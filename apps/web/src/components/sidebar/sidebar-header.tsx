@@ -5,9 +5,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { Command } from "lucide-react";
+import { LangGraphLogoSVG } from "../icons/langgraph";
+import NextLink from "next/link";
 
 export function SiteHeader() {
   return (
@@ -18,17 +18,14 @@ export function SiteHeader() {
             size="lg"
             asChild
           >
-            <a href="#">
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                {/* TODO: Replace with langchain logo */}
-                <Command className="size-4" />
-              </div>
+            <NextLink href="/">
+              <LangGraphLogoSVG />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
                   Open Agent Platform
                 </span>
               </div>
-            </a>
+            </NextLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
+import { Wrench, Bot, Inbox, MessageCircle, Brain } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -23,8 +23,8 @@ const data = {
   navMain: [
     {
       title: "Chat",
-      url: "/chat",
-      icon: SquareTerminal,
+      url: "/",
+      icon: MessageCircle,
     },
     {
       title: "Agents",
@@ -34,17 +34,17 @@ const data = {
     {
       title: "Tools",
       url: "/tools",
-      icon: BookOpen,
+      icon: Wrench,
     },
     {
       title: "Inbox",
       url: "/inbox",
-      icon: Settings2,
+      icon: Inbox,
     },
     {
       title: "RAG",
       url: "/rag",
-      icon: Settings2,
+      icon: Brain,
     },
   ],
 };

@@ -161,29 +161,13 @@ export function Thread() {
     });
   };
 
-  const chatStarted = !!threadId || !!messages.length;
+  const chatStarted = !!threadId;
   const hasNoAIOrToolMessages = !messages.find(
     (m) => m.type === "ai" || m.type === "tool",
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      {chatStarted && (
-        <div className="relative z-10 flex items-center justify-between gap-3 p-2">
-          <TooltipIconButton
-            size="lg"
-            className="p-4"
-            tooltip="New thread"
-            variant="ghost"
-            onClick={() => setThreadId(null)}
-          >
-            <SquarePen className="size-5" />
-          </TooltipIconButton>
-
-          <div className="from-background to-background/0 absolute inset-x-0 top-full h-5 bg-gradient-to-b" />
-        </div>
-      )}
-
+    <div className="flex h-full w-full overflow-hidden">
       <StickToBottom className="relative flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
@@ -231,7 +215,7 @@ export function Thread() {
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    Agent Chat
+                    Open Agent Platform
                   </h1>
                 </div>
               )}
@@ -266,6 +250,18 @@ export function Thread() {
                   <div className="flex items-center justify-between p-2 pt-4">
                     <div>
                       <div className="flex items-center space-x-2">
+                        {chatStarted && (
+                          <TooltipIconButton
+                            size="lg"
+                            className="p-4"
+                            tooltip="New thread"
+                            variant="ghost"
+                            onClick={() => setThreadId(null)}
+                          >
+                            <SquarePen className="size-5" />
+                          </TooltipIconButton>
+                        )}
+
                         <Switch
                           id="render-tool-calls"
                           checked={hideToolCalls ?? false}

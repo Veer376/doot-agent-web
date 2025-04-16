@@ -5,14 +5,13 @@ import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { TeamSwitcher } from "./team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { SiteHeader } from "./sidebar-header";
 
 // This is sample data.
 const data = {
@@ -21,31 +20,11 @@ const data = {
     email: "johndoe@langchain.dev",
     avatar: "",
   },
-  // Commented out for now, as workspaces are a P1 feature.
-  // teams: [
-  //   {
-  //     name: "Acme Inc",
-  //     logo: GalleryVerticalEnd,
-  //     plan: "Enterprise",
-  //   },
-  //   {
-  //     name: "Acme Corp.",
-  //     logo: AudioWaveform,
-  //     plan: "Startup",
-  //   },
-  //   {
-  //     name: "Evil Corp.",
-  //     logo: Command,
-  //     plan: "Free",
-  //   },
-  // ],
-  teams: [],
   navMain: [
     {
       title: "Chat",
       url: "/chat",
       icon: SquareTerminal,
-      isActive: true,
     },
     {
       title: "Agents",
@@ -76,9 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       collapsible="icon"
       {...props}
     >
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
+      <SiteHeader />
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>

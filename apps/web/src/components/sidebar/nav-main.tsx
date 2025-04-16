@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import NextLink from "next/link";
+import { cn } from "@/lib/utils";
 
 export function NavMain({
   items,
@@ -28,13 +29,19 @@ export function NavMain({
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item, index) => (
-          <NextLink href={item.url} key={`${item.title}-${index}`}>
-            <SidebarMenuItem>
+          <NextLink
+            href={item.url}
+            key={`${item.title}-${index}`}
+          >
+            <SidebarMenuItem
+              className={cn(
+                pathname === item.url &&
+                  "bg-sidebar-accent text-sidebar-accent-foreground",
+              )}
+            >
               <SidebarMenuButton tooltip={item.title}>
                 {item.icon && <item.icon />}
-                <span className={pathname === item.url ? "text-red-500" : ""}>
-                  {item.title}
-                </span>
+                <span>{item.title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </NextLink>

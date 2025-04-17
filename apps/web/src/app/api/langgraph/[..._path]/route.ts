@@ -1,3 +1,4 @@
+import { validate } from "uuid";
 import { initApiPassthrough } from "langgraph-nextjs-api-passthrough";
 import { NextRequest } from "next/server";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -19,24 +20,37 @@ import { getDeployments } from "@/lib/environment/deployments";
 
 export const runtime = "edge";
 
+/**
+ * The dynamic route parameters for this API endpoint.
+ */
 type DynamicRouteParams = {
-  deploymentId: string;
   _path: string[];
 };
 
+/**
+ * The request parameters for this API endpoint.
+ * This is the second argument of the API route handler functions.
+ */
 type RequestParams = {
   params: Promise<DynamicRouteParams>;
 };
 
 /**
- * Returns the deployment URL for the given request URL.
- * @param requestUrl The request URL.
- * @returns The deployment URL, or null if the deployment is not found.
+ * Finds the deployment URL based on the path parameters. If the first item in the
+ * _path array is not a valid UUID, or if the deployment is not found, returns null.
+ * @param params The request parameters containing the path segments.
+ * @param params._path The path segments in the request URL.
+ * @returns An object with the base route and deployment URL, or null if not found.
  */
 async function getDeploymentUrl({
   params,
 }: RequestParams): Promise<{ baseRoute: string; url: string } | null> {
-  const { deploymentId } = await params;
+  const { _path } = await params;
+  // The first item in the _path array should always be the deployment ID.
+  const deploymentId = _path[0];
+  if (!validate(deploymentId)) {
+    return null;
+  }
   const deployment = getDeployments().find((d) => d.id === deploymentId);
 
   if (deployment) {

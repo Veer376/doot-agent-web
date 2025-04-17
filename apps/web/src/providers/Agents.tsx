@@ -13,7 +13,7 @@ import { Agent } from "@/types/agent";
 import { Client } from "@langchain/langgraph-sdk";
 import { Deployment } from "@/types/deployment";
 
-async function getAgents(deployments: Deployment[]): Promise<Agent[][]> {
+async function getAgents(deployments: Deployment[]): Promise<Agent[]> {
   const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
 
   const agentsPromise: Promise<Agent[]>[] = deployments.map(
@@ -33,7 +33,7 @@ async function getAgents(deployments: Deployment[]): Promise<Agent[][]> {
     },
   );
 
-  return await Promise.all(agentsPromise);
+  return (await Promise.all(agentsPromise)).flat();
 }
 
 type AgentsContextType = {
@@ -41,7 +41,7 @@ type AgentsContextType = {
    * A two-dimensional array of agents.
    * Each subarray contains the agents for a specific deployment.
    */
-  agents: Agent[][];
+  agents: Agent[];
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
@@ -49,7 +49,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const deployments = getDeployments();
-  const [agents, setAgents] = useState<Agent[][]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const isLoading = useRef(false);
 
   useEffect(() => {

@@ -13,4 +13,8 @@ export interface Deployment {
    * the `/info` endpoint of the deployment URL.
    */
   tenantId: string;
+  /**
+   * A custom name for the deployment. This is a custom field the user sets.
+   */
+  name: string;
 }

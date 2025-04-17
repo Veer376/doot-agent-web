@@ -53,8 +53,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   const isLoading = useRef(false);
 
   useEffect(() => {
-    if (agents.length > 0 || isLoading.current || typeof window === "undefined")
-      return;
+    if (agents.length > 0 || isLoading.current) return;
 
     isLoading.current = true;
     getAgents(deployments).then(setAgents);

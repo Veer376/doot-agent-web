@@ -34,10 +34,14 @@ export interface Agent<
    */
   description?: string;
   /**
-   * The deployment URL of the LangGraph deployment
+   * The deployment ID of the LangGraph deployment
    * this agent belongs to.
    */
-  deploymentUrl: string;
+  deploymentId: string;
+  /**
+   * The tenant ID the LangGraph deployment belongs to.
+   */
+  tenantId: string;
   /**
    * The configurable fields the agent has set.
    */

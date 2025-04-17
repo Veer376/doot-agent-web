@@ -12,13 +12,15 @@ The environment variable should be a JSON array of objects with the following sh
 {
   "id": "<string>",
   "deploymentUrl": "<string>",
-  "tenantId": "<string>"
+  "tenantId": "<string>",
+  "name": "<string>"
 }
 ```
 
 - `id`: The ID of the deployment.
 - `deploymentUrl`: The API URL of the deployment.
 - `tenantId`: The tenant ID the deployment belongs to.
+- `name`: A custom name for the deployment. This is a custom field you need to set.
 
 We have a convenience page you can use to get the deployment information for your deployments. Visit `/onboarding/deployments` in the platform, where you can paste in the deployment URLs and custom names, and it will return the full environment variable string needed to add the deployment to the platform.
 

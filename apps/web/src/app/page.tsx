@@ -10,7 +10,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { AgentsProvider } from "@/providers/Agents";
 import React from "react";
 
 /**
@@ -37,9 +36,7 @@ export default function ChatPage(): React.ReactNode {
           </Breadcrumb>
         </div>
       </header>
-      <AgentsProvider>
-        <ChatInterface />
-      </AgentsProvider>
+      <ChatInterface />
     </React.Suspense>
   );
 }

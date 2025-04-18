@@ -78,7 +78,7 @@ export function ConfigField({
       // want to use the parsed string.
       JSON.parse(jsonString);
       setJsonError(null);
-    } catch (error) {
+    } catch (_error) {
       setJsonError("Invalid JSON format");
     }
   };
@@ -87,7 +87,7 @@ export function ConfigField({
     try {
       const formatted = JSON.stringify(JSON.parse(jsonString), null, 2);
       handleJsonChange(formatted);
-    } catch (error) {
+    } catch (_error) {
       setJsonError("Invalid JSON format");
     }
   };

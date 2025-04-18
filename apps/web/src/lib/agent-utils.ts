@@ -5,9 +5,9 @@ import { Agent } from "@/types/agent";
  * @param agent The agent to check.
  * @returns True if the agent is the default, false otherwise.
  */
-export const isDefaultAssistant = (agent: Agent): boolean => {
+export function isDefaultAssistant(agent: Agent): boolean {
   return agent.metadata?.created_by === "system";
-};
+}
 
 /**
  * Sorts an array of agents within a group.
@@ -15,7 +15,7 @@ export const isDefaultAssistant = (agent: Agent): boolean => {
  * @param agentGroup An array of agents belonging to the same group.
  * @returns A new array with the sorted agents.
  */
-export const sortAgentGroup = (agentGroup: Agent[]): Agent[] => {
+export function sortAgentGroup(agentGroup: Agent[]): Agent[] {
   return [...agentGroup].sort((a, b) => {
     const aIsDefault = isDefaultAssistant(a);
     const bIsDefault = isDefaultAssistant(b);
@@ -36,4 +36,22 @@ export const sortAgentGroup = (agentGroup: Agent[]): Agent[] => {
 
     return validTimeB - validTimeA; // Newest first
   });
-};
+}
+
+/**
+ * Groups an array of agents by their `graph_id`.
+ * @param agents An array of agents.
+ * @returns An array of arrays, where each inner array contains agents belonging to the same graph.
+ */
+export function groupAgentsByGraphs(agents: Agent[]): Agent[][] {
+  return Object.values(
+    agents.reduce<Record<string, Agent[]>>((acc, agent) => {
+      const groupId = agent.graph_id;
+      if (!acc[groupId]) {
+        acc[groupId] = [];
+      }
+      acc[groupId].push(agent);
+      return acc;
+    }, {}),
+  );
+}

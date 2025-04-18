@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Star } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Agent } from "@/types/agent";
-import { isDefaultAssistant, sortAgentGroup } from "@/lib/agent-utils";
+import {
+  groupAgentsByGraphs,
+  isDefaultAssistant,
+  sortAgentGroup,
+} from "@/lib/agent-utils";
+import { DefaultStar } from "./default-star";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
@@ -66,16 +71,7 @@ export function AgentsCombobox({
   setValue,
   className,
 }: AgentsComboboxProps) {
-  const agentsGroupedByGraphs = Object.values(
-    agents.reduce<Record<string, Agent[]>>((acc, agent) => {
-      const groupId = agent.graph_id;
-      if (!acc[groupId]) {
-        acc[groupId] = [];
-      }
-      acc[groupId].push(agent);
-      return acc;
-    }, {}),
-  );
+  const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
 
   return (
     <Popover
@@ -123,7 +119,7 @@ export function AgentsCombobox({
                       </p>
                       <div className="flex items-center justify-end gap-2">
                         {isDefaultAssistant(item) && (
-                          <Star className="opacity-100" />
+                          <DefaultStar className="opacity-100" />
                         )}
                         <Check
                           className={cn(

@@ -11,8 +11,12 @@ import { ConfigurationSidebar } from "./components/configuration-sidebar";
 export default function ChatInterface(): React.ReactNode {
   return (
     <StreamProvider>
-      <Thread />
-      <ConfigurationSidebar />
+      <div className="flex h-full overflow-x-hidden">
+        <div className="flex h-full flex-1 flex-col p-4">
+          <Thread />
+        </div>
+        <ConfigurationSidebar />
+      </div>
     </StreamProvider>
   );
 }

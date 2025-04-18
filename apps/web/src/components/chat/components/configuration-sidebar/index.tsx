@@ -10,6 +10,7 @@ import { ConfigSection } from "@/components/chat/components/configuration-sideba
 import { useConfigStore } from "@/components/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -18,7 +19,7 @@ export interface AIConfigPanelProps {
 }
 
 export function ConfigurationSidebar({
-  className,
+  className, // className is now applied to the fixed panel
   defaultOpen = false,
   onSave,
 }: AIConfigPanelProps) {
@@ -32,30 +33,23 @@ export function ConfigurationSidebar({
   };
 
   return (
-    <div className={cn("relative h-full", className)}>
+    <>
+      {/* Main Fixed Panel */}
       <div
         className={cn(
-          "absolute top-0 right-0 z-10 h-full border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
-          isOpen ? "w-80 md:w-96" : "w-0 border-none",
+          // Use fixed positioning, full height, top right
+          "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
+          // Animate width and handle border/overflow when closed
+          isOpen ? "w-80 md:w-xl" : "w-0 border-l-0 overflow-hidden",
+          className, // Apply external className here
         )}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-4 -left-10 rounded-full border border-gray-200 bg-white shadow-sm"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
-
+        {/* Content only rendered when open */}
         {isOpen && (
           <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between border-b border-gray-200 p-4">
-              <h2 className="text-lg font-semibold">AI Configuration</h2>
+            {/* Panel Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 p-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold">Agent Configuration</h2>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -75,16 +69,19 @@ export function ConfigurationSidebar({
               </div>
             </div>
 
+            {/* Tabs Container - Flex column, allow scroll area to take remaining space */}
             <Tabs
               defaultValue="general"
-              className="flex flex-1 flex-col"
+              className="flex flex-1 flex-col overflow-hidden" // Added overflow-hidden
             >
-              <TabsList className="justify-start bg-transparent px-4 pt-2">
+              {/* Tabs List - Don't let it shrink/grow */}
+              <TabsList className="justify-start bg-transparent px-4 pt-2 flex-shrink-0">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 <TabsTrigger value="tools">Tools</TabsTrigger>
               </TabsList>
 
+              {/* Scrollable Content Area */}
               <ScrollArea className="flex-1">
                 <TabsContent
                   value="general"
@@ -237,6 +234,24 @@ export function ConfigurationSidebar({
           </div>
         )}
       </div>
-    </div>
+
+      {/* Fixed Toggle Button */}
+      <TooltipIconButton
+        onClick={() => setIsOpen(!isOpen)}
+        tooltip={`${isOpen ? "Hide" : "Show"} Configuration Sidebar`}
+        className={cn(
+          // Fixed position, always visible
+          "fixed top-4 z-20 size-9 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300",
+          // Adjust right position based on panel state
+          isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-2",
+        )}
+      >
+        {isOpen ? (
+          <ChevronRight className="size-4" />
+        ) : (
+          <ChevronLeft className="size-4" />
+        )}
+      </TooltipIconButton>
+    </>
   );
 }

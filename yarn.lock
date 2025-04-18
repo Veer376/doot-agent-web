@@ -658,10 +658,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/env@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/env@npm:15.3.0"
-  checksum: 7d8d49d5ba102f3bf85c7d1b13890e5af21b4ee2c6995fb0c0ebcb7cdd0b133ab6385b9db08644acdef7b9586ae3342fa326ada9f51988bf5fefa61778fa1da1
+"@next/env@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/env@npm:15.3.1"
+  checksum: eb24d59257d0d171770b09ae28cd23b6944aecf4b39da85729a09c6604a2f7aaeb973b3ca7234a086ed9da732e3d622e013b113688487add6315e62414b58501
   languageName: node
   linkType: hard
 
@@ -674,58 +674,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-arm64@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-darwin-arm64@npm:15.3.0"
+"@next/swc-darwin-arm64@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-darwin-arm64@npm:15.3.1"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-x64@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-darwin-x64@npm:15.3.0"
+"@next/swc-darwin-x64@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-darwin-x64@npm:15.3.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-gnu@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-linux-arm64-gnu@npm:15.3.0"
+"@next/swc-linux-arm64-gnu@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-linux-arm64-gnu@npm:15.3.1"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-musl@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-linux-arm64-musl@npm:15.3.0"
+"@next/swc-linux-arm64-musl@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-linux-arm64-musl@npm:15.3.1"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-gnu@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-linux-x64-gnu@npm:15.3.0"
+"@next/swc-linux-x64-gnu@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-linux-x64-gnu@npm:15.3.1"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-musl@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-linux-x64-musl@npm:15.3.0"
+"@next/swc-linux-x64-musl@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-linux-x64-musl@npm:15.3.1"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-win32-arm64-msvc@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-win32-arm64-msvc@npm:15.3.0"
+"@next/swc-win32-arm64-msvc@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-win32-arm64-msvc@npm:15.3.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-win32-x64-msvc@npm:15.3.0":
-  version: 15.3.0
-  resolution: "@next/swc-win32-x64-msvc@npm:15.3.0"
+"@next/swc-win32-x64-msvc@npm:15.3.1":
+  version: 15.3.1
+  resolution: "@next/swc-win32-x64-msvc@npm:15.3.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -1425,9 +1425,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-roving-focus@npm:1.1.5":
-  version: 1.1.5
-  resolution: "@radix-ui/react-roving-focus@npm:1.1.5"
+"@radix-ui/react-roving-focus@npm:1.1.6":
+  version: 1.1.6
+  resolution: "@radix-ui/react-roving-focus@npm:1.1.6"
   dependencies:
     "@radix-ui/primitive": 1.1.2
     "@radix-ui/react-collection": 1.1.4
@@ -1437,7 +1437,7 @@ __metadata:
     "@radix-ui/react-id": 1.1.1
     "@radix-ui/react-primitive": 2.1.0
     "@radix-ui/react-use-callback-ref": 1.1.1
-    "@radix-ui/react-use-controllable-state": 1.2.1
+    "@radix-ui/react-use-controllable-state": 1.2.2
   peerDependencies:
     "@types/react": "*"
     "@types/react-dom": "*"
@@ -1448,7 +1448,7 @@ __metadata:
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: c98e435f5158d76b6e45ced553b6cba5b368580432698ac65ba1e42ff99cca34d66f8d249d266b80045edc3dac255ed77ece3e490cc46778d21ad23df79b4a71
+  checksum: 09e0358e00dd4c72f75c2f51d4337d08a9031a4898a03532e96f46762ae9cdca2bd716296af314ef0ffb828188dde8ded163adf755d9010d9b6d001b8c07515e
   languageName: node
   linkType: hard
 
@@ -1606,9 +1606,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-tabs@npm:^1.1.6":
-  version: 1.1.6
-  resolution: "@radix-ui/react-tabs@npm:1.1.6"
+"@radix-ui/react-tabs@npm:^1.1.7":
+  version: 1.1.7
+  resolution: "@radix-ui/react-tabs@npm:1.1.7"
   dependencies:
     "@radix-ui/primitive": 1.1.2
     "@radix-ui/react-context": 1.1.2
@@ -1616,8 +1616,8 @@ __metadata:
     "@radix-ui/react-id": 1.1.1
     "@radix-ui/react-presence": 1.1.3
     "@radix-ui/react-primitive": 2.1.0
-    "@radix-ui/react-roving-focus": 1.1.5
-    "@radix-ui/react-use-controllable-state": 1.2.1
+    "@radix-ui/react-roving-focus": 1.1.6
+    "@radix-ui/react-use-controllable-state": 1.2.2
   peerDependencies:
     "@types/react": "*"
     "@types/react-dom": "*"
@@ -1628,7 +1628,7 @@ __metadata:
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: afd73e0db960588e3ebb37024c60b219fb363d414692abf99a97888b3904ff5cafcae62e9b057be173a8aa655a4789987f755a680d3bda9a356b7c235977ceab
+  checksum: 7dc91060ebb28df1d5c592901951ecb9c58a8b82f83df72c93a137e71c24c26365e380040946a5f9b80369e36d47f63e2148e88256357ab77154d9cf373ec7a3
   languageName: node
   linkType: hard
 
@@ -1706,6 +1706,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@radix-ui/react-use-controllable-state@npm:1.2.2":
+  version: 1.2.2
+  resolution: "@radix-ui/react-use-controllable-state@npm:1.2.2"
+  dependencies:
+    "@radix-ui/react-use-effect-event": 0.0.2
+    "@radix-ui/react-use-layout-effect": 1.1.1
+  peerDependencies:
+    "@types/react": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: b438ee199d0630bf95eaafe8bf4bce219e73b371cfc8465f47548bfa4ee231f1134b5c6696b242890a01a0fd25fa34a7b172346bbfc5ee25cfb28b3881b1dc92
+  languageName: node
+  linkType: hard
+
 "@radix-ui/react-use-effect-event@npm:0.0.1":
   version: 0.0.1
   resolution: "@radix-ui/react-use-effect-event@npm:0.0.1"
@@ -1718,6 +1734,21 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 19838775d5fc613e46e043fba9f915970920a8f6df76ab2f80840901b6d1a451678acb3462b233cd5ed011e25327675e17de400df95a5b66df753c7225c5f307
+  languageName: node
+  linkType: hard
+
+"@radix-ui/react-use-effect-event@npm:0.0.2":
+  version: 0.0.2
+  resolution: "@radix-ui/react-use-effect-event@npm:0.0.2"
+  dependencies:
+    "@radix-ui/react-use-layout-effect": 1.1.1
+  peerDependencies:
+    "@types/react": "*"
+    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 5a1950a30a399ea7e4b98154da9f536737a610de80189b7aacd4f064a89a3cd0d2a48571d527435227252e72e872bdb544ff6ffcfbdd02de2efd011be4aaa902
   languageName: node
   linkType: hard
 
@@ -6098,19 +6129,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:^15.2.3":
-  version: 15.3.0
-  resolution: "next@npm:15.3.0"
+"next@npm:^15.3.1":
+  version: 15.3.1
+  resolution: "next@npm:15.3.1"
   dependencies:
-    "@next/env": 15.3.0
-    "@next/swc-darwin-arm64": 15.3.0
-    "@next/swc-darwin-x64": 15.3.0
-    "@next/swc-linux-arm64-gnu": 15.3.0
-    "@next/swc-linux-arm64-musl": 15.3.0
-    "@next/swc-linux-x64-gnu": 15.3.0
-    "@next/swc-linux-x64-musl": 15.3.0
-    "@next/swc-win32-arm64-msvc": 15.3.0
-    "@next/swc-win32-x64-msvc": 15.3.0
+    "@next/env": 15.3.1
+    "@next/swc-darwin-arm64": 15.3.1
+    "@next/swc-darwin-x64": 15.3.1
+    "@next/swc-linux-arm64-gnu": 15.3.1
+    "@next/swc-linux-arm64-musl": 15.3.1
+    "@next/swc-linux-x64-gnu": 15.3.1
+    "@next/swc-linux-x64-musl": 15.3.1
+    "@next/swc-win32-arm64-msvc": 15.3.1
+    "@next/swc-win32-x64-msvc": 15.3.1
     "@swc/counter": 0.1.3
     "@swc/helpers": 0.5.15
     busboy: 1.6.0
@@ -6155,7 +6186,7 @@ __metadata:
       optional: true
   bin:
     next: dist/bin/next
-  checksum: a68d6f92ed8eb23ee53692e4285ffeda2ad25ca08d0f8d19572a139da088490b87a58042f0e01dc528a4528547d5c4dc08806cfecb1a47152f7be44d1940b303
+  checksum: c748e9f2657272b033aa559c42f3d99abe5cb7ae2e22d3a685e16f008aab1a23666b79178b33d1bf075e7663722cbbf3f726169b63e74f6d7a17d7b8a6e476fc
   languageName: node
   linkType: hard
 
@@ -8299,7 +8330,7 @@ __metadata:
     "@radix-ui/react-slider": ^1.3.1
     "@radix-ui/react-slot": ^1.2.0
     "@radix-ui/react-switch": ^1.1.4
-    "@radix-ui/react-tabs": ^1.1.6
+    "@radix-ui/react-tabs": ^1.1.7
     "@radix-ui/react-tooltip": ^1.2.0
     "@tailwindcss/postcss": ^4.0.13
     "@types/node": ^22.13.5
@@ -8319,7 +8350,7 @@ __metadata:
     globals: ^15.14.0
     langgraph-nextjs-api-passthrough: ^0.0.5
     lucide-react: ^0.488.0
-    next: ^15.2.3
+    next: ^15.3.1
     next-themes: ^0.4.6
     nuqs: ^2.4.1
     postcss: ^8.5.3

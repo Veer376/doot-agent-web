@@ -40,7 +40,7 @@ export function ConfigurationSidebar({
           // Use fixed positioning, full height, top right
           "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
           // Animate width and handle border/overflow when closed
-          isOpen ? "w-80 md:w-xl" : "w-0 border-l-0 overflow-hidden",
+          isOpen ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
           className, // Apply external className here
         )}
       >
@@ -48,7 +48,7 @@ export function ConfigurationSidebar({
         {isOpen && (
           <div className="flex h-full flex-col">
             {/* Panel Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 p-4 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4">
               <h2 className="text-lg font-semibold">Agent Configuration</h2>
               <div className="flex gap-2">
                 <Button
@@ -75,7 +75,7 @@ export function ConfigurationSidebar({
               className="flex flex-1 flex-col overflow-hidden" // Added overflow-hidden
             >
               {/* Tabs List - Don't let it shrink/grow */}
-              <TabsList className="justify-start bg-transparent px-4 pt-2 flex-shrink-0">
+              <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 <TabsTrigger value="tools">Tools</TabsTrigger>

@@ -17,6 +17,7 @@ import { useConfigStore } from "@/components/chat/hooks/use-config-store";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface Option {
   label: string;
@@ -72,12 +73,22 @@ export function ConfigField({
         return;
       }
 
-      const parsed = JSON.parse(jsonString);
-      updateConfig(id, parsed);
+      updateConfig(id, jsonString);
+      // Attempt to parse, but only so it can error if it's invalid. We do not
+      // want to use the parsed string.
+      JSON.parse(jsonString);
       setJsonError(null);
     } catch (error) {
       setJsonError("Invalid JSON format");
-      console.error(error);
+    }
+  };
+
+  const handleFormatJson = (jsonString: string) => {
+    try {
+      const formatted = JSON.stringify(JSON.parse(jsonString), null, 2);
+      handleJsonChange(formatted);
+    } catch (error) {
+      setJsonError("Invalid JSON format");
     }
   };
 
@@ -177,22 +188,33 @@ export function ConfigField({
         <>
           <Textarea
             id={id}
-            value={value ? JSON.stringify(value, null, 2) : ""}
+            value={value ?? ""}
             onChange={(e) => handleJsonChange(e.target.value)}
             placeholder={placeholder || '{\n  "key": "value"\n}'}
             className="min-h-[120px] font-mono text-sm"
           />
-          {jsonError && (
-            <Alert
-              variant="destructive"
-              className="py-2"
+          <div className="flex w-full items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleFormatJson(value ?? "")}
+              disabled={!!jsonError}
+              className="mr-auto"
             >
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                {jsonError}
-              </AlertDescription>
-            </Alert>
-          )}
+              Format
+            </Button>
+            {jsonError && (
+              <Alert
+                variant="destructive"
+                className="py-2"
+              >
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  {jsonError}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
         </>
       )}
     </div>

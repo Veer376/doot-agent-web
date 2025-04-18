@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Save, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +11,9 @@ import { useConfigStore } from "@/components/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { useQueryState } from "nuqs";
+import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import { createClient } from "@/lib/client";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -25,6 +28,35 @@ export function ConfigurationSidebar({
 }: AIConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { config, resetConfig } = useConfigStore();
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
+  const [configurations, setConfigurations] = useState<
+    ConfigurableFieldUIMetadata[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!agentId || !deploymentId) return;
+
+    const getAssistantConfigSchemas = async () => {
+      setLoading(true);
+      try {
+        const client = createClient(deploymentId);
+        const schemas = await client.assistants.getSchemas(agentId);
+        return schemas.config_schema;
+      } catch (e) {
+        console.error("Failed to get assistant schemas");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAssistantConfigSchemas().then((schemas) => {
+      if (schemas) {
+        console.log(schemas);
+      }
+    });
+  }, [agentId, deploymentId]);
 
   const handleSave = () => {
     if (onSave) {
@@ -34,20 +66,15 @@ export function ConfigurationSidebar({
 
   return (
     <>
-      {/* Main Fixed Panel */}
       <div
         className={cn(
-          // Use fixed positioning, full height, top right
           "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
-          // Animate width and handle border/overflow when closed
           isOpen ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
-          className, // Apply external className here
+          className,
         )}
       >
-        {/* Content only rendered when open */}
         {isOpen && (
           <div className="flex h-full flex-col">
-            {/* Panel Header */}
             <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4">
               <h2 className="text-lg font-semibold">Agent Configuration</h2>
               <div className="flex gap-2">
@@ -69,114 +96,38 @@ export function ConfigurationSidebar({
               </div>
             </div>
 
-            {/* Tabs Container - Flex column, allow scroll area to take remaining space */}
             <Tabs
               defaultValue="general"
-              className="flex flex-1 flex-col overflow-hidden" // Added overflow-hidden
+              className="flex flex-1 flex-col overflow-hidden"
             >
-              {/* Tabs List - Don't let it shrink/grow */}
               <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
                 <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
                 <TabsTrigger value="tools">Tools</TabsTrigger>
               </TabsList>
 
-              {/* Scrollable Content Area */}
               <ScrollArea className="flex-1">
                 <TabsContent
                   value="general"
                   className="m-0 p-4"
                 >
-                  <ConfigSection title="Basic Settings">
-                    <ConfigField
-                      id="systemPrompt"
-                      label="System Prompt"
-                      type="textarea"
-                      description="Instructions for how the AI should behave"
-                    />
-                    <ConfigField
-                      id="temperature"
-                      label="Temperature"
-                      type="slider"
-                      min={0}
-                      max={2}
-                      step={0.1}
-                      description="Controls randomness (0 = deterministic, 2 = creative)"
-                    />
-                    <ConfigField
-                      id="maxTokens"
-                      label="Max Tokens"
-                      type="number"
-                      min={1}
-                      max={4096}
-                      description="Maximum length of the generated response"
-                    />
-                  </ConfigSection>
-
-                  <ConfigSection title="Behavior">
-                    <ConfigField
-                      id="useMarkdown"
-                      label="Use Markdown"
-                      type="switch"
-                      description="Enable markdown formatting in responses"
-                    />
-                    <ConfigField
-                      id="streamResponse"
-                      label="Stream Response"
-                      type="switch"
-                      description="Show response as it's being generated"
-                    />
-                    <ConfigField
-                      id="memoryEnabled"
-                      label="Enable Memory"
-                      type="switch"
-                      description="Remember previous conversations"
-                    />
-                  </ConfigSection>
-                </TabsContent>
-
-                <TabsContent
-                  value="advanced"
-                  className="m-0 p-4"
-                >
-                  <ConfigSection title="Advanced Settings">
-                    <ConfigField
-                      id="model"
-                      label="AI Model"
-                      type="select"
-                      options={[
-                        { label: "GPT-4o", value: "gpt-4o" },
-                        { label: "GPT-4 Turbo", value: "gpt-4-turbo" },
-                        { label: "Claude 3 Opus", value: "claude-3-opus" },
-                        { label: "Claude 3 Sonnet", value: "claude-3-sonnet" },
-                        { label: "Llama 3 70B", value: "llama-3-70b" },
-                      ]}
-                      description="Select the AI model to use"
-                    />
-                    <ConfigField
-                      id="presencePenalty"
-                      label="Presence Penalty"
-                      type="slider"
-                      min={-2}
-                      max={2}
-                      step={0.1}
-                      description="Penalize new tokens based on presence in text"
-                    />
-                    <ConfigField
-                      id="frequencyPenalty"
-                      label="Frequency Penalty"
-                      type="slider"
-                      min={-2}
-                      max={2}
-                      step={0.1}
-                      description="Penalize new tokens based on frequency in text"
-                    />
-                    <ConfigField
-                      id="customInstructions"
-                      label="Custom Instructions"
-                      type="json"
-                      description="Advanced configuration in JSON format"
-                    />
+                  <ConfigSection title="Configuration">
+                    {configurations.map((c, index) => (
+                      <ConfigField
+                        key={`${c.label}-${index}`}
+                        id={c.label}
+                        label={c.label}
+                        type={
+                          c.type === "boolean" ? "switch" : (c.type ?? "text")
+                        }
+                        description={c.description}
+                        placeholder={c.placeholder}
+                        options={c.options}
+                        min={c.min}
+                        max={c.max}
+                        step={c.step}
+                        // TODO: How to set default values?
+                      />
+                    ))}
                   </ConfigSection>
                 </TabsContent>
 
@@ -235,14 +186,11 @@ export function ConfigurationSidebar({
         )}
       </div>
 
-      {/* Fixed Toggle Button */}
       <TooltipIconButton
         onClick={() => setIsOpen(!isOpen)}
         tooltip={`${isOpen ? "Hide" : "Show"} Configuration Sidebar`}
         className={cn(
-          // Fixed position, always visible
           "fixed top-4 z-20 size-9 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300",
-          // Adjust right position based on panel state
           isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-2",
         )}
       >

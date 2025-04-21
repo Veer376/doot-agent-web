@@ -14,8 +14,8 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 import { createClient } from "@/lib/client";
-import { GraphSchema } from "@langchain/langgraph-sdk";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -110,23 +110,31 @@ export function ConfigurationSidebar({
                   className="m-0 p-4"
                 >
                   <ConfigSection title="Configuration">
-                    {configurations.map((c, index) => (
-                      <ConfigField
-                        key={`${c.label}-${index}`}
-                        id={c.label}
-                        label={c.label}
-                        type={
-                          c.type === "boolean" ? "switch" : (c.type ?? "text")
-                        }
-                        description={c.description}
-                        placeholder={c.placeholder}
-                        options={c.options}
-                        min={c.min}
-                        max={c.max}
-                        step={c.step}
-                        // TODO: How to set default values?
-                      />
-                    ))}
+                    {loading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    ) : (
+                      configurations.map((c, index) => (
+                        <ConfigField
+                          key={`${c.label}-${index}`}
+                          id={c.label}
+                          label={c.label}
+                          type={
+                            c.type === "boolean" ? "switch" : (c.type ?? "text")
+                          }
+                          description={c.description}
+                          placeholder={c.placeholder}
+                          options={c.options}
+                          min={c.min}
+                          max={c.max}
+                          step={c.step}
+                          // TODO: How to set default values?
+                        />
+                      ))
+                    )}
                   </ConfigSection>
                 </TabsContent>
 
@@ -187,7 +195,7 @@ export function ConfigurationSidebar({
 
       <TooltipIconButton
         onClick={() => setIsOpen(!isOpen)}
-        tooltip={`${isOpen ? "Hide" : "Show"} Configuration Sidebar`}
+        tooltip={`${isOpen ? "Hide" : "Show"} Configuration`}
         className={cn(
           "fixed top-4 z-20 size-9 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300",
           isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-2",

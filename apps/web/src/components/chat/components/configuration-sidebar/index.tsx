@@ -14,6 +14,8 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 import { createClient } from "@/lib/client";
+import { GraphSchema } from "@langchain/langgraph-sdk";
+import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -44,17 +46,14 @@ export function ConfigurationSidebar({
         const client = createClient(deploymentId);
         const schemas = await client.assistants.getSchemas(agentId);
         return schemas.config_schema;
-      } catch (e) {
-        console.error("Failed to get assistant schemas");
       } finally {
         setLoading(false);
       }
     };
 
     getAssistantConfigSchemas().then((schemas) => {
-      if (schemas) {
-        console.log(schemas);
-      }
+      if (!schemas) return;
+      setConfigurations(configSchemaToConfigurableFields(schemas));
     });
   }, [agentId, deploymentId]);
 

@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
@@ -10,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Tool } from "@/types/tool";
 import { ToolDetailsDialog } from "../tool-details-dialog";
+import { Eye } from "lucide-react";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 interface ToolCardProps {
   tool: Tool;
@@ -28,7 +29,13 @@ export function ToolCard({ tool }: ToolCardProps) {
       </CardHeader>
       <CardFooter className="flex justify-between gap-2">
         <ToolDetailsDialog tool={tool}>
-          <Button className="w-full">Inspect</Button>
+          <TooltipIconButton
+            tooltip="View tool details"
+            variant="default"
+            className="size-7"
+          >
+            <Eye className="size-4" />
+          </TooltipIconButton>
         </ToolDetailsDialog>
       </CardFooter>
     </Card>

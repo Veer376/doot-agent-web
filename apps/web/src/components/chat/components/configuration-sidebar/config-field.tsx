@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import _ from "lodash";
 
 interface Option {
   label: string;
@@ -99,7 +100,7 @@ export function ConfigField({
           htmlFor={id}
           className="text-sm font-medium"
         >
-          {label}
+          {_.startCase(label)}
         </Label>
         {type === "switch" && (
           <Switch

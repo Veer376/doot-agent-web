@@ -24,7 +24,7 @@ export interface AIConfigPanelProps {
 }
 
 export function ConfigurationSidebar({
-  className, // className is now applied to the fixed panel
+  className,
   defaultOpen = false,
   onSave,
 }: AIConfigPanelProps) {
@@ -53,13 +53,20 @@ export function ConfigurationSidebar({
 
     getAssistantConfigSchemas().then((schemas) => {
       if (!schemas) return;
-      setConfigurations(configSchemaToConfigurableFields(schemas));
+      const configFields = configSchemaToConfigurableFields(schemas);
+      setConfigurations(configFields);
+
+      // Set default config values based on configuration fields
+      const { setDefaultConfig } = useConfigStore.getState();
+      setDefaultConfig(configFields);
     });
   }, [agentId, deploymentId]);
 
   const handleSave = () => {
     if (onSave) {
       onSave(config);
+    } else {
+      alert("Save config not implemented");
     }
   };
 
@@ -131,13 +138,13 @@ export function ConfigurationSidebar({
                           min={c.min}
                           max={c.max}
                           step={c.step}
-                          // TODO: How to set default values?
                         />
                       ))
                     )}
                   </ConfigSection>
                 </TabsContent>
 
+                {/* TODO: Replace with actual tools */}
                 <TabsContent
                   value="tools"
                   className="m-0 p-4"

@@ -13,8 +13,24 @@ import { cn } from "@/lib/utils";
 
 export type TooltipIconButtonProps = ButtonProps & {
   tooltip: string;
+  /**
+   * @default "bottom"
+   */
   side?: "top" | "bottom" | "left" | "right";
+  /**
+   * @default 200
+   */
   delayDuration?: number;
+  /**
+   * @default "ghost"
+   */
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
 };
 
 export const TooltipIconButton = forwardRef<
@@ -22,7 +38,15 @@ export const TooltipIconButton = forwardRef<
   TooltipIconButtonProps
 >(
   (
-    { children, tooltip, side = "bottom", className, delayDuration, ...rest },
+    {
+      children,
+      tooltip,
+      side = "bottom",
+      className,
+      delayDuration = 200,
+      variant = "ghost",
+      ...rest
+    },
     ref,
   ) => {
     return (
@@ -30,7 +54,7 @@ export const TooltipIconButton = forwardRef<
         <Tooltip delayDuration={delayDuration}>
           <TooltipTrigger asChild>
             <Button
-              variant="ghost"
+              variant={variant}
               size="icon"
               {...rest}
               className={cn("size-6 p-1", className)}

@@ -1,5 +1,8 @@
 # Open Agent Platform
 
+> [!WARNING]
+> This platform is currently a work in progress and is not ready for production use.
+
 # Setup
 
 ## Deployments

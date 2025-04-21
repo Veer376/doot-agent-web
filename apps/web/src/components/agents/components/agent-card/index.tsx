@@ -11,7 +11,7 @@ import {
 import { Agent } from "@/types/agent";
 import { isDefaultAssistant } from "@/lib/agent-utils";
 import { DefaultStar } from "@/components/ui/default-star";
-import NextLink from "next/link"; // Add this import
+import NextLink from "next/link";
 import { SquareArrowOutUpRight } from "lucide-react";
 
 interface AgentCardProps {
@@ -22,8 +22,8 @@ export function AgentCard({ agent }: AgentCardProps) {
   const isDefault = isDefaultAssistant(agent);
 
   return (
-    <Card className="w-[350px]">
-      <CardHeader>
+    <Card className="w-[350px] flex-shrink-0">
+      <CardHeader className="w-full">
         <CardTitle className="flex items-center justify-between">
           <span>{isDefault ? "Default agent" : agent.name}</span>
           {isDefault && <DefaultStar className="opacity-100" />}
@@ -34,7 +34,7 @@ export function AgentCard({ agent }: AgentCardProps) {
           </CardDescription>
         ) : null}
       </CardHeader>
-      <CardFooter className="flex justify-between gap-2">
+      <CardFooter className="flex w-full justify-between gap-2">
         <Button
           onClick={() => alert("Inspect not implemented")}
           variant="outline"

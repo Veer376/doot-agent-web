@@ -20,9 +20,9 @@ export default function AgentsInterface(): React.ReactNode {
   return (
     <div className="flex flex-col gap-16 p-6">
       {deployments.map((deployment) => {
-        const agentsGroupedByGraphs = groupAgentsByGraphs(agents.filter(
-          (agent) => agent.deploymentId === deployment.id
-        ));
+        const agentsGroupedByGraphs = groupAgentsByGraphs(
+          agents.filter((agent) => agent.deploymentId === deployment.id),
+        );
 
         return (
           <div
@@ -60,7 +60,7 @@ export default function AgentsInterface(): React.ReactNode {
                         <CirclePlus className="size-5" />
                       </TooltipIconButton>
                     </div>
-  
+
                     <div className="flex w-full gap-2 overflow-x-auto">
                       {sortedAgentGroup.map((agent, index) => (
                         <AgentCard
@@ -74,7 +74,7 @@ export default function AgentsInterface(): React.ReactNode {
               })}
             </div>
           </div>
-        )
+        );
       })}
     </div>
   );

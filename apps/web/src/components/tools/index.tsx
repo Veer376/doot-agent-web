@@ -1,19 +1,44 @@
 "use client";
 
-import React from "react";
+import { Tool } from "@/types/tool";
+import React, { useEffect, useState } from "react";
+import useMCP from "@/hooks/use-mcp";
+import { Wrench } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ToolCard } from "./components/tool-card";
+import { DUMMY_TOOLS } from "./dummy";
 
 /**
  * The parent component containing the tools interface.
  */
 export default function ToolsInterface(): React.ReactNode {
+  const [tools, setTools] = useState<Tool[]>(DUMMY_TOOLS);
+  const { getTools } = useMCP();
+
+  useEffect(() => {
+    if (tools.length) return;
+
+    getTools("http://localhost:8000", {
+      name: "Tools Interface",
+      version: "1.0.0",
+    }).then((tools) => setTools(tools));
+  }, []);
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+    <div className="flex w-full flex-col gap-4 p-6">
+      <div className="flex items-center justify-start gap-2">
+        <Wrench className="size-6" />
+        <p className="text-lg font-semibold tracking-tight">Tools</p>
       </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+      <Separator />
+      <div className="flex flex-wrap gap-4 space-y-3">
+        {tools.map((tool, index) => (
+          <ToolCard
+            key={`${tool.name}-${index}`}
+            tool={tool}
+          />
+        ))}
+      </div>
     </div>
   );
 }

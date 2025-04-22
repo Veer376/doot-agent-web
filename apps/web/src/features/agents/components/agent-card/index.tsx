@@ -14,6 +14,7 @@ import { DefaultStar } from "@/components/ui/default-star";
 import NextLink from "next/link";
 import { SquareArrowOutUpRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EditAgentDialog } from "../edit-agent-dialog";
 
 interface AgentCardProps {
   agent: Agent;
@@ -36,13 +37,7 @@ export function AgentCard({ agent }: AgentCardProps) {
         ) : null}
       </CardHeader>
       <CardFooter className="flex w-full justify-between gap-2">
-        <Button
-          onClick={() => alert("Inspect not implemented")}
-          variant="outline"
-          className="w-1/4"
-        >
-          Inspect
-        </Button>
+        <EditAgentDialog agent={agent} />
         <NextLink
           href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
           target="_blank"

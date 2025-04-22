@@ -48,8 +48,55 @@ export function useAgents() {
     }
   };
 
+  const updateAgent = async (
+    deploymentId: string,
+    agentId: string,
+    args: {
+      name: string;
+      description: string;
+      config: Record<string, any>;
+    },
+  ): Promise<Assistant | undefined> => {
+    try {
+      const client = createClient(deploymentId);
+      const agent = await client.assistants.update(agentId, {
+        metadata: {
+          description: args.description,
+        },
+        name: args.name,
+        config: {
+          configurable: {
+            ...args.config,
+          },
+        },
+      });
+      return agent;
+    } catch (e) {
+      console.error("Failed to update agent", e);
+      toast.error("Failed to update agent");
+      return undefined;
+    }
+  };
+
+  const deleteAgent = async (
+    deploymentId: string,
+    agentId: string,
+  ): Promise<boolean> => {
+    try {
+      const client = createClient(deploymentId);
+      await client.assistants.delete(agentId);
+      return true;
+    } catch (e) {
+      console.error("Failed to delete agent", e);
+      toast.error("Failed to delete agent");
+      return false;
+    }
+  };
+
   return {
     getAgentConfigSchema,
     createAgent,
+    updateAgent,
+    deleteAgent,
   };
 }

@@ -43,6 +43,9 @@ interface ConfigFieldProps {
   max?: number;
   step?: number;
   className?: string;
+  // Optional props for external state management
+  value?: any;
+  setValue?: (value: any) => void;
 }
 
 export function ConfigField({
@@ -56,39 +59,61 @@ export function ConfigField({
   max,
   step = 1,
   className,
+  value: externalValue, // Rename to avoid conflict
+  setValue: externalSetValue, // Rename to avoid conflict
 }: ConfigFieldProps) {
-  const { config, updateConfig } = useConfigStore();
+  const store = useConfigStore();
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  const value = config[id];
+  // Determine whether to use external state or Zustand store
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const currentValue = isExternallyManaged ? externalValue : store.config[id];
 
   const handleChange = (newValue: any) => {
-    updateConfig(id, newValue);
+    setJsonError(null); // Clear JSON error on any change
+    if (isExternallyManaged) {
+      externalSetValue!(newValue); // Use non-null assertion as we checked existence
+    } else {
+      store.updateConfig(id, newValue);
+    }
   };
 
   const handleJsonChange = (jsonString: string) => {
     try {
       if (!jsonString.trim()) {
-        updateConfig(id, undefined);
+        handleChange(undefined); // Use the unified handleChange
         setJsonError(null);
         return;
       }
 
-      updateConfig(id, jsonString);
-      // Attempt to parse, but only so it can error if it's invalid. We do not
-      // want to use the parsed string.
+      // Attempt to parse for validation first
       JSON.parse(jsonString);
+      // If parsing succeeds, call handleChange with the raw string and clear error
+      handleChange(jsonString); // Use the unified handleChange
       setJsonError(null);
     } catch (_error) {
+      // If parsing fails, update state with invalid string but set error
+      // This allows the user to see their invalid input and the error message
+      if (isExternallyManaged) {
+        externalSetValue!(jsonString);
+      } else {
+        store.updateConfig(id, jsonString);
+      }
       setJsonError("Invalid JSON format");
     }
   };
 
   const handleFormatJson = (jsonString: string) => {
     try {
-      const formatted = JSON.stringify(JSON.parse(jsonString), null, 2);
-      handleJsonChange(formatted);
+      const parsed = JSON.parse(jsonString);
+      const formatted = JSON.stringify(parsed, null, 2);
+      // Directly use handleChange to update with the formatted string
+      handleChange(formatted);
+      setJsonError(null); // Clear error on successful format
     } catch (_error) {
+      // If formatting fails (because input is not valid JSON), set the error state
+      // Do not change the underlying value that failed to parse/format
       setJsonError("Invalid JSON format");
     }
   };
@@ -105,7 +130,7 @@ export function ConfigField({
         {type === "switch" && (
           <Switch
             id={id}
-            checked={!!value}
+            checked={!!currentValue} // Use currentValue
             onCheckedChange={handleChange}
           />
         )}
@@ -116,7 +141,7 @@ export function ConfigField({
       {type === "text" && (
         <Input
           id={id}
-          value={value || ""}
+          value={currentValue || ""} // Use currentValue
           onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
         />
@@ -125,7 +150,7 @@ export function ConfigField({
       {type === "textarea" && (
         <Textarea
           id={id}
-          value={value || ""}
+          value={currentValue || ""} // Use currentValue
           onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
           className="min-h-[100px]"
@@ -136,8 +161,21 @@ export function ConfigField({
         <Input
           id={id}
           type="number"
-          value={value !== undefined ? value : ""}
-          onChange={(e) => handleChange(Number(e.target.value))}
+          value={currentValue !== undefined ? currentValue : ""} // Use currentValue
+          onChange={(e) => {
+            // Handle potential empty string or invalid number input
+            const val = e.target.value;
+            if (val === "") {
+              handleChange(undefined); // Treat empty string as clearing the value
+            } else {
+              const num = Number(val);
+              // Only call handleChange if it's a valid number
+              if (!isNaN(num)) {
+                handleChange(num);
+              }
+              // If not a valid number (e.g., '1.2.3'), do nothing, keep the last valid state
+            }
+          }}
           min={min}
           max={max}
           step={step}
@@ -147,32 +185,55 @@ export function ConfigField({
       {type === "slider" && (
         <div className="pt-2">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs text-gray-500">{min}</span>
+            <span className="text-xs text-gray-500">{min ?? ""}</span>
             <span className="text-sm font-medium">
-              {value !== undefined ? value : (min! + max!) / 2}
+              {/* Use currentValue */}
+              {currentValue !== undefined
+                ? currentValue
+                : min !== undefined && max !== undefined
+                  ? (min + max) / 2
+                  : ""}
             </span>
-            <span className="text-xs text-gray-500">{max}</span>
+            <span className="text-xs text-gray-500">{max ?? ""}</span>
           </div>
           <Slider
             id={id}
-            value={[value !== undefined ? value : (min! + max!) / 2]}
+            // Use currentValue, provide default based on min/max if undefined
+            value={[
+              currentValue !== undefined
+                ? currentValue
+                : min !== undefined && max !== undefined
+                  ? (min + max) / 2
+                  : 0,
+            ]}
             min={min}
             max={max}
             step={step}
             onValueChange={(vals) => handleChange(vals[0])}
+            disabled={min === undefined || max === undefined} // Disable slider if min/max not provided
           />
         </div>
       )}
 
       {type === "select" && (
         <Select
-          value={value}
+          value={currentValue ?? ""} // Use currentValue, provide default empty string if undefined/null
           onValueChange={handleChange}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select an option" />
+            {/* Display selected value or placeholder */}
+            <SelectValue placeholder={placeholder || "Select an option"} />
           </SelectTrigger>
           <SelectContent>
+            {/* Add a placeholder/default option if needed */}
+            {placeholder && (
+              <SelectItem
+                value=""
+                disabled
+              >
+                {placeholder}
+              </SelectItem>
+            )}
             {options.map((option) => (
               <SelectItem
                 key={option.value}
@@ -189,30 +250,44 @@ export function ConfigField({
         <>
           <Textarea
             id={id}
-            value={value ?? ""}
+            value={currentValue ?? ""} // Use currentValue
             onChange={(e) => handleJsonChange(e.target.value)}
             placeholder={placeholder || '{\n  "key": "value"\n}'}
-            className="min-h-[120px] font-mono text-sm"
+            className={cn(
+              "min-h-[120px] font-mono text-sm",
+              jsonError &&
+                "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
+            )}
           />
-          <div className="flex w-full items-center justify-center gap-2">
+          <div className="flex w-full items-start justify-between gap-2 pt-1">
+            {" "}
+            {/* Use items-start */}
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleFormatJson(value ?? "")}
-              disabled={!!jsonError}
-              className="mr-auto"
+              onClick={() => handleFormatJson(currentValue ?? "")}
+              // Disable if value is empty, not a string, or already has a JSON error
+              disabled={
+                !currentValue || typeof currentValue !== "string" || !!jsonError
+              }
+              className="mt-1" // Add margin top to align better with textarea
             >
               Format
             </Button>
             {jsonError && (
               <Alert
                 variant="destructive"
-                className="py-2"
+                className="flex-grow px-3 py-1" // Adjusted styling
               >
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  {jsonError}
-                </AlertDescription>
+                <div className="flex items-center gap-2">
+                  {" "}
+                  {/* Ensure icon and text are aligned */}
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />{" "}
+                  {/* Added flex-shrink-0 */}
+                  <AlertDescription className="text-xs">
+                    {jsonError}
+                  </AlertDescription>
+                </div>
               </Alert>
             )}
           </div>

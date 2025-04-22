@@ -42,6 +42,15 @@ type AgentsContextType = {
    * Each subarray contains the agents for a specific deployment.
    */
   agents: Agent[];
+  /**
+   * Refreshes the agents list by fetching the latest agents from the API,
+   * and updating the state.
+   */
+  refreshAgents: () => Promise<void>;
+  /**
+   * Whether the agents list is currently loading.
+   */
+  loading: boolean;
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
@@ -50,17 +59,36 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const deployments = getDeployments();
   const [agents, setAgents] = useState<Agent[]>([]);
-  const isLoading = useRef(false);
+  const firstRequestMade = useRef(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (agents.length > 0 || isLoading.current) return;
+    if (agents.length > 0 || firstRequestMade.current) return;
 
-    isLoading.current = true;
-    getAgents(deployments).then(setAgents);
+    firstRequestMade.current = true;
+    setLoading(true);
+    getAgents(deployments)
+      .then(setAgents)
+      .finally(() => setLoading(false));
   }, []);
 
+  async function refreshAgents() {
+    try {
+      const newAgents = await getAgents(deployments);
+      setAgents(newAgents);
+    } catch (e) {
+      console.error("Failed to refresh agents", e);
+    }
+  }
+
+  const agentsContextValue = {
+    agents,
+    loading,
+    refreshAgents,
+  };
+
   return (
-    <AgentsContext.Provider value={{ agents }}>
+    <AgentsContext.Provider value={agentsContextValue}>
       {children}
     </AgentsContext.Provider>
   );

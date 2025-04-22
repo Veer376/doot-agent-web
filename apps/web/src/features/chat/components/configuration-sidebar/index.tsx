@@ -13,9 +13,9 @@ import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
-import { createClient } from "@/lib/client";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAgents } from "@/hooks/use-agents";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -36,30 +36,23 @@ export function ConfigurationSidebar({
     ConfigurableFieldUIMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const { getAgentConfigSchema } = useAgents();
 
   useEffect(() => {
     if (!agentId || !deploymentId) return;
 
-    const getAssistantConfigSchemas = async () => {
-      setLoading(true);
-      try {
-        const client = createClient(deploymentId);
-        const schemas = await client.assistants.getSchemas(agentId);
-        return schemas.config_schema;
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    getAgentConfigSchema(agentId, deploymentId)
+      .then((schemas) => {
+        if (!schemas) return;
+        const configFields = configSchemaToConfigurableFields(schemas);
+        setConfigurations(configFields);
 
-    getAssistantConfigSchemas().then((schemas) => {
-      if (!schemas) return;
-      const configFields = configSchemaToConfigurableFields(schemas);
-      setConfigurations(configFields);
-
-      // Set default config values based on configuration fields
-      const { setDefaultConfig } = useConfigStore.getState();
-      setDefaultConfig(configFields);
-    });
+        // Set default config values based on configuration fields
+        const { setDefaultConfig } = useConfigStore.getState();
+        setDefaultConfig(configFields);
+      })
+      .finally(() => setLoading(false));
   }, [agentId, deploymentId]);
 
   const handleSave = () => {

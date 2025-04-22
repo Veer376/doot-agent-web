@@ -136,6 +136,7 @@ export function CreateAgentDialog({
             configurations={configurations}
             config={config}
             setConfig={setConfig}
+            agentId={agentId}
           />
         )}
         <AlertDialogFooter>

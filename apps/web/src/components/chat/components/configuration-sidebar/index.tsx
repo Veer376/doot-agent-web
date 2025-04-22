@@ -54,6 +54,8 @@ export function ConfigurationSidebar({
     getAssistantConfigSchemas().then((schemas) => {
       if (!schemas) return;
       const configFields = configSchemaToConfigurableFields(schemas);
+      console.log("schemas", schemas);
+      console.log("configFields", configFields);
       setConfigurations(configFields);
 
       // Set default config values based on configuration fields

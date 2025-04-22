@@ -41,6 +41,12 @@ export function configSchemaToConfigurableFields(
         label: key,
         ...uiConfig,
       });
+    } else {
+      // If the `x_lg_ui_config` metadata is not found, default to text input
+      fields.push({
+        label: key,
+        type: "text",
+      });
     }
   }
   return fields;

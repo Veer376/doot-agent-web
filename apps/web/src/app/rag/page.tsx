@@ -1,6 +1,6 @@
 "use client";
 
-import RAGInterface from "@/components/rag";
+import RAGInterface from "@/features/rag";
 import {
   Breadcrumb,
   BreadcrumbItem,

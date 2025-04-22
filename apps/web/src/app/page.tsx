@@ -1,6 +1,6 @@
 "use client";
 
-import ChatInterface from "@/components/chat";
+import ChatInterface from "@/features/chat";
 import {
   Breadcrumb,
   BreadcrumbItem,

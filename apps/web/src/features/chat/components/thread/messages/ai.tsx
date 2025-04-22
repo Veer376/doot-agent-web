@@ -1,7 +1,7 @@
 import { parsePartialJson } from "@langchain/core/output_parsers";
-import { useStreamContext } from "@/components/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
 import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
-import { getContentString } from "@/components/chat/utils/content-string";
+import { getContentString } from "@/features/chat/utils/content-string";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";

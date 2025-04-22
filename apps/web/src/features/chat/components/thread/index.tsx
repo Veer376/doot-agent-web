@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
+import { useConfigStore } from "../../hooks/use-config-store";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -64,6 +65,8 @@ function ScrollToBottom(props: { className?: string }) {
 
 export function Thread() {
   const [threadId, setThreadId] = useQueryState("threadId");
+  const [agentId] = useQueryState("agentId");
+  const { getAgentConfig } = useConfigStore();
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
@@ -122,6 +125,7 @@ export function Thread() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    if (!agentId) return;
     setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {
@@ -143,6 +147,9 @@ export function Thread() {
             newHumanMessage,
           ],
         }),
+        config: {
+          configurable: getAgentConfig(agentId),
+        },
       },
     );
 
@@ -152,12 +159,17 @@ export function Thread() {
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
   ) => {
+    if (!agentId) return;
+
     // Do this so the loading state is correct
     prevMessageLength.current = prevMessageLength.current - 1;
     setFirstTokenReceived(false);
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
+      config: {
+        configurable: getAgentConfig(agentId),
+      },
     });
   };
 

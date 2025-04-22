@@ -5,6 +5,8 @@ import { getContentString } from "@/features/chat/utils/content-string";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
+import { useQueryState } from "nuqs";
+import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 
 function EditableContent({
   value,
@@ -39,6 +41,9 @@ export function HumanMessage({
   message: Message;
   isLoading: boolean;
 }) {
+  const [agentId] = useQueryState("agentId");
+  const { getAgentConfig } = useConfigStore();
+
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
@@ -48,6 +53,8 @@ export function HumanMessage({
   const contentString = getContentString(message.content);
 
   const handleSubmitEdit = () => {
+    if (!agentId) return;
+
     setIsEditing(false);
 
     const newMessage: Message = { type: "human", content: value };
@@ -64,6 +71,9 @@ export function HumanMessage({
             ...values,
             messages: [...(values.messages ?? []), newMessage],
           };
+        },
+        config: {
+          configurable: getAgentConfig(agentId),
         },
       },
     );

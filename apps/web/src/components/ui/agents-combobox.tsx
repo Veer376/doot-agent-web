@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Computer, Star as DefaultStar } from "lucide-react";
+import { Check, ChevronsUpDown, Star as DefaultStar } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,9 @@ const getSelectedAgentValue = (
 ): React.ReactNode => {
   const [selectedAssistantId, selectedDeploymentId] = value.split(":");
   const selectedAgent = agents.find(
-    (item) => item.assistant_id === selectedAssistantId && item.deploymentId === selectedDeploymentId,
+    (item) =>
+      item.assistant_id === selectedAssistantId &&
+      item.deploymentId === selectedDeploymentId,
   );
 
   if (selectedAgent) {
@@ -105,7 +107,8 @@ export function AgentsCombobox({
                 (agent) => agent.deploymentId === deployment.id,
               );
               // Group filtered agents by graph
-              const agentsGroupedByGraphs = groupAgentsByGraphs(deploymentAgents);
+              const agentsGroupedByGraphs =
+                groupAgentsByGraphs(deploymentAgents);
 
               // Only render the deployment group if it has agents
               if (agentsGroupedByGraphs.length === 0) {
@@ -114,59 +117,59 @@ export function AgentsCombobox({
 
               return (
                 <React.Fragment key={deployment.id}>
-                <CommandGroup
-                  heading={deployment.name} // Use deployment name as heading
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
-                >
-                  {/* Map over graphs within the deployment */}
-                  {agentsGroupedByGraphs.map((agentGroup) => {
-                    const sortedAgentGroup = sortAgentGroup(agentGroup);
-                    return (
-                      // Nested CommandGroup for the graph
-                      <CommandGroup
-                        key={`${deployment.id}-${agentGroup[0].graph_id}`}
-                        heading={agentGroup[0].graph_id} // Use graph_id as heading
-                        // Add some styling/indentation if desired for the nested group
-                        className="ml-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-normal"
-                      >
-                        {/* Map over agents within the graph */}
-                        {sortedAgentGroup.map((item) => (
-                          <CommandItem
-                            key={item.assistant_id}
-                            value={`${item.assistant_id}:${item.deploymentId}`}
-                            onSelect={(currentValue) => {
-                              setValue?.(
-                                currentValue === value ? "" : currentValue,
-                              );
-                              setOpen?.(false);
-                            }}
-                            className="flex w-full items-center justify-between"
-                          >
-                            <p className="line-clamp-1 flex-1 truncate pr-2">
-                              {isDefaultAssistant(item)
-                                ? "Default agent"
-                                : item.name}
-                            </p>
-                            <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                              {isDefaultAssistant(item) && (
-                                <DefaultStar className="opacity-100" />
-                              )}
-                              <Check
-                                className={cn(
-                                  value ===
-                                    `${item.assistant_id}:${item.deploymentId}`
-                                    ? "opacity-100"
-                                    : "opacity-0",
+                  <CommandGroup
+                    heading={deployment.name} // Use deployment name as heading
+                    className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium"
+                  >
+                    {/* Map over graphs within the deployment */}
+                    {agentsGroupedByGraphs.map((agentGroup) => {
+                      const sortedAgentGroup = sortAgentGroup(agentGroup);
+                      return (
+                        // Nested CommandGroup for the graph
+                        <CommandGroup
+                          key={`${deployment.id}-${agentGroup[0].graph_id}`}
+                          heading={agentGroup[0].graph_id} // Use graph_id as heading
+                          // Add some styling/indentation if desired for the nested group
+                          className="ml-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-normal"
+                        >
+                          {/* Map over agents within the graph */}
+                          {sortedAgentGroup.map((item) => (
+                            <CommandItem
+                              key={item.assistant_id}
+                              value={`${item.assistant_id}:${item.deploymentId}`}
+                              onSelect={(currentValue) => {
+                                setValue?.(
+                                  currentValue === value ? "" : currentValue,
+                                );
+                                setOpen?.(false);
+                              }}
+                              className="flex w-full items-center justify-between"
+                            >
+                              <p className="line-clamp-1 flex-1 truncate pr-2">
+                                {isDefaultAssistant(item)
+                                  ? "Default agent"
+                                  : item.name}
+                              </p>
+                              <div className="flex flex-shrink-0 items-center justify-end gap-2">
+                                {isDefaultAssistant(item) && (
+                                  <DefaultStar className="opacity-100" />
                                 )}
-                              />
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    );
-                  })}
-                </CommandGroup>
-                <CommandSeparator />
+                                <Check
+                                  className={cn(
+                                    value ===
+                                      `${item.assistant_id}:${item.deploymentId}`
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      );
+                    })}
+                  </CommandGroup>
+                  <CommandSeparator />
                 </React.Fragment>
               );
             })}

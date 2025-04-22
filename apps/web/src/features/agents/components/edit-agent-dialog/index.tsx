@@ -9,11 +9,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useAgents } from "@/hooks/use-agents";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
-import { Bot, CirclePlus, LoaderCircle, Pencil, Trash, X } from "lucide-react";
+import { Bot, LoaderCircle, Pencil, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -24,10 +23,8 @@ interface EditAgentDialogProps {
   agent: Agent;
 }
 
-export function EditAgentDialog({
-  agent
-}: EditAgentDialogProps) {
-  const { getAgentConfigSchema } = useAgents();
+export function EditAgentDialog({ agent }: EditAgentDialogProps) {
+  const { getAgentConfigSchema, updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
@@ -54,7 +51,8 @@ export function EditAgentDialog({
         if (!schemas) return;
         const configFields = configSchemaToConfigurableFields(schemas);
         const configFieldsWithDefaults = configFields.map((f) => {
-          const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
+          const defaultConfig =
+            agent.config?.configurable?.[f.label] ?? f.default;
           return {
             ...f,
             default: defaultConfig,
@@ -78,21 +76,45 @@ export function EditAgentDialog({
     }
 
     setSubmitting(true);
-    // const newAgent = await createAgent(deploymentId, graphId, {
-    //   name,
-    //   description,
-    //   config,
-    // });
+    const updatedAgent = await updateAgent(
+      agent.deploymentId,
+      agent.assistant_id,
+      {
+        name,
+        description,
+        config,
+      },
+    );
     setSubmitting(false);
 
-    // if (!newAgent) {
-    //   toast.error("Failed to create agent", {
-    //     description: "Please try again",
-    //   });
-    //   return;
-    // }
+    if (!updatedAgent) {
+      toast.error("Failed to update agent", {
+        description: "Please try again",
+      });
+      return;
+    }
 
-    toast.success("Agent created successfully!");
+    toast.success("Agent updated successfully!");
+
+    setOpen(false);
+    clearState();
+    // Do not await so that the refresh is non-blocking
+    refreshAgents();
+  };
+
+  const handleDelete = async () => {
+    setSubmitting(true);
+    const deleted = await deleteAgent(agent.deploymentId, agent.assistant_id);
+    setSubmitting(false);
+
+    if (!deleted) {
+      toast.error("Failed to delete agent", {
+        description: "Please try again",
+      });
+      return;
+    }
+
+    toast.success("Agent deleted successfully!");
 
     setOpen(false);
     clearState();
@@ -104,6 +126,9 @@ export function EditAgentDialog({
     setConfig({});
     setName("");
     setDescription("");
+    setConfigurations([]);
+    setLoading(false);
+    setSubmitting(false);
   };
 
   return (
@@ -117,7 +142,10 @@ export function EditAgentDialog({
       }}
     >
       <AlertDialogTrigger asChild>
-        <Button variant="secondary" className="flex gap-1 items-center justify-center">
+        <Button
+          variant="secondary"
+          className="flex items-center justify-center gap-1"
+        >
           <Pencil className="size-4" />
           <span>Edit</span>
         </Button>
@@ -150,7 +178,7 @@ export function EditAgentDialog({
         )}
         <AlertDialogFooter>
           <Button
-            onClick={(e) => handleSubmit(e)}
+            onClick={handleDelete}
             className="flex w-full items-center justify-center gap-1"
             disabled={loading || submitting}
             variant="destructive"
@@ -159,7 +187,7 @@ export function EditAgentDialog({
             <span>{submitting ? "Deleting..." : "Delete Agent"}</span>
           </Button>
           <Button
-            onClick={(e) => handleSubmit(e)}
+            onClick={handleSubmit}
             className="flex w-full items-center justify-center gap-1"
             disabled={loading || submitting}
           >

@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { CirclePlus, Computer } from "lucide-react";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { GraphSVG } from "@/components/icons/graph";
+import { CreateAgentDialog } from "./components/create-agent-dialog";
 
 /**
  * The parent component containing the agents interface.
@@ -51,14 +52,11 @@ export default function AgentsInterface(): React.ReactNode {
                           {agentGroup[0].graph_id}
                         </p>
                       </div>
-                      <TooltipIconButton
-                        onClick={() => alert("New agent not implemented")}
-                        className="size-8"
-                        tooltip="New Agent"
-                        delayDuration={200}
-                      >
-                        <CirclePlus className="size-5" />
-                      </TooltipIconButton>
+                      <CreateAgentDialog
+                        deploymentId={agentGroup[0].deploymentId}
+                        graphId={agentGroup[0].graph_id}
+                        agentId={agentGroup[0].assistant_id}
+                      />
                     </div>
 
                     <div className="flex w-full gap-2 overflow-x-auto">

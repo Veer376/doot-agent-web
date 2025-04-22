@@ -5,36 +5,63 @@ import { persist } from "zustand/middleware";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 
 interface ConfigState {
-  config: Record<string, any>;
-  updateConfig: (key: string, value: any) => void;
-  resetConfig: () => void;
-  setDefaultConfig: (configurations: ConfigurableFieldUIMetadata[]) => void;
+  configsByAgentId: Record<string, Record<string, any>>;
+  getAgentConfig: (agentId: string) => Record<string, any>;
+  updateConfig: (agentId: string, key: string, value: any) => void;
+  resetConfig: (agentId: string) => void;
+  setDefaultConfig: (
+    agentId: string,
+    configurations: ConfigurableFieldUIMetadata[],
+  ) => void;
 }
 
 export const useConfigStore = create<ConfigState>()(
   persist(
     (set, get) => ({
-      config: {},
-      updateConfig: (key, value) =>
+      configsByAgentId: {},
+
+      getAgentConfig: (agentId: string) => {
+        const state = get();
+        return state.configsByAgentId[agentId] || {};
+      },
+
+      updateConfig: (agentId, key, value) =>
         set((state) => ({
-          config: {
-            ...state.config,
-            [key]: value,
+          configsByAgentId: {
+            ...state.configsByAgentId,
+            [agentId]: {
+              ...(state.configsByAgentId[agentId] || {}),
+              [key]: value,
+            },
           },
         })),
-      resetConfig: () => {
-        // Get current defaultConfig based on provided configurations
-        const currentState = get();
-        // If setDefaultConfig was never called, fallback to the original defaults
-        const configToUse = currentState.config.__defaultValues;
 
-        set({ config: { ...configToUse } });
+      resetConfig: (agentId) => {
+        set((state) => {
+          const agentConfig = state.configsByAgentId[agentId];
+          if (!agentConfig || !agentConfig.__defaultValues) {
+            // If no config or default values exist for this agent, do nothing or set to empty
+            return state;
+          }
+          const defaultsToUse = { ...agentConfig.__defaultValues };
+          return {
+            configsByAgentId: {
+              ...state.configsByAgentId,
+              [agentId]: defaultsToUse,
+            },
+          };
+        });
       },
-      setDefaultConfig: (configurations: ConfigurableFieldUIMetadata[]) => {
+
+      setDefaultConfig: (agentId, configurations) => {
+        const state = get();
+        // Only set default config if it hasn't been set for this agentId yet
+        if (state.configsByAgentId[agentId]?.__defaultValues) {
+          return; // Defaults already set, potentially overwritten by user, don't reset
+        }
+
         // Create default config object from configurations
         const defaultConfig: Record<string, any> = {};
-
-        // Add default values from configurations
         configurations.forEach((config) => {
           if (config.default !== undefined) {
             defaultConfig[config.label] = config.default;
@@ -44,16 +71,19 @@ export const useConfigStore = create<ConfigState>()(
         // Store the default values for reset
         defaultConfig.__defaultValues = { ...defaultConfig };
 
-        // Only set config if it hasn't been set before (to avoid overriding user changes)
-        set((state) => ({
-          config: state.config.__defaultValues
-            ? state.config
-            : { ...defaultConfig },
+        set((currentState) => ({
+          configsByAgentId: {
+            ...currentState.configsByAgentId,
+            // Initialize with defaults if no config exists yet for this agent
+            [agentId]: currentState.configsByAgentId[agentId]
+              ? currentState.configsByAgentId[agentId] // Keep existing if user already interacted
+              : defaultConfig,
+          },
         }));
       },
     }),
     {
-      name: "ai-config-storage",
+      name: "ai-config-storage", // Keep the same storage key, but manage agents inside
     },
   ),
 );

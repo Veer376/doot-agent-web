@@ -77,8 +77,8 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
 
     setSubmitting(true);
     const updatedAgent = await updateAgent(
-      agent.deploymentId,
       agent.assistant_id,
+      agent.deploymentId,
       {
         name,
         description,

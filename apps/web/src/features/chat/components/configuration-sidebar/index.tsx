@@ -16,51 +16,80 @@ import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 export interface AIConfigPanelProps {
   className?: string;
   defaultOpen?: boolean;
-  onSave?: (config: any) => void;
 }
 
 export function ConfigurationSidebar({
   className,
   defaultOpen = false,
-  onSave,
 }: AIConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const { config, resetConfig } = useConfigStore();
+  const { configsByAgentId, resetConfig } = useConfigStore();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const { getAgentConfigSchema } = useAgents();
+  const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
 
   useEffect(() => {
     if (!agentId || !deploymentId) return;
 
     setLoading(true);
-    getAgentConfigSchema(agentId, deploymentId)
-      .then((schemas) => {
-        if (!schemas) return;
-        const configFields = configSchemaToConfigurableFields(schemas);
-        setConfigurations(configFields);
+    getAgent(agentId, deploymentId)
+      .then(async (a) => {
+        if (!a) {
+          toast.error("Failed to get agent");
+          return;
+        }
 
+        const schema = await getAgentConfigSchema(agentId, deploymentId);
+        if (!schema) return;
+        const configFields = configSchemaToConfigurableFields(schema);
+
+        const configFieldsWithDefaults = configFields.map((f) => {
+          const defaultConfig = a.config?.configurable?.[f.label] ?? f.default;
+          return {
+            ...f,
+            default: defaultConfig,
+          };
+        });
+
+        setConfigurations(configFieldsWithDefaults);
         // Set default config values based on configuration fields
         const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(configFields);
+        setDefaultConfig(agentId, configFieldsWithDefaults);
+      })
+      .catch((e) => {
+        console.error("Failed to get agent", e);
+        toast.error("Failed to get agent");
       })
       .finally(() => setLoading(false));
   }, [agentId, deploymentId]);
 
-  const handleSave = () => {
-    if (onSave) {
-      onSave(config);
-    } else {
-      alert("Save config not implemented");
+  const handleSave = async () => {
+    if (!agentId || !deploymentId) return;
+
+    const updatedAgent = await updateAgent(agentId, deploymentId, {
+      config: configsByAgentId[agentId],
+    });
+    if (!updatedAgent) {
+      toast.error("Failed to update agent configuration");
+      return;
     }
+
+    toast.success("Agent configuration saved successfully");
   };
 
   return (
@@ -77,21 +106,41 @@ export function ConfigurationSidebar({
             <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4">
               <h2 className="text-lg font-semibold">Agent Configuration</h2>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetConfig}
-                >
-                  <Trash2 className="mr-1 h-4 w-4" />
-                  Reset
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                >
-                  <Save className="mr-1 h-4 w-4" />
-                  Save
-                </Button>
+                <TooltipProvider>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!agentId) return;
+                          resetConfig(agentId);
+                        }}
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" />
+                        Reset
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reset the configuration to the last saved state</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                      >
+                        <Save className="mr-1 h-4 w-4" />
+                        Save
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Save your changes to the agent</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
@@ -110,7 +159,7 @@ export function ConfigurationSidebar({
                   className="m-0 p-4"
                 >
                   <ConfigSection title="Configuration">
-                    {loading ? (
+                    {loading || !agentId ? (
                       <div className="space-y-4">
                         <Skeleton className="h-8 w-full" />
                         <Skeleton className="h-8 w-full" />
@@ -131,6 +180,7 @@ export function ConfigurationSidebar({
                           min={c.min}
                           max={c.max}
                           step={c.step}
+                          agentId={agentId}
                         />
                       ))
                     )}
@@ -159,24 +209,28 @@ export function ConfigurationSidebar({
                       label="Web Search"
                       type="switch"
                       description="Allow the AI to search the web for information"
+                      agentId=""
                     />
                     <ConfigField
                       id="enableCalculator"
                       label="Calculator"
                       type="switch"
                       description="Enable mathematical calculations"
+                      agentId=""
                     />
                     <ConfigField
                       id="enableCodeInterpreter"
                       label="Code Interpreter"
                       type="switch"
                       description="Run code snippets and return results"
+                      agentId=""
                     />
                     <ConfigField
                       id="enableImageGeneration"
                       label="Image Generation"
                       type="switch"
                       description="Generate images from text descriptions"
+                      agentId=""
                     />
                     <Separator className="my-2" />
                     <ConfigField
@@ -184,6 +238,7 @@ export function ConfigurationSidebar({
                       label="Custom Tools"
                       type="json"
                       description="Define custom tools in JSON format"
+                      agentId=""
                     />
                   </ConfigSection>
                 </TabsContent>

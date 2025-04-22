@@ -67,7 +67,6 @@ export async function GET(req: NextRequest, { params }: RequestParams) {
   if (!urlAndRoute) {
     return new Response("Deployment not found", { status: 404 });
   }
-  
 
   const { GET } = initApiPassthrough({
     apiKey: process.env.LANGSMITH_API_KEY,

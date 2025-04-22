@@ -18,10 +18,12 @@ import { ConfigField } from "@/features/chat/components/configuration-sidebar/co
 import { useAgents } from "@/hooks/use-agents";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
-import { Bot, CirclePlus } from "lucide-react";
+import { Bot, CirclePlus, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { useAgentsContext } from "@/providers/Agents";
 
 interface CreateAgentDialogProps {
   agentId: string;
@@ -69,7 +71,9 @@ function CreateAgentForm({
       <div className="flex w-full flex-col items-start justify-start gap-2 space-y-2">
         <p className="text-lg font-semibold tracking-tight">Agent Details</p>
         <div className="flex w-full flex-col items-start justify-start gap-2">
-          <Label htmlFor="oap_name">Name</Label>
+          <Label htmlFor="oap_name">
+            Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="oap_name"
             value={name}
@@ -78,7 +82,9 @@ function CreateAgentForm({
           />
         </div>
         <div className="flex w-full flex-col items-start justify-start gap-2">
-          <Label htmlFor="oap_description">Description</Label>
+          <Label htmlFor="oap_description">
+            Description <span className="text-red-500">*</span>
+          </Label>
           <Textarea
             id="oap_description"
             value={description}
@@ -123,7 +129,8 @@ export function CreateAgentDialog({
   deploymentId,
   graphId,
 }: CreateAgentDialogProps) {
-  const { getAgentConfigSchema } = useAgents();
+  const { getAgentConfigSchema, createAgent } = useAgents();
+  const { refreshAgents } = useAgentsContext();
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);
@@ -132,6 +139,7 @@ export function CreateAgentDialog({
   const [description, setDescription] = useState("");
   const [config, setConfig] = useState<Record<string, any>>({});
   const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (
@@ -152,11 +160,36 @@ export function CreateAgentDialog({
       .finally(() => setLoading(false));
   }, [agentId, deploymentId, open]);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleSubmit = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => {
     e.preventDefault();
-    console.log(config);
+    if (!name || !description) {
+      toast.warning("Name and description are required");
+      return;
+    }
+
+    setSubmitting(true);
+    const newAgent = await createAgent(deploymentId, graphId, {
+      name,
+      description,
+      config,
+    });
+    setSubmitting(false);
+
+    if (!newAgent) {
+      toast.error("Failed to create agent", {
+        description: "Please try again",
+      });
+      return;
+    }
+
+    toast.success("Agent created successfully!");
+
     setOpen(false);
     clearState();
+    // Do not await so that the refresh is non-blocking
+    refreshAgents();
   };
 
   const clearState = () => {
@@ -219,10 +252,10 @@ export function CreateAgentDialog({
           <Button
             onClick={(e) => handleSubmit(e)}
             className="flex w-full items-center justify-center gap-1"
-            disabled={loading}
+            disabled={loading || submitting}
           >
-            <Bot />
-            <span>Create Agent</span>
+            {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
+            <span>{submitting ? "Creating..." : "Create Agent"}</span>
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

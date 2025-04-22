@@ -13,6 +13,7 @@ import { isDefaultAssistant } from "@/lib/agent-utils";
 import { DefaultStar } from "@/components/ui/default-star";
 import NextLink from "next/link";
 import { SquareArrowOutUpRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AgentCardProps {
   agent: Agent;
@@ -56,6 +57,25 @@ export function AgentCard({ agent }: AgentCardProps) {
             <span>Chat</span>
           </Button>
         </NextLink>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export function LoadingAgentCard() {
+  return (
+    <Card className="w-[350px] flex-shrink-0">
+      <CardHeader className="w-full">
+        <CardTitle className="flex items-center justify-between">
+          <Skeleton className="h-6 w-1/2" />
+        </CardTitle>
+        <CardDescription>
+          <Skeleton className="h-5 w-3/4" />
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="flex w-full justify-between gap-2">
+        <Skeleton className="h-9 w-1/4" />
+        <Skeleton className="h-9 w-3/4" />
       </CardFooter>
     </Card>
   );

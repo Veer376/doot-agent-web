@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/client";
+import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 
 export function useAgents() {
@@ -15,7 +16,38 @@ export function useAgents() {
     }
   };
 
+  const createAgent = async (
+    deploymentId: string,
+    graphId: string,
+    args: {
+      name: string;
+      description: string;
+      config: Record<string, any>;
+    },
+  ): Promise<Assistant | undefined> => {
+    try {
+      const client = createClient(deploymentId);
+      const agent = await client.assistants.create({
+        graphId,
+        metadata: {
+          description: args.description,
+        },
+        name: args.name,
+        config: {
+          configurable: {
+            ...args.config,
+          },
+        },
+      });
+      return agent;
+    } catch (e) {
+      toast.error("Failed to create agent");
+      return undefined;
+    }
+  };
+
   return {
     getAgentConfigSchema,
+    createAgent,
   };
 }

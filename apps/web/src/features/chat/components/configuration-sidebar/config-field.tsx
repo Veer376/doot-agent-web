@@ -29,13 +29,13 @@ interface ConfigFieldProps {
   id: string;
   label: string;
   type:
-  | "text"
-  | "textarea"
-  | "number"
-  | "switch"
-  | "slider"
-  | "select"
-  | "json";
+    | "text"
+    | "textarea"
+    | "number"
+    | "switch"
+    | "slider"
+    | "select"
+    | "json";
   description?: string;
   placeholder?: string;
   options?: Option[];

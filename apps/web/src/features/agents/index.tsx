@@ -1,6 +1,10 @@
 "use client";
 
-import { groupAgentsByGraphs, sortAgentGroup } from "@/lib/agent-utils";
+import {
+  groupAgentsByGraphs,
+  isDefaultAssistant,
+  sortAgentGroup,
+} from "@/lib/agent-utils";
 import { useAgentsContext } from "@/providers/Agents";
 import React from "react";
 import { AgentCard, LoadingAgentCard } from "./components/agent-card";
@@ -61,22 +65,25 @@ export default function AgentsInterface(): React.ReactNode {
               {agentsGroupedByGraphs?.length > 0 && !loading ? (
                 agentsGroupedByGraphs.map((agentGroup) => {
                   const sortedAgentGroup = sortAgentGroup(agentGroup);
+                  const defaultAgent =
+                    sortedAgentGroup.find((a) => isDefaultAssistant(a)) ??
+                    sortedAgentGroup[0];
                   return (
                     <div
-                      key={agentGroup[0].graph_id}
+                      key={defaultAgent.graph_id}
                       className="flex flex-col gap-3"
                     >
                       <div className="flex items-center justify-start gap-4 text-gray-700">
                         <div className="flex items-center justify-start">
                           <GraphSVG />
                           <p className="font-medium tracking-tight">
-                            {agentGroup[0].graph_id}
+                            {defaultAgent.graph_id}
                           </p>
                         </div>
                         <CreateAgentDialog
-                          deploymentId={agentGroup[0].deploymentId}
-                          graphId={agentGroup[0].graph_id}
-                          agentId={agentGroup[0].assistant_id}
+                          deploymentId={defaultAgent.deploymentId}
+                          graphId={defaultAgent.graph_id}
+                          agentId={defaultAgent.assistant_id}
                         />
                       </div>
 

@@ -174,6 +174,7 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
             configurations={configurations}
             config={config}
             setConfig={setConfig}
+            agentId={agent.assistant_id}
           />
         )}
         <AlertDialogFooter>

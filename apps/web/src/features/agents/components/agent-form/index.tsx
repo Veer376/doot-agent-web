@@ -30,6 +30,7 @@ interface AgentFieldsFormProps {
   configurations: ConfigurableFieldUIMetadata[];
   config: Record<string, any>;
   setConfig: (config: Record<string, any>) => void;
+  agentId: string;
 }
 
 export function AgentFieldsForm({
@@ -40,6 +41,7 @@ export function AgentFieldsForm({
   configurations,
   config,
   setConfig,
+  agentId,
 }: AgentFieldsFormProps) {
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">
@@ -90,6 +92,7 @@ export function AgentFieldsForm({
                 step={c.step}
                 value={config[c.label]}
                 setValue={(v) => setConfig({ ...config, [c.label]: v })}
+                agentId={agentId}
               />
             ))}
           </div>

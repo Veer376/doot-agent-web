@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
-import { createClient } from "@/lib/client";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";

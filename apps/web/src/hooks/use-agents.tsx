@@ -12,6 +12,7 @@ export function useAgents() {
       const schemas = await client.assistants.getSchemas(agentId);
       return schemas.config_schema;
     } catch (e) {
+      console.error("Failed to get agent config schema", e);
       toast.error("Failed to get agent config schema");
     }
   };
@@ -41,6 +42,7 @@ export function useAgents() {
       });
       return agent;
     } catch (e) {
+      console.error("Failed to create agent", e);
       toast.error("Failed to create agent");
       return undefined;
     }

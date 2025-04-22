@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { StreamProvider } from "@/components/chat/providers/Stream";
+import { StreamProvider } from "@/features/chat/providers/Stream";
 import { Thread } from "./components/thread";
 import { ConfigurationSidebar } from "./components/configuration-sidebar";
 

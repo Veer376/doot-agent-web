@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useConfigStore } from "@/components/chat/hooks/use-config-store";
+import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -29,13 +29,13 @@ interface ConfigFieldProps {
   id: string;
   label: string;
   type:
-    | "text"
-    | "textarea"
-    | "number"
-    | "switch"
-    | "slider"
-    | "select"
-    | "json";
+  | "text"
+  | "textarea"
+  | "number"
+  | "switch"
+  | "slider"
+  | "select"
+  | "json";
   description?: string;
   placeholder?: string;
   options?: Option[];

@@ -1,6 +1,6 @@
 "use client";
 
-import InboxInterface from "@/components/inbox";
+import InboxInterface from "@/features/inbox";
 import {
   Breadcrumb,
   BreadcrumbItem,

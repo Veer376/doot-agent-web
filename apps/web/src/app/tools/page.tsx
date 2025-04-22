@@ -1,6 +1,6 @@
 "use client";
 
-import ToolsInterface from "@/components/tools";
+import ToolsInterface from "@/features/tools";
 import {
   Breadcrumb,
   BreadcrumbItem,

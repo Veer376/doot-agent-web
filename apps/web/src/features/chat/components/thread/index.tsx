@@ -1,15 +1,15 @@
 import { v4 as uuidv4 } from "uuid";
 import { ReactNode, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { useStreamContext } from "@/components/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import {
   AssistantMessage,
   AssistantMessageLoading,
-} from "@/components/chat/components/thread/messages/ai";
-import { HumanMessage } from "@/components/chat/components/thread/messages/human";
+} from "@/features/chat/components/thread/messages/ai";
+import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ArrowDown, LoaderCircle, SquarePen } from "lucide-react";
@@ -18,7 +18,7 @@ import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ensureToolCallsHaveResponses } from "@/components/chat/utils/tool-responses";
+import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 
 function StickyToBottomContent(props: {

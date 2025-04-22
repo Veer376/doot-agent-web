@@ -1,7 +1,7 @@
-import { useStreamContext } from "@/components/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
 import { Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
-import { getContentString } from "@/components/chat/utils/content-string";
+import { getContentString } from "@/features/chat/utils/content-string";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";

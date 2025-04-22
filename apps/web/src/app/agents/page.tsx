@@ -1,6 +1,6 @@
 "use client";
 
-import AgentsInterface from "@/components/agents";
+import AgentsInterface from "@/features/agents";
 import {
   Breadcrumb,
   BreadcrumbItem,

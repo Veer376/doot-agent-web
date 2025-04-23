@@ -37,12 +37,13 @@ export function AgentCard({ agent }: AgentCardProps) {
         ) : null}
       </CardHeader>
       <CardFooter className="flex w-full justify-between gap-2">
-        <EditAgentDialog agent={agent} />
+        {/* Do not show edit button if agent is default */}
+        {!isDefault && <EditAgentDialog agent={agent} />}
         <NextLink
           href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-3/4"
+          className="w-full"
         >
           <Button
             variant="brand"

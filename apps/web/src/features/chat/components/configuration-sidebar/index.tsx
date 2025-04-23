@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Save, Trash2, Plus } from "lucide-react";
+import { Save, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +10,6 @@ import { ConfigSection } from "@/features/chat/components/configuration-sidebar/
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";
@@ -26,14 +25,10 @@ import { toast } from "sonner";
 
 export interface AIConfigPanelProps {
   className?: string;
-  defaultOpen?: boolean;
+  open: boolean;
 }
 
-export function ConfigurationSidebar({
-  className,
-  defaultOpen = false,
-}: AIConfigPanelProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
   const { configsByAgentId, resetConfig } = useConfigStore();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
@@ -93,175 +88,158 @@ export function ConfigurationSidebar({
   };
 
   return (
-    <>
-      <div
-        className={cn(
-          "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
-          isOpen ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
-          className,
-        )}
-      >
-        {isOpen && (
-          <div className="flex h-full flex-col">
-            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4">
-              <h2 className="text-lg font-semibold">Agent Configuration</h2>
-              <div className="flex gap-2">
-                <TooltipProvider>
-                  <Tooltip delayDuration={200}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (!agentId) return;
-                          resetConfig(agentId);
-                        }}
-                      >
-                        <Trash2 className="mr-1 h-4 w-4" />
-                        Reset
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Reset the configuration to the last saved state</p>
-                    </TooltipContent>
-                  </Tooltip>
+    <div
+      className={cn(
+        "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
+        open ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
+        className,
+      )}
+    >
+      {open && (
+        <div className="flex h-full flex-col">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4">
+            <h2 className="text-lg font-semibold">Agent Configuration</h2>
+            <div className="flex gap-2">
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!agentId) return;
+                        resetConfig(agentId);
+                      }}
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Reset
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Reset the configuration to the last saved state</p>
+                  </TooltipContent>
+                </Tooltip>
 
-                  <Tooltip delayDuration={200}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="sm"
-                        onClick={handleSave}
-                      >
-                        <Save className="mr-1 h-4 w-4" />
-                        Save
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Save your changes to the agent</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      onClick={handleSave}
+                    >
+                      <Save className="mr-1 h-4 w-4" />
+                      Save
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Save your changes to the agent</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-
-            <Tabs
-              defaultValue="general"
-              className="flex flex-1 flex-col overflow-hidden"
-            >
-              <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="tools">Tools</TabsTrigger>
-              </TabsList>
-
-              <ScrollArea className="flex-1">
-                <TabsContent
-                  value="general"
-                  className="m-0 p-4"
-                >
-                  <ConfigSection title="Configuration">
-                    {loading || !agentId ? (
-                      <div className="space-y-4">
-                        <Skeleton className="h-8 w-full" />
-                        <Skeleton className="h-8 w-full" />
-                        <Skeleton className="h-8 w-full" />
-                      </div>
-                    ) : (
-                      configurations.map((c, index) => (
-                        <ConfigField
-                          key={`${c.label}-${index}`}
-                          id={c.label}
-                          label={c.label}
-                          type={
-                            c.type === "boolean" ? "switch" : (c.type ?? "text")
-                          }
-                          description={c.description}
-                          placeholder={c.placeholder}
-                          options={c.options}
-                          min={c.min}
-                          max={c.max}
-                          step={c.step}
-                          agentId={agentId}
-                        />
-                      ))
-                    )}
-                  </ConfigSection>
-                </TabsContent>
-
-                {/* TODO: Replace with actual tools */}
-                <TabsContent
-                  value="tools"
-                  className="m-0 p-4"
-                >
-                  <ConfigSection
-                    title="Available Tools"
-                    action={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                      >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Add Tool
-                      </Button>
-                    }
-                  >
-                    <ConfigField
-                      id="enableWebSearch"
-                      label="Web Search"
-                      type="switch"
-                      description="Allow the AI to search the web for information"
-                      agentId=""
-                    />
-                    <ConfigField
-                      id="enableCalculator"
-                      label="Calculator"
-                      type="switch"
-                      description="Enable mathematical calculations"
-                      agentId=""
-                    />
-                    <ConfigField
-                      id="enableCodeInterpreter"
-                      label="Code Interpreter"
-                      type="switch"
-                      description="Run code snippets and return results"
-                      agentId=""
-                    />
-                    <ConfigField
-                      id="enableImageGeneration"
-                      label="Image Generation"
-                      type="switch"
-                      description="Generate images from text descriptions"
-                      agentId=""
-                    />
-                    <Separator className="my-2" />
-                    <ConfigField
-                      id="customTools"
-                      label="Custom Tools"
-                      type="json"
-                      description="Define custom tools in JSON format"
-                      agentId=""
-                    />
-                  </ConfigSection>
-                </TabsContent>
-              </ScrollArea>
-            </Tabs>
           </div>
-        )}
-      </div>
 
-      <TooltipIconButton
-        onClick={() => setIsOpen(!isOpen)}
-        tooltip={`${isOpen ? "Hide" : "Show"} Configuration`}
-        className={cn(
-          "fixed top-4 z-20 size-9 rounded-full border border-gray-200 bg-white shadow-sm transition-all duration-300",
-          isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-2",
-        )}
-      >
-        {isOpen ? (
-          <ChevronRight className="size-4" />
-        ) : (
-          <ChevronLeft className="size-4" />
-        )}
-      </TooltipIconButton>
-    </>
+          <Tabs
+            defaultValue="general"
+            className="flex flex-1 flex-col overflow-hidden"
+          >
+            <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
+            </TabsList>
+
+            <ScrollArea className="flex-1">
+              <TabsContent
+                value="general"
+                className="m-0 p-4"
+              >
+                <ConfigSection title="Configuration">
+                  {loading || !agentId ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : (
+                    configurations.map((c, index) => (
+                      <ConfigField
+                        key={`${c.label}-${index}`}
+                        id={c.label}
+                        label={c.label}
+                        type={
+                          c.type === "boolean" ? "switch" : (c.type ?? "text")
+                        }
+                        description={c.description}
+                        placeholder={c.placeholder}
+                        options={c.options}
+                        min={c.min}
+                        max={c.max}
+                        step={c.step}
+                        agentId={agentId}
+                      />
+                    ))
+                  )}
+                </ConfigSection>
+              </TabsContent>
+
+              {/* TODO: Replace with actual tools */}
+              <TabsContent
+                value="tools"
+                className="m-0 p-4"
+              >
+                <ConfigSection
+                  title="Available Tools"
+                  action={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add Tool
+                    </Button>
+                  }
+                >
+                  <ConfigField
+                    id="enableWebSearch"
+                    label="Web Search"
+                    type="switch"
+                    description="Allow the AI to search the web for information"
+                    agentId=""
+                  />
+                  <ConfigField
+                    id="enableCalculator"
+                    label="Calculator"
+                    type="switch"
+                    description="Enable mathematical calculations"
+                    agentId=""
+                  />
+                  <ConfigField
+                    id="enableCodeInterpreter"
+                    label="Code Interpreter"
+                    type="switch"
+                    description="Run code snippets and return results"
+                    agentId=""
+                  />
+                  <ConfigField
+                    id="enableImageGeneration"
+                    label="Image Generation"
+                    type="switch"
+                    description="Generate images from text descriptions"
+                    agentId=""
+                  />
+                  <Separator className="my-2" />
+                  <ConfigField
+                    id="customTools"
+                    label="Custom Tools"
+                    type="json"
+                    description="Define custom tools in JSON format"
+                    agentId=""
+                  />
+                </ConfigSection>
+              </TabsContent>
+            </ScrollArea>
+          </Tabs>
+        </div>
+      )}
+    </div>
   );
 }

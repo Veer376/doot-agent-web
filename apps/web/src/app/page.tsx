@@ -1,16 +1,11 @@
 "use client";
 
 import ChatInterface from "@/features/chat";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
+import { ChatBreadcrumb } from "@/features/chat/components/chat-breadcrumb";
 
 /**
  * The default page (/).
@@ -27,13 +22,7 @@ export default function ChatPage(): React.ReactNode {
             orientation="vertical"
             className="mr-2 h-4"
           />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>Chat</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <ChatBreadcrumb />
         </div>
       </header>
       <ChatInterface />

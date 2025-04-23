@@ -39,6 +39,8 @@ export interface AgentsComboboxProps {
   value?: string;
   setValue?: (value: string) => void;
   className?: string;
+  trigger?: React.ReactNode;
+  triggerAsChild?: boolean;
 }
 
 /**
@@ -90,6 +92,8 @@ export function AgentsCombobox({
   value,
   setValue,
   className,
+  trigger,
+  triggerAsChild,
 }: AgentsComboboxProps) {
   const deployments = getDeployments();
 
@@ -99,18 +103,20 @@ export function AgentsCombobox({
       onOpenChange={setOpen}
     >
       <PopoverTrigger
-        asChild
+        asChild={triggerAsChild || !trigger}
         className={className}
       >
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[200px] justify-between"
-        >
-          {value ? getSelectedAgentValue(value, agents) : placeholder}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
+        {trigger || (
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-[200px] justify-between"
+          >
+            {value ? getSelectedAgentValue(value, agents) : placeholder}
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent className="min-w-[200px] p-0">
         <Command
@@ -118,7 +124,6 @@ export function AgentsCombobox({
             const name = getNameFromValue(value, agents);
             if (!name) return 0;
             if (name.toLowerCase().includes(search.toLowerCase())) {
-              console.log("returning 1 for name!!!", name);
               return 1;
             }
             return 0;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Save, Trash2, Plus } from "lucide-react";
+import { Save, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +10,6 @@ import { ConfigSection } from "@/features/chat/components/configuration-sidebar/
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useQueryState } from "nuqs";
 import { ConfigurableFieldUIMetadata } from "@/types/configurable";
 import { configSchemaToConfigurableFields } from "@/lib/ui-config";

@@ -26,7 +26,10 @@ export default function ChatInterface(): React.ReactNode {
           configOpen={configOpen}
           setConfigOpen={setConfigOpen}
         />
-        <ThreadHistorySidebar open={historyOpen} />
+        <ThreadHistorySidebar
+          open={historyOpen}
+          setOpen={setHistoryOpen}
+        />
         <ConfigurationSidebar open={configOpen} />
       </div>
     </StreamProvider>

@@ -38,6 +38,7 @@ function SelectedAgentSelect() {
 
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_threadId, setThreadId] = useQueryState("threadId");
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -51,6 +52,9 @@ function SelectedAgentSelect() {
   const dropdownLabel = getNewAgentLabel(value, agents);
 
   const handleValueChange = (v: string) => {
+    if (!v) {
+      return;
+    }
     setValue(v);
     setOpen(false);
   };
@@ -63,6 +67,7 @@ function SelectedAgentSelect() {
     const [agentId_, deploymentId_] = value.split(":");
     setAgentId(agentId_);
     setDeploymentId(deploymentId_);
+    setThreadId(null);
   };
 
   const handleReset = () => {

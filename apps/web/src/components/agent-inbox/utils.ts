@@ -32,7 +32,7 @@ export function isDeployedUrl(url: string): boolean {
 }
 
 export function isArrayOfMessages(
-  value: Record<string, any>[]
+  value: Record<string, any>[],
 ): value is BaseMessage[] {
   if (
     value.every(isBaseMessage) ||
@@ -43,7 +43,7 @@ export function isArrayOfMessages(
           "id" in v &&
           "type" in v &&
           "content" in v &&
-          "additional_kwargs" in v
+          "additional_kwargs" in v,
       ))
   ) {
     return true;
@@ -106,7 +106,7 @@ export function unknownToPrettyDate(input: unknown): string | undefined {
 
 export function constructOpenInStudioURL(
   inbox: AgentInbox,
-  threadId?: string
+  threadId?: string,
 ): string {
   const smithStudioBaseUrl = "https://smith.langchain.com/studio/thread";
 
@@ -129,7 +129,7 @@ export function constructOpenInStudioURL(
           hasProjectId: !!projectId,
           hasTenantId: !!tenantId,
           hasThreadId: !!threadId,
-        }
+        },
       );
       return "#"; // Return a placeholder/non-functional link
     }
@@ -151,7 +151,9 @@ export function constructOpenInStudioURL(
 
 export function createDefaultHumanResponse(
   interrupts: HumanInterrupt[],
-  initialHumanInterruptEditValue: React.MutableRefObject<Record<string, string>>
+  initialHumanInterruptEditValue: React.MutableRefObject<
+    Record<string, string>
+  >,
 ): {
   responses: HumanResponseWithEdits[];
   defaultSubmitType: SubmitType | undefined;
@@ -188,7 +190,7 @@ export function createDefaultHumanResponse(
               key: k,
               value: stringValue,
               expectedValue: initialHumanInterruptEditValue.current[k],
-            }
+            },
           );
         }
       });
@@ -257,7 +259,7 @@ export function createDefaultHumanResponse(
 
 export function haveArgsChanged(
   args: unknown,
-  initialValues: Record<string, string>
+  initialValues: Record<string, string>,
 ): boolean {
   if (typeof args !== "object" || !args) {
     return false;
@@ -295,7 +297,7 @@ export interface DeploymentInfoResponse {
  * @param deploymentUrl The URL of the deployment to fetch info from
  */
 export async function fetchDeploymentInfo(
-  deploymentUrl: string
+  deploymentUrl: string,
 ): Promise<DeploymentInfoResponse | null> {
   try {
     // Ensure deploymentUrl doesn't end with a slash

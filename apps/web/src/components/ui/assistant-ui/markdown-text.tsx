@@ -27,7 +27,7 @@ const MarkdownTextImpl = () => {
           <h1
             className={cn(
               "mb-8 scroll-m-20 text-4xl font-extrabold tracking-tight last:mb-0",
-              className
+              className,
             )}
             {...props}
           />
@@ -35,8 +35,8 @@ const MarkdownTextImpl = () => {
         h2: ({ node: _node, className, ...props }) => (
           <h2
             className={cn(
-              "mb-4 mt-8 scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0 last:mb-0",
-              className
+              "mt-8 mb-4 scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0 last:mb-0",
+              className,
             )}
             {...props}
           />
@@ -44,8 +44,8 @@ const MarkdownTextImpl = () => {
         h3: ({ node: _node, className, ...props }) => (
           <h3
             className={cn(
-              "mb-4 mt-6 scroll-m-20 text-2xl font-semibold tracking-tight first:mt-0 last:mb-0",
-              className
+              "mt-6 mb-4 scroll-m-20 text-2xl font-semibold tracking-tight first:mt-0 last:mb-0",
+              className,
             )}
             {...props}
           />
@@ -53,8 +53,8 @@ const MarkdownTextImpl = () => {
         h4: ({ node: _node, className, ...props }) => (
           <h4
             className={cn(
-              "mb-4 mt-6 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
-              className
+              "mt-6 mb-4 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
+              className,
             )}
             {...props}
           />
@@ -63,7 +63,7 @@ const MarkdownTextImpl = () => {
           <h5
             className={cn(
               "my-4 text-lg font-semibold first:mt-0 last:mb-0",
-              className
+              className,
             )}
             {...props}
           />
@@ -77,8 +77,8 @@ const MarkdownTextImpl = () => {
         p: ({ node: _node, className, ...props }) => (
           <p
             className={cn(
-              "mb-5 mt-5 leading-7 first:mt-0 last:mb-0",
-              className
+              "mt-5 mb-5 leading-7 first:mt-0 last:mb-0",
+              className,
             )}
             {...props}
           />
@@ -88,7 +88,7 @@ const MarkdownTextImpl = () => {
             target="_blank"
             className={cn(
               "text-primary font-medium underline underline-offset-4",
-              className
+              className,
             )}
             {...props}
           />
@@ -112,13 +112,16 @@ const MarkdownTextImpl = () => {
           />
         ),
         hr: ({ node: _node, className, ...props }) => (
-          <hr className={cn("my-5 border-b", className)} {...props} />
+          <hr
+            className={cn("my-5 border-b", className)}
+            {...props}
+          />
         ),
         table: ({ node: _node, className, ...props }) => (
           <table
             className={cn(
               "my-5 w-full border-separate border-spacing-0 overflow-y-auto",
-              className
+              className,
             )}
             {...props}
           />
@@ -127,7 +130,7 @@ const MarkdownTextImpl = () => {
           <th
             className={cn(
               "bg-muted px-4 py-2 text-left font-bold first:rounded-tl-lg last:rounded-tr-lg [&[align=center]]:text-center [&[align=right]]:text-right",
-              className
+              className,
             )}
             {...props}
           />
@@ -136,7 +139,7 @@ const MarkdownTextImpl = () => {
           <td
             className={cn(
               "border-b border-l px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right",
-              className
+              className,
             )}
             {...props}
           />
@@ -145,7 +148,7 @@ const MarkdownTextImpl = () => {
           <tr
             className={cn(
               "m-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg",
-              className
+              className,
             )}
             {...props}
           />
@@ -160,7 +163,7 @@ const MarkdownTextImpl = () => {
           <pre
             className={cn(
               "overflow-x-auto rounded-b-lg bg-black p-4 text-white",
-              className
+              className,
             )}
             {...props}
           />
@@ -171,7 +174,7 @@ const MarkdownTextImpl = () => {
             <code
               className={cn(
                 !isCodeBlock && "bg-aui-muted rounded border font-semibold",
-                className
+                className,
               )}
               {...props}
             />
@@ -196,7 +199,10 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   return (
     <div className="flex items-center justify-between gap-4 rounded-t-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
       <span className="lowercase [&>span]:text-xs">{language}</span>
-      <TooltipIconButton tooltip="Copy" onClick={onCopy}>
+      <TooltipIconButton
+        tooltip="Copy"
+        onClick={onCopy}
+      >
         {!isCopied && <CopyIcon />}
         {isCopied && <CheckIcon />}
       </TooltipIconButton>

@@ -47,7 +47,7 @@ export function ThreadView<
       if (typeof window === "undefined") return;
       if (!threadId || !threads.length || loading) return;
       const selectedThread = threads.find(
-        (t) => t.thread.thread_id === threadId
+        (t) => t.thread.thread_id === threadId,
       );
       if (selectedThread) {
         setThreadData(selectedThread);
@@ -73,7 +73,7 @@ export function ThreadView<
 
   const handleShowSidePanel = (
     showState: boolean,
-    showDescription: boolean
+    showDescription: boolean,
   ) => {
     if (showState && showDescription) {
       logger.error("Cannot show both state and description");
@@ -96,11 +96,11 @@ export function ThreadView<
   }
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-full">
+    <div className="flex h-full w-full flex-col lg:flex-row">
       <div
         className={cn(
           "flex overflow-y-auto",
-          showSidePanel ? "lg:w-1/2 w-full" : "w-full"
+          showSidePanel ? "w-full lg:w-1/2" : "w-full",
         )}
       >
         <ThreadActionsView<ThreadValues>
@@ -116,7 +116,7 @@ export function ThreadView<
       <div
         className={cn(
           showSidePanel ? "flex" : "hidden",
-          "overflow-y-auto lg:w-1/2 w-full"
+          "w-full overflow-y-auto lg:w-1/2",
         )}
       >
         <StateView

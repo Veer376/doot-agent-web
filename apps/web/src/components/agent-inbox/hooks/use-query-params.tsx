@@ -13,7 +13,7 @@ export function useQueryParams() {
       if (Array.isArray(key)) {
         if (!Array.isArray(value) || key.length !== value.length) {
           throw new Error(
-            "When key is an array, value must also be an array of the same length"
+            "When key is an array, value must also be an array of the same length",
           );
         }
 
@@ -50,7 +50,7 @@ export function useQueryParams() {
       // Use replace instead of push to avoid breaking the browser's history
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [router, pathname]
+    [router, pathname],
   );
 
   const getSearchParam = (name: string): string | undefined => {

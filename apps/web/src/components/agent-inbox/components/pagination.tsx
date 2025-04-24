@@ -29,14 +29,17 @@ function DisplayLimitSelect() {
         updateQueryParams(LIMIT_PARAM, v);
       }}
     >
-      <SelectTrigger className="w-[180px] h-8">
+      <SelectTrigger className="h-8 w-[180px]">
         <SelectValue>{fetchLimitParam}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
           <SelectLabel>Display Limit</SelectLabel>
           {fetchLimitOptions.map((option) => (
-            <SelectItem key={`fetch-limit-${option}`} value={option}>
+            <SelectItem
+              key={`fetch-limit-${option}`}
+              value={option}
+            >
               {option}
             </SelectItem>
           ))}
@@ -96,27 +99,27 @@ export function Pagination() {
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex items-center gap-2">
       <DisplayLimitSelect />
-      <div className="flex gap-1 items-center">
+      <div className="flex items-center gap-1">
         <Button
           size="sm"
-          className="flex gap-1 items-center"
+          className="flex items-center gap-1"
           variant="outline"
           disabled={isPreviousDisabled}
           onClick={handleClickPrevious}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="h-4 w-4" />
           <span>Previous</span>
         </Button>
         <Button
           size="sm"
-          className="flex gap-1 items-center"
+          className="flex items-center gap-1"
           variant="outline"
           disabled={isNextDisabled}
           onClick={handleClickNext}
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="h-4 w-4" />
           <span>Next</span>
         </Button>
       </div>

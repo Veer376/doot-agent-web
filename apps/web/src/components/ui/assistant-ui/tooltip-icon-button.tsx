@@ -26,7 +26,7 @@ export const TooltipIconButton = forwardRef<
 >(
   (
     { children, tooltip, side = "bottom", className, delayDuration, ...rest },
-    ref
+    ref,
   ) => {
     return (
       <TooltipProvider>
@@ -47,7 +47,7 @@ export const TooltipIconButton = forwardRef<
         </Tooltip>
       </TooltipProvider>
     );
-  }
+  },
 );
 
 TooltipIconButton.displayName = "TooltipIconButton";

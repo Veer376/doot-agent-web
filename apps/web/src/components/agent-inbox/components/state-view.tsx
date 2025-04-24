@@ -1,10 +1,10 @@
 import { ChevronRight, X, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-    baseMessageObject,
-    isArrayOfMessages,
-    prettifyText,
-    unknownToPrettyDate,
+  baseMessageObject,
+  isArrayOfMessages,
+  prettifyText,
+  unknownToPrettyDate,
 } from "../utils";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,10 +15,10 @@ import { ToolCallTable } from "./tool-call-table";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { ThreadData } from "../types";
 import {
-    EmptyStateView,
-    InterruptedDescriptionView,
-    NonInterruptedDescriptionView,
-    ThreadStateView,
+  EmptyStateView,
+  InterruptedDescriptionView,
+  NonInterruptedDescriptionView,
+  ThreadStateView,
 } from "./views";
 
 interface StateViewRecursiveProps {
@@ -50,7 +50,7 @@ const messageTypeToLabel = (message: BaseMessage) => {
 
 function MessagesRenderer({ messages }: { messages: BaseMessage[] }) {
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className="flex w-full flex-col gap-1">
       {messages.map((msg, idx) => {
         const messageTypeLabel = messageTypeToLabel(msg);
         const content =
@@ -60,14 +60,14 @@ function MessagesRenderer({ messages }: { messages: BaseMessage[] }) {
         return (
           <div
             key={msg.id || `message-${idx}`}
-            className="flex flex-col gap-[2px] ml-2 w-full"
+            className="ml-2 flex w-full flex-col gap-[2px]"
           >
             <p className="font-medium text-gray-700">{messageTypeLabel}:</p>
             {content && (
               <MarkdownText className="text-gray-600">{content}</MarkdownText>
             )}
             {"tool_calls" in msg && msg.tool_calls ? (
-              <div className="flex flex-col gap-1 items-start w-full">
+              <div className="flex w-full flex-col items-start gap-1">
                 {(msg.tool_calls as ToolCall[]).map((tc, idx) => (
                   <ToolCallTable
                     key={tc.id || `tool-call-${idx}`}
@@ -106,7 +106,7 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
   }
 
   if (props.value == null) {
-    return <p className="font-light text-gray-600 whitespace-pre-wrap">null</p>;
+    return <p className="font-light whitespace-pre-wrap text-gray-600">null</p>;
   }
 
   if (Array.isArray(props.value)) {
@@ -116,18 +116,18 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
 
     const valueArray = props.value as unknown[];
     return (
-      <div className="flex flex-row gap-1 items-start justify-start w-full">
+      <div className="flex w-full flex-row items-start justify-start gap-1">
         <span className="font-normal text-black">[</span>
         {valueArray.map((item, idx) => {
           const itemRenderValue = baseMessageObject(item);
           return (
             <div
               key={`state-view-${idx}`}
-              className="flex flex-row items-start whitespace-pre-wrap w-full"
+              className="flex w-full flex-row items-start whitespace-pre-wrap"
             >
               <StateViewRecursive value={itemRenderValue} />
               {idx < valueArray?.length - 1 && (
-                <span className="text-black font-normal">,&nbsp;</span>
+                <span className="font-normal text-black">,&nbsp;</span>
               )}
             </div>
           );
@@ -142,9 +142,9 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
       return <p className="font-light text-gray-600">{"{}"}</p>;
     }
     return (
-      <div className="flex flex-col gap-1 items-start justify-start ml-6 relative w-full">
+      <div className="relative ml-6 flex w-full flex-col items-start justify-start gap-1">
         {/* Vertical line */}
-        <div className="absolute left-[-24px] top-0 h-full w-[1px] bg-gray-200" />
+        <div className="absolute top-0 left-[-24px] h-full w-[1px] bg-gray-200" />
 
         {Object.entries(props.value).map(([key, value], idx) => (
           <div
@@ -152,7 +152,7 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
             className="relative w-full"
           >
             {/* Horizontal connector line */}
-            <div className="absolute left-[-20px] top-[10px] h-[1px] w-[18px] bg-gray-200" />
+            <div className="absolute top-[10px] left-[-20px] h-[1px] w-[18px] bg-gray-200" />
             <StateViewObject
               expanded={props.expanded}
               keyName={key}
@@ -170,10 +170,10 @@ function HasContentsEllipsis({ onClick }: { onClick?: () => void }) {
     <span
       onClick={onClick}
       className={cn(
-        "font-mono text-[10px] leading-3 p-[2px] rounded-md",
-        "bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800",
-        "transition-colors ease-in-out cursor-pointer",
-        "-translate-y-[2px] inline-block"
+        "rounded-md p-[2px] font-mono text-[10px] leading-3",
+        "bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800",
+        "cursor-pointer transition-colors ease-in-out",
+        "inline-block -translate-y-[2px]",
       )}
     >
       {"{...}"}
@@ -201,7 +201,7 @@ export function StateViewObject(props: StateViewProps) {
   }, [props.expanded]);
 
   return (
-    <div className="flex flex-row gap-2 items-start justify-start relative text-sm">
+    <div className="relative flex flex-row items-start justify-start gap-2 text-sm">
       <motion.div
         initial={false}
         animate={{ rotate: expanded ? 90 : 0 }}
@@ -209,13 +209,13 @@ export function StateViewObject(props: StateViewProps) {
       >
         <div
           onClick={() => setExpanded((prev) => !prev)}
-          className="w-5 h-5 flex items-center justify-center hover:bg-gray-100 text-gray-500 hover:text-black rounded-md transition-colors ease-in-out cursor-pointer"
+          className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-gray-500 transition-colors ease-in-out hover:bg-gray-100 hover:text-black"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="h-4 w-4" />
         </div>
       </motion.div>
-      <div className="flex flex-col gap-1 items-start justify-start w-full">
-        <p className="text-black font-normal">
+      <div className="flex w-full flex-col items-start justify-start gap-1">
+        <p className="font-normal text-black">
           {prettifyText(props.keyName)}{" "}
           {!expanded && (
             <HasContentsEllipsis onClick={() => setExpanded((prev) => !prev)} />
@@ -234,7 +234,10 @@ export function StateViewObject(props: StateViewProps) {
           style={{ overflow: "hidden" }}
           className="relative w-full"
         >
-          <StateViewRecursive expanded={props.expanded} value={props.value} />
+          <StateViewRecursive
+            expanded={props.expanded}
+            value={props.value}
+          />
         </motion.div>
       </div>
     </div>
@@ -265,7 +268,7 @@ export function StateView({
   }
 
   return (
-    <div className="overflow-y-auto pl-6 border-t-[1px] lg:border-t-[0px] lg:border-l-[1px] border-gray-100 flex flex-row gap-0 w-full relative">
+    <div className="relative flex w-full flex-row gap-0 overflow-y-auto border-t-[1px] border-gray-100 pl-6 lg:border-t-[0px] lg:border-l-[1px]">
       {view === "description" && isInterrupted && (
         <InterruptedDescriptionView description={description} />
       )}
@@ -273,7 +276,10 @@ export function StateView({
         <NonInterruptedDescriptionView />
       )}
       {view === "state" && (
-        <ThreadStateView threadValues={threadValues} expanded={expanded} />
+        <ThreadStateView
+          threadValues={threadValues}
+          expanded={expanded}
+        />
       )}
 
       <div className="absolute top-6 right-6 flex gap-2">
@@ -285,9 +291,9 @@ export function StateView({
             size="sm"
           >
             {expanded ? (
-              <ChevronsUpDown className="w-4 h-4" />
+              <ChevronsUpDown className="h-4 w-4" />
             ) : (
-              <ChevronsDownUp className="w-4 h-4" />
+              <ChevronsDownUp className="h-4 w-4" />
             )}
           </Button>
         )}
@@ -297,7 +303,7 @@ export function StateView({
           className="text-gray-600"
           size="sm"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
     </div>

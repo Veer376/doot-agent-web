@@ -10,7 +10,7 @@ export function ThreadStateView({
   expanded,
 }: ThreadStateViewProps) {
   return (
-    <div className="flex-1 w-full">
+    <div className="w-full flex-1">
       <div className="flex flex-col items-start justify-start gap-1 pt-6 pb-2">
         {Object.entries(threadValues).map(([k, v], idx) => (
           <StateViewObject

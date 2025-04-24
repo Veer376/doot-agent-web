@@ -112,7 +112,7 @@ export function AgentInbox<
         // Set default inbox if none selected, and ensure offset, limit, and inbox (tab) are set
         updateQueryParams(
           [INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM],
-          ["interrupted", "0", "10"]
+          ["interrupted", "0", "10"],
         );
       } else {
         setSelectedInbox(currentInbox);

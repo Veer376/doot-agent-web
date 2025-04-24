@@ -32,22 +32,34 @@ export function DropdownDialogMenu({
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+    <Dialog
+      open={dialogOpen}
+      onOpenChange={handleDialogOpenChange}
+    >
+      <DropdownMenu
+        open={dropdownOpen}
+        onOpenChange={setDropdownOpen}
+      >
         <DropdownMenuTrigger asChild>
-          <Button className="px-2" variant="ghost">
-            <MoreVertical className="w-4 h-4 cursor-pointer text-gray-800 hover:text-gray-600 transition-colors ease-in-out duration-200" />
+          <Button
+            className="px-2"
+            variant="ghost"
+          >
+            <MoreVertical className="h-4 w-4 cursor-pointer text-gray-800 transition-colors duration-200 ease-in-out hover:text-gray-600" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuContent
+          align="end"
+          className="w-40"
+        >
           <DialogTrigger asChild>
             <DropdownMenuItem
-              className="cursor-pointer flex items-center gap-2"
+              className="flex cursor-pointer items-center gap-2"
               onClick={(e) => {
                 e.stopPropagation();
               }}
             >
-              <Pencil className="w-4 h-4" />
+              <Pencil className="h-4 w-4" />
               <span>Edit</span>
             </DropdownMenuItem>
           </DialogTrigger>
@@ -60,7 +72,7 @@ export function DropdownDialogMenu({
               setDropdownOpen(false);
             }}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

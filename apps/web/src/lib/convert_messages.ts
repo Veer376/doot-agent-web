@@ -48,7 +48,7 @@ export const convertLangchainMessages: useExternalMessageConverter.Callback<
         id: message.id,
         content: [{ type: "text", text: message.content }],
       };
-    case "ai":
+    case "ai": {
       const aiMsg = message as AIMessage;
       const toolCallsContent: ToolCallContentPart[] = aiMsg.tool_calls?.length
         ? aiMsg.tool_calls.map((tc) => ({
@@ -70,6 +70,7 @@ export const convertLangchainMessages: useExternalMessageConverter.Callback<
           },
         ],
       };
+    }
     case "tool":
       return {
         role: "tool",
@@ -87,27 +88,31 @@ export function convertToOpenAIFormat(message: BaseMessage) {
     throw new Error("Only text messages are supported");
   }
   switch (getMessageType(message)) {
-    case "system":
+    case "system": {
       return {
         role: "system",
         content: message.content,
       };
-    case "human":
+    }
+    case "human": {
       return {
         role: "user",
         content: message.content,
       };
-    case "ai":
+    }
+    case "ai": {
       return {
         role: "assistant",
         content: message.content,
       };
-    case "tool":
+    }
+    case "tool": {
       return {
         role: "tool",
         toolName: message.name,
         result: message.content,
       };
+    }
     default:
       throw new Error(`Unsupported message type: ${getMessageType(message)}`);
   }

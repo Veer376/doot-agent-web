@@ -84,7 +84,7 @@ export function clearBackfillFlag(): void {
  * @returns Promise<{updatedInboxes: AgentInbox[], madeChanges: boolean}> - The updated agent inboxes and whether changes were made
  */
 export async function backfillInboxIds(
-  agentInboxes: AgentInbox[]
+  agentInboxes: AgentInbox[],
 ): Promise<{ updatedInboxes: AgentInbox[]; madeChanges: boolean }> {
   if (!agentInboxes.length) {
     logger.log("No inboxes to backfill");
@@ -100,7 +100,7 @@ export async function backfillInboxIds(
       // Only process deployed graphs
       if (isDeployedUrl(inbox.deploymentUrl)) {
         logger.log(
-          `Processing deployed inbox ${inbox.id} with URL ${inbox.deploymentUrl}`
+          `Processing deployed inbox ${inbox.id} with URL ${inbox.deploymentUrl}`,
         );
 
         // Skip if the ID is already in the new format (contains a colon)
@@ -134,13 +134,13 @@ export async function backfillInboxIds(
             continue;
           } else {
             logger.log(
-              `No project_id found for inbox ${inbox.id}, keeping original ID`
+              `No project_id found for inbox ${inbox.id}, keeping original ID`,
             );
           }
         } catch (error) {
           logger.error(
             `Error fetching deployment info for inbox ${inbox.id}:`,
-            error
+            error,
           );
         }
       } else {
@@ -196,7 +196,7 @@ export async function runInboxBackfill(): Promise<{
 
     if (!inboxesStr || inboxesStr === "[]") {
       logger.log(
-        "No inboxes found in localStorage, marking backfill as completed"
+        "No inboxes found in localStorage, marking backfill as completed",
       );
       markBackfillCompleted();
       return { success: true, updatedInboxes: [] };
@@ -233,7 +233,7 @@ export async function runInboxBackfill(): Promise<{
     // Save the updated inboxes
     localStorage.setItem(
       AGENT_INBOXES_LOCAL_STORAGE_KEY,
-      JSON.stringify(updatedInboxes)
+      JSON.stringify(updatedInboxes),
     );
 
     // Only mark as completed if we successfully processed all inboxes
@@ -291,7 +291,7 @@ export async function forceInboxBackfill(): Promise<{
     // Save the updated inboxes regardless of changes
     localStorage.setItem(
       AGENT_INBOXES_LOCAL_STORAGE_KEY,
-      JSON.stringify(updatedInboxes)
+      JSON.stringify(updatedInboxes),
     );
 
     // Mark as completed

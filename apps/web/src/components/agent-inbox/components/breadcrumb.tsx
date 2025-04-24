@@ -46,10 +46,10 @@ export function BreadCrumb({ className }: { className?: string }) {
       }
 
       const selectedThreadIdParam = searchParams.get(
-        VIEW_STATE_THREAD_QUERY_PARAM
+        VIEW_STATE_THREAD_QUERY_PARAM,
       );
       const selectedThread = threadData.find(
-        (t) => t.thread.thread_id === selectedThreadIdParam
+        (t) => t.thread.thread_id === selectedThreadIdParam,
       );
       const selectedThreadAction = (
         selectedThread?.interrupts as HumanInterrupt[] | undefined
@@ -86,8 +86,8 @@ export function BreadCrumb({ className }: { className?: string }) {
     return (
       <div
         className={cn(
-          "flex items-center justify-start gap-2 text-gray-500 text-sm h-[34px]",
-          className
+          "flex h-[34px] items-center justify-start gap-2 text-sm text-gray-500",
+          className,
         )}
         aria-hidden="true"
       />
@@ -97,12 +97,16 @@ export function BreadCrumb({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-start gap-2 text-gray-500 text-sm",
-        className
+        "flex items-center justify-start gap-2 text-sm text-gray-500",
+        className,
       )}
     >
       <NextLink href={constructBaseUrl()}>
-        <Button size="sm" className="text-gray-500" variant="link">
+        <Button
+          size="sm"
+          className="text-gray-500"
+          variant="link"
+        >
           {agentInboxLabel}
         </Button>
       </NextLink>
@@ -111,7 +115,11 @@ export function BreadCrumb({ className }: { className?: string }) {
         <>
           <ChevronRight className="h-[14px] w-[14px]" />
           <NextLink href={constructInboxLink()}>
-            <Button size="sm" className="text-gray-500" variant="link">
+            <Button
+              size="sm"
+              className="text-gray-500"
+              variant="link"
+            >
               {selectedInboxLabel}
             </Button>
           </NextLink>
@@ -121,7 +129,11 @@ export function BreadCrumb({ className }: { className?: string }) {
         <>
           <ChevronRight className="h-[14px] w-[14px]" />
           <NextLink href={window.location.pathname + window.location.search}>
-            <Button size="sm" className="text-gray-500" variant="link">
+            <Button
+              size="sm"
+              className="text-gray-500"
+              variant="link"
+            >
               {selectedThreadActionLabel}
             </Button>
           </NextLink>

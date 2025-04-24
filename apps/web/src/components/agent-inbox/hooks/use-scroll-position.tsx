@@ -25,7 +25,7 @@ export function useScrollPosition() {
         scrollElementRef.current = "window";
       }
     },
-    []
+    [],
   );
 
   // Restore the saved scroll position
@@ -63,7 +63,7 @@ export function useScrollPosition() {
         }
       });
     },
-    []
+    [],
   );
 
   return {

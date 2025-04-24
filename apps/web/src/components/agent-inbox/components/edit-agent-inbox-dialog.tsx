@@ -25,7 +25,7 @@ export function EditAgentInboxDialog({
   const { toast } = useToast();
   const [graphId, setGraphId] = React.useState(agentInbox.graphId);
   const [deploymentUrl, setDeploymentUrl] = React.useState(
-    agentInbox.deploymentUrl
+    agentInbox.deploymentUrl,
   );
   const [name, setName] = React.useState(agentInbox.name || "");
 
@@ -73,14 +73,17 @@ export function EditAgentInboxDialog({
         <DialogTitle>Edit Inbox</DialogTitle>
       </DialogHeader>
       <form
-        className="flex flex-col items-center justify-center gap-4 py-4 w-full"
+        className="flex w-full flex-col items-center justify-center gap-4 py-4"
         onSubmit={handleSubmit}
       >
-        <div className="flex flex-col gap-2 items-start justify-start w-full">
-          <Label htmlFor="graph-id" className="text-right">
+        <div className="flex w-full flex-col items-start justify-start gap-2">
+          <Label
+            htmlFor="graph-id"
+            className="text-right"
+          >
             Assistant/Graph ID <span className="text-red-500">*</span>
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             This is the ID of the graph (can be the graph name), or assistant to
             fetch threads from, and invoke when actions are taken.
           </p>
@@ -93,11 +96,14 @@ export function EditAgentInboxDialog({
             onChange={(e) => setGraphId(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2 items-start justify-start w-full">
-          <Label htmlFor="deployment-url" className="text-right">
+        <div className="flex w-full flex-col items-start justify-start gap-2">
+          <Label
+            htmlFor="deployment-url"
+            className="text-right"
+          >
             Deployment URL <span className="text-red-500">*</span>
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             This is the URL of your LangGraph deployment. Can be a local, or
             production deployment.
           </p>
@@ -110,11 +116,14 @@ export function EditAgentInboxDialog({
             onChange={(e) => setDeploymentUrl(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2 items-start justify-start w-full">
-          <Label htmlFor="name" className="text-right">
+        <div className="flex w-full flex-col items-start justify-start gap-2">
+          <Label
+            htmlFor="name"
+            className="text-right"
+          >
             Name
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Optional name for the inbox. Used in the sidebar.
           </p>
           <Input
@@ -126,11 +135,17 @@ export function EditAgentInboxDialog({
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="brand" type="submit">
+          <Button
+            variant="brand"
+            type="submit"
+          >
             Save
           </Button>
           <DialogClose asChild>
-            <Button variant="outline" type="button">
+            <Button
+              variant="outline"
+              type="button"
+            >
               Cancel
             </Button>
           </DialogClose>

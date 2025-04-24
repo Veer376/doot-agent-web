@@ -11,12 +11,12 @@ export const tmpCleanInterrupts = (interrupts: Record<string, any[]>) => {
         return [k, v?.[0][1]];
       }
       return [k, v];
-    })
+    }),
   );
 };
 
 export function getInterruptFromThread(
-  thread: Thread
+  thread: Thread,
 ): HumanInterrupt[] | undefined {
   try {
     if (thread.interrupts && Object.values(thread.interrupts).length > 0) {
@@ -223,7 +223,7 @@ export function processInterruptedThread<
   if (interrupts) {
     // Check if any interrupt has improper_schema action
     const hasInvalidSchema = interrupts.some(
-      (interrupt) => interrupt?.action_request?.action === IMPROPER_SCHEMA
+      (interrupt) => interrupt?.action_request?.action === IMPROPER_SCHEMA,
     );
 
     return {
@@ -240,7 +240,7 @@ export function processThreadWithoutInterrupts<
   ThreadValues extends Record<string, any>,
 >(
   thread: Thread<ThreadValues>,
-  state: { thread_state: ThreadState<ThreadValues>; thread_id: string }
+  state: { thread_state: ThreadState<ThreadValues>; thread_id: string },
 ): ThreadData<ThreadValues> {
   const lastTask =
     state.thread_state.tasks[state.thread_state.tasks.length - 1];
@@ -270,7 +270,7 @@ type ThreadFilterMetadata =
     };
 
 export function getThreadFilterMetadata(
-  agentInboxes: AgentInbox[]
+  agentInboxes: AgentInbox[],
 ): ThreadFilterMetadata | undefined {
   const graphAssistantId = agentInboxes.find((i) => i.selected)?.graphId;
   if (graphAssistantId) {
@@ -311,8 +311,8 @@ export function debugInterruptStructure(thread: Thread): void {
         parsedInterrupts.some(
           (interrupt) =>
             interrupt?.action_request?.action === IMPROPER_SCHEMA ||
-            !interrupt?.action_request?.action
-        )
+            !interrupt?.action_request?.action,
+        ),
       );
 
       parsedInterrupts.forEach((interrupt, index) => {

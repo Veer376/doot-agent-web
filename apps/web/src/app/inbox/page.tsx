@@ -5,7 +5,7 @@ import React from "react";
 
 export default function DemoPage(): React.ReactNode {
   return (
-    <div className="flex flex-col w-full h-full">
+    <div className="flex h-full w-full flex-col">
       <AgentInbox />
     </div>
   );

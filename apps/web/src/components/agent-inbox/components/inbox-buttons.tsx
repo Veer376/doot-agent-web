@@ -45,7 +45,7 @@ function InboxButton({
       onClick={onClick}
       className={cn(
         "text-[16px] leading-6 font-medium",
-        selectedInbox === label.toLowerCase() ? "text-black" : "text-gray-500"
+        selectedInbox === label.toLowerCase() ? "text-black" : "text-gray-500",
       )}
       variant="ghost"
     >
@@ -64,7 +64,7 @@ export function InboxButtons({
   const selectedInbox = searchParams.get(INBOX_PARAM) || "interrupted";
 
   return (
-    <div className="flex w-full gap-2 items-center justify-start">
+    <div className="flex w-full items-center justify-start gap-2">
       <InboxButton
         label="All"
         selectedInbox={selectedInbox}

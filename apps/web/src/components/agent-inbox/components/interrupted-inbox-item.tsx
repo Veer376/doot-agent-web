@@ -35,7 +35,7 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
 
   const updatedAtDateString = format(
     new Date(threadData.thread.updated_at),
-    "MM/dd h:mm a"
+    "MM/dd h:mm a",
   );
 
   const handleThreadClick = (e: React.MouseEvent) => {
@@ -50,7 +50,7 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
     // The scroll option is set to false in updateQueryParams to prevent auto-scrolling
     updateQueryParams(
       VIEW_STATE_THREAD_QUERY_PARAM,
-      threadData.thread.thread_id
+      threadData.thread.thread_id,
     );
   };
 
@@ -64,19 +64,19 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
       key={threadData.thread.thread_id}
       onClick={handleThreadClick}
       className={cn(
-        "grid grid-cols-12 w-full p-4 items-center cursor-pointer hover:bg-gray-50/90 transition-colors ease-in-out h-[71px]",
-        !isLast && "border-b border-gray-200"
+        "grid h-[71px] w-full cursor-pointer grid-cols-12 items-center p-4 transition-colors ease-in-out hover:bg-gray-50/90",
+        !isLast && "border-b border-gray-200",
       )}
     >
       {/* Column 1: Dot - adjusted span slightly */}
       <div className="col-span-1 flex justify-center">
-        <div className="w-[6px] h-[6px] rounded-full bg-blue-400" />
+        <div className="h-[6px] w-[6px] rounded-full bg-blue-400" />
       </div>
 
       {/* Column 2-9: Title and Description - merged spans */}
       <div className="col-span-8 overflow-hidden">
         <div className="flex items-center">
-          <span className="text-sm font-semibold text-black truncate pr-1">
+          <span className="truncate pr-1 text-sm font-semibold text-black">
             {title}
           </span>
 
@@ -90,7 +90,7 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
           )}
         </div>
         {hasDescriptionValue && (
-          <div className="text-sm text-muted-foreground truncate h-[18px]">
+          <div className="text-muted-foreground h-[18px] truncate text-sm">
             {descriptionPreview}
             {descriptionTruncated && "..."}
             {!firstInterrupt && threadData.invalidSchema && (
@@ -109,7 +109,7 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
       </div>
 
       {/* Column 11-12: Timestamp - adjusted span */}
-      <p className="col-span-2 text-right text-sm text-gray-600 font-light">
+      <p className="col-span-2 text-right text-sm font-light text-gray-600">
         {updatedAtDateString}
       </p>
     </div>

@@ -26,13 +26,13 @@ interface UseInterruptedActionsInput<
 interface UseInterruptedActionsValue {
   // Actions
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
   handleIgnore: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
   handleResolve: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
 
   // State values
@@ -84,7 +84,7 @@ export default function useInterruptedActions<
   const [currentNode, setCurrentNode] = React.useState("");
   const [streamFinished, setStreamFinished] = React.useState(false);
   const initialHumanInterruptEditValue = React.useRef<Record<string, string>>(
-    {}
+    {},
   );
   const [selectedSubmitType, setSelectedSubmitType] =
     React.useState<SubmitType>();
@@ -105,7 +105,7 @@ export default function useInterruptedActions<
       const { responses, defaultSubmitType, hasAccept } =
         createDefaultHumanResponse(
           threadData.interrupts,
-          initialHumanInterruptEditValue
+          initialHumanInterruptEditValue,
         );
       setSelectedSubmitType(defaultSubmitType);
       setHumanResponse(responses);
@@ -121,7 +121,7 @@ export default function useInterruptedActions<
   }, [threadData?.interrupts]);
 
   const handleSubmit = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
@@ -187,11 +187,11 @@ export default function useInterruptedActions<
               type: r.type,
               args: r.args,
             };
-          }
+          },
         );
 
         const input = humanResponseInput.find(
-          (r) => r.type === selectedSubmitType
+          (r) => r.type === selectedSubmitType,
         );
         if (!input) {
           toast({
@@ -210,7 +210,7 @@ export default function useInterruptedActions<
           [input],
           {
             stream: true,
-          }
+          },
         );
         if (!response) {
           // This will only be undefined if the graph ID is not found
@@ -237,7 +237,7 @@ export default function useInterruptedActions<
             toast({
               title: "Error",
               description: (
-                <div className="flex flex-col gap-1 items-start">
+                <div className="flex flex-col items-start gap-1">
                   <p>Something went wrong while attempting to run the graph.</p>
                   <span>
                     <strong>Error:</strong>
@@ -288,7 +288,7 @@ export default function useInterruptedActions<
         setCurrentNode("");
         setStreaming(false);
         const updatedThreadData = await fetchSingleThread(
-          threadData.thread.thread_id
+          threadData.thread.thread_id,
         );
         if (updatedThreadData && updatedThreadData?.status === "interrupted") {
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
@@ -314,7 +314,7 @@ export default function useInterruptedActions<
   };
 
   const handleIgnore = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
@@ -360,7 +360,7 @@ export default function useInterruptedActions<
   };
 
   const handleResolve = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
@@ -407,7 +407,8 @@ export default function useInterruptedActions<
       Boolean(threadData?.interrupts?.[0]?.config?.allow_ignore) || true, // Default to true for invalid interrupts
     supportsMultipleMethods:
       humanResponse.filter(
-        (r) => r.type === "edit" || r.type === "accept" || r.type === "response"
+        (r) =>
+          r.type === "edit" || r.type === "accept" || r.type === "response",
       ).length > 1,
     selectedSubmitType,
     hasEdited,

@@ -37,7 +37,7 @@ export function AddAgentInboxDialog({
   hideTrigger?: boolean;
   langchainApiKey?: string;
   handleChangeLangChainApiKey?: (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => void;
 }) {
   const { searchParams, updateQueryParams } = useQueryParams();
@@ -80,7 +80,7 @@ export function AddAgentInboxDialog({
       if (isDeployed) {
         logger.log(
           "Deployed graph detected, getting info from:",
-          deploymentUrl
+          deploymentUrl,
         );
 
         // Get the LangChain API key from local storage or props
@@ -90,7 +90,7 @@ export function AddAgentInboxDialog({
 
         if (!apiKey && isDeployed) {
           setErrorMessage(
-            "API key is required for deployed LangGraph instances"
+            "API key is required for deployed LangGraph instances",
           );
           setIsSubmitting(false);
           return;
@@ -109,17 +109,17 @@ export function AddAgentInboxDialog({
             logger.log(`Fetched tenant ID: ${fetchedTenantId}`);
           } else {
             logger.log(
-              "No project_id in deployment info, using UUID for inbox ID"
+              "No project_id in deployment info, using UUID for inbox ID",
             );
             fetchedTenantId = deploymentInfo?.host?.tenant_id;
             logger.log(
-              `Fetched tenant ID (without project_id): ${fetchedTenantId}`
+              `Fetched tenant ID (without project_id): ${fetchedTenantId}`,
             );
           }
         } catch (error) {
           logger.error("Error fetching deployment info:", error);
           setErrorMessage(
-            "Failed to get deployment info. Check your deployment URL."
+            "Failed to get deployment info. Check your deployment URL.",
           );
           setIsSubmitting(false);
           return;
@@ -159,7 +159,7 @@ export function AddAgentInboxDialog({
     } catch (error) {
       logger.error("Error adding agent inbox:", error);
       setErrorMessage(
-        `Failed to add the agent inbox: ${error instanceof Error ? error.message : String(error)}. Please try again or check the console.`
+        `Failed to add the agent inbox: ${error instanceof Error ? error.message : String(error)}. Please try again or check the console.`,
       );
     } finally {
       setIsSubmitting(false);
@@ -200,7 +200,7 @@ export function AddAgentInboxDialog({
                   href={AGENT_INBOX_GITHUB_README_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-brand-500 hover:underline ml-1"
+                  className="text-brand-500 ml-1 hover:underline"
                 >
                   here
                 </a>
@@ -215,14 +215,17 @@ export function AddAgentInboxDialog({
           </DialogHeader>
         )}
         <form
-          className="flex flex-col items-center justify-center gap-4 py-4 w-full"
+          className="flex w-full flex-col items-center justify-center gap-4 py-4"
           onSubmit={handleSubmit}
         >
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
-            <Label htmlFor="graph-id" className="text-right">
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <Label
+              htmlFor="graph-id"
+              className="text-right"
+            >
               Assistant/Graph ID <span className="text-red-500">*</span>
             </Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               This is the ID of the graph (can be the graph name), or assistant
               to fetch threads from, and invoke when actions are taken.
             </p>
@@ -235,11 +238,14 @@ export function AddAgentInboxDialog({
               onChange={(e) => setGraphId(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
-            <Label htmlFor="deployment-url" className="text-right">
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <Label
+              htmlFor="deployment-url"
+              className="text-right"
+            >
               Deployment URL <span className="text-red-500">*</span>
             </Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               This is the URL of your LangGraph deployment. Can be a local, or
               production deployment.
             </p>
@@ -252,11 +258,14 @@ export function AddAgentInboxDialog({
               onChange={(e) => setDeploymentUrl(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-2 items-start justify-start w-full">
-            <Label htmlFor="name" className="text-right">
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <Label
+              htmlFor="name"
+              className="text-right"
+            >
               Name
             </Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Optional name for the inbox. Used in the sidebar.
             </p>
             <Input
@@ -268,12 +277,12 @@ export function AddAgentInboxDialog({
             />
           </div>
           {showLangChainApiKeyField && (
-            <div className="flex flex-col items-start gap-2 w-full">
-              <div className="flex flex-col gap-1 w-full items-start">
+            <div className="flex w-full flex-col items-start gap-2">
+              <div className="flex w-full flex-col items-start gap-1">
                 <Label htmlFor="langchain-api-key">
                   LangSmith API Key <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   This value is stored in your browser&apos;s local storage and
                   is only used to authenticate requests sent to your LangGraph
                   server.
@@ -291,7 +300,7 @@ export function AddAgentInboxDialog({
           )}
 
           {errorMessage && (
-            <div className="text-red-500 text-sm w-full">{errorMessage}</div>
+            <div className="w-full text-sm text-red-500">{errorMessage}</div>
           )}
 
           <div className="grid grid-cols-2 gap-4">

@@ -52,7 +52,7 @@ export function useInboxes() {
           setAgentInboxes(backfillResult.updatedInboxes);
           logger.log(
             "Initialized inboxes state after backfill:",
-            backfillResult.updatedInboxes
+            backfillResult.updatedInboxes,
           );
           // Now trigger the selection logic based on current URL param
           // This reuses the logic to select based on param or default
@@ -91,7 +91,7 @@ export function useInboxes() {
         const agentInboxesStr = getItem(AGENT_INBOXES_LOCAL_STORAGE_KEY);
         logger.log(
           "Reading inboxes from localStorage for selection logic:",
-          agentInboxesStr
+          agentInboxesStr,
         );
         if (agentInboxesStr && agentInboxesStr !== "[]") {
           try {
@@ -99,7 +99,7 @@ export function useInboxes() {
           } catch (error) {
             logger.error(
               "Error parsing agent inboxes for selection logic",
-              error
+              error,
             );
             // Handle error state appropriately
             setAgentInboxes([]);
@@ -132,7 +132,7 @@ export function useInboxes() {
       const agentInboxSearchParam = getSearchParam(AGENT_INBOX_PARAM);
       logger.log(
         "Agent inbox search param for selection:",
-        agentInboxSearchParam
+        agentInboxSearchParam,
       );
 
       // If there is no agent inbox search param, or the search param does not match any inbox
@@ -143,22 +143,22 @@ export function useInboxes() {
           currentInboxes[0].selected = true;
           updateQueryParams(
             [AGENT_INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM, INBOX_PARAM],
-            [currentInboxes[0].id, "0", "10", "interrupted"]
+            [currentInboxes[0].id, "0", "10", "interrupted"],
           );
           setAgentInboxes(currentInboxes);
           setItem(
             AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(currentInboxes)
+            JSON.stringify(currentInboxes),
           );
         } else {
           updateQueryParams(
             [AGENT_INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM, INBOX_PARAM],
-            [selectedInbox.id, "0", "10", "interrupted"]
+            [selectedInbox.id, "0", "10", "interrupted"],
           );
           setAgentInboxes(currentInboxes);
           setItem(
             AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(currentInboxes)
+            JSON.stringify(currentInboxes),
           );
         }
 
@@ -174,7 +174,7 @@ export function useInboxes() {
 
       // Param exists: Find inbox by param ID
       const selectedByParam = currentInboxes.find(
-        (inbox) => inbox.id === agentInboxSearchParam
+        (inbox) => inbox.id === agentInboxSearchParam,
       );
 
       if (selectedByParam) {
@@ -185,7 +185,7 @@ export function useInboxes() {
         finalSelectedInboxId = currentInboxes[0]?.id || null;
         logger.log(
           "Inbox for search param not found, selecting first inbox:",
-          finalSelectedInboxId
+          finalSelectedInboxId,
         );
         if (finalSelectedInboxId) {
           // Update URL to reflect the actual selection
@@ -203,7 +203,7 @@ export function useInboxes() {
       if (JSON.stringify(updatedInboxes) !== JSON.stringify(agentInboxes)) {
         logger.log(
           "Updating agentInboxes state with selection:",
-          updatedInboxes
+          updatedInboxes,
         );
         setAgentInboxes(updatedInboxes);
       }
@@ -213,7 +213,7 @@ export function useInboxes() {
       getItem,
       agentInboxes, // Include agentInboxes state to compare against
       updateQueryParams,
-    ]
+    ],
   );
 
   /**
@@ -236,7 +236,7 @@ export function useInboxes() {
         // Set agent inbox, offset, and limit
         updateQueryParams(
           [AGENT_INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM, INBOX_PARAM],
-          [newInbox.id, "0", "10", "interrupted"]
+          [newInbox.id, "0", "10", "interrupted"],
         );
         return;
       }
@@ -258,7 +258,7 @@ export function useInboxes() {
         setAgentInboxes(updatedInboxes);
         setItem(
           AGENT_INBOXES_LOCAL_STORAGE_KEY,
-          JSON.stringify(updatedInboxes)
+          JSON.stringify(updatedInboxes),
         );
 
         // Update URL to show the new inbox
@@ -276,7 +276,7 @@ export function useInboxes() {
         });
       }
     },
-    [getItem, setItem, updateQueryParams, router]
+    [getItem, setItem, updateQueryParams, router],
   );
 
   /**
@@ -297,7 +297,7 @@ export function useInboxes() {
           parsedAgentInboxes.find((inbox) => inbox.id === id)?.selected ||
           false;
         const updatedInboxes = parsedAgentInboxes.filter(
-          (inbox) => inbox.id !== id
+          (inbox) => inbox.id !== id,
         );
 
         // Handle empty result
@@ -325,13 +325,13 @@ export function useInboxes() {
           setAgentInboxes(selectedInboxes);
           setItem(
             AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(selectedInboxes)
+            JSON.stringify(selectedInboxes),
           );
           updateQueryParams(AGENT_INBOX_PARAM, firstInbox.id);
         } else {
           setItem(
             AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(updatedInboxes)
+            JSON.stringify(updatedInboxes),
           );
         }
 
@@ -347,7 +347,7 @@ export function useInboxes() {
         });
       }
     },
-    [getItem, setItem, updateQueryParams, router]
+    [getItem, setItem, updateQueryParams, router],
   );
 
   /**
@@ -362,7 +362,7 @@ export function useInboxes() {
         prevInboxes.map((inbox) => ({
           ...inbox,
           selected: inbox.id === id,
-        }))
+        })),
       );
 
       // Update localStorage
@@ -377,7 +377,7 @@ export function useInboxes() {
 
           setItem(
             AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(updatedInboxes)
+            JSON.stringify(updatedInboxes),
           );
         } catch (error) {
           logger.error("Error updating selected inbox in localStorage", error);
@@ -389,7 +389,7 @@ export function useInboxes() {
         // Set agent inbox, offset, limit, and inbox param
         updateQueryParams(
           [AGENT_INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM, INBOX_PARAM],
-          [id, "0", "10", "interrupted"]
+          [id, "0", "10", "interrupted"],
         );
       } else {
         const url = new URL(window.location.href);
@@ -403,7 +403,7 @@ export function useInboxes() {
         window.location.href = newUrl;
       }
     },
-    [getItem, setItem, updateQueryParams, router]
+    [getItem, setItem, updateQueryParams, router],
   );
 
   /**
@@ -421,7 +421,7 @@ export function useInboxes() {
       try {
         const parsedInboxes: AgentInbox[] = JSON.parse(agentInboxesStr);
         const currentInbox = parsedInboxes.find(
-          (inbox) => inbox.id === updatedInbox.id
+          (inbox) => inbox.id === updatedInbox.id,
         );
 
         if (!currentInbox) {
@@ -434,13 +434,13 @@ export function useInboxes() {
         const updatedInboxes = parsedInboxes.map((inbox) =>
           inbox.id === updatedInbox.id
             ? { ...updatedInbox, selected: wasSelected }
-            : inbox
+            : inbox,
         );
 
         setAgentInboxes(updatedInboxes);
         setItem(
           AGENT_INBOXES_LOCAL_STORAGE_KEY,
-          JSON.stringify(updatedInboxes)
+          JSON.stringify(updatedInboxes),
         );
 
         // Refresh data without full page reload
@@ -455,7 +455,7 @@ export function useInboxes() {
         });
       }
     },
-    [getItem, setItem, router]
+    [getItem, setItem, router],
   );
 
   return {

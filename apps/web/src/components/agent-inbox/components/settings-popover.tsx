@@ -52,7 +52,7 @@ export function SettingsPopover() {
   }, [langchainApiKey]);
 
   const handleChangeLangChainApiKey = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setLangchainApiKey(e.target.value);
     setItem(LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY, e.target.value);
@@ -111,7 +111,7 @@ export function SettingsPopover() {
       <PopoverTrigger asChild>
         <PillButton
           variant="outline"
-          className="flex gap-2 items-center justify-center text-gray-800 w-fit"
+          className="flex w-fit items-center justify-center gap-2 text-gray-800"
           size="lg"
         >
           <Settings />
@@ -121,18 +121,18 @@ export function SettingsPopover() {
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Settings</h4>
-            <p className="text-sm text-muted-foreground">
+            <h4 className="leading-none font-medium">Settings</h4>
+            <p className="text-muted-foreground text-sm">
               Configuration settings for Agent Inbox
             </p>
           </div>
-          <div className="flex flex-col items-start gap-4 w-full">
-            <div className="flex flex-col items-start gap-2 w-full">
-              <div className="flex flex-col gap-1 w-full items-start">
+          <div className="flex w-full flex-col items-start gap-4">
+            <div className="flex w-full flex-col items-start gap-2">
+              <div className="flex w-full flex-col items-start gap-1">
                 <Label htmlFor="langchain-api-key">
                   LangSmith API Key <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   This value is stored in your browser&apos;s local storage and
                   is only used to authenticate requests sent to your LangGraph
                   server.
@@ -148,10 +148,10 @@ export function SettingsPopover() {
               />
             </div>
             {!backfillCompleted && (
-              <div className="flex flex-col items-start gap-2 w-full border-t pt-4">
-                <div className="flex flex-col gap-1 w-full items-start">
+              <div className="flex w-full flex-col items-start gap-2 border-t pt-4">
+                <div className="flex w-full flex-col items-start gap-1">
                   <Label>Update Inbox IDs</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Update your inbox IDs to the new format that supports
                     sharing links across machines.
                   </p>
@@ -163,7 +163,7 @@ export function SettingsPopover() {
                 >
                   <RefreshCw
                     className={cn(
-                      isRunningBackfill ? "animate-spin h-4 w-4" : "h-4 w-4"
+                      isRunningBackfill ? "h-4 w-4 animate-spin" : "h-4 w-4",
                     )}
                   />
                   {isRunningBackfill ? "Updating..." : "Update Inbox IDs"}

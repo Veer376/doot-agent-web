@@ -29,7 +29,6 @@ import { useLocalStorage } from "../hooks/use-local-storage";
 import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
 
-
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
 > = {
@@ -49,7 +48,7 @@ type ThreadContentType<
     response: HumanResponse[],
     options?: {
       stream?: TStream;
-    }
+    },
   ) => TStream extends true
     ?
         | AsyncGenerator<{
@@ -59,12 +58,12 @@ type ThreadContentType<
         | undefined
     : Promise<Run> | undefined;
   fetchSingleThread: (
-    threadId: string
+    threadId: string,
   ) => Promise<ThreadData<ThreadValues> | undefined>;
 };
 
 const ThreadsContext = React.createContext<ThreadContentType | undefined>(
-  undefined
+  undefined,
 );
 
 interface GetClientArgs {
@@ -245,7 +244,7 @@ export function ThreadsProvider<
                 const threadInterrupts = getInterruptFromThread(currentThread);
                 if (!threadInterrupts || threadInterrupts.length === 0) {
                   const state = await client.threads.getState<ThreadValues>(
-                    currentThread.thread_id
+                    currentThread.thread_id,
                   );
 
                   return processThreadWithoutInterrupts(currentThread, {
@@ -262,7 +261,7 @@ export function ThreadsProvider<
                   invalidSchema: threadInterrupts.some(
                     (interrupt) =>
                       interrupt?.action_request?.action === IMPROPER_SCHEMA ||
-                      !interrupt?.action_request?.action
+                      !interrupt?.action_request?.action,
                   ),
                 };
               } catch (_e) {
@@ -283,7 +282,7 @@ export function ThreadsProvider<
                 invalidSchema: undefined,
               } as ThreadData<ThreadValues>;
             }
-          }
+          },
         );
 
         // Process all threads concurrently
@@ -304,7 +303,7 @@ export function ThreadsProvider<
       }
       setLoading(false);
     },
-    [agentInboxes, getItem, getSearchParam, toast]
+    [agentInboxes, getItem, getSearchParam, toast],
   );
 
   const fetchSingleThread = React.useCallback(
@@ -330,7 +329,7 @@ export function ThreadsProvider<
             {
               thread_state: state,
               thread_id: threadId,
-            }
+            },
           );
 
           if (processedThread) {
@@ -349,7 +348,7 @@ export function ThreadsProvider<
             threadInterrupts.some(
               (interrupt) =>
                 interrupt?.action_request?.action === IMPROPER_SCHEMA ||
-                !interrupt?.action_request?.action
+                !interrupt?.action_request?.action,
             ),
         };
       }
@@ -373,7 +372,7 @@ export function ThreadsProvider<
         invalidSchema: undefined,
       };
     },
-    [agentInboxes, getItem, getSearchParam]
+    [agentInboxes, getItem, getSearchParam],
   );
 
   const ignoreThread = async (threadId: string) => {
@@ -415,7 +414,7 @@ export function ThreadsProvider<
     response: HumanResponse[],
     options?: {
       stream?: TStream;
-    }
+    },
   ): TStream extends true
     ?
         | AsyncGenerator<{

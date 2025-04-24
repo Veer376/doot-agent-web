@@ -11,7 +11,7 @@ const PillButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 PillButton.displayName = "PillButton";
 

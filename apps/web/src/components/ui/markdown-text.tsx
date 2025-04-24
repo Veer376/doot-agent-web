@@ -3,11 +3,15 @@ import Markdown, { Options } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
-export interface MarkdownTextProps extends Omit<Options, 'className'> {
+export interface MarkdownTextProps extends Omit<Options, "className"> {
   className?: string;
 }
 
-export function MarkdownText({ children, className, ...props }: MarkdownTextProps) {
+export function MarkdownText({
+  children,
+  className,
+  ...props
+}: MarkdownTextProps) {
   return (
     <div className={className}>
       <Markdown
@@ -17,7 +21,7 @@ export function MarkdownText({ children, className, ...props }: MarkdownTextProp
           pre: ({ node: _node, ...props }) => (
             <pre
               {...props}
-              className="my-1 rounded-lg bg-muted p-4 text-wrap break-words whitespace-pre-wrap"
+              className="bg-muted my-1 rounded-lg p-4 text-wrap break-words whitespace-pre-wrap"
             />
           ),
           code: ({ node: _node, ...props }) => {
@@ -27,22 +31,28 @@ export function MarkdownText({ children, className, ...props }: MarkdownTextProp
                 {...props}
                 className={
                   isInline
-                    ? "rounded bg-muted px-1.5 py-0.5 font-mono text-sm"
+                    ? "bg-muted rounded px-1.5 py-0.5 font-mono text-sm"
                     : "block font-mono text-sm"
                 }
               />
             );
           },
           details: ({ node: _node, ...props }) => (
-            <details {...props} className="my-2 rounded-lg border p-4" />
+            <details
+              {...props}
+              className="my-2 rounded-lg border p-4"
+            />
           ),
           summary: ({ node: _node, ...props }) => (
-            <summary {...props} className="cursor-pointer font-medium" />
+            <summary
+              {...props}
+              className="cursor-pointer font-medium"
+            />
           ),
           h1: ({ node: _node, ...props }) => (
             <h1
               {...props}
-              className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl mb-2"
+              className="mb-2 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl"
             />
           ),
           h2: ({ node: _node, ...props }) => (
@@ -76,19 +86,30 @@ export function MarkdownText({ children, className, ...props }: MarkdownTextProp
             />
           ),
           ul: ({ node: _node, ...props }) => (
-            <ul {...props} className="ml-6 list-disc [&>li]:mt-1" />
+            <ul
+              {...props}
+              className="ml-6 list-disc [&>li]:mt-1"
+            />
           ),
           ol: ({ node: _node, ...props }) => (
-            <ol {...props} className="ml-6 list-decimal [&>li]:mt-1" />
+            <ol
+              {...props}
+              className="ml-6 list-decimal [&>li]:mt-1"
+            />
           ),
-          li: ({ node: _node, ...props }) => <li {...props} className="ml-4" />,
+          li: ({ node: _node, ...props }) => (
+            <li
+              {...props}
+              className="ml-4"
+            />
+          ),
           a: ({ node: _node, className, ...props }) => (
             <a
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "font-medium underline underline-offset-4 break-all",
-                className
+                "font-medium break-all underline underline-offset-4",
+                className,
               )}
               {...props}
             />

@@ -1,12 +1,12 @@
-"use client";;
+"use client";
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UploadCloud, House } from "lucide-react";
 import { SettingsPopover } from "../agent-inbox/components/settings-popover";
@@ -18,10 +18,10 @@ import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
 import { LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY } from "../agent-inbox/constants";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "../ui/tooltip";
 import { AddAgentInboxDialog } from "../agent-inbox/components/add-agent-inbox-dialog";
 import { useLocalStorage } from "../agent-inbox/hooks/use-local-storage";
@@ -49,22 +49,27 @@ export function InboxSidebar() {
   }, [langchainApiKey]);
 
   const handleChangeLangChainApiKey = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setLangchainApiKey(e.target.value);
     setItem(LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY, e.target.value);
   };
 
   return (
-    <Sidebar className="border-l-[1px] border-r-[0px] bg-[#F9FAFB]" side="right">
-      <SidebarContent className="flex flex-col h-screen pb-9 pt-6">
+    <Sidebar
+      className="border-r-[0px] border-l-[1px] bg-[#F9FAFB]"
+      side="right"
+    >
+      <SidebarContent className="flex h-screen flex-col pt-6 pb-9">
         <div className="flex items-center justify-between px-5">
-      
-          <InboxSidebarTrigger isOutside={false} className="mt-1" />
+          <InboxSidebarTrigger
+            isOutside={false}
+            className="mt-1"
+          />
         </div>
         <SidebarGroup className="flex-1 overflow-y-auto pt-6">
           <SidebarGroupContent className="h-full">
-            <SidebarMenu className="flex flex-col gap-2 justify-between h-full">
+            <SidebarMenu className="flex h-full flex-col justify-between gap-2">
               <div className="flex flex-col gap-2 pl-5">
                 {agentInboxes.map((item, idx) => {
                   const label = item.name || prettifyText(item.graphId);
@@ -73,8 +78,8 @@ export function InboxSidebar() {
                     <SidebarMenuItem
                       key={`graph-id-${item.graphId}-${idx}`}
                       className={cn(
-                        "flex items-center w-full",
-                        item.selected ? "bg-gray-100 rounded-md" : ""
+                        "flex w-full items-center",
+                        item.selected ? "rounded-md bg-gray-100" : "",
                       )}
                     >
                       <TooltipProvider>
@@ -84,14 +89,16 @@ export function InboxSidebar() {
                               onClick={() => changeAgentInbox(item.id)}
                             >
                               {isDeployed ? (
-                                <UploadCloud className="w-5 h-5 text-blue-500" />
+                                <UploadCloud className="h-5 w-5 text-blue-500" />
                               ) : (
-                                <House className="w-5 h-5 text-green-500" />
+                                <House className="h-5 w-5 text-green-500" />
                               )}
                               <span
                                 className={cn(
-                                  "truncate min-w-0 font-medium",
-                                  item.selected ? "text-black" : "text-gray-600"
+                                  "min-w-0 truncate font-medium",
+                                  item.selected
+                                    ? "text-black"
+                                    : "text-gray-600",
                                 )}
                               >
                                 {label}
@@ -120,7 +127,6 @@ export function InboxSidebar() {
 
               <div className="flex flex-col gap-3 pl-5">
                 <SettingsPopover />
-           
               </div>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -167,10 +173,7 @@ export function InboxSidebarTrigger({
     <TooltipIconButton
       tooltip="Toggle Inbox Sidebar"
       onClick={toggleSidebar}
-      className={cn(
-        className, 
-        isOutside && "absolute right-4 top-4 z-50"
-      )}
+      className={cn(className, isOutside && "absolute top-4 right-4 z-50")}
     >
       {isOutside ? (
         // Custom icon when outside, pointing to the right

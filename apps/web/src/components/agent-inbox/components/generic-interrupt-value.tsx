@@ -16,7 +16,7 @@ const truncateString = (str: string, maxLength: number = 100): string => {
 // Helper to render simple values or truncated complex values for the collapsed view
 const renderCollapsedValue = (
   value: any,
-  isComplex: boolean
+  isComplex: boolean,
 ): React.ReactNode => {
   if (value === null) {
     return <span className="text-gray-500">null</span>;
@@ -53,7 +53,7 @@ const renderCollapsedValue = (
       }
       const strValue = JSON.stringify(previewValue, null, 2); // Pretty print preview
       return (
-        <code className="rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap block">
+        <code className="block rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap">
           {/* Truncate the stringified preview if it's still too long */}
           {truncateString(strValue, 200)}
         </code>
@@ -72,7 +72,7 @@ const renderTableCellValue = (value: any): React.ReactNode => {
     try {
       // Stringify nested objects/arrays within the table
       return (
-        <code className="rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap block">
+        <code className="block rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap">
           {JSON.stringify(value, null, 2)}
         </code>
       );
@@ -130,14 +130,18 @@ export function GenericInterruptValue({
       {/* Header */}
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-medium text-gray-900 flex flex-wrap items-center justify-center gap-2">
-            Interrupt <ThreadIdCopyable showUUID threadId={id} />
+          <h3 className="flex flex-wrap items-center justify-center gap-2 font-medium text-gray-900">
+            Interrupt{" "}
+            <ThreadIdCopyable
+              showUUID
+              threadId={id}
+            />
           </h3>
           {/* Simple Toggle Button in Header */}
           {complex && shouldShowExpandButton && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-500 hover:text-gray-700 p-1 rounded hover:bg-gray-200"
+              className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
               aria-label={isExpanded ? "Collapse details" : "Expand details"}
             >
               {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -153,7 +157,10 @@ export function GenericInterruptValue({
         animate={{ height: "auto" }} // Let content dictate height
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence
+          mode="wait"
+          initial={false}
+        >
           {
             // Determine rendering mode
             (() => {
@@ -193,14 +200,14 @@ export function GenericInterruptValue({
                       }}
                     >
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50 sticky top-0 z-10">
+                        <thead className="sticky top-0 z-10 bg-gray-50">
                           {" "}
                           {/* Sticky header */}
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                               {Array.isArray(interrupt) ? "Index" : "Key"}
                             </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                               Value
                             </th>
                           </tr>
@@ -220,10 +227,10 @@ export function GenericInterruptValue({
                           )}
                           {displayEntries.map(([key, value]) => (
                             <tr key={key}>
-                              <td className="px-4 py-2 text-sm font-medium whitespace-nowrap text-gray-900 align-top">
+                              <td className="px-4 py-2 align-top text-sm font-medium whitespace-nowrap text-gray-900">
                                 {key}
                               </td>
-                              <td className="px-4 py-2 text-sm text-gray-500 align-top">
+                              <td className="px-4 py-2 align-top text-sm text-gray-500">
                                 {/* Render cell value using the helper */}
                                 {renderTableCellValue(value)}
                               </td>

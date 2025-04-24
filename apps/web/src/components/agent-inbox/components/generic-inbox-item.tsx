@@ -50,7 +50,7 @@ export function GenericInboxItem<
 
     const studioUrl = constructOpenInStudioURL(
       selectedInbox,
-      threadData.thread.thread_id
+      threadData.thread.thread_id,
     );
 
     if (studioUrl === "#") {
@@ -84,7 +84,7 @@ export function GenericInboxItem<
 
   const updatedAtDateString = format(
     new Date(threadData.thread.updated_at),
-    "MM/dd h:mm a"
+    "MM/dd h:mm a",
   );
 
   return (
@@ -92,26 +92,29 @@ export function GenericInboxItem<
       onClick={() =>
         updateQueryParams(
           VIEW_STATE_THREAD_QUERY_PARAM,
-          threadData.thread.thread_id
+          threadData.thread.thread_id,
         )
       }
       className={cn(
-        "grid grid-cols-12 w-full p-4 py-4.5 cursor-pointer hover:bg-gray-50/90 transition-colors ease-in-out h-[71px]",
-        !isLast && "border-b-[1px] border-gray-200"
+        "grid h-[71px] w-full cursor-pointer grid-cols-12 p-4 py-4.5 transition-colors ease-in-out hover:bg-gray-50/90",
+        !isLast && "border-b-[1px] border-gray-200",
       )}
     >
-      <div className="col-span-1 flex justify-center items-center">
+      <div className="col-span-1 flex items-center justify-center">
         {/* Empty space for alignment with interrupted items */}
       </div>
 
       <div
         className={cn(
           "col-span-6 flex items-center justify-start gap-2",
-          !selectedInbox && "col-span-9"
+          !selectedInbox && "col-span-9",
         )}
       >
         <p className="text-sm font-semibold text-black">Thread ID:</p>
-        <ThreadIdCopyable showUUID threadId={threadData.thread.thread_id} />
+        <ThreadIdCopyable
+          showUUID
+          threadId={threadData.thread.thread_id}
+        />
       </div>
 
       {selectedInbox && (
@@ -130,13 +133,13 @@ export function GenericInboxItem<
       <div
         className={cn(
           "col-span-2 flex items-center",
-          !selectedInbox && "col-start-10"
+          !selectedInbox && "col-start-10",
         )}
       >
         <InboxItemStatuses status={threadData.status} />
       </div>
 
-      <p className="col-span-1 text-right text-sm text-gray-600 font-light pt-2">
+      <p className="col-span-1 pt-2 text-right text-sm font-light text-gray-600">
         {updatedAtDateString}
       </p>
     </div>

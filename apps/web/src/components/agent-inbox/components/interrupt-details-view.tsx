@@ -8,7 +8,7 @@ export function InterruptDetailsView({
   threadData: ThreadData<any>;
 }) {
   return (
-    <div className="flex flex-col gap-4 h-full w-full">
+    <div className="flex h-full w-full flex-col gap-4">
       {threadData.thread.interrupts &&
       Object.entries(threadData.thread.interrupts).length > 0 ? (
         Object.entries(threadData.thread.interrupts).map(
@@ -18,10 +18,10 @@ export function InterruptDetailsView({
               interrupt={values?.[values?.length - 1]?.value}
               id={interruptId}
             />
-          )
+          ),
         )
       ) : (
-        <div className="text-gray-500 text-sm">No interrupt data available</div>
+        <div className="text-sm text-gray-500">No interrupt data available</div>
       )}
     </div>
   );

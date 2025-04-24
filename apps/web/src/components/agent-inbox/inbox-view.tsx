@@ -123,7 +123,7 @@ export function AgentInboxView<
     // Update query params
     updateQueryParams(
       [INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM],
-      [inbox, "0", "10"]
+      [inbox, "0", "10"],
     );
   };
 
@@ -149,7 +149,7 @@ export function AgentInboxView<
         if (selectedInbox === "all") return true;
         return t.status === selectedInbox;
       }),
-    [selectedInbox, threadData]
+    [selectedInbox, threadData],
   );
   const noThreadsFound = !threadDataToRender.length;
 
@@ -173,7 +173,7 @@ export function AgentInboxView<
     // If none have scroll, find scrollable elements as fallback
     else {
       const scrollableElements = document.querySelectorAll(
-        '[class*="overflow"]'
+        '[class*="overflow"]',
       );
       scrollableElements.forEach((el) => {
         const htmlEl = el as HTMLElement;
@@ -186,14 +186,17 @@ export function AgentInboxView<
   };
 
   return (
-    <div ref={containerRef} className="min-w-[1000px] h-full overflow-y-auto">
-      <div className="pl-5 pt-4">
+    <div
+      ref={containerRef}
+      className="h-full min-w-[1000px] overflow-y-auto"
+    >
+      <div className="pt-4 pl-5">
         <BackfillBanner />
         <InboxButtons changeInbox={changeInbox} />
       </div>
       <div
         ref={scrollableContentRef}
-        className="flex flex-col items-start w-full max-h-fit h-full border-y-[1px] border-gray-50 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 mt-3"
+        className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 mt-3 flex h-full max-h-fit w-full flex-col items-start overflow-y-auto border-y-[1px] border-gray-50"
       >
         {threadDataToRender.map((threadData, idx) => {
           return (
@@ -206,23 +209,23 @@ export function AgentInboxView<
           );
         })}
         {noThreadsFound && !loading && (
-          <div className="w-full flex items-center justify-center p-4 flex-col">
-            <div className="flex gap-2 items-center justify-center text-gray-700 mb-4">
-              <InboxIcon className="w-6 h-6" />
+          <div className="flex w-full flex-col items-center justify-center p-4">
+            <div className="mb-4 flex items-center justify-center gap-2 text-gray-700">
+              <InboxIcon className="h-6 w-6" />
               <p className="font-medium">No threads found</p>
             </div>
           </div>
         )}
         {noThreadsFound && loading && (
-          <div className="w-full flex items-center justify-center p-4">
-            <div className="flex gap-2 items-center justify-center text-gray-700">
+          <div className="flex w-full items-center justify-center p-4">
+            <div className="flex items-center justify-center gap-2 text-gray-700">
               <p className="font-medium">Loading</p>
-              <LoaderCircle className="w-6 h-6 animate-spin" />
+              <LoaderCircle className="h-6 w-6 animate-spin" />
             </div>
           </div>
         )}
       </div>
-      <div className="flex justify-start w-full p-5">
+      <div className="flex w-full justify-start p-5">
         <Pagination />
       </div>
     </div>

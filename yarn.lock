@@ -3738,7 +3738,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4":
+"@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4, @tailwindcss/oxide-linux-x64-gnu@npm:^4.0.1":
   version: 4.1.4
   resolution: "@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4"
   conditions: os=linux & cpu=x64 & libc=glibc
@@ -8757,7 +8757,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lightningcss-linux-x64-gnu@npm:1.29.3":
+"lightningcss-linux-x64-gnu@npm:1.29.3, lightningcss-linux-x64-gnu@npm:^1.29.1":
   version: 1.29.3
   resolution: "lightningcss-linux-x64-gnu@npm:1.29.3"
   conditions: os=linux & cpu=x64 & libc=glibc
@@ -10702,6 +10702,7 @@ __metadata:
   resolution: "open-agent-platform@workspace:."
   dependencies:
     "@eslint/eslintrc": ^3.3.0
+    "@tailwindcss/oxide-linux-x64-gnu": ^4.0.1
     "@tsconfig/recommended": ^1.0.8
     "@typescript-eslint/eslint-plugin": ^8.26.1
     "@typescript-eslint/parser": ^8.26.1
@@ -10712,11 +10713,17 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^5.2.3
     lightningcss: ^1.29.3
+    lightningcss-linux-x64-gnu: ^1.29.1
     prettier: ^3.3.3
     rehype-raw: latest
     tsx: ^4.19.1
     turbo: ^2.5.0
     typescript: ^5
+  dependenciesMeta:
+    "@tailwindcss/oxide-linux-x64-gnu":
+      optional: true
+    lightningcss-linux-x64-gnu:
+      optional: true
   languageName: unknown
   linkType: soft
 

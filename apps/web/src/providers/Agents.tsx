@@ -51,6 +51,14 @@ type AgentsContextType = {
    * Whether the agents list is currently loading.
    */
   loading: boolean;
+  /**
+   * The currently selected agent's ID (format: "assistant_id:deploymentId")
+   */
+  selectedAgentId: string | null;
+  /**
+   * Function to change the selected agent 
+   */
+  changeSelectedAgent: (agentId: string) => void;
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
@@ -59,6 +67,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const deployments = getDeployments();
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +77,14 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     firstRequestMade.current = true;
     setLoading(true);
     getAgents(deployments)
-      .then(setAgents)
+      .then((fetchedAgents) => {
+        setAgents(fetchedAgents);
+        // Select the first agent by default if none is selected
+        if (!selectedAgentId && fetchedAgents.length > 0) {
+          const firstAgent = fetchedAgents[0];
+          setSelectedAgentId(`${firstAgent.assistant_id}:${firstAgent.deploymentId}`);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -81,10 +97,16 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
+  const changeSelectedAgent = (agentId: string) => {
+    setSelectedAgentId(agentId);
+  };
+
   const agentsContextValue = {
     agents,
     loading,
     refreshAgents,
+    selectedAgentId,
+    changeSelectedAgent,
   };
 
   return (

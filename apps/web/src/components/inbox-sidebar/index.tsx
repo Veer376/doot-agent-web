@@ -26,12 +26,17 @@ import { useAgentsContext } from "@/providers/Agents";
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
+import { useRouter } from "next/navigation";
+import { useQueryParams } from "../agent-inbox/hooks/use-query-params";
 
 export function InboxSidebar() {
-  const { agents, loading } = useAgentsContext();
+  const { agents, loading, selectedAgentId, changeSelectedAgent } = useAgentsContext();
   const [langchainApiKey, setLangchainApiKey] = React.useState("");
   const { getItem } = useLocalStorage();
   const deployments = getDeployments();
+  const router = useRouter();
+  const { updateQueryParams } = useQueryParams();
+  const lastSelectedAgentRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     try {
@@ -47,6 +52,32 @@ export function InboxSidebar() {
       console.error("Error getting/setting LangSmith API key", e);
     }
   }, [langchainApiKey]);
+
+  // Function to handle agent selection
+  const handleAgentSelect = (agent: any) => {
+    const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
+    
+    // Skip if already selected to prevent loops
+    if (agentId === selectedAgentId) return;
+    
+    // Update ref to track last selected agent
+    lastSelectedAgentRef.current = agentId;
+    
+    // Update selected agent in context
+    changeSelectedAgent(agentId);
+    
+    // Use timeout to break potential render cycles and allow state to settle
+    setTimeout(() => {
+      // Update query params to load appropriate thread data
+      updateQueryParams(
+        ["offset", "limit", "inbox"],
+        ["0", "10", "interrupted"]
+      );
+      
+      // Refresh to ensure UI updates
+      router.refresh();
+    }, 10);
+  };
 
   return (
     <Sidebar
@@ -108,8 +139,9 @@ export function InboxSidebar() {
                                   const label =
                                     agent.name || prettifyText(agent.graph_id);
                                   const isDefault = isDefaultAssistant(agent);
-                                  // Default selected property to false since it doesn't exist on Agent type
-                                  const isSelected = false;
+                                  // Check if this agent is selected
+                                  const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
+                                  const isSelected = selectedAgentId === agentId;
 
                                   return (
                                     <SidebarMenuItem
@@ -125,10 +157,7 @@ export function InboxSidebar() {
                                         <Tooltip delayDuration={200}>
                                           <TooltipTrigger asChild>
                                             <SidebarMenuButton
-                                              onClick={() => {
-                                                // TODO: Implement changeAgent function
-                                                // that's similar to changeAgentInbox
-                                              }}
+                                              onClick={() => handleAgentSelect(agent)}
                                             >
                                               {isDeployed ? (
                                                 <UploadCloud className="h-5 w-5 text-blue-500" />
@@ -155,8 +184,6 @@ export function InboxSidebar() {
                                           </TooltipContent>
                                         </Tooltip>
                                       </TooltipProvider>
-
-                                      {/* TODO: Implement DropdownDialogMenu for agents */}
                                     </SidebarMenuItem>
                                   );
                                 })}

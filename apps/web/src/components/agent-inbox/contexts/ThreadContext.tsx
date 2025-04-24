@@ -28,6 +28,10 @@ import {
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
+import { useAgentsContext } from "@/providers/Agents";
+import { v4 as uuidv4 } from 'uuid';
+import { getDeployments } from "@/lib/environment/deployments";
+import { Deployment } from "@/types/deployment";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -116,6 +120,9 @@ export function ThreadsProvider<
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { getItem } = useLocalStorage();
   const { toast } = useToast();
+  const { selectedAgentId, agents } = useAgentsContext();
+  const deployments = getDeployments();
+  const processedAgentIdRef = React.useRef<string | null>(null);
 
   const { getSearchParam, searchParams } = useQueryParams();
   const [loading, setLoading] = React.useState(false);
@@ -131,6 +138,55 @@ export function ThreadsProvider<
     changeAgentInbox,
     updateAgentInbox,
   } = useInboxes();
+
+  // Effect for loading threads when selectedAgentId changes
+  React.useEffect(() => {
+    // Skip if no selectedAgentId or if we've already processed this agent ID
+    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current) return;
+    
+    // Update ref to prevent processing the same agent multiple times
+    processedAgentIdRef.current = selectedAgentId;
+    
+    // Extract assistant_id and deploymentId from selectedAgentId
+    const [assistantId, deploymentId] = selectedAgentId.split(':');
+    if (!assistantId || !deploymentId) return;
+    
+    // Find or create an agent inbox for this agent
+    const existingInbox = agentInboxes.find(
+      inbox => inbox.graphId === assistantId && inbox.deploymentUrl.includes(deploymentId)
+    );
+    
+    if (existingInbox) {
+      // If inbox exists, select it
+      changeAgentInbox(existingInbox.id);
+    } else {
+      // Create a new agent inbox for this agent
+      const agent = agents.find(
+        a => a.assistant_id === assistantId && a.deploymentId === deploymentId
+      );
+      
+      if (agent) {
+        // Create and add new inbox using agent data
+        const deployment = deployments.find((d: Deployment) => d.id === agent.deploymentId);
+        
+        if (deployment) {
+          const newInbox: AgentInbox = {
+            id: uuidv4(),
+            graphId: agent.graph_id,
+            deploymentUrl: deployment.deploymentUrl,
+            name: agent.name,
+            selected: true,
+            createdAt: new Date().toISOString(),
+          };
+          
+          // Use setTimeout to break the render cycle and prevent infinite loops
+          setTimeout(() => {
+            addAgentInbox(newInbox);
+          }, 0);
+        }
+      }
+    }
+  }, [selectedAgentId, agentInboxes, agents, deployments]);
 
   const limitParam = searchParams.get(LIMIT_PARAM);
   const offsetParam = searchParams.get(OFFSET_PARAM);

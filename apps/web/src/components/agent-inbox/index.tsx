@@ -12,15 +12,18 @@ import { ThreadView } from "./thread-view";
 import { useScrollPosition } from "./hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
+import { useAgentsContext } from "@/providers/Agents";
 
 export function AgentInbox<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
   const { searchParams, updateQueryParams, getSearchParam } = useQueryParams();
+  const { selectedAgentId } = useAgentsContext();
   const [_selectedInbox, setSelectedInbox] =
     React.useState<ThreadStatusWithAll>("interrupted");
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const processedAgentIdRef = React.useRef<string | null>(null);
 
   const selectedThreadIdParam = searchParams.get(VIEW_STATE_THREAD_QUERY_PARAM);
   const isStateViewOpen = !!selectedThreadIdParam;
@@ -37,6 +40,24 @@ export function AgentInbox<
   const nextSearchParams = useSearchParams();
   const navigationSignature = `${pathname}?${nextSearchParams}`;
   const prevNavigationSignature = React.useRef("");
+
+  // Effect to update parameters when selectedAgentId changes
+  React.useEffect(() => {
+    // Skip if no selectedAgentId or if we've already processed this agent ID
+    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current) return;
+    
+    // Update ref to prevent processing the same agent multiple times
+    processedAgentIdRef.current = selectedAgentId;
+    
+    // Use setTimeout to break potential render cycles
+    setTimeout(() => {
+      // When agent selection changes, update relevant query params
+      updateQueryParams(
+        [INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM],
+        ["interrupted", "0", "10"],
+      );
+    }, 0);
+  }, [selectedAgentId]);
 
   // Effect to handle transitions between list and thread views
   React.useEffect(() => {

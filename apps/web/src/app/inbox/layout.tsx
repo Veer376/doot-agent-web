@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <body className={inter.className}>
+    <div className={inter.className}>
       <React.Suspense fallback={<div>Loading (layout)...</div>}>
         <Toaster />
         <ThreadsProvider>
@@ -52,6 +52,6 @@ export default function RootLayout({
           </div>
         </ThreadsProvider>
       </React.Suspense>
-    </body>
+    </div>
   );
 }

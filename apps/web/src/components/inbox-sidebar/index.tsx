@@ -9,11 +9,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UploadCloud, House } from "lucide-react";
-import { SettingsPopover } from "../agent-inbox/components/settings-popover";
 import React from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TooltipIconButton } from "../ui/assistant-ui/tooltip-icon-button";
-import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
 import { LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY } from "../agent-inbox/constants";
@@ -23,15 +21,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { AddAgentInboxDialog } from "../agent-inbox/components/add-agent-inbox-dialog";
 import { useLocalStorage } from "../agent-inbox/hooks/use-local-storage";
-import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
+import { useAgentsContext } from "@/providers/Agents";
+import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import { getDeployments } from "@/lib/environment/deployments";
+import { Deployment } from "@/types/deployment";
 
 export function InboxSidebar() {
-  const { agentInboxes, changeAgentInbox, deleteAgentInbox } =
-    useThreadsContext();
+  const { agents, loading } = useAgentsContext();
   const [langchainApiKey, setLangchainApiKey] = React.useState("");
-  const { getItem, setItem } = useLocalStorage();
+  const { getItem } = useLocalStorage();
+  const deployments = getDeployments();
 
   React.useEffect(() => {
     try {
@@ -47,13 +47,6 @@ export function InboxSidebar() {
       console.error("Error getting/setting LangSmith API key", e);
     }
   }, [langchainApiKey]);
-
-  const handleChangeLangChainApiKey = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setLangchainApiKey(e.target.value);
-    setItem(LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY, e.target.value);
-  };
 
   return (
     <Sidebar
@@ -71,62 +64,111 @@ export function InboxSidebar() {
           <SidebarGroupContent className="h-full">
             <SidebarMenu className="flex h-full flex-col justify-between gap-2">
               <div className="flex flex-col gap-2 pl-5">
-                {agentInboxes.map((item, idx) => {
-                  const label = item.name || prettifyText(item.graphId);
-                  const isDeployed = isDeployedUrl(item.deploymentUrl);
-                  return (
-                    <SidebarMenuItem
-                      key={`graph-id-${item.graphId}-${idx}`}
-                      className={cn(
-                        "flex w-full items-center",
-                        item.selected ? "rounded-md bg-gray-100" : "",
-                      )}
-                    >
-                      <TooltipProvider>
-                        <Tooltip delayDuration={200}>
-                          <TooltipTrigger asChild>
-                            <SidebarMenuButton
-                              onClick={() => changeAgentInbox(item.id)}
-                            >
-                              {isDeployed ? (
-                                <UploadCloud className="h-5 w-5 text-blue-500" />
-                              ) : (
-                                <House className="h-5 w-5 text-green-500" />
-                              )}
-                              <span
-                                className={cn(
-                                  "min-w-0 truncate font-medium",
-                                  item.selected
-                                    ? "text-black"
-                                    : "text-gray-600",
-                                )}
+                {loading ? (
+                  <div className="px-2 py-4 text-sm text-gray-500">
+                    Loading agents...
+                  </div>
+                ) : (
+                  <>
+                    {deployments.map((deployment: Deployment) => {
+                      // Filter agents for the current deployment
+                      const deploymentAgents = agents.filter(
+                        (agent) => agent.deploymentId === deployment.id,
+                      );
+
+                      // Skip deployments with no agents
+                      if (deploymentAgents.length === 0) {
+                        return null;
+                      }
+
+                      // Group agents by graph
+                      const agentsByGraph =
+                        groupAgentsByGraphs(deploymentAgents);
+
+                      return (
+                        <React.Fragment key={deployment.id}>
+                          <div className="text-muted-foreground mb-2 px-2 text-xs font-medium">
+                            {deployment.name}
+                          </div>
+
+                          {agentsByGraph.map((graphAgents, graphIdx) => {
+                            if (graphAgents.length === 0) return null;
+
+                            // Use the first agent's graph_id as the group identifier
+                            const graphId = graphAgents[0].graph_id;
+
+                            return (
+                              <React.Fragment
+                                key={`${deployment.id}-${graphId}`}
                               >
-                                {label}
-                              </span>
-                            </SidebarMenuButton>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {label} - {isDeployed ? "Deployed" : "Local"}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                                {graphAgents.map((agent, agentIdx) => {
+                                  const isDeployed = isDeployedUrl(
+                                    deployment.deploymentUrl || "",
+                                  );
+                                  const label =
+                                    agent.name || prettifyText(agent.graph_id);
+                                  const isDefault = isDefaultAssistant(agent);
+                                  // Default selected property to false since it doesn't exist on Agent type
+                                  const isSelected = false;
 
-                      <DropdownDialogMenu
-                        item={item}
-                        deleteAgentInbox={deleteAgentInbox}
-                      />
-                    </SidebarMenuItem>
-                  );
-                })}
-                <AddAgentInboxDialog
-                  hideTrigger={false}
-                  langchainApiKey={langchainApiKey}
-                  handleChangeLangChainApiKey={handleChangeLangChainApiKey}
-                />
-              </div>
+                                  return (
+                                    <SidebarMenuItem
+                                      key={`agent-${agent.assistant_id}`}
+                                      className={cn(
+                                        "flex w-full items-center",
+                                        isSelected
+                                          ? "rounded-md bg-gray-100"
+                                          : "",
+                                      )}
+                                    >
+                                      <TooltipProvider>
+                                        <Tooltip delayDuration={200}>
+                                          <TooltipTrigger asChild>
+                                            <SidebarMenuButton
+                                              onClick={() => {
+                                                // TODO: Implement changeAgent function
+                                                // that's similar to changeAgentInbox
+                                              }}
+                                            >
+                                              {isDeployed ? (
+                                                <UploadCloud className="h-5 w-5 text-blue-500" />
+                                              ) : (
+                                                <House className="h-5 w-5 text-green-500" />
+                                              )}
+                                              <span
+                                                className={cn(
+                                                  "min-w-0 truncate font-medium",
+                                                  isSelected
+                                                    ? "text-black"
+                                                    : "text-gray-600",
+                                                )}
+                                              >
+                                                {isDefault
+                                                  ? "Default agent"
+                                                  : label}
+                                              </span>
+                                            </SidebarMenuButton>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            {label} -{" "}
+                                            {isDeployed ? "Deployed" : "Local"}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
 
-              <div className="flex flex-col gap-3 pl-5">
-                <SettingsPopover />
+                                      {/* TODO: Implement DropdownDialogMenu for agents */}
+                                    </SidebarMenuItem>
+                                  );
+                                })}
+                              </React.Fragment>
+                            );
+                          })}
+                          <div className="my-2 h-px bg-gray-200" />
+                        </React.Fragment>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </SidebarMenu>
           </SidebarGroupContent>

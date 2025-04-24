@@ -7,7 +7,7 @@ import {
   ThreadStatusWithAll,
 } from "@/components/agent-inbox/types";
 import { useToast, type ToastInput } from "@/hooks/use-toast";
-import { createClient } from "@/lib/client";
+import { createClient } from "@/app/inbox/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import { END } from "@langchain/langgraph/web";
 import React from "react";
@@ -28,6 +28,7 @@ import {
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
+
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,

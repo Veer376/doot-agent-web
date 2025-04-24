@@ -5,7 +5,7 @@ import { Toaster } from "sonner";
 import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
 import React from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar, AppSidebarTrigger } from "@/components/app-sidebar";
+import { InboxSidebar, InboxSidebarTrigger } from "@/components/inbox-sidebar";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({
@@ -29,10 +29,9 @@ export default function RootLayout({
         <React.Suspense fallback={<div>Loading (layout)...</div>}>
           <Toaster />
           <ThreadsProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <main className="flex flex-row w-full min-h-full pt-6 pl-6 gap-6">
-                <AppSidebarTrigger isOutside={true} />
+            <div className="flex flex-row w-full min-h-full">
+              {/* Main content area, including left sidebar (handled by main app layout) */}
+              <main className="flex flex-row w-full min-h-full pt-6 pl-6 pr-6 gap-6">
                 <div className="flex flex-col gap-6 w-full min-h-full">
                   <div
                     className={cn(
@@ -43,11 +42,16 @@ export default function RootLayout({
                     {children}
                   </div>
                 </div>
+                
+                {/* Right sidebar for inbox */}
+                <SidebarProvider>
+                  <InboxSidebar />
+                  <InboxSidebarTrigger isOutside={true} />
+                </SidebarProvider>
               </main>
-            </SidebarProvider>
+            </div>
           </ThreadsProvider>
         </React.Suspense>
       </body>
- 
   );
 }

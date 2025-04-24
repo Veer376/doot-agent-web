@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
-  ClockIcon,
-  AlertCircle,
-  Loader,
+    ArrowLeft,
+    RefreshCw,
+    AlertTriangle,
+    ClockIcon,
+    AlertCircle,
+    Loader,
 } from "lucide-react";
 import { ThreadData, GenericThreadData } from "../types";
 import useInterruptedActions from "../hooks/use-interrupted-actions";
@@ -14,8 +14,8 @@ import { ThreadIdCopyable } from "./thread-id";
 import { InboxItemInput } from "./inbox-item-input";
 import { TooltipIconButton } from "@/components/ui/assistant-ui/tooltip-icon-button";
 import {
-  STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
-  VIEW_STATE_THREAD_QUERY_PARAM,
+    STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
+    VIEW_STATE_THREAD_QUERY_PARAM,
 } from "../constants";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -24,9 +24,9 @@ import { useThreadsContext } from "../contexts/ThreadContext";
 import { useState } from "react";
 
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { InterruptDetailsView } from "./interrupt-details-view";
 

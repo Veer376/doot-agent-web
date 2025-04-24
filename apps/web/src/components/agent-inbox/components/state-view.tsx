@@ -1,25 +1,24 @@
 import { ChevronRight, X, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  baseMessageObject,
-  isArrayOfMessages,
-  prettifyText,
-  unknownToPrettyDate,
+    baseMessageObject,
+    isArrayOfMessages,
+    prettifyText,
+    unknownToPrettyDate,
 } from "../utils";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BaseMessage } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
-import React from "react";
 import { Button } from "../../ui/button";
 import { ToolCallTable } from "./tool-call-table";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { ThreadData } from "../types";
 import {
-  EmptyStateView,
-  InterruptedDescriptionView,
-  NonInterruptedDescriptionView,
-  ThreadStateView,
+    EmptyStateView,
+    InterruptedDescriptionView,
+    NonInterruptedDescriptionView,
+    ThreadStateView,
 } from "./views";
 
 interface StateViewRecursiveProps {

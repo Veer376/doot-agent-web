@@ -100,7 +100,7 @@ export function ThreadView<
       <div
         className={cn(
           "flex overflow-y-auto",
-          showSidePanel ? "lg:min-w-1/2 lg:max-w-2xl w-full" : "w-full"
+          showSidePanel ? "lg:w-1/2 w-full" : "w-full"
         )}
       >
         <ThreadActionsView<ThreadValues>
@@ -116,7 +116,7 @@ export function ThreadView<
       <div
         className={cn(
           showSidePanel ? "flex" : "hidden",
-          "overflow-y-auto lg:max-w-1/2 w-full"
+          "overflow-y-auto lg:w-1/2 w-full"
         )}
       >
         <StateView

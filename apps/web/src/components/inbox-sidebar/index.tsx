@@ -1,40 +1,33 @@
-"use client";
-
-import NextLink from "next/link";
+"use client";;
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { FileText, UploadCloud, House } from "lucide-react";
-import { agentInboxSvg } from "../agent-inbox/components/agent-inbox-logo";
+import { UploadCloud, House } from "lucide-react";
 import { SettingsPopover } from "../agent-inbox/components/settings-popover";
-import { PillButton } from "../ui/pill-button";
 import React from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TooltipIconButton } from "../ui/assistant-ui/tooltip-icon-button";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
+import { LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY } from "../agent-inbox/constants";
 import {
-  AGENT_INBOX_GITHUB_README_URL,
-  LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY,
-} from "../agent-inbox/constants";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from "../ui/tooltip";
 import { AddAgentInboxDialog } from "../agent-inbox/components/add-agent-inbox-dialog";
 import { useLocalStorage } from "../agent-inbox/hooks/use-local-storage";
 import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
 
-export function AppSidebar() {
+export function InboxSidebar() {
   const { agentInboxes, changeAgentInbox, deleteAgentInbox } =
     useThreadsContext();
   const [langchainApiKey, setLangchainApiKey] = React.useState("");
@@ -63,18 +56,16 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r-[0px] bg-[#F9FAFB]">
+    <Sidebar className="border-l-[1px] border-r-[0px] bg-[#F9FAFB]" side="right">
       <SidebarContent className="flex flex-col h-screen pb-9 pt-6">
-        <div className="flex items-center justify-between px-11">
-          <NextLink href="/" className="flex-shrink-0 w-full">
-            {agentInboxSvg}
-          </NextLink>
-          <AppSidebarTrigger isOutside={false} className="mt-1" />
+        <div className="flex items-center justify-between px-5">
+      
+          <InboxSidebarTrigger isOutside={false} className="mt-1" />
         </div>
         <SidebarGroup className="flex-1 overflow-y-auto pt-6">
           <SidebarGroupContent className="h-full">
             <SidebarMenu className="flex flex-col gap-2 justify-between h-full">
-              <div className="flex flex-col gap-2 pl-7">
+              <div className="flex flex-col gap-2 pl-5">
                 {agentInboxes.map((item, idx) => {
                   const label = item.name || prettifyText(item.graphId);
                   const isDeployed = isDeployedUrl(item.deploymentUrl);
@@ -127,22 +118,9 @@ export function AppSidebar() {
                 />
               </div>
 
-              <div className="flex flex-col gap-3 pl-7">
+              <div className="flex flex-col gap-3 pl-5">
                 <SettingsPopover />
-                <NextLink
-                  href={AGENT_INBOX_GITHUB_README_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <PillButton
-                    variant="outline"
-                    className="flex gap-2 items-center justify-center text-gray-800"
-                    size="lg"
-                  >
-                    <FileText />
-                    <span>Documentation</span>
-                  </PillButton>
-                </NextLink>
+           
               </div>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -170,7 +148,7 @@ const sidebarTriggerSVG = (
   </svg>
 );
 
-export function AppSidebarTrigger({
+export function InboxSidebarTrigger({
   isOutside,
   className,
 }: {
@@ -187,11 +165,33 @@ export function AppSidebarTrigger({
 
   return (
     <TooltipIconButton
-      tooltip="Toggle Sidebar"
+      tooltip="Toggle Inbox Sidebar"
       onClick={toggleSidebar}
-      className={className}
+      className={cn(
+        className, 
+        isOutside && "absolute right-4 top-4 z-50"
+      )}
     >
-      {sidebarTriggerSVG}
+      {isOutside ? (
+        // Custom icon when outside, pointing to the right
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 2V14M5.2 2H10.8C11.9201 2 12.4802 2 12.908 2.21799C13.2843 2.40973 13.5903 2.71569 13.782 3.09202C14 3.51984 14 4.0799 14 5.2V10.8C14 11.9201 14 12.4802 13.782 12.908C13.5903 13.2843 13.2843 13.5903 12.908 13.782C12.4802 14 11.9201 14 10.8 14H5.2C4.07989 14 3.51984 14 3.09202 13.782C2.71569 13.5903 2.40973 13.2843 2.21799 12.908C2 12.4802 2 11.9201 2 10.8V5.2C2 4.07989 2 3.51984 2.21799 3.09202C2.40973 2.71569 2.71569 2.40973 3.09202 2.21799C3.51984 2 4.0799 2 5.2 2Z"
+            stroke="#3F3F46"
+            strokeWidth="1.66667"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        sidebarTriggerSVG
+      )}
     </TooltipIconButton>
   );
 }

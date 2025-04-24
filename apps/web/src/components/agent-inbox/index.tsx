@@ -152,7 +152,7 @@ export function AgentInbox<
   return (
     <AgentInboxView<ThreadValues>
       saveScrollPosition={saveScrollPosition}
-      containerRef={containerRef}
+      containerRef={containerRef as React.RefObject<HTMLDivElement>}
     />
   );
 }

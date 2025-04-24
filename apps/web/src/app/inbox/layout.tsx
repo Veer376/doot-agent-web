@@ -30,25 +30,25 @@ export default function RootLayout({
           <Toaster />
           <ThreadsProvider>
             <div className="flex flex-row w-full min-h-full">
-              {/* Main content area, including left sidebar (handled by main app layout) */}
-              <main className="flex flex-row w-full min-h-full pt-6 pl-6 pr-6 gap-6">
-                <div className="flex flex-col gap-6 w-full min-h-full">
-                  <div
-                    className={cn(
-                      "h-full bg-white rounded-tl-[58px]",
-                      "overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
-                    )}
-                  >
-                    {children}
-                  </div>
+              {/* Main content area */}
+              <div className="flex-grow pt-6 pl-6">
+                <div
+                  className={cn(
+                    "h-full bg-white rounded-tl-[58px]",
+                    "overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                  )}
+                >
+                  {children}
                 </div>
-                
-                {/* Right sidebar for inbox */}
-                <SidebarProvider>
+              </div>
+              
+              {/* Right sidebar for inbox - width auto prevents it from taking extra space */}
+              <div className="flex-none">
+                <SidebarProvider style={{ width: "auto" }}>
                   <InboxSidebar />
                   <InboxSidebarTrigger isOutside={true} />
                 </SidebarProvider>
-              </main>
+              </div>
             </div>
           </ThreadsProvider>
         </React.Suspense>

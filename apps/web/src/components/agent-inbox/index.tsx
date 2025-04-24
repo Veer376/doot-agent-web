@@ -44,11 +44,12 @@ export function AgentInbox<
   // Effect to update parameters when selectedAgentId changes
   React.useEffect(() => {
     // Skip if no selectedAgentId or if we've already processed this agent ID
-    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current) return;
-    
+    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current)
+      return;
+
     // Update ref to prevent processing the same agent multiple times
     processedAgentIdRef.current = selectedAgentId;
-    
+
     // Use setTimeout to break potential render cycles
     setTimeout(() => {
       // When agent selection changes, update relevant query params

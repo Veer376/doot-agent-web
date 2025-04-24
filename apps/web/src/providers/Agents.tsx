@@ -56,7 +56,7 @@ type AgentsContextType = {
    */
   selectedAgentId: string | null;
   /**
-   * Function to change the selected agent 
+   * Function to change the selected agent
    */
   changeSelectedAgent: (agentId: string) => void;
 };
@@ -82,7 +82,9 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
         // Select the first agent by default if none is selected
         if (!selectedAgentId && fetchedAgents.length > 0) {
           const firstAgent = fetchedAgents[0];
-          setSelectedAgentId(`${firstAgent.assistant_id}:${firstAgent.deploymentId}`);
+          setSelectedAgentId(
+            `${firstAgent.assistant_id}:${firstAgent.deploymentId}`,
+          );
         }
       })
       .finally(() => setLoading(false));

@@ -30,7 +30,8 @@ import { useRouter } from "next/navigation";
 import { useQueryParams } from "../agent-inbox/hooks/use-query-params";
 
 export function InboxSidebar() {
-  const { agents, loading, selectedAgentId, changeSelectedAgent } = useAgentsContext();
+  const { agents, loading, selectedAgentId, changeSelectedAgent } =
+    useAgentsContext();
   const [langchainApiKey, setLangchainApiKey] = React.useState("");
   const { getItem } = useLocalStorage();
   const deployments = getDeployments();
@@ -56,24 +57,24 @@ export function InboxSidebar() {
   // Function to handle agent selection
   const handleAgentSelect = (agent: any) => {
     const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
-    
+
     // Skip if already selected to prevent loops
     if (agentId === selectedAgentId) return;
-    
+
     // Update ref to track last selected agent
     lastSelectedAgentRef.current = agentId;
-    
+
     // Update selected agent in context
     changeSelectedAgent(agentId);
-    
+
     // Use timeout to break potential render cycles and allow state to settle
     setTimeout(() => {
       // Update query params to load appropriate thread data
       updateQueryParams(
         ["offset", "limit", "inbox"],
-        ["0", "10", "interrupted"]
+        ["0", "10", "interrupted"],
       );
-      
+
       // Refresh to ensure UI updates
       router.refresh();
     }, 10);
@@ -141,7 +142,8 @@ export function InboxSidebar() {
                                   const isDefault = isDefaultAssistant(agent);
                                   // Check if this agent is selected
                                   const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
-                                  const isSelected = selectedAgentId === agentId;
+                                  const isSelected =
+                                    selectedAgentId === agentId;
 
                                   return (
                                     <SidebarMenuItem
@@ -157,7 +159,9 @@ export function InboxSidebar() {
                                         <Tooltip delayDuration={200}>
                                           <TooltipTrigger asChild>
                                             <SidebarMenuButton
-                                              onClick={() => handleAgentSelect(agent)}
+                                              onClick={() =>
+                                                handleAgentSelect(agent)
+                                              }
                                             >
                                               {isDeployed ? (
                                                 <UploadCloud className="h-5 w-5 text-blue-500" />

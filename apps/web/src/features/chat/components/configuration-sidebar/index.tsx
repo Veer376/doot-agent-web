@@ -22,10 +22,43 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import _ from "lodash";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export interface AIConfigPanelProps {
   className?: string;
   open: boolean;
+}
+
+function ToolConfigField({
+  id,
+  label,
+  description,
+}: {
+  id: string;
+  label: string;
+  description?: string;
+}) {
+  const [checked, setChecked] = useState(false);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label
+          htmlFor={id}
+          className="text-sm font-medium"
+        >
+          {_.startCase(label)}
+        </Label>
+        <Switch
+          id={id}
+          checked={checked}
+          onCheckedChange={setChecked}
+        />
+      </div>
+      {description && <p className="text-xs text-gray-500">{description}</p>}
+    </div>
+  );
 }
 
 export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
@@ -198,41 +231,25 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
                     </Button>
                   }
                 >
-                  <ConfigField
+                  <ToolConfigField
                     id="enableWebSearch"
                     label="Web Search"
-                    type="switch"
                     description="Allow the AI to search the web for information"
-                    agentId=""
                   />
-                  <ConfigField
+                  <ToolConfigField
                     id="enableCalculator"
                     label="Calculator"
-                    type="switch"
                     description="Enable mathematical calculations"
-                    agentId=""
                   />
-                  <ConfigField
+                  <ToolConfigField
                     id="enableCodeInterpreter"
                     label="Code Interpreter"
-                    type="switch"
                     description="Run code snippets and return results"
-                    agentId=""
                   />
-                  <ConfigField
+                  <ToolConfigField
                     id="enableImageGeneration"
                     label="Image Generation"
-                    type="switch"
                     description="Generate images from text descriptions"
-                    agentId=""
-                  />
-                  <Separator className="my-2" />
-                  <ConfigField
-                    id="customTools"
-                    label="Custom Tools"
-                    type="json"
-                    description="Define custom tools in JSON format"
-                    agentId=""
                   />
                 </ConfigSection>
               </TabsContent>

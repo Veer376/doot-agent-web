@@ -70,7 +70,7 @@ export function useRag(
   initialCollections: Collection[] = [],
   initialDocs: RagDocument[] = initialDocuments, // Use sample data or allow override
 ): UseRagReturn {
-  // --- State --- 
+  // --- State ---
   const [collections, setCollections] =
     useState<Collection[]>(initialCollections);
   const [documents, setDocuments] = useState<RagDocument[]>(initialDocs);

@@ -1,27 +1,15 @@
-import React, {
-  createContext,
-  useContext,
-  PropsWithChildren,
-} from "react";
+import React, { createContext, useContext, PropsWithChildren } from "react";
 import { useRag } from "../hooks/use-rag";
 
-interface RagContextType extends ReturnType<typeof useRag> {}
+type RagContextType = ReturnType<typeof useRag>;
 
 const RagContext = createContext<RagContextType | null>(null);
 
-interface RagProviderProps extends PropsWithChildren {}
-
-export const RagProvider: React.FC<RagProviderProps> = ({
-  children,
-}) => {
+export const RagProvider: React.FC<PropsWithChildren> = ({ children }) => {
   // TODO: Fetch initial collections here and pass to the useRag hook.
   const ragState = useRag();
 
-  return (
-    <RagContext.Provider value={ragState}>
-      {children}
-    </RagContext.Provider>
-  );
+  return <RagContext.Provider value={ragState}>{children}</RagContext.Provider>;
 };
 
 export const useRagContext = () => {

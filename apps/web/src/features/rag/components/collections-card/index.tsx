@@ -34,7 +34,8 @@ export function CollectionsCard({
   setSelectedCollection,
   setCurrentPage,
 }: CollectionsCardProps) {
-  const { createCollection, deleteCollection, deleteDocumentsByCollection } = useRagContext();
+  const { createCollection, deleteCollection, deleteDocumentsByCollection } =
+    useRagContext();
 
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");

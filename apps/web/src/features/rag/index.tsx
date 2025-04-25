@@ -4,56 +4,11 @@ import type React from "react";
 import { useState } from "react";
 import { DocumentsCard } from "./components/documents-card";
 import { CollectionsCard } from "./components/collections-card";
-import type { Collection } from "@/types/collection";
-
-const getDefaultCollection = (collections: Collection[]) => {
-  return collections.find((c) => c.name === "Default") ?? collections[0];
-};
+import { useRagContext } from "./providers/RAG";
 
 export default function RAGInterface() {
-  // Use the custom hook for collections
-  const initialCollections = [
-    { name: "Default", description: "Default collection" },
-    { name: "Technical Documentation", description: "Software and API docs" },
-    { name: "Science & Nature", description: "Physics, biology, environment" },
-    {
-      name: "History & Culture",
-      description: "World history, traditions, societies",
-    },
-    {
-      name: "Arts & Literature",
-      description: "Painting, books, poetry, theatre",
-    },
-    { name: "Health & Wellness", description: "Medicine, fitness, nutrition" },
-    {
-      name: "Business & Finance",
-      description: "Economics, markets, investing",
-    },
-    { name: "Travel & Geography", description: "Countries, cities, landmarks" },
-    { name: "Food & Cooking", description: "Recipes, cuisines, restaurants" },
-    {
-      name: "Sports & Recreation",
-      description: "Athletics, games, outdoor activities",
-    },
-    {
-      name: "Music & Entertainment",
-      description: "Movies, TV shows, artists, genres",
-    },
-    { name: "Current Events", description: "News, politics, world affairs" },
-    {
-      name: "Programming & Computer Science",
-      description: "Algorithms, languages, systems",
-    },
-    { name: "Philosophy & Religion", description: "Ethics, beliefs, thinkers" },
-    {
-      name: "Education & Learning",
-      description: "Teaching methods, academic resources",
-    },
-  ];
-
-  const [selectedCollection, setSelectedCollection] = useState(
-    getDefaultCollection(initialCollections).name,
-  );
+  const { selectedCollection, setSelectedCollection, collections } =
+    useRagContext();
   const [currentPage, setCurrentPage] = useState(1);
 
   return (
@@ -62,7 +17,7 @@ export default function RAGInterface() {
         {/* Collections Section */}
         <div className="md:col-span-1">
           <CollectionsCard
-            collections={initialCollections}
+            collections={collections}
             selectedCollection={selectedCollection}
             setSelectedCollection={setSelectedCollection}
             setCurrentPage={setCurrentPage}

@@ -23,10 +23,56 @@ import {
 } from "@/components/ui/pagination";
 import { Trash2 } from "lucide-react";
 import type { Collection } from "@/types/collection";
+import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
+
+function DeleteCollection({
+  collection,
+  onDelete,
+}: {
+  collection: Collection;
+  onDelete: (name: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <AlertDialog>
+        <AlertDialogTrigger
+          asChild
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+          >
+            <Trash2 className="text-destructive h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the collection "{collection.name}
+              "? This will also delete all associated documents.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDelete(collection.name)}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
 
 interface CollectionsListProps {
   collections: Collection[];
-  selectedCollection: string;
+  selectedCollection: Collection | undefined;
   onSelect: (name: string) => void;
   onDelete: (name: string) => void;
   currentPage: number;
@@ -57,45 +103,16 @@ export function CollectionsList({
         {paginatedCollections.map((collection) => (
           <div
             key={collection.name}
-            className={`flex cursor-pointer items-center justify-between rounded-md p-2 ${selectedCollection === collection.name ? "bg-muted" : "hover:bg-muted/50"}`}
+            className={`flex cursor-pointer items-center justify-between rounded-md p-2 ${selectedCollection?.name === collection.name ? "bg-muted" : "hover:bg-muted/50"}`}
             onClick={() => onSelect(collection.name)}
           >
             <span>{collection.name}</span>
-            <div className="flex items-center gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger
-                  asChild
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete the collection "
-                      {collection.name}"? This will also delete all associated
-                      documents.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => onDelete(collection.name)}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+            {collection.name !== DEFAULT_COLLECTION_NAME && (
+              <DeleteCollection
+                collection={collection}
+                onDelete={onDelete}
+              />
+            )}
           </div>
         ))}
       </div>

@@ -25,9 +25,10 @@ import {
 import { Plus, FileUp } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
+import { Collection } from "@/types/collection";
 
 interface DocumentsCardProps {
-  selectedCollection: string;
+  selectedCollection: Collection | undefined;
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -43,13 +44,15 @@ export function DocumentsCard({
     handleTextUpload: handleDocumentTextUpload,
   } = useRagContext();
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const [textInput, setTextInput] = useState("");
 
   const filteredDocuments = useMemo(
     () =>
-      documents.filter((doc) => doc.metadata.collection === selectedCollection),
+      documents.filter(
+        (doc) => doc.metadata.collection === selectedCollection?.name,
+      ),
     [documents, selectedCollection],
   );
 
@@ -66,14 +69,21 @@ export function DocumentsCard({
 
   // Handle file upload (uses document hook)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedCollection) {
+      throw new Error("No collection selected");
+    }
     const files = event.target.files;
-    handleDocumentFileUpload(files, selectedCollection);
+    handleDocumentFileUpload(files, selectedCollection.name);
   };
 
   // Handle text upload (uses document hook)
   const handleTextUpload = () => {
+    if (!selectedCollection) {
+      throw new Error("No collection selected");
+    }
+
     if (textInput.trim()) {
-      handleDocumentTextUpload(textInput, selectedCollection);
+      handleDocumentTextUpload(textInput, selectedCollection.name);
       setTextInput(""); // Clear text input after upload
     }
   };
@@ -81,7 +91,7 @@ export function DocumentsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{`${selectedCollection} Documents`}</CardTitle>
+        <CardTitle>{`${selectedCollection?.name || ""} Documents`}</CardTitle>
         <CardDescription>
           {"Manage documents in this collection"}
         </CardDescription>
@@ -138,12 +148,14 @@ export function DocumentsCard({
         </div>
 
         {/* Document Table */}
-        <div className="rounded-md border">
-          <DocumentsTable
-            documents={currentDocuments}
-            selectedCollection={selectedCollection}
-          />
-        </div>
+        {selectedCollection && (
+          <div className="rounded-md border">
+            <DocumentsTable
+              documents={currentDocuments}
+              selectedCollection={selectedCollection}
+            />
+          </div>
+        )}
 
         {/* Pagination */}
         {filteredDocuments.length > itemsPerPage && (

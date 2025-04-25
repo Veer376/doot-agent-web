@@ -12,7 +12,7 @@ import { MarkdownText } from "@/components/ui/markdown-text";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { CircleX, LoaderCircle, Undo2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { logger } from "../utils/logger";
 
 function ResetButton({ handleReset }: { handleReset: () => void }) {
@@ -48,9 +48,11 @@ function ArgsRenderer({ args }: { args: Record<string, any> }) {
               {prettifyText(k)}:
             </p>
             <span className="w-full max-w-full rounded-xl bg-zinc-100 p-3 text-[13px] leading-[18px] text-black">
-              <MarkdownText className="text-wrap break-words break-all whitespace-pre-wrap">
-                {value}
-              </MarkdownText>
+              <div className="text-wrap break-words break-all whitespace-pre-wrap">
+                <MarkdownText>
+                  {value}
+                </MarkdownText>
+              </div>
             </span>
           </div>
         );
@@ -341,7 +343,6 @@ export function InboxItemInput({
   setHasAddedResponse,
   handleSubmit,
 }: InboxItemInputProps) {
-  const { toast } = useToast();
   const isEditAllowed = interruptValue?.config?.allow_edit ?? false;
   const isResponseAllowed = interruptValue?.config?.allow_respond ?? false;
   const hasArgs =
@@ -361,11 +362,7 @@ export function InboxItemInput({
       (Array.isArray(change) && !Array.isArray(key)) ||
       (!Array.isArray(change) && Array.isArray(key))
     ) {
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong");
       return;
     }
 

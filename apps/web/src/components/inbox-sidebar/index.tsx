@@ -21,7 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { useLocalStorage } from "../agent-inbox/hooks/use-local-storage";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAgentsContext } from "@/providers/Agents";
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";

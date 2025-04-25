@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useQueryParams } from "./use-query-params";
 import {
   AGENT_INBOX_PARAM,
@@ -9,7 +9,7 @@ import {
   LIMIT_PARAM,
   INBOX_PARAM,
 } from "../constants";
-import { useLocalStorage } from "./use-local-storage";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { AgentInbox } from "../types";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,6 @@ export function useInboxes() {
   const { getSearchParam, updateQueryParams } = useQueryParams();
   const router = useRouter();
   const { getItem, setItem } = useLocalStorage();
-  const { toast } = useToast();
   const [agentInboxes, setAgentInboxes] = useState<AgentInbox[]>([]);
   const initialLoadComplete = useRef(false);
 
@@ -268,12 +267,7 @@ export function useInboxes() {
         router.refresh();
       } catch (error) {
         logger.error("Error adding agent inbox", error);
-        toast({
-          title: "Error",
-          description: "Failed to add agent inbox. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+        toast.error("Failed to add agent inbox. Please try again.");
       }
     },
     [getItem, setItem, updateQueryParams, router],
@@ -339,12 +333,7 @@ export function useInboxes() {
         router.refresh();
       } catch (error) {
         logger.error("Error deleting agent inbox", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete agent inbox. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+        toast.error("Failed to delete agent inbox. Please try again.");
       }
     },
     [getItem, setItem, updateQueryParams, router],
@@ -447,12 +436,7 @@ export function useInboxes() {
         router.refresh();
       } catch (error) {
         logger.error("Error updating agent inbox", error);
-        toast({
-          title: "Error",
-          description: "Failed to update agent inbox. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+        toast.error("Failed to update agent inbox. Please try again.");
       }
     },
     [getItem, setItem, router],

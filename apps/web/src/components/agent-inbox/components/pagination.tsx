@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQueryParams } from "../hooks/use-query-params";
 import { ThreadStatusWithAll } from "../types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { INBOX_PARAM, LIMIT_PARAM, OFFSET_PARAM } from "../constants";
 
 function DisplayLimitSelect() {
@@ -51,7 +51,6 @@ function DisplayLimitSelect() {
 
 export function Pagination() {
   const { searchParams, getSearchParam, updateQueryParams } = useQueryParams();
-  const { toast } = useToast();
   const { hasMoreThreads, loading } = useThreadsContext();
 
   const isPreviousDisabled =
@@ -63,12 +62,7 @@ export function Pagination() {
       | ThreadStatusWithAll
       | undefined;
     if (!selectedInbox) {
-      toast({
-        title: "Error",
-        description: "No inbox selected",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("No inbox selected");
       return;
     }
 
@@ -83,12 +77,7 @@ export function Pagination() {
       | ThreadStatusWithAll
       | undefined;
     if (!selectedInbox) {
-      toast({
-        title: "Error",
-        description: "No inbox selected",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("No inbox selected");
       return;
     }
 

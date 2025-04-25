@@ -9,7 +9,7 @@ import {
 import { ThreadStatusWithAll } from "./types";
 import { AgentInboxView } from "./inbox-view";
 import { ThreadView } from "./thread-view";
-import { useScrollPosition } from "./hooks/use-scroll-position";
+import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
 import { useAgentsContext } from "@/providers/Agents";

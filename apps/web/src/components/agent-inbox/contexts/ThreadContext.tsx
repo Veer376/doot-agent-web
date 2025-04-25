@@ -6,8 +6,8 @@ import {
   ThreadData,
   ThreadStatusWithAll,
 } from "@/components/agent-inbox/types";
-import { useToast, type ToastInput } from "@/hooks/use-toast";
-import { createClient } from "@/app/inbox/lib/client";
+import { toast } from "sonner";
+import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import { END } from "@langchain/langgraph/web";
 import React from "react";
@@ -25,7 +25,7 @@ import {
   processInterruptedThread,
   processThreadWithoutInterrupts,
 } from "./utils";
-import { useLocalStorage } from "../hooks/use-local-storage";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
 import { useAgentsContext } from "@/providers/Agents";
@@ -73,26 +73,20 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 interface GetClientArgs {
   agentInboxes: AgentInbox[];
   getItem: (key: string) => string | null | undefined;
-  toast: (input: ToastInput) => void;
 }
 
-const getClient = ({ agentInboxes, getItem, toast }: GetClientArgs) => {
+const getClient = ({ agentInboxes, getItem }: GetClientArgs) => {
   if (agentInboxes.length === 0) {
-    toast({
-      title: "Error",
-      description: "Agent inbox not found. Please add an inbox in settings. (",
-      variant: "destructive",
+    toast.error("Agent inbox not found", {
+      description: "Please add an inbox in settings.",
       duration: 3000,
     });
     return;
   }
   const deploymentUrl = agentInboxes.find((i) => i.selected)?.deploymentUrl;
   if (!deploymentUrl) {
-    toast({
-      title: "Error",
-      description:
-        "Please ensure your selected agent inbox has a deployment URL.",
-      variant: "destructive",
+    toast.error("Missing deployment URL", {
+      description: "Please ensure your selected agent inbox has a deployment URL.",
       duration: 5000,
     });
     return;
@@ -103,23 +97,21 @@ const getClient = ({ agentInboxes, getItem, toast }: GetClientArgs) => {
   // Only show this error if the deployment URL is for a deployed LangGraph instance.
   // Local graphs do NOT require an API key.
   if (!langchainApiKeyLS && deploymentUrl.includes("us.langgraph.app")) {
-    toast({
-      title: "Error",
+    toast.error("API Key Missing", {
       description: "Please add your LangSmith API key in settings.",
-      variant: "destructive",
       duration: 5000,
     });
     return;
   }
 
-  return createClient({ deploymentUrl, langchainApiKey: langchainApiKeyLS });
+  // Pass only the deploymentUrl string to match client.ts implementation
+  return createClient(deploymentUrl);
 };
 
 export function ThreadsProvider<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { getItem } = useLocalStorage();
-  const { toast } = useToast();
   const { selectedAgentId, agents } = useAgentsContext();
   const deployments = getDeployments();
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -223,7 +215,6 @@ export function ThreadsProvider<
       const client = getClient({
         agentInboxes,
         getItem,
-        toast,
       });
       if (!client) {
         setLoading(false);
@@ -243,10 +234,8 @@ export function ThreadsProvider<
         const offset = Number(offsetQueryParam);
 
         if (limit > 100) {
-          toast({
-            title: "Error",
+          toast.error("Limit Exceeded", {
             description: "Cannot fetch more than 100 threads at a time",
-            variant: "destructive",
             duration: 3000,
           });
           setLoading(false);
@@ -365,7 +354,7 @@ export function ThreadsProvider<
       }
       setLoading(false);
     },
-    [agentInboxes, getItem, getSearchParam, toast],
+    [agentInboxes, getItem, getSearchParam],
   );
 
   const fetchSingleThread = React.useCallback(
@@ -373,7 +362,6 @@ export function ThreadsProvider<
       const client = getClient({
         agentInboxes,
         getItem,
-        toast,
       });
       if (!client) {
         return;
@@ -441,7 +429,6 @@ export function ThreadsProvider<
     const client = getClient({
       agentInboxes,
       getItem,
-      toast,
     });
     if (!client) {
       return;
@@ -455,17 +442,14 @@ export function ThreadsProvider<
       setThreadData((prev) => {
         return prev.filter((p) => p.thread.thread_id !== threadId);
       });
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Ignored thread",
         duration: 3000,
       });
     } catch (e) {
       logger.error("Error ignoring thread", e);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to ignore thread",
-        variant: "destructive",
         duration: 3000,
       });
     }
@@ -487,11 +471,9 @@ export function ThreadsProvider<
     : Promise<Run> | undefined => {
     const graphId = agentInboxes.find((i) => i.selected)?.graphId;
     if (!graphId) {
-      toast({
-        title: "No assistant/graph ID found.",
+      toast.error("No assistant/graph ID found", {
         description:
           "Assistant/graph IDs are required to send responses. Please add an assistant/graph ID in the settings.",
-        variant: "destructive",
       });
       return undefined;
     }
@@ -499,7 +481,6 @@ export function ThreadsProvider<
     const client = getClient({
       agentInboxes,
       getItem,
-      toast,
     });
     if (!client) {
       return;

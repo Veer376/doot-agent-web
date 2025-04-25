@@ -6,7 +6,7 @@ import {
   ThreadStatusWithAll,
   InterruptedThreadData,
 } from "../types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import React from "react";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { createDefaultHumanResponse } from "../utils";
@@ -71,7 +71,6 @@ export default function useInterruptedActions<
   threadData,
   setThreadData,
 }: UseInterruptedActionsInput<ThreadValues>): UseInterruptedActionsValue {
-  const { toast } = useToast();
   const { updateQueryParams, getSearchParam } = useQueryParams();
   const { fetchSingleThread, fetchThreads, sendHumanResponse, ignoreThread } =
     useThreadsContext<ThreadValues>();
@@ -125,31 +124,18 @@ export default function useInterruptedActions<
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
-      toast({
-        title: "Error",
-        description: "Thread data is not available",
-        duration: 5000,
-      });
+      toast.error("Thread data is not available");
       return;
     }
     if (!humanResponse) {
-      toast({
-        title: "Error",
-        description: "Please enter a response.",
-        duration: 5000,
-      });
+      toast.error("Please enter a response.");
       return;
     }
     const currentInbox = getSearchParam(INBOX_PARAM) as
       | ThreadStatusWithAll
       | undefined;
     if (!currentInbox) {
-      toast({
-        title: "Error",
-        description: "No inbox selected",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("No inbox selected");
       return;
     }
 
@@ -194,12 +180,7 @@ export default function useInterruptedActions<
           (r) => r.type === selectedSubmitType,
         );
         if (!input) {
-          toast({
-            title: "Error",
-            description: "No response found.",
-            variant: "destructive",
-            duration: 5000,
-          });
+          toast.error("No response found.");
           return;
         }
 
@@ -218,8 +199,7 @@ export default function useInterruptedActions<
           return;
         }
 
-        toast({
-          title: "Success",
+        toast("Success", {
           description: "Response submitted successfully.",
           duration: 5000,
         });
@@ -234,8 +214,7 @@ export default function useInterruptedActions<
             typeof chunk.event === "string" &&
             chunk.event === "error"
           ) {
-            toast({
-              title: "Error",
+            toast.error("Error", {
               description: (
                 <div className="flex flex-col items-start gap-1">
                   <p>Something went wrong while attempting to run the graph.</p>
@@ -247,7 +226,6 @@ export default function useInterruptedActions<
                   </span>
                 </div>
               ),
-              variant: "destructive",
               duration: 15000,
             });
             setCurrentNode("__error__");
@@ -262,18 +240,13 @@ export default function useInterruptedActions<
         logger.error("Error sending human response", e);
 
         if ("message" in e && e.message.includes("Invalid assistant ID")) {
-          toast({
-            title: "Error: Invalid assistant ID",
+          toast.error("Error: Invalid assistant ID", {
             description:
               "The provided assistant ID was not found in this graph. Please update the assistant ID in the settings and try again.",
-            variant: "destructive",
             duration: 5000,
           });
         } else {
-          toast({
-            title: "Error",
-            description: "Failed to submit response.",
-            variant: "destructive",
+          toast.error("Failed to submit response.", {
             duration: 5000,
           });
         }
@@ -303,8 +276,7 @@ export default function useInterruptedActions<
       setLoading(true);
       await sendHumanResponse(threadData.thread.thread_id, humanResponse);
 
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Response submitted successfully.",
         duration: 5000,
       });
@@ -318,11 +290,7 @@ export default function useInterruptedActions<
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
-      toast({
-        title: "Error",
-        description: "Thread data is not available",
-        duration: 5000,
-      });
+      toast.error("Thread data is not available");
       return;
     }
 
@@ -336,12 +304,7 @@ export default function useInterruptedActions<
       | ThreadStatusWithAll
       | undefined;
     if (!currentInbox) {
-      toast({
-        title: "Error",
-        description: "No inbox selected",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("No inbox selected");
       return;
     }
 
@@ -352,8 +315,7 @@ export default function useInterruptedActions<
     await fetchThreads(currentInbox);
 
     setLoading(false);
-    toast({
-      title: "Successfully ignored thread",
+    toast("Successfully ignored thread", {
       duration: 5000,
     });
     updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
@@ -364,23 +326,14 @@ export default function useInterruptedActions<
   ) => {
     e.preventDefault();
     if (!threadData || !setThreadData) {
-      toast({
-        title: "Error",
-        description: "Thread data is not available",
-        duration: 5000,
-      });
+      toast.error("Thread data is not available");
       return;
     }
     const currentInbox = getSearchParam(INBOX_PARAM) as
       | ThreadStatusWithAll
       | undefined;
     if (!currentInbox) {
-      toast({
-        title: "Error",
-        description: "No inbox selected",
-        variant: "destructive",
-        duration: 3000,
-      });
+      toast.error("No inbox selected");
       return;
     }
 

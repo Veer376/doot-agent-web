@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import {
   forceInboxBackfill,
@@ -16,7 +16,7 @@ export function BackfillBanner() {
   const [mounted, setMounted] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const { toast } = useToast();
+
 
   // Only run this check after mounting on the client
   useEffect(() => {
@@ -35,28 +35,23 @@ export function BackfillBanner() {
       const result = await forceInboxBackfill();
 
       if (result.success) {
-        toast({
-          title: "Success",
+        toast("Success", {
           description:
             "Your inbox IDs have been updated. Please refresh the page to see your inboxes.",
           duration: 5000,
         });
         setShowBanner(false);
       } else {
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description:
             "Failed to update inbox IDs. Please try again or contact support.",
-          variant: "destructive",
           duration: 5000,
         });
       }
     } catch (error) {
       logger.error("Error running backfill:", error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive",
         duration: 5000,
       });
     } finally {
@@ -67,8 +62,7 @@ export function BackfillBanner() {
   const handleDismiss = () => {
     markBackfillCompleted();
     setShowBanner(false);
-    toast({
-      title: "Dismissed",
+    toast("Dismissed", {
       description:
         "The banner has been dismissed. You can still update your inboxes from settings.",
       duration: 3000,

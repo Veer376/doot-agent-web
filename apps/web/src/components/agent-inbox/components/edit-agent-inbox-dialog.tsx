@@ -8,7 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AgentInbox } from "../types";
 import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
@@ -22,7 +22,7 @@ export function EditAgentInboxDialog({
   agentInbox: AgentInbox;
 }) {
   const { updateAgentInbox } = useInboxes();
-  const { toast } = useToast();
+
   const [graphId, setGraphId] = React.useState(agentInbox.graphId);
   const [deploymentUrl, setDeploymentUrl] = React.useState(
     agentInbox.deploymentUrl,
@@ -48,8 +48,7 @@ export function EditAgentInboxDialog({
         name,
       });
 
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Agent inbox updated successfully",
         duration: 3000,
       });
@@ -58,10 +57,8 @@ export function EditAgentInboxDialog({
       window.location.reload();
     } catch (error) {
       logger.error("Error updating agent inbox", error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to update agent inbox",
-        variant: "destructive",
         duration: 3000,
       });
     }

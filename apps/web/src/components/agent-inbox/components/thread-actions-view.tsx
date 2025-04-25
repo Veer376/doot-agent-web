@@ -17,7 +17,7 @@ import {
   STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
   VIEW_STATE_THREAD_QUERY_PARAM,
 } from "../constants";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryParams } from "../hooks/use-query-params";
 import { useThreadsContext } from "../contexts/ThreadContext";
@@ -116,7 +116,6 @@ export function ThreadActionsView<
   setThreadData,
 }: ThreadActionsViewProps<ThreadValues>) {
   const { agentInboxes, fetchSingleThread } = useThreadsContext<ThreadValues>();
-  const { toast } = useToast();
   const { updateQueryParams } = useQueryParams();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -144,12 +143,7 @@ export function ThreadActionsView<
 
   const handleOpenInStudio = () => {
     if (!selectedInbox) {
-      toast({
-        title: "Error",
-        description: "No agent inbox selected.",
-        variant: "destructive",
-        duration: 5000,
-      });
+      toast.error("No agent inbox selected.");
       return;
     }
 
@@ -160,8 +154,7 @@ export function ThreadActionsView<
 
     if (studioUrl === "#") {
       // Handle case where URL construction failed (e.g., missing data)
-      toast({
-        title: "Error",
+      toast.error("Could not construct Studio URL. Check if inbox has necessary details (Project ID, Tenant ID).", {
         description: (
           <>
             <p>
@@ -180,7 +173,6 @@ export function ThreadActionsView<
             </p>
           </>
         ),
-        variant: "destructive",
         duration: 10000,
       });
     } else {
@@ -191,19 +183,13 @@ export function ThreadActionsView<
   const handleRefreshThread = async () => {
     // Use selectedInbox here as well
     if (!selectedInbox) {
-      toast({
-        title: "Error",
-        description: "No agent inbox selected.",
-        variant: "destructive",
-        duration: 5000,
-      });
+      toast.error("No agent inbox selected.");
       return;
     }
 
     setRefreshing(true);
     try {
-      toast({
-        title: "Refreshing thread",
+      toast("Refreshing thread", {
         description: "Checking for updates to the thread status...",
         duration: 3000,
       });
@@ -211,19 +197,13 @@ export function ThreadActionsView<
       // Fetch the latest thread data using the ThreadsContext
       await fetchSingleThread(threadData.thread.thread_id);
 
-      toast({
-        title: "Thread refreshed",
+      toast("Thread refreshed", {
         description: "Thread information has been updated.",
         duration: 3000,
       });
     } catch (error) {
       logger.error("Error refreshing thread:", error);
-      toast({
-        title: "Error",
-        description: "Failed to refresh thread information.",
-        variant: "destructive",
-        duration: 5000,
-      });
+      toast.error("Failed to refresh thread information.");
     } finally {
       setRefreshing(false);
     }

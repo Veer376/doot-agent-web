@@ -9,7 +9,7 @@ import {
   VIEW_STATE_THREAD_QUERY_PARAM,
 } from "../constants";
 import { GenericThreadData } from "../types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useThreadsContext } from "../contexts/ThreadContext";
 
@@ -32,17 +32,13 @@ export function GenericInboxItem<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ threadData, isLast }: GenericInboxItemProps<ThreadValues>) {
   const { updateQueryParams } = useQueryParams();
-  const { toast } = useToast();
   const { agentInboxes } = useThreadsContext();
 
   const selectedInbox = agentInboxes.find((i) => i.selected);
 
   const handleOpenInStudio = () => {
     if (!selectedInbox) {
-      toast({
-        title: "Error",
-        description: "No agent inbox selected.",
-        variant: "destructive",
+      toast.error("No agent inbox selected.", {
         duration: 5000,
       });
       return;
@@ -54,8 +50,7 @@ export function GenericInboxItem<
     );
 
     if (studioUrl === "#") {
-      toast({
-        title: "Error",
+      toast.error("Could not construct Studio URL. Check if inbox has necessary details (Project ID, Tenant ID).", {
         description: (
           <>
             <p>
@@ -74,7 +69,6 @@ export function GenericInboxItem<
             </p>
           </>
         ),
-        variant: "destructive",
         duration: 10000,
       });
     } else {

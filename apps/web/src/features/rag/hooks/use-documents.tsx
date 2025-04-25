@@ -8,7 +8,7 @@ export interface RagDocumentMetadata extends Record<string, any> {
   name: string;
   collection: string;
   size: string;
-  uploadDate: string;
+  created_at: string; // Use ISO 8601 format
 }
 
 // Define the structure of the document more explicitly
@@ -23,7 +23,7 @@ const initialDocuments: RagDocument[] = [
       name: "Introduction to AI.pdf",
       collection: "General Knowledge",
       size: "1.2 MB",
-      uploadDate: "2023-05-15",
+      created_at: new Date("2023-05-15T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -34,7 +34,7 @@ const initialDocuments: RagDocument[] = [
       name: "Machine Learning Basics.pdf",
       collection: "General Knowledge",
       size: "2.5 MB",
-      uploadDate: "2023-05-16",
+      created_at: new Date("2023-05-16T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -45,7 +45,7 @@ const initialDocuments: RagDocument[] = [
       name: "Neural Networks.pdf",
       collection: "General Knowledge",
       size: "3.1 MB",
-      uploadDate: "2023-05-17",
+      created_at: new Date("2023-05-17T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -56,7 +56,7 @@ const initialDocuments: RagDocument[] = [
       name: "API Documentation.pdf",
       collection: "Technical Documentation",
       size: "1.8 MB",
-      uploadDate: "2023-05-18",
+      created_at: new Date("2023-05-18T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -67,7 +67,7 @@ const initialDocuments: RagDocument[] = [
       name: "Database Schema.pdf",
       collection: "Technical Documentation",
       size: "0.9 MB",
-      uploadDate: "2023-05-19",
+      created_at: new Date("2023-05-19T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -78,7 +78,7 @@ const initialDocuments: RagDocument[] = [
       name: "Deployment Guide.pdf",
       collection: "Technical Documentation",
       size: "1.5 MB",
-      uploadDate: "2023-05-20",
+      created_at: new Date("2023-05-20T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -89,7 +89,7 @@ const initialDocuments: RagDocument[] = [
       name: "RAG Overview.pdf",
       collection: "General Knowledge",
       size: "2.2 MB",
-      uploadDate: "2023-05-21",
+      created_at: new Date("2023-05-21T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -100,7 +100,7 @@ const initialDocuments: RagDocument[] = [
       name: "Vector Databases.pdf",
       collection: "General Knowledge",
       size: "1.7 MB",
-      uploadDate: "2023-05-22",
+      created_at: new Date("2023-05-22T00:00:00.000Z").toISOString(),
     },
     id: uuidv4(),
   },
@@ -169,7 +169,7 @@ export function useDocuments(initialState: RagDocument[] = initialDocuments) {
             name: file.name,
             collection: collectionName,
             size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-            uploadDate: new Date().toISOString().split("T")[0],
+            created_at: new Date().toISOString(),
           },
           id: newId, // Ensure top-level ID matches metadata ID
         };
@@ -197,7 +197,7 @@ export function useDocuments(initialState: RagDocument[] = initialDocuments) {
           name: `Text Document ${new Date().toISOString().slice(0, 19).replace("T", " ")}.txt`,
           collection: collectionName,
           size: `${(textInput.length / 1024).toFixed(1)} KB`,
-          uploadDate: new Date().toISOString().split("T")[0],
+          created_at: new Date().toISOString(),
         },
         id: newId, // Ensure top-level ID matches metadata ID
       };

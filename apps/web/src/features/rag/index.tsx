@@ -4,11 +4,16 @@ import type React from "react";
 import { useState } from "react";
 import { DocumentsCard } from "./components/documents-card";
 import { CollectionsCard } from "./components/collections-card";
+import type { Collection } from "@/types/collection";
+
+const getDefaultCollection = (collections: Collection[]) => {
+  return collections.find((c) => c.name === "Default") ?? collections[0];
+};
 
 export default function RAGInterface() {
   // Use the custom hook for collections
   const initialCollections = [
-    { name: "General Knowledge", description: "Various topics" },
+    { name: "Default", description: "Default collection" },
     { name: "Technical Documentation", description: "Software and API docs" },
     { name: "Science & Nature", description: "Physics, biology, environment" },
     {
@@ -47,7 +52,7 @@ export default function RAGInterface() {
   ];
 
   const [selectedCollection, setSelectedCollection] = useState(
-    initialCollections[0].name,
+    getDefaultCollection(initialCollections).name,
   );
   const [currentPage, setCurrentPage] = useState(1);
 

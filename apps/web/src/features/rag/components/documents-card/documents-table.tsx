@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -30,12 +31,17 @@ import {
 import { Trash2, MoreVertical } from "lucide-react";
 import type { RagDocument } from "../../hooks/use-documents";
 import { useDocuments } from "../../hooks/use-documents";
+import { format } from "date-fns";
 
 interface DocumentsTableProps {
   documents: RagDocument[];
+  selectedCollection: string;
 }
 
-export function DocumentsTable({ documents }: DocumentsTableProps) {
+export function DocumentsTable({
+  documents,
+  selectedCollection,
+}: DocumentsTableProps) {
   const { deleteDocument } = useDocuments();
   return (
     <Table>
@@ -43,7 +49,6 @@ export function DocumentsTable({ documents }: DocumentsTableProps) {
         <TableRow>
           <TableHead>Document Name</TableHead>
           <TableHead>Collection</TableHead>
-          <TableHead>Size</TableHead>
           <TableHead>Date Uploaded</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -52,7 +57,7 @@ export function DocumentsTable({ documents }: DocumentsTableProps) {
         {documents.length === 0 ? (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={4}
               className="text-muted-foreground text-center"
             >
               No documents found in this collection.
@@ -62,9 +67,12 @@ export function DocumentsTable({ documents }: DocumentsTableProps) {
           documents.map((doc) => (
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.metadata.name}</TableCell>
-              <TableCell>{doc.metadata.collection}</TableCell>
-              <TableCell>{doc.metadata.size}</TableCell>
-              <TableCell>{doc.metadata.uploadDate}</TableCell>
+              <TableCell>
+                <Badge variant="secondary">{selectedCollection}</Badge>
+              </TableCell>
+              <TableCell>
+                {format(new Date(doc.metadata.created_at), "MM/dd/yyyy h:mm a")}
+              </TableCell>
               <TableCell className="text-right">
                 <AlertDialog>
                   <DropdownMenu>

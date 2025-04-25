@@ -94,7 +94,7 @@ export function DocumentsCard({
               <TabsTrigger value="text">Add Text</TabsTrigger>
             </TabsList>
             <TabsContent value="file">
-              <div className="rounded-lg border-2 border-dashed p-6 text-center">
+              <div className="flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center">
                 <FileUp className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                 <p className="text-muted-foreground mb-2 text-sm">
                   Drag and drop files here or click to browse
@@ -139,7 +139,10 @@ export function DocumentsCard({
 
         {/* Document Table */}
         <div className="rounded-md border">
-          <DocumentsTable documents={currentDocuments} />
+          <DocumentsTable
+            documents={currentDocuments}
+            selectedCollection={selectedCollection}
+          />
         </div>
 
         {/* Pagination */}

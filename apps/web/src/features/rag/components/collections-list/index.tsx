@@ -54,13 +54,6 @@ export function CollectionsList({
   return (
     <div>
       <div className="space-y-2">
-        <div
-          className={`flex cursor-pointer items-center justify-between rounded-md p-2 ${selectedCollection === "all" ? "bg-muted" : "hover:bg-muted/50"}`}
-          onClick={() => onSelect("all")}
-        >
-          <span>All Documents</span>
-        </div>
-
         {paginatedCollections.map((collection) => (
           <div
             key={collection.name}

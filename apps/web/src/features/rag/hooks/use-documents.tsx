@@ -25,6 +25,7 @@ const initialDocuments: RagDocument[] = [
       size: "1.2 MB",
       uploadDate: "2023-05-15",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for Machine Learning Basics.pdf",
@@ -35,6 +36,7 @@ const initialDocuments: RagDocument[] = [
       size: "2.5 MB",
       uploadDate: "2023-05-16",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for Neural Networks.pdf",
@@ -45,6 +47,7 @@ const initialDocuments: RagDocument[] = [
       size: "3.1 MB",
       uploadDate: "2023-05-17",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for API Documentation.pdf",
@@ -55,6 +58,7 @@ const initialDocuments: RagDocument[] = [
       size: "1.8 MB",
       uploadDate: "2023-05-18",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for Database Schema.pdf",
@@ -65,6 +69,7 @@ const initialDocuments: RagDocument[] = [
       size: "0.9 MB",
       uploadDate: "2023-05-19",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for Deployment Guide.pdf",
@@ -75,6 +80,7 @@ const initialDocuments: RagDocument[] = [
       size: "1.5 MB",
       uploadDate: "2023-05-20",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for RAG Overview.pdf",
@@ -85,6 +91,7 @@ const initialDocuments: RagDocument[] = [
       size: "2.2 MB",
       uploadDate: "2023-05-21",
     },
+    id: uuidv4(),
   },
   {
     pageContent: "Placeholder content for Vector Databases.pdf",
@@ -95,6 +102,7 @@ const initialDocuments: RagDocument[] = [
       size: "1.7 MB",
       uploadDate: "2023-05-22",
     },
+    id: uuidv4(),
   },
 ];
 

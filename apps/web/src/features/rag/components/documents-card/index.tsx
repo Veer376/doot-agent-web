@@ -49,11 +49,7 @@ export function DocumentsCard({
 
   const filteredDocuments = useMemo(
     () =>
-      selectedCollection === "all"
-        ? documents
-        : documents.filter(
-            (doc) => doc.metadata.collection === selectedCollection,
-          ),
+      documents.filter((doc) => doc.metadata.collection === selectedCollection),
     [documents, selectedCollection],
   );
 
@@ -71,94 +67,75 @@ export function DocumentsCard({
   // Handle file upload (uses document hook)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (selectedCollection !== "all") {
-      handleDocumentFileUpload(files, selectedCollection);
-    } else {
-      console.warn("Cannot upload file: No collection selected.");
-    }
+    handleDocumentFileUpload(files, selectedCollection);
   };
 
   // Handle text upload (uses document hook)
   const handleTextUpload = () => {
-    if (textInput.trim() && selectedCollection !== "all") {
+    if (textInput.trim()) {
       handleDocumentTextUpload(textInput, selectedCollection);
       setTextInput(""); // Clear text input after upload
-    } else {
-      if (!textInput.trim()) {
-        console.warn("Cannot upload text: Input is empty.");
-      }
-      if (selectedCollection === "all") {
-        console.warn("Cannot upload text: No collection selected.");
-      }
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {selectedCollection === "all"
-            ? "All Documents"
-            : `${selectedCollection} Documents`}
-        </CardTitle>
+        <CardTitle>{`${selectedCollection} Documents`}</CardTitle>
         <CardDescription>
-          {selectedCollection === "all"
-            ? "Viewing all documents across collections"
-            : "Manage documents in this collection"}
+          {"Manage documents in this collection"}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {selectedCollection !== "all" && (
-          <div className="mb-6">
-            <Tabs defaultValue="file">
-              <TabsList className="mb-4">
-                <TabsTrigger value="file">Upload File</TabsTrigger>
-                <TabsTrigger value="text">Add Text</TabsTrigger>
-              </TabsList>
-              <TabsContent value="file">
-                <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                  <FileUp className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-                  <p className="text-muted-foreground mb-2 text-sm">
-                    Drag and drop files here or click to browse
-                  </p>
-                  <Input
-                    type="file"
-                    className="hidden"
-                    id="file-upload"
-                    multiple
-                    onChange={handleFileUpload}
-                  />
-                  <Label htmlFor="file-upload">
-                    <Button
-                      variant="outline"
-                      className="mt-2"
-                      asChild
-                    >
-                      <span>Select Files</span>
-                    </Button>
-                  </Label>
-                </div>
-              </TabsContent>
-              <TabsContent value="text">
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="Paste or type your text here..."
-                    className="min-h-[150px]"
-                    value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
-                  />
+        <div className="mb-6">
+          <Tabs defaultValue="file">
+            <TabsList className="mb-4">
+              <TabsTrigger value="file">Upload File</TabsTrigger>
+              <TabsTrigger value="text">Add Text</TabsTrigger>
+            </TabsList>
+            <TabsContent value="file">
+              <div className="rounded-lg border-2 border-dashed p-6 text-center">
+                <FileUp className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                <p className="text-muted-foreground mb-2 text-sm">
+                  Drag and drop files here or click to browse
+                </p>
+                <Input
+                  type="file"
+                  className="hidden"
+                  id="file-upload"
+                  multiple
+                  onChange={handleFileUpload}
+                />
+                <Label htmlFor="file-upload">
                   <Button
-                    onClick={handleTextUpload}
-                    disabled={!textInput.trim() || selectedCollection === "all"}
+                    variant="outline"
+                    className="mt-2"
+                    asChild
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Text Document
+                    <span>Select Files</span>
                   </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+                </Label>
+              </div>
+            </TabsContent>
+            <TabsContent value="text">
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Paste or type your text here..."
+                  className="min-h-[150px]"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                />
+                <Button
+                  onClick={handleTextUpload}
+                  disabled={!textInput.trim()}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Text Document
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
         {/* Document Table */}
         <div className="rounded-md border">

@@ -46,8 +46,9 @@ export default function RAGInterface() {
     },
   ];
 
-  // State for selected collection (stores name or 'all')
-  const [selectedCollection, setSelectedCollection] = useState("all");
+  const [selectedCollection, setSelectedCollection] = useState(
+    initialCollections[0].name,
+  );
   const [currentPage, setCurrentPage] = useState(1);
 
   return (

@@ -35,9 +35,13 @@ import { format } from "date-fns";
 
 interface DocumentsTableProps {
   documents: RagDocument[];
+  selectedCollection: string;
 }
 
-export function DocumentsTable({ documents }: DocumentsTableProps) {
+export function DocumentsTable({
+  documents,
+  selectedCollection,
+}: DocumentsTableProps) {
   const { deleteDocument } = useDocuments();
   return (
     <Table>
@@ -64,7 +68,7 @@ export function DocumentsTable({ documents }: DocumentsTableProps) {
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.metadata.name}</TableCell>
               <TableCell>
-                <Badge variant="secondary">{doc.metadata.collection}</Badge>
+                <Badge variant="secondary">{selectedCollection}</Badge>
               </TableCell>
               <TableCell>
                 {format(new Date(doc.metadata.created_at), "MM/dd/yyyy h:mm a")}

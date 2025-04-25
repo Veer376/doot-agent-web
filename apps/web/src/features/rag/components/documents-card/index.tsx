@@ -139,7 +139,10 @@ export function DocumentsCard({
 
         {/* Document Table */}
         <div className="rounded-md border">
-          <DocumentsTable documents={currentDocuments} />
+          <DocumentsTable
+            documents={currentDocuments}
+            selectedCollection={selectedCollection}
+          />
         </div>
 
         {/* Pagination */}

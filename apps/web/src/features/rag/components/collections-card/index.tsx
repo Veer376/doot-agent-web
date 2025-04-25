@@ -16,8 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FolderPlus } from "lucide-react";
-import { useCollections } from "../../hooks/use-collections";
-import { useDocuments } from "../../hooks/use-documents";
+import { useRagContext } from "../../providers/RAG";
 import type { Collection } from "@/types/collection";
 import { useState } from "react";
 import { CollectionsList } from "../collections-list";
@@ -35,10 +34,7 @@ export function CollectionsCard({
   setSelectedCollection,
   setCurrentPage,
 }: CollectionsCardProps) {
-  const { createCollection, deleteCollection } = useCollections(collections);
-
-  // Use the custom hook for documents
-  const { deleteDocumentsByCollection } = useDocuments();
+  const { createCollection, deleteCollection, deleteDocumentsByCollection } = useRagContext();
 
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");

@@ -29,8 +29,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2, MoreVertical } from "lucide-react";
-import type { RagDocument } from "../../hooks/use-documents";
-import { useDocuments } from "../../hooks/use-documents";
+import { type RagDocument } from "../../hooks/use-rag";
+import { useRagContext } from "../../providers/RAG";
 import { format } from "date-fns";
 
 interface DocumentsTableProps {
@@ -42,7 +42,7 @@ export function DocumentsTable({
   documents,
   selectedCollection,
 }: DocumentsTableProps) {
-  const { deleteDocument } = useDocuments();
+  const { deleteDocument } = useRagContext();
   return (
     <Table>
       <TableHeader>

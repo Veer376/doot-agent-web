@@ -23,7 +23,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Plus, FileUp } from "lucide-react";
-import { useDocuments } from "../../hooks/use-documents";
+import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 
 interface DocumentsCardProps {
@@ -41,7 +41,7 @@ export function DocumentsCard({
     documents,
     handleFileUpload: handleDocumentFileUpload,
     handleTextUpload: handleDocumentTextUpload,
-  } = useDocuments();
+  } = useRagContext();
 
   const itemsPerPage = 5;
 

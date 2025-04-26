@@ -1,4 +1,8 @@
 export type Collection = {
   name: string;
-  description: string;
+  uuid: string;
+};
+
+export type CollectionCreate = {
+  name: string;
 };

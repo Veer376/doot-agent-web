@@ -29,13 +29,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2, MoreVertical } from "lucide-react";
-import { type RagDocument } from "../../hooks/use-rag";
+import { Document } from "@langchain/core/documents";
 import { useRagContext } from "../../providers/RAG";
 import { format } from "date-fns";
+import { Collection } from "@/types/collection";
 
 interface DocumentsTableProps {
-  documents: RagDocument[];
-  selectedCollection: string;
+  documents: Document[];
+  selectedCollection: Collection;
 }
 
 export function DocumentsTable({
@@ -68,7 +69,7 @@ export function DocumentsTable({
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.metadata.name}</TableCell>
               <TableCell>
-                <Badge variant="secondary">{selectedCollection}</Badge>
+                <Badge variant="secondary">{selectedCollection.name}</Badge>
               </TableCell>
               <TableCell>
                 {format(new Date(doc.metadata.created_at), "MM/dd/yyyy h:mm a")}
@@ -111,10 +112,10 @@ export function DocumentsTable({
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() =>
-                          deleteDocument(doc.id ?? doc.metadata.id)
+                        onClick={async () =>
+                          await deleteDocument(doc.id ?? doc.metadata.id)
                         }
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-destructive hover:bg-destructive/90 text-white"
                       >
                         Delete
                       </AlertDialogAction>

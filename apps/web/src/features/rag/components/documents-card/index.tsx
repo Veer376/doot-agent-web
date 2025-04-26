@@ -22,12 +22,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp } from "lucide-react";
+import { Plus, FileUp, X } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
+import { Collection } from "@/types/collection";
 
 interface DocumentsCardProps {
-  selectedCollection: string;
+  selectedCollection: Collection | undefined;
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -43,13 +44,16 @@ export function DocumentsCard({
     handleTextUpload: handleDocumentTextUpload,
   } = useRagContext();
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const [textInput, setTextInput] = useState("");
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
 
   const filteredDocuments = useMemo(
     () =>
-      documents.filter((doc) => doc.metadata.collection === selectedCollection),
+      documents.filter(
+        (doc) => doc.metadata.collection === selectedCollection?.name,
+      ),
     [documents, selectedCollection],
   );
 
@@ -64,16 +68,54 @@ export function DocumentsCard({
     [filteredDocuments, currentPage, itemsPerPage],
   );
 
-  // Handle file upload (uses document hook)
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle adding files to staging
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    handleDocumentFileUpload(files, selectedCollection);
+    if (files) {
+      setStagedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
+      // Reset file input value to allow selecting the same file again
+      event.target.value = "";
+    }
+  };
+
+  // Handle removing a file from staging
+  const removeStagedFile = (indexToRemove: number) => {
+    setStagedFiles((prevFiles) =>
+      prevFiles.filter((_, index) => index !== indexToRemove),
+    );
+  };
+
+  // Handle uploading staged files (uses document hook)
+  const handleUploadStagedFiles = async () => {
+    if (!selectedCollection) {
+      // Should ideally be handled by disabling the button, but good practice
+      console.error("No collection selected for upload");
+      return;
+    }
+    if (stagedFiles.length === 0) {
+      // Should ideally be handled by hiding the button, but good practice
+      console.warn("No files staged for upload");
+      return;
+    }
+
+    // Convert File[] to FileList as expected by the hook
+    const dataTransfer = new DataTransfer();
+    stagedFiles.forEach((file) => dataTransfer.items.add(file));
+    const fileList = dataTransfer.files;
+
+    await handleDocumentFileUpload(fileList, selectedCollection.name);
+
+    setStagedFiles([]); // Clear staged files after initiating upload
   };
 
   // Handle text upload (uses document hook)
-  const handleTextUpload = () => {
+  const handleTextUpload = async () => {
+    if (!selectedCollection) {
+      throw new Error("No collection selected");
+    }
+
     if (textInput.trim()) {
-      handleDocumentTextUpload(textInput, selectedCollection);
+      await handleDocumentTextUpload(textInput, selectedCollection.name);
       setTextInput(""); // Clear text input after upload
     }
   };
@@ -81,7 +123,7 @@ export function DocumentsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{`${selectedCollection} Documents`}</CardTitle>
+        <CardTitle>{`${selectedCollection?.name || ""} Documents`}</CardTitle>
         <CardDescription>
           {"Manage documents in this collection"}
         </CardDescription>
@@ -104,7 +146,7 @@ export function DocumentsCard({
                   className="hidden"
                   id="file-upload"
                   multiple
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                 />
                 <Label htmlFor="file-upload">
                   <Button
@@ -116,6 +158,39 @@ export function DocumentsCard({
                   </Button>
                 </Label>
               </div>
+              {/* Staged Files Display */}
+              {stagedFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium">Files to Upload:</h4>
+                  <ul className="space-y-1">
+                    {stagedFiles.map((file, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between rounded-md border p-2 text-sm"
+                      >
+                        <span className="truncate pr-2">{file.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => removeStagedFile(index)}
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={handleUploadStagedFiles}
+                    disabled={!selectedCollection} // Disable if no collection selected
+                    className="mt-2 w-full"
+                  >
+                    <FileUp className="mr-2 h-4 w-4" />
+                    {`Upload ${stagedFiles.length} File(s)`}
+                  </Button>
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="text">
               <div className="space-y-4">
@@ -138,12 +213,14 @@ export function DocumentsCard({
         </div>
 
         {/* Document Table */}
-        <div className="rounded-md border">
-          <DocumentsTable
-            documents={currentDocuments}
-            selectedCollection={selectedCollection}
-          />
-        </div>
+        {selectedCollection && (
+          <div className="rounded-md border">
+            <DocumentsTable
+              documents={currentDocuments}
+              selectedCollection={selectedCollection}
+            />
+          </div>
+        )}
 
         {/* Pagination */}
         {filteredDocuments.length > itemsPerPage && (

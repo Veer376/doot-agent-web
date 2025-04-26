@@ -1,246 +1,396 @@
-import { useState, useCallback } from "react";
-import type { Document as DocumentInterface } from "@langchain/core/documents";
+import { useState, Dispatch, SetStateAction, useCallback } from "react";
+import { Document } from "@langchain/core/documents";
 import { v4 as uuidv4 } from "uuid";
-import { Collection } from "@/types/collection";
+import { Collection, CollectionCreate } from "@/types/collection";
+
+export const DEFAULT_COLLECTION_NAME = "Default";
+
+export function getDefaultCollection(collections: Collection[]): Collection {
+  return (
+    collections.find((c) => c.name === DEFAULT_COLLECTION_NAME) ??
+    collections[0]
+  );
+}
+
+/**
+ * Uploads documents to a specific collection using the API.
+ *
+ * @param collectionName The name of the collection to add documents to.
+ * @param files An array of File objects to upload.
+ * @param metadatas Optional array of metadata objects, one for each file.
+ *                  Each item in the array should be a serializable object (dictionary).
+ * @param apiUrlBase The base URL of your LangConnect API (e.g., "http://localhost:8000").
+ * @returns A promise that resolves with the API response.
+ */
+async function uploadDocuments(
+  collectionName: string,
+  files: File[],
+  metadatas?: Record<string, any>[],
+  apiUrlBase: string = "http://localhost:8080", // Default API base URL
+): Promise<any> {
+  const url = `${apiUrlBase}/collections/${encodeURIComponent(collectionName)}/documents`;
+
+  const formData = new FormData();
+
+  // Append files
+  files.forEach((file) => {
+    formData.append("files", file, file.name);
+  });
+
+  // Append metadatas if provided
+  if (metadatas) {
+    if (metadatas.length !== files.length) {
+      throw new Error(
+        `Number of metadata objects (${metadatas.length}) must match the number of files (${files.length}).`,
+      );
+    }
+    // FastAPI expects the metadatas as a JSON *string* in the form data
+    const metadatasJsonString = JSON.stringify(metadatas);
+    formData.append("metadatas_json", metadatasJsonString);
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      // Attempt to parse error details from the response body
+      let errorDetail = `HTTP error! status: ${response.status}`;
+      try {
+        const errorJson = await response.json();
+        errorDetail = errorJson.detail || JSON.stringify(errorJson);
+      } catch (_) {
+        // If parsing JSON fails, use the status text
+        errorDetail = `${errorDetail} - ${response.statusText}`;
+      }
+      throw new Error(`Failed to upload documents: ${errorDetail}`);
+    }
+
+    return await response.json(); // Parse the successful JSON response
+  } catch (error) {
+    console.error("Error uploading documents:", error);
+    throw error; // Re-throw the error for further handling
+  }
+}
 
 // --- Type Definitions ---
 
-// Document metadata structure
-export interface RagDocumentMetadata extends Record<string, any> {
-  id: string; // Unique ID for the document
-  name: string;
-  collection: string;
-  size: string;
-  created_at: string; // ISO 8601 format
-}
-
-// Document structure
-export type RagDocument = DocumentInterface<RagDocumentMetadata>;
-
 // Return type for the combined hook
 interface UseRagReturn {
+  // Initial load
+  initialFetch: () => Promise<void>;
+
   // Collection state and operations
   collections: Collection[];
-  createCollection: (name: string, description: string) => boolean;
-  deleteCollection: (name: string) => string | undefined;
-  getCollectionDescriptionByName: (name: string) => string | undefined;
-  updateCollectionDescription: (name: string, description: string) => void;
+  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  collectionsLoading: boolean;
+  setCollectionsLoading: Dispatch<SetStateAction<boolean>>;
+  getCollections: () => Promise<Collection[]>;
+  createCollection: (name: string) => Promise<Collection | undefined>;
+  deleteCollection: (name: string) => Promise<string | undefined>;
+
+  // Selected collection
+  selectedCollection: Collection | undefined;
+  setSelectedCollection: Dispatch<SetStateAction<Collection | undefined>>;
 
   // Document state and operations
-  documents: RagDocument[];
-  addDocument: (doc: RagDocument) => void;
-  addDocuments: (docs: RagDocument[]) => void;
-  deleteDocument: (id: string) => void;
-  deleteDocumentsByCollection: (collectionName: string) => void;
-  handleFileUpload: (files: FileList | null, collectionName: string) => void;
-  handleTextUpload: (textInput: string, collectionName: string) => void;
+  documents: Document[];
+  setDocuments: Dispatch<SetStateAction<Document[]>>;
+  documentsLoading: boolean;
+  setDocumentsLoading: Dispatch<SetStateAction<boolean>>;
+  listDocuments: (
+    collectionId: string,
+    args?: { limit?: number; offset?: number },
+  ) => Promise<Document[]>;
+  deleteDocument: (id: string) => Promise<void>;
+  handleFileUpload: (
+    files: FileList | null,
+    collectionName: string,
+  ) => Promise<void>;
+  handleTextUpload: (
+    textInput: string,
+    collectionName: string,
+  ) => Promise<void>;
 }
-
-// Initial sample documents (can be moved outside or fetched)
-// TODO: Replace with actual data fetching or remove if not needed
-const initialDocuments: RagDocument[] = [
-  {
-    pageContent: "Placeholder content for Introduction to AI.pdf",
-    metadata: {
-      id: "1",
-      name: "Introduction to AI.pdf",
-      collection: "General Knowledge",
-      size: "1.2 MB",
-      created_at: new Date("2023-05-15T00:00:00.000Z").toISOString(),
-    },
-  },
-  {
-    pageContent: "Placeholder content for Machine Learning Basics.pdf",
-    metadata: {
-      id: "2",
-      name: "Machine Learning Basics.pdf",
-      collection: "General Knowledge",
-      size: "2.5 MB",
-      created_at: new Date("2023-05-16T00:00:00.000Z").toISOString(),
-    },
-  },
-  // Add more sample documents if needed
-];
 
 /**
  * Custom hook for managing RAG collections and documents.
  * Combines the logic of useCollections and useDocuments.
  */
-export function useRag(
-  initialCollections: Collection[] = [],
-  initialDocs: RagDocument[] = initialDocuments, // Use sample data or allow override
-): UseRagReturn {
+export function useRag(): UseRagReturn {
   // --- State ---
-  const [collections, setCollections] =
-    useState<Collection[]>(initialCollections);
-  const [documents, setDocuments] = useState<RagDocument[]>(initialDocs);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState<
+    Collection | undefined
+  >(undefined);
+
+  // --- Initial Fetch ---
+  const initialFetch = useCallback(async () => {
+    setCollectionsLoading(true);
+    setDocumentsLoading(true);
+    let defaultCollectionId = "";
+    const initCollections = await getCollections();
+    if (!initCollections.length) {
+      // No collections exist, create the default collection.
+      const defaultCollection = await createCollection(DEFAULT_COLLECTION_NAME);
+      if (!defaultCollection) {
+        throw new Error("Failed to create default collection");
+      }
+      defaultCollectionId = defaultCollection.uuid;
+    } else {
+      setCollections(initCollections);
+      defaultCollectionId =
+        initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)?.uuid ||
+        "";
+    }
+    setCollectionsLoading(false);
+    setSelectedCollection(
+      initCollections.find((c) => c.uuid === defaultCollectionId),
+    );
+
+    const documents = await listDocuments(DEFAULT_COLLECTION_NAME, {
+      limit: 100,
+    });
+    setDocuments(documents);
+    setDocumentsLoading(false);
+  }, []);
 
   // --- Document Operations ---
 
-  const addDocument = useCallback((doc: RagDocument) => {
-    const metadataWithId = {
-      ...(doc.metadata || {}),
-      id: doc.metadata?.id ?? uuidv4(), // Ensure ID exists
-    };
-    setDocuments((prevDocs) => [
-      ...prevDocs,
-      { ...doc, metadata: metadataWithId }, // Use metadata id if needed elsewhere
-    ]);
-  }, []);
+  const listDocuments = useCallback(
+    async (
+      collectionName: string,
+      args?: { limit?: number; offset?: number },
+    ): Promise<Document[]> => {
+      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+        throw new Error("Failed to fetch documents: API URL not configured.");
+      }
 
-  const addDocuments = useCallback((docs: RagDocument[]) => {
-    const docsWithIds = docs.map((doc) => {
-      const metadataWithId = {
-        ...(doc.metadata || {}),
-        id: doc.metadata?.id ?? uuidv4(),
-      };
-      return { ...doc, metadata: metadataWithId };
-    });
-    setDocuments((prevDocs) => [...prevDocs, ...docsWithIds]);
-  }, []);
+      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      url.pathname = `/collections/${collectionName}/documents`;
+      if (args?.limit) {
+        url.searchParams.set("limit", args.limit.toString());
+      }
+      if (args?.offset) {
+        url.searchParams.set("offset", args.offset.toString());
+      }
 
-  const deleteDocument = useCallback((id: string) => {
-    setDocuments((prevDocs) =>
-      prevDocs.filter((doc) => doc.metadata?.id !== id),
-    );
-  }, []);
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`Failed to fetch documents: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data;
+    },
+    [],
+  );
 
-  const deleteDocumentsByCollection = useCallback((collectionName: string) => {
-    setDocuments((prevDocs) =>
-      prevDocs.filter((doc) => doc.metadata?.collection !== collectionName),
-    );
-  }, []);
+  const deleteDocument = useCallback(
+    async (id: string) => {
+      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+        throw new Error("Failed to fetch documents: API URL not configured.");
+      }
+      if (!selectedCollection) {
+        throw new Error("No collection selected");
+      }
+
+      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
+
+      const response = await fetch(url.toString(), { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error(`Failed to delete document: ${response.statusText}`);
+      }
+
+      setDocuments((prevDocs) =>
+        prevDocs.filter((doc) => doc.metadata?.id !== id),
+      );
+    },
+    [selectedCollection],
+  );
 
   const handleFileUpload = useCallback(
-    (files: FileList | null, collectionName: string) => {
-      if (!files || files.length === 0 || collectionName === "all") {
-        console.warn(
-          "File upload skipped: No files selected or collection is 'all'.",
-        );
+    async (files: FileList | null, collectionName: string) => {
+      if (!files || files.length === 0) {
+        console.warn("File upload skipped: No files selected.");
         return;
       }
 
-      const newDocs: RagDocument[] = Array.from(files).map((file) => {
-        const newId = uuidv4();
-        return {
+      const newDocs: Document[] = Array.from(files).map((file) => {
+        return new Document({
+          id: uuidv4(),
           pageContent: `Content of ${file.name}`, // Placeholder: Real implementation needs file reading
           metadata: {
-            id: newId,
             name: file.name,
             collection: collectionName,
             size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
             created_at: new Date().toISOString(),
           },
-        };
+        });
       });
 
-      addDocuments(newDocs);
+      await uploadDocuments(
+        collectionName,
+        Array.from(files),
+        newDocs.map((d) => d.metadata),
+      );
+      setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
     },
-    [addDocuments],
+    [],
   );
 
   const handleTextUpload = useCallback(
-    (textInput: string, collectionName: string) => {
+    async (textInput: string, collectionName: string) => {
       if (!textInput.trim() || collectionName === "all") {
         console.warn(
           "Text upload skipped: Text is empty or collection is 'all'.",
         );
         return;
       }
-      const newId = uuidv4();
-      const newDoc: RagDocument = {
-        pageContent: textInput,
-        metadata: {
-          id: newId,
-          name: `Text Document ${new Date().toISOString().slice(0, 19).replace("T", " ")}.txt`,
-          collection: collectionName,
-          size: `${(textInput.length / 1024).toFixed(1)} KB`,
-          created_at: new Date().toISOString(),
-        },
+      const textBlob = new Blob([textInput], { type: "text/plain" });
+      const fileName = `Text Document ${new Date().toISOString().slice(0, 19).replace("T", " ")}.txt`;
+      const textFile = new File([textBlob], fileName, { type: "text/plain" });
+      const metadata = {
+        name: fileName,
+        collection: collectionName,
+        size: `${(textInput.length / 1024).toFixed(1)} KB`,
+        created_at: new Date().toISOString(),
       };
-      addDocument(newDoc);
+      await uploadDocuments(collectionName, [textFile], [metadata]);
+      setDocuments((prevDocs) => [
+        ...prevDocs,
+        new Document({
+          id: uuidv4(),
+          pageContent: textInput,
+          metadata,
+        }),
+      ]);
     },
-    [addDocument],
+    [],
   );
 
   // --- Collection Operations ---
 
+  const getCollections = useCallback(async (): Promise<Collection[]> => {
+    if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+      throw new Error("Failed to fetch collections: API URL not configured.");
+    }
+
+    const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+    url.pathname = "/collections";
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`Failed to fetch collections: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data;
+  }, []);
+
   const createCollection = useCallback(
-    (name: string, description: string): boolean => {
+    async (name: string): Promise<Collection | undefined> => {
+      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+        throw new Error("Failed to fetch collections: API URL not configured.");
+      }
+
+      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      url.pathname = "/collections";
+
       const trimmedName = name.trim();
       if (!trimmedName) {
         console.error("Collection name cannot be empty.");
-        return false;
+        return undefined;
       }
       const nameExists = collections.some(
         (c) => c.name.toLowerCase() === trimmedName.toLowerCase(),
       );
       if (nameExists) {
         console.warn(`Collection with name "${trimmedName}" already exists.`);
-        return false;
+        return undefined;
       }
 
-      const newCollection: Collection = {
+      const newCollection: CollectionCreate = {
         name: trimmedName,
-        description: description.trim(),
       };
-      setCollections((prevCollections) => [...prevCollections, newCollection]);
-      return true;
+      const response = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCollection),
+      });
+      if (!response.ok) {
+        console.error(`Failed to create collection: ${response.statusText}`);
+        return undefined;
+      }
+      const data = await response.json();
+      setCollections((prevCollections) => [...prevCollections, data]);
+      return data;
     },
     [collections],
   );
 
-  // Modified deleteCollection to also remove associated documents
   const deleteCollection = useCallback(
-    (name: string): string | undefined => {
+    async (name: string): Promise<string | undefined> => {
+      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+        throw new Error("Failed to fetch collections: API URL not configured.");
+      }
       const collectionToDelete = collections.find((c) => c.name === name);
       const deletedCollectionName = collectionToDelete?.name;
 
-      if (deletedCollectionName) {
-        // Delete the collection itself
-        setCollections((prevCollections) =>
-          prevCollections.filter((collection) => collection.name !== name),
-        );
-        // Delete documents associated with this collection
-        deleteDocumentsByCollection(deletedCollectionName);
+      if (!deletedCollectionName) {
+        return;
       }
-      return deletedCollectionName;
-    },
-    [collections, deleteDocumentsByCollection], // Added deleteDocumentsByCollection dependency
-  );
 
-  const updateCollectionDescription = useCallback(
-    (name: string, description: string) => {
+      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      url.pathname = `/collections/${name}`;
+
+      const response = await fetch(url.toString(), {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to delete collection: ${response.statusText}`);
+        return undefined;
+      }
+
+      // Delete the collection itself
       setCollections((prevCollections) =>
-        prevCollections.map((collection) =>
-          collection.name === name
-            ? { ...collection, description: description.trim() } // Trim description
-            : collection,
-        ),
+        prevCollections.filter((collection) => collection.name !== name),
       );
-    },
-    [], // No dependency needed if only using setCollections with functional update
-  );
-
-  const getCollectionDescriptionByName = useCallback(
-    (name: string): string | undefined => {
-      return collections.find((c) => c.name === name)?.description;
     },
     [collections],
   );
 
   // --- Return combined state and functions ---
   return {
+    // Initial load
+    initialFetch,
+
+    // Collections
     collections,
+    setCollections,
+    collectionsLoading,
+    setCollectionsLoading,
+    getCollections,
     createCollection,
     deleteCollection,
-    getCollectionDescriptionByName,
-    updateCollectionDescription,
+
+    selectedCollection,
+    setSelectedCollection,
+
+    // Documents
     documents,
-    addDocument,
-    addDocuments,
+    setDocuments,
+    documentsLoading,
+    setDocumentsLoading,
+    listDocuments,
     deleteDocument,
-    deleteDocumentsByCollection,
     handleFileUpload,
     handleTextUpload,
   };

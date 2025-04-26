@@ -112,10 +112,10 @@ export function DocumentsTable({
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() =>
-                          deleteDocument(doc.id ?? doc.metadata.id)
+                        onClick={async () =>
+                          await deleteDocument(doc.id ?? doc.metadata.id)
                         }
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-destructive hover:bg-destructive/90 text-white"
                       >
                         Delete
                       </AlertDialogAction>

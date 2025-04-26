@@ -124,6 +124,9 @@ export function CollectionsCard({
           collections={collections}
           selectedCollection={selectedCollection}
           onSelect={async (name) => {
+            if (selectedCollection?.name === name) {
+              return;
+            }
             setSelectedCollection(collections.find((c) => c.name === name));
             setCurrentPage(1); // Reset page when collection changes
             setCollectionsCurrentPage(1);

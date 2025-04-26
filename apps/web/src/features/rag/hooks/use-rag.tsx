@@ -104,9 +104,15 @@ interface UseRagReturn {
     collectionId: string,
     args?: { limit?: number; offset?: number },
   ) => Promise<Document[]>;
-  deleteDocument: (id: string) => void;
-  handleFileUpload: (files: FileList | null, collectionName: string) => void;
-  handleTextUpload: (textInput: string, collectionName: string) => void;
+  deleteDocument: (id: string) => Promise<void>;
+  handleFileUpload: (
+    files: FileList | null,
+    collectionName: string,
+  ) => Promise<void>;
+  handleTextUpload: (
+    textInput: string,
+    collectionName: string,
+  ) => Promise<void>;
 }
 
 /**
@@ -147,7 +153,9 @@ export function useRag(): UseRagReturn {
       initCollections.find((c) => c.uuid === defaultCollectionId),
     );
 
-    const documents = await listDocuments(DEFAULT_COLLECTION_NAME);
+    const documents = await listDocuments(DEFAULT_COLLECTION_NAME, {
+      limit: 100,
+    });
     setDocuments(documents);
     setDocumentsLoading(false);
   }, []);
@@ -182,18 +190,34 @@ export function useRag(): UseRagReturn {
     [],
   );
 
-  const deleteDocument = useCallback((id: string) => {
-    setDocuments((prevDocs) =>
-      prevDocs.filter((doc) => doc.metadata?.id !== id),
-    );
-  }, []);
+  const deleteDocument = useCallback(
+    async (id: string) => {
+      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+        throw new Error("Failed to fetch documents: API URL not configured.");
+      }
+      if (!selectedCollection) {
+        throw new Error("No collection selected");
+      }
+
+      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
+
+      const response = await fetch(url.toString(), { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error(`Failed to delete document: ${response.statusText}`);
+      }
+
+      setDocuments((prevDocs) =>
+        prevDocs.filter((doc) => doc.metadata?.id !== id),
+      );
+    },
+    [selectedCollection],
+  );
 
   const handleFileUpload = useCallback(
-    (files: FileList | null, collectionName: string) => {
-      if (!files || files.length === 0 || collectionName === "all") {
-        console.warn(
-          "File upload skipped: No files selected or collection is 'all'.",
-        );
+    async (files: FileList | null, collectionName: string) => {
+      if (!files || files.length === 0) {
+        console.warn("File upload skipped: No files selected.");
         return;
       }
 
@@ -210,6 +234,11 @@ export function useRag(): UseRagReturn {
         });
       });
 
+      await uploadDocuments(
+        collectionName,
+        Array.from(files),
+        newDocs.map((d) => d.metadata),
+      );
       setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
     },
     [],

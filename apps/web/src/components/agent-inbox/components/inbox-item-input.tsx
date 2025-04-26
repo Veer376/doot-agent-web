@@ -49,9 +49,7 @@ function ArgsRenderer({ args }: { args: Record<string, any> }) {
             </p>
             <span className="w-full max-w-full rounded-xl bg-zinc-100 p-3 text-[13px] leading-[18px] text-black">
               <div className="text-wrap break-words break-all whitespace-pre-wrap">
-                <MarkdownText>
-                  {value}
-                </MarkdownText>
+                <MarkdownText>{value}</MarkdownText>
               </div>
             </span>
           </div>

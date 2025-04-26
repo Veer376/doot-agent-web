@@ -7,7 +7,7 @@ import {
   ThreadStatusWithAll,
 } from "@/components/agent-inbox/types";
 import { toast } from "sonner";
-import { createClient } from "@/lib/client";
+import { createClient } from "@/app/inbox/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import { END } from "@langchain/langgraph/web";
 import React from "react";
@@ -86,7 +86,8 @@ const getClient = ({ agentInboxes, getItem }: GetClientArgs) => {
   const deploymentUrl = agentInboxes.find((i) => i.selected)?.deploymentUrl;
   if (!deploymentUrl) {
     toast.error("Missing deployment URL", {
-      description: "Please ensure your selected agent inbox has a deployment URL.",
+      description:
+        "Please ensure your selected agent inbox has a deployment URL.",
       duration: 5000,
     });
     return;
@@ -105,7 +106,7 @@ const getClient = ({ agentInboxes, getItem }: GetClientArgs) => {
   }
 
   // Pass only the deploymentUrl string to match client.ts implementation
-  return createClient(deploymentUrl);
+  return createClient({ deploymentUrl, langchainApiKey: langchainApiKeyLS });
 };
 
 export function ThreadsProvider<

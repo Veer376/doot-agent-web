@@ -17,7 +17,6 @@ export function BackfillBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
-
   // Only run this check after mounting on the client
   useEffect(() => {
     setMounted(true);

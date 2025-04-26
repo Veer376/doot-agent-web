@@ -154,27 +154,30 @@ export function ThreadActionsView<
 
     if (studioUrl === "#") {
       // Handle case where URL construction failed (e.g., missing data)
-      toast.error("Could not construct Studio URL. Check if inbox has necessary details (Project ID, Tenant ID).", {
-        description: (
-          <>
-            <p>
-              Could not construct Studio URL. Check if inbox has necessary
-              details (Project ID, Tenant ID).
-            </p>
-            <p>
-              If the issue persists, see the{" "}
-              <a
-                href={STUDIO_NOT_WORKING_TROUBLESHOOTING_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                troubleshooting section
-              </a>
-            </p>
-          </>
-        ),
-        duration: 10000,
-      });
+      toast.error(
+        "Could not construct Studio URL. Check if inbox has necessary details (Project ID, Tenant ID).",
+        {
+          description: (
+            <>
+              <p>
+                Could not construct Studio URL. Check if inbox has necessary
+                details (Project ID, Tenant ID).
+              </p>
+              <p>
+                If the issue persists, see the{" "}
+                <a
+                  href={STUDIO_NOT_WORKING_TROUBLESHOOTING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  troubleshooting section
+                </a>
+              </p>
+            </>
+          ),
+          duration: 10000,
+        },
+      );
     } else {
       window.open(studioUrl, "_blank");
     }

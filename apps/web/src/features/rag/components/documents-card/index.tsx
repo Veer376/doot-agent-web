@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp, X, LoaderCircle } from "lucide-react";
+import { Plus, FileUp, X } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
@@ -51,6 +51,7 @@ export function DocumentsCard({
   const [textInput, setTextInput] = useState("");
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const filteredDocuments = useMemo(
     () =>
@@ -72,13 +73,40 @@ export function DocumentsCard({
   );
 
   // Handle adding files to staging
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+
+    const allowedTypes = ["application/pdf", "text/plain", "text/html"];
+    const filteredFiles = Array.from(files).filter((file) =>
+      allowedTypes.includes(file.type),
+    );
+
+    // TODO: Add user feedback if files are filtered out
+    console.log("Selected files:", filteredFiles);
+    setStagedFiles((prevFiles) => [...prevFiles, ...filteredFiles]);
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setStagedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
-      // Reset file input value to allow selecting the same file again
-      event.target.value = "";
-    }
+    handleFiles(event.target.files);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    handleFiles(event.dataTransfer.files);
   };
 
   // Handle removing a file from staging
@@ -124,12 +152,16 @@ export function DocumentsCard({
 
     if (textInput.trim()) {
       setIsUploading(true);
-      const loadingToast = toast.loading("Uploading text document", { richColors: true });
+      const loadingToast = toast.loading("Uploading text document", {
+        richColors: true,
+      });
       await handleDocumentTextUpload(textInput, selectedCollection.name);
       setTextInput("");
       setIsUploading(false);
       toast.dismiss(loadingToast);
-      toast.success("Text document uploaded successfully", { richColors: true });
+      toast.success("Text document uploaded successfully", {
+        richColors: true,
+      });
     }
   };
 
@@ -149,7 +181,12 @@ export function DocumentsCard({
               <TabsTrigger value="text">Add Text</TabsTrigger>
             </TabsList>
             <TabsContent value="file">
-              <div className="flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center">
+              <div
+                className={`flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center ${isDragging ? "border-primary bg-muted/50" : ""}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <FileUp className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                 <p className="text-muted-foreground mb-2 text-sm">
                   Drag and drop files here or click to browse
@@ -160,6 +197,7 @@ export function DocumentsCard({
                   id="file-upload"
                   multiple
                   onChange={handleFileSelect}
+                  accept=".pdf,.txt,.html"
                 />
                 <Label htmlFor="file-upload">
                   <Button

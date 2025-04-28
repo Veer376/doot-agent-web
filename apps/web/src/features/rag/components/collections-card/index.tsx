@@ -55,11 +55,13 @@ export function CollectionsCard({
       toast.warning(`Default collection name is reserved.`, {
         description: "Please choose a different name.",
         duration: 5000,
-        richColors: true
+        richColors: true,
       });
       return;
     }
-    const loadingToast = toast.loading("Creating collection", { richColors: true });
+    const loadingToast = toast.loading("Creating collection", {
+      richColors: true,
+    });
     const success = await createCollection(newCollectionName);
     toast.dismiss(loadingToast);
     if (success) {
@@ -79,14 +81,16 @@ export function CollectionsCard({
 
   // Handle deleting a collection (uses collection hook and document hook)
   const handleDeleteCollection = async (name: string) => {
-    const loadingToast = toast.loading("Deleting collection", { richColors: true });
+    const loadingToast = toast.loading("Deleting collection", {
+      richColors: true,
+    });
     await deleteCollection(name);
     toast.dismiss(loadingToast);
     toast.success("Collection deleted successfully", { richColors: true });
     if (selectedCollection?.name === name) {
       const newSelectedCollection = collections.find((c) => c.name !== name);
       if (!newSelectedCollection) {
-        toast.error("No collections remaining.", { richColors: true })
+        toast.error("No collections remaining.", { richColors: true });
         return;
       }
       setSelectedCollection(newSelectedCollection);

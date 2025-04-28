@@ -2,10 +2,10 @@ import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
 import { format } from "date-fns";
 import { startCase } from "lodash";
 import {
-  HumanInterrupt,
-  HumanResponseWithEdits,
-  SubmitType,
-  AgentInbox,
+    HumanInterrupt,
+    HumanResponseWithEdits,
+    SubmitType,
+    AgentInbox,
 } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
@@ -110,7 +110,8 @@ export function constructOpenInStudioURL(
 ): string {
   const smithStudioBaseUrl = "https://smith.langchain.com/studio/thread";
 
-  if (isDeployedUrl(inbox.deploymentUrl)) {
+  // Check if deploymentUrl exists before using it
+  if (inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl)) {
     const projectId = extractProjectId(inbox.id);
     const tenantId = inbox.tenantId;
 
@@ -136,7 +137,10 @@ export function constructOpenInStudioURL(
   } else {
     // --- Logic for local/non-deployed URLs ---
     const smithStudioURL = new URL(smithStudioBaseUrl);
-    const trimmedDeploymentUrl = inbox.deploymentUrl.replace(/\/$/, "");
+    
+    // Make sure deploymentUrl exists before using it
+    const deploymentUrl = inbox.deploymentUrl || "";
+    const trimmedDeploymentUrl = deploymentUrl.replace(/\/$/, "");
 
     if (threadId) {
       smithStudioURL.searchParams.append("threadId", threadId);

@@ -7,7 +7,7 @@ export function InboxItemStatuses({
   status,
 }: {
   config?: HumanInterruptConfig;
-  status?: "idle" | "busy" | "error" | "interrupted";
+  status?: "idle" | "busy" | "error" | "interrupted" | "human_response_needed";
 }) {
   if (!config && !status) {
     throw new Error("Either config or status must be provided");
@@ -53,6 +53,7 @@ export function InboxItemStatuses({
           status === "busy" && "border-yellow-600 text-yellow-600",
           status === "error" && "border-red-600 text-red-600",
           status === "interrupted" && "border-green-700 text-green-700",
+          status === "human_response_needed" && "border-blue-600 text-blue-600",
         )}
       >
         <p className="text-sm">{prettifyText(status)}</p>

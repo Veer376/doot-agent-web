@@ -51,7 +51,7 @@ export function hasDeployedInboxes(): boolean {
 
   try {
     const inboxes: AgentInbox[] = JSON.parse(inboxesStr);
-    return inboxes.some((inbox) => isDeployedUrl(inbox.deploymentUrl));
+    return inboxes.some((inbox) => inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl));
   } catch (e) {
     logger.error("Error checking for deployed inboxes:", e);
     return false;
@@ -98,7 +98,7 @@ export async function backfillInboxIds(
   for (const inbox of agentInboxes) {
     try {
       // Only process deployed graphs
-      if (isDeployedUrl(inbox.deploymentUrl)) {
+      if (inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl)) {
         logger.log(
           `Processing deployed inbox ${inbox.id} with URL ${inbox.deploymentUrl}`,
         );
@@ -112,7 +112,8 @@ export async function backfillInboxIds(
 
         try {
           // Fetch deployment info
-          const deploymentInfo = await fetchDeploymentInfo(inbox.deploymentUrl);
+          const deploymentUrl = inbox.deploymentUrl;
+          const deploymentInfo = await fetchDeploymentInfo(deploymentUrl);
           logger.log(`Got deployment info for ${inbox.id}:`, deploymentInfo);
 
           if (

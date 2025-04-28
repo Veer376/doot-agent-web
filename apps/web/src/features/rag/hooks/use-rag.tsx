@@ -12,13 +12,13 @@ export function getDefaultCollection(collections: Collection[]): Collection {
   );
 }
 
-function getApiUrlOrThrow() {
+function getApiUrlOrThrow(): URL {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
     throw new Error(
       "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
     );
   }
-  return process.env.NEXT_PUBLIC_RAG_API_URL;
+  return new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
 }
 
 export function getCollectionName(name: string | undefined) {
@@ -41,11 +41,7 @@ async function uploadDocuments(
   files: File[],
   metadatas?: Record<string, any>[],
 ): Promise<any> {
-  const API_BASE_URL = getApiUrlOrThrow();
-  if (!API_BASE_URL) {
-    throw new Error("Failed to upload documents: API URL not configured.");
-  }
-  const url = `${API_BASE_URL}/collections/${encodeURIComponent(collectionName)}/documents`;
+  const url = `${getApiUrlOrThrow().href}collections/${encodeURIComponent(collectionName)}/documents`;
 
   const formData = new FormData();
 
@@ -184,7 +180,7 @@ export function useRag(): UseRagReturn {
       collectionName: string,
       args?: { limit?: number; offset?: number },
     ): Promise<Document[]> => {
-      const url = new URL(getApiUrlOrThrow());
+      const url = getApiUrlOrThrow();
       url.pathname = `/collections/${collectionName}/documents`;
       if (args?.limit) {
         url.searchParams.set("limit", args.limit.toString());
@@ -209,7 +205,7 @@ export function useRag(): UseRagReturn {
         throw new Error("No collection selected");
       }
 
-      const url = new URL(getApiUrlOrThrow());
+      const url = getApiUrlOrThrow();
       url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
 
       const response = await fetch(url.toString(), { method: "DELETE" });
@@ -287,7 +283,7 @@ export function useRag(): UseRagReturn {
   // --- Collection Operations ---
 
   const getCollections = useCallback(async (): Promise<Collection[]> => {
-    const url = new URL(getApiUrlOrThrow());
+    const url = getApiUrlOrThrow();
     url.pathname = "/collections";
 
     const response = await fetch(url.toString());
@@ -300,7 +296,7 @@ export function useRag(): UseRagReturn {
 
   const createCollection = useCallback(
     async (name: string): Promise<Collection | undefined> => {
-      const url = new URL(getApiUrlOrThrow());
+      const url = getApiUrlOrThrow();
       url.pathname = "/collections";
 
       const trimmedName = name.trim();
@@ -346,7 +342,7 @@ export function useRag(): UseRagReturn {
         return;
       }
 
-      const url = new URL(getApiUrlOrThrow());
+      const url = getApiUrlOrThrow();
       url.pathname = `/collections/${name}`;
 
       const response = await fetch(url.toString(), {

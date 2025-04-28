@@ -24,15 +24,15 @@ export function EditAgentInboxDialog({
   const { updateAgentInbox } = useInboxes();
 
   const [graphId, setGraphId] = React.useState(agentInbox.graphId);
-  const [deploymentUrl, setDeploymentUrl] = React.useState(
-    agentInbox.deploymentUrl,
+  const [deploymentId, setDeploymentId] = React.useState(
+    agentInbox.deploymentId,
   );
   const [name, setName] = React.useState(agentInbox.name || "");
 
   // Initialize form values when the component mounts
   React.useEffect(() => {
     setGraphId(agentInbox.graphId);
-    setDeploymentUrl(agentInbox.deploymentUrl);
+    setDeploymentId(agentInbox.deploymentId);
     setName(agentInbox.name || "");
   }, [agentInbox]);
 
@@ -44,7 +44,7 @@ export function EditAgentInboxDialog({
       updateAgentInbox({
         ...agentInbox,
         graphId,
-        deploymentUrl,
+        deploymentId,
         name,
       });
 
@@ -95,22 +95,21 @@ export function EditAgentInboxDialog({
         </div>
         <div className="flex w-full flex-col items-start justify-start gap-2">
           <Label
-            htmlFor="deployment-url"
+            htmlFor="deployment-id"
             className="text-right"
           >
-            Deployment URL <span className="text-red-500">*</span>
+            Deployment ID <span className="text-red-500">*</span>
           </Label>
           <p className="text-muted-foreground text-xs">
-            This is the URL of your LangGraph deployment. Can be a local, or
-            production deployment.
+            This is the ID of your LangGraph deployment.
           </p>
           <Input
-            id="deployment-url"
-            placeholder="https://my-agent.default.us.langgraph.app"
+            id="deployment-id"
+            placeholder="my-agent-deployment"
             className="col-span-3"
             required
-            value={deploymentUrl}
-            onChange={(e) => setDeploymentUrl(e.target.value)}
+            value={deploymentId}
+            onChange={(e) => setDeploymentId(e.target.value)}
           />
         </div>
         <div className="flex w-full flex-col items-start justify-start gap-2">

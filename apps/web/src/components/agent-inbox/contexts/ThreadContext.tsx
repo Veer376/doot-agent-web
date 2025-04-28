@@ -5,9 +5,10 @@ import {
   HumanResponse,
   ThreadData,
   ThreadStatusWithAll,
+  EnhancedThreadStatus,
 } from "@/components/agent-inbox/types";
 import { toast } from "sonner";
-import { createClient } from "@/app/inbox/lib/client";
+import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import { END } from "@langchain/langgraph/web";
 import React from "react";
@@ -16,7 +17,6 @@ import {
   INBOX_PARAM,
   LIMIT_PARAM,
   OFFSET_PARAM,
-  LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY,
   IMPROPER_SCHEMA,
 } from "../constants";
 import {
@@ -83,30 +83,26 @@ const getClient = ({ agentInboxes, getItem }: GetClientArgs) => {
     });
     return;
   }
-  const deploymentUrl = agentInboxes.find((i) => i.selected)?.deploymentUrl;
-  if (!deploymentUrl) {
-    toast.error("Missing deployment URL", {
+  const selectedInbox = agentInboxes.find((i) => i.selected);
+  if (!selectedInbox) {
+    toast.error("No selected inbox", {
+      description: "Please select an agent inbox.",
+      duration: 5000,
+    });
+    return;
+  }
+
+  const deploymentId = selectedInbox.deploymentId;
+  if (!deploymentId) {
+    toast.error("Missing deployment ID", {
       description:
-        "Please ensure your selected agent inbox has a deployment URL.",
+        "Please ensure your selected agent inbox has a deployment ID.",
       duration: 5000,
     });
     return;
   }
 
-  const langchainApiKeyLS =
-    getItem(LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY) || undefined;
-  // Only show this error if the deployment URL is for a deployed LangGraph instance.
-  // Local graphs do NOT require an API key.
-  if (!langchainApiKeyLS && deploymentUrl.includes("us.langgraph.app")) {
-    toast.error("API Key Missing", {
-      description: "Please add your LangSmith API key in settings.",
-      duration: 5000,
-    });
-    return;
-  }
-
-  // Pass only the deploymentUrl string to match client.ts implementation
-  return createClient({ deploymentUrl, langchainApiKey: langchainApiKeyLS });
+  return createClient(deploymentId);
 };
 
 export function ThreadsProvider<
@@ -149,7 +145,8 @@ export function ThreadsProvider<
     const existingInbox = agentInboxes.find(
       (inbox) =>
         inbox.graphId === assistantId &&
-        inbox.deploymentUrl.includes(deploymentId),
+        (inbox.deploymentId === deploymentId ||
+          (inbox.deploymentUrl && inbox.deploymentUrl.includes(deploymentId))),
     );
 
     if (existingInbox) {
@@ -172,6 +169,7 @@ export function ThreadsProvider<
           const newInbox: AgentInbox = {
             id: uuidv4(),
             graphId: agent.graph_id,
+            deploymentId: agent.deploymentId,
             deploymentUrl: deployment.deploymentUrl,
             name: agent.name,
             selected: true,
@@ -272,7 +270,7 @@ export function ThreadsProvider<
               currentThread.status !== "interrupted"
             ) {
               return {
-                status: "human_response_needed" as const,
+                status: "human_response_needed" as EnhancedThreadStatus,
                 thread: currentThread,
                 interrupts: undefined,
                 invalidSchema: undefined,
@@ -409,7 +407,7 @@ export function ThreadsProvider<
       if (inbox === "human_response_needed") {
         return {
           thread: currentThread,
-          status: "human_response_needed",
+          status: "human_response_needed" as EnhancedThreadStatus,
           interrupts: undefined,
           invalidSchema: undefined,
         };

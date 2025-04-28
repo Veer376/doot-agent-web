@@ -28,6 +28,9 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
 import { useRouter } from "next/navigation";
 import { useQueryParams } from "../agent-inbox/hooks/use-query-params";
+import { useInboxes } from "../agent-inbox/hooks/use-inboxes";
+import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
+import { AgentInbox } from "../agent-inbox/types";
 
 export function InboxSidebar() {
   const { agents, loading, selectedAgentId, changeSelectedAgent } =
@@ -38,6 +41,7 @@ export function InboxSidebar() {
   const router = useRouter();
   const { updateQueryParams } = useQueryParams();
   const lastSelectedAgentRef = React.useRef<string | null>(null);
+  const { agentInboxes, deleteAgentInbox } = useInboxes();
 
   React.useEffect(() => {
     try {
@@ -149,7 +153,7 @@ export function InboxSidebar() {
                                     <SidebarMenuItem
                                       key={`agent-${agent.assistant_id}`}
                                       className={cn(
-                                        "flex w-full items-center",
+                                        "flex w-full items-center justify-between",
                                         isSelected
                                           ? "rounded-md bg-gray-100"
                                           : "",
@@ -188,6 +192,32 @@ export function InboxSidebar() {
                                           </TooltipContent>
                                         </Tooltip>
                                       </TooltipProvider>
+                                      {isSelected &&
+                                        agentInboxes.find(
+                                          (inbox: AgentInbox) =>
+                                            inbox.graphId === agent.graph_id &&
+                                            inbox.deploymentId ===
+                                              agent.deploymentId,
+                                        ) && (
+                                          <div
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <DropdownDialogMenu
+                                              item={
+                                                agentInboxes.find(
+                                                  (inbox: AgentInbox) =>
+                                                    inbox.graphId ===
+                                                      agent.graph_id &&
+                                                    inbox.deploymentId ===
+                                                      agent.deploymentId,
+                                                )!
+                                              }
+                                              deleteAgentInbox={
+                                                deleteAgentInbox
+                                              }
+                                            />
+                                          </div>
+                                        )}
                                     </SidebarMenuItem>
                                   );
                                 })}

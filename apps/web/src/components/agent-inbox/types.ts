@@ -102,7 +102,7 @@ interface BaseThreadData<T extends Record<string, any> = Record<string, any>> {
 export interface GenericThreadData<
   T extends Record<string, any> = Record<string, any>,
 > extends BaseThreadData<T> {
-  status: "idle" | "busy" | "error";
+  status: "idle" | "busy" | "error" | "human_response_needed";
   interrupts?: undefined;
 }
 
@@ -148,9 +148,14 @@ export interface AgentInbox {
    */
   graphId: string;
   /**
-   * The URL of the deployment. Either a localhost URL, or a deployment URL.
+   * The ID of the deployment.
    */
-  deploymentUrl: string;
+  deploymentId: string;
+  /**
+   * The URL of the deployment. Either a localhost URL, or a deployment URL.
+   * @deprecated Use deploymentId instead.
+   */
+  deploymentUrl?: string;
   /**
    * Optional name for the inbox, used in the UI to label the inbox.
    */

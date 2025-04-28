@@ -243,7 +243,10 @@ const defaultComponents: any = {
   },
 };
 
-const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({ children, className }) => {
+const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
+  children,
+  className,
+}) => {
   return (
     <div className={cn("markdown-content", className)}>
       <ReactMarkdown

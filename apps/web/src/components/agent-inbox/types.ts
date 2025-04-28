@@ -118,23 +118,12 @@ export interface InterruptedThreadData<
 }
 
 /**
- * Thread data for human_response_needed state.
- */
-export interface HumanResponseNeededThreadData<
-  T extends Record<string, any> = Record<string, any>,
-> extends BaseThreadData<T> {
-  status: "human_response_needed";
-  interrupts?: HumanInterrupt[];
-}
-
-/**
  * Union type for all thread data types.
  * Using discriminated union pattern for better type safety.
  */
 export type ThreadData<T extends Record<string, any> = Record<string, any>> =
   | GenericThreadData<T>
-  | InterruptedThreadData<T>
-  | HumanResponseNeededThreadData<T>;
+  | InterruptedThreadData<T>;
 
 /**
  * Thread status with special "all" option for filtering.

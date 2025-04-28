@@ -647,9 +647,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/sdk@npm:^1.10.1":
-  version: 1.10.1
-  resolution: "@modelcontextprotocol/sdk@npm:1.10.1"
+"@modelcontextprotocol/sdk@npm:^1.10.2":
+  version: 1.10.2
+  resolution: "@modelcontextprotocol/sdk@npm:1.10.2"
   dependencies:
     content-type: ^1.0.5
     cors: ^2.8.5
@@ -661,7 +661,7 @@ __metadata:
     raw-body: ^3.0.0
     zod: ^3.23.8
     zod-to-json-schema: ^3.24.1
-  checksum: 6bf2d6521ca7d8b71d18022a4c3c9b3b21a79760b50ee4ecbfd5ceaa56236f10db749716e71e9628b1c0da284a037aa8d3cb14c42062978a3d0d4c99732bb362
+  checksum: b208c4a2a10895c5bec5d911887d927fab34c45184143571d13df7956435086aa0676f2b66acb44e4a96db226394b773b77b9abbf1f221bb4a44d27a74c52991
   languageName: node
   linkType: hard
 
@@ -8799,7 +8799,7 @@ __metadata:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.0.57
-    "@modelcontextprotocol/sdk": ^1.10.1
+    "@modelcontextprotocol/sdk": ^1.10.2
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4
     "@radix-ui/react-collapsible": ^1.1.4

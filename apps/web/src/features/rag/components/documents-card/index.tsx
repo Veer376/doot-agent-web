@@ -22,11 +22,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp, X } from "lucide-react";
+import { Plus, FileUp, X, LoaderCircle } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
 import { getCollectionName } from "../../hooks/use-rag";
+import { toast } from "sonner";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -49,6 +50,7 @@ export function DocumentsCard({
 
   const [textInput, setTextInput] = useState("");
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const filteredDocuments = useMemo(
     () =>
@@ -99,6 +101,8 @@ export function DocumentsCard({
       return;
     }
 
+    setIsUploading(true);
+    const loadingToast = toast.loading("Uploading files", { richColors: true });
     // Convert File[] to FileList as expected by the hook
     const dataTransfer = new DataTransfer();
     stagedFiles.forEach((file) => dataTransfer.items.add(file));
@@ -106,6 +110,9 @@ export function DocumentsCard({
 
     await handleDocumentFileUpload(fileList, selectedCollection.name);
 
+    toast.success("Files uploaded successfully", { richColors: true });
+    setIsUploading(false);
+    toast.dismiss(loadingToast);
     setStagedFiles([]); // Clear staged files after initiating upload
   };
 
@@ -116,8 +123,13 @@ export function DocumentsCard({
     }
 
     if (textInput.trim()) {
+      setIsUploading(true);
+      const loadingToast = toast.loading("Uploading text document", { richColors: true });
       await handleDocumentTextUpload(textInput, selectedCollection.name);
-      setTextInput(""); // Clear text input after upload
+      setTextInput("");
+      setIsUploading(false);
+      toast.dismiss(loadingToast);
+      toast.success("Text document uploaded successfully", { richColors: true });
     }
   };
 
@@ -184,7 +196,7 @@ export function DocumentsCard({
                   </ul>
                   <Button
                     onClick={handleUploadStagedFiles}
-                    disabled={!selectedCollection} // Disable if no collection selected
+                    disabled={!selectedCollection || isUploading}
                     className="mt-2 w-full"
                   >
                     <FileUp className="mr-2 h-4 w-4" />
@@ -203,7 +215,7 @@ export function DocumentsCard({
                 />
                 <Button
                   onClick={handleTextUpload}
-                  disabled={!textInput.trim()}
+                  disabled={!textInput.trim() || isUploading}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Text Document
@@ -219,6 +231,7 @@ export function DocumentsCard({
             <DocumentsTable
               documents={currentDocuments}
               selectedCollection={selectedCollection}
+              actionsDisabled={isUploading}
             />
           </div>
         )}

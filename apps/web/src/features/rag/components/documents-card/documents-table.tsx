@@ -38,11 +38,13 @@ import { getCollectionName } from "../../hooks/use-rag";
 interface DocumentsTableProps {
   documents: Document[];
   selectedCollection: Collection;
+  actionsDisabled: boolean;
 }
 
 export function DocumentsTable({
   documents,
   selectedCollection,
+  actionsDisabled,
 }: DocumentsTableProps) {
   const { deleteDocument } = useRagContext();
   return (
@@ -90,7 +92,7 @@ export function DocumentsTable({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" disabled={actionsDisabled}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -119,6 +121,7 @@ export function DocumentsTable({
                           await deleteDocument(doc.id ?? doc.metadata.id)
                         }
                         className="bg-destructive hover:bg-destructive/90 text-white"
+                        disabled={actionsDisabled}
                       >
                         Delete
                       </AlertDialogAction>

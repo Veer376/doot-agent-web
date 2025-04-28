@@ -27,7 +27,7 @@ import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
 import { useRouter } from "next/navigation";
-import { useQueryParams } from "../agent-inbox/hooks/use-query-params";
+import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import { useInboxes } from "../agent-inbox/hooks/use-inboxes";
 import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
 import { AgentInbox } from "../agent-inbox/types";
@@ -39,7 +39,14 @@ export function InboxSidebar() {
   const { getItem } = useLocalStorage();
   const deployments = getDeployments();
   const router = useRouter();
-  const { updateQueryParams } = useQueryParams();
+
+  // Replace useQueryParams with nuqs
+  const [, setPaginationParams] = useQueryStates({
+    offset: parseAsInteger.withDefault(0),
+    limit: parseAsInteger.withDefault(10),
+    inbox: parseAsString.withDefault("interrupted"),
+  });
+
   const lastSelectedAgentRef = React.useRef<string | null>(null);
   const { agentInboxes, deleteAgentInbox } = useInboxes();
 
@@ -72,12 +79,13 @@ export function InboxSidebar() {
     changeSelectedAgent(agentId);
 
     // Use timeout to break potential render cycles and allow state to settle
-    setTimeout(() => {
+    setTimeout(async () => {
       // Update query params to load appropriate thread data
-      updateQueryParams(
-        ["offset", "limit", "inbox"],
-        ["0", "10", "interrupted"],
-      );
+      await setPaginationParams({
+        offset: 0,
+        limit: 10,
+        inbox: "interrupted",
+      });
 
       // Refresh to ensure UI updates
       router.refresh();

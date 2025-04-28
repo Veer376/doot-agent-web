@@ -11,7 +11,8 @@ import React from "react";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { createDefaultHumanResponse } from "../utils";
 import { INBOX_PARAM, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
-import { useQueryParams } from "./use-query-params";
+
+import { useQueryState, parseAsString } from "nuqs";
 import { logger } from "../utils/logger";
 
 interface UseInterruptedActionsInput<
@@ -71,7 +72,16 @@ export default function useInterruptedActions<
   threadData,
   setThreadData,
 }: UseInterruptedActionsInput<ThreadValues>): UseInterruptedActionsValue {
-  const { updateQueryParams, getSearchParam } = useQueryParams();
+  const [selectedInbox] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted"),
+  );
+
+  const [, setSelectedThreadId] = useQueryState(
+    VIEW_STATE_THREAD_QUERY_PARAM,
+    parseAsString,
+  );
+
   const { fetchSingleThread, fetchThreads, sendHumanResponse, ignoreThread } =
     useThreadsContext<ThreadValues>();
 
@@ -131,10 +141,7 @@ export default function useInterruptedActions<
       toast.error("Please enter a response.");
       return;
     }
-    const currentInbox = getSearchParam(INBOX_PARAM) as
-      | ThreadStatusWithAll
-      | undefined;
-    if (!currentInbox) {
+    if (!selectedInbox) {
       toast.error("No inbox selected");
       return;
     }
@@ -267,8 +274,9 @@ export default function useInterruptedActions<
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
         } else {
           // Re-fetch threads before routing back so the inbox is up to date
-          await fetchThreads(currentInbox);
-          updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+          await fetchThreads(selectedInbox as ThreadStatusWithAll);
+          // Clear the selected thread ID to go back to inbox view
+          await setSelectedThreadId(null);
         }
         setStreamFinished(false);
       }
@@ -300,10 +308,7 @@ export default function useInterruptedActions<
       ignoreResponse = { type: "ignore", args: null };
     }
 
-    const currentInbox = getSearchParam(INBOX_PARAM) as
-      | ThreadStatusWithAll
-      | undefined;
-    if (!currentInbox) {
+    if (!selectedInbox) {
       toast.error("No inbox selected");
       return;
     }
@@ -312,13 +317,14 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
-    await fetchThreads(currentInbox);
+    await fetchThreads(selectedInbox as ThreadStatusWithAll);
 
     setLoading(false);
     toast("Successfully ignored thread", {
       duration: 5000,
     });
-    updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+    // Clear the selected thread ID to go back to inbox view
+    await setSelectedThreadId(null);
   };
 
   const handleResolve = async (
@@ -329,10 +335,7 @@ export default function useInterruptedActions<
       toast.error("Thread data is not available");
       return;
     }
-    const currentInbox = getSearchParam(INBOX_PARAM) as
-      | ThreadStatusWithAll
-      | undefined;
-    if (!currentInbox) {
+    if (!selectedInbox) {
       toast.error("No inbox selected");
       return;
     }
@@ -341,10 +344,11 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await ignoreThread(threadData.thread.thread_id);
-    await fetchThreads(currentInbox);
+    await fetchThreads(selectedInbox as ThreadStatusWithAll);
 
     setLoading(false);
-    updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+    // Clear the selected thread ID to go back to inbox view
+    await setSelectedThreadId(null);
   };
 
   return {

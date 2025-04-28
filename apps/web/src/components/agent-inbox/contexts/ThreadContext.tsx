@@ -12,7 +12,7 @@ import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import { END } from "@langchain/langgraph/web";
 import React from "react";
-import { useQueryParams } from "../hooks/use-query-params";
+import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
   INBOX_PARAM,
   LIMIT_PARAM,
@@ -113,7 +113,17 @@ export function ThreadsProvider<
   const deployments = getDeployments();
   const processedAgentIdRef = React.useRef<string | null>(null);
 
-  const { getSearchParam, searchParams } = useQueryParams();
+  // Use useQueryStates to get and set parameters
+  const [queryParams, _setQueryParams] = useQueryStates({
+    [LIMIT_PARAM]: parseAsInteger.withDefault(10),
+    [OFFSET_PARAM]: parseAsInteger.withDefault(0),
+    [INBOX_PARAM]: parseAsString.withDefault("interrupted"),
+  });
+
+  const limitParam = queryParams[LIMIT_PARAM];
+  const offsetParam = queryParams[OFFSET_PARAM];
+  const inboxParam = queryParams[INBOX_PARAM] as ThreadStatusWithAll;
+
   const [loading, setLoading] = React.useState(false);
   const [threadData, setThreadData] = React.useState<
     ThreadData<ThreadValues>[]
@@ -183,29 +193,14 @@ export function ThreadsProvider<
         }
       }
     }
-  }, [selectedAgentId, agentInboxes, agents, deployments]);
-
-  const limitParam = searchParams.get(LIMIT_PARAM);
-  const offsetParam = searchParams.get(OFFSET_PARAM);
-  const inboxParam = searchParams.get(INBOX_PARAM);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    if (!agentInboxes.length) {
-      return;
-    }
-    const inboxSearchParam = getSearchParam(INBOX_PARAM) as ThreadStatusWithAll;
-    if (!inboxSearchParam) {
-      return;
-    }
-    try {
-      fetchThreads(inboxSearchParam);
-    } catch (e) {
-      logger.error("Error occurred while fetching threads", e);
-    }
-  }, [limitParam, offsetParam, inboxParam, agentInboxes]);
+  }, [
+    selectedAgentId,
+    agentInboxes,
+    agents,
+    deployments,
+    changeAgentInbox,
+    addAgentInbox,
+  ]);
 
   const fetchThreads = React.useCallback(
     async (inbox: ThreadStatusWithAll) => {
@@ -221,16 +216,17 @@ export function ThreadsProvider<
       }
 
       try {
-        const limitQueryParam = getSearchParam(LIMIT_PARAM);
-        if (!limitQueryParam) {
+        // Use the values from queryParams
+        const limit = limitParam;
+        const offset = offsetParam;
+
+        if (!limit) {
           throw new Error("Limit query param not found");
         }
-        const offsetQueryParam = getSearchParam(OFFSET_PARAM);
-        if (!offsetQueryParam) {
+
+        if (!offset && offset !== 0) {
           throw new Error("Offset query param not found");
         }
-        const limit = Number(limitQueryParam);
-        const offset = Number(offsetQueryParam);
 
         if (limit > 100) {
           toast.error("Limit Exceeded", {
@@ -353,8 +349,26 @@ export function ThreadsProvider<
       }
       setLoading(false);
     },
-    [agentInboxes, getItem, getSearchParam],
+    [agentInboxes, getItem, limitParam, offsetParam],
   );
+
+  // Effect to fetch threads when parameters change
+  React.useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (!agentInboxes.length) {
+      return;
+    }
+    if (!inboxParam) {
+      return;
+    }
+    try {
+      fetchThreads(inboxParam);
+    } catch (e) {
+      logger.error("Error occurred while fetching threads", e);
+    }
+  }, [limitParam, offsetParam, inboxParam, agentInboxes, fetchThreads]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
@@ -403,8 +417,7 @@ export function ThreadsProvider<
       }
 
       // Check for special human_response_needed status
-      const inbox = getSearchParam(INBOX_PARAM) as ThreadStatusWithAll;
-      if (inbox === "human_response_needed") {
+      if (inboxParam === "human_response_needed") {
         return {
           thread: currentThread,
           status: "human_response_needed" as EnhancedThreadStatus,
@@ -421,7 +434,7 @@ export function ThreadsProvider<
         invalidSchema: undefined,
       };
     },
-    [agentInboxes, getItem, getSearchParam],
+    [agentInboxes, getItem, inboxParam],
   );
 
   const ignoreThread = async (threadId: string) => {

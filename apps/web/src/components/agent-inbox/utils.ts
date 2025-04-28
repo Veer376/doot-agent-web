@@ -2,10 +2,10 @@ import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
 import { format } from "date-fns";
 import { startCase } from "lodash";
 import {
-    HumanInterrupt,
-    HumanResponseWithEdits,
-    SubmitType,
-    AgentInbox,
+  HumanInterrupt,
+  HumanResponseWithEdits,
+  SubmitType,
+  AgentInbox,
 } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
@@ -137,7 +137,7 @@ export function constructOpenInStudioURL(
   } else {
     // --- Logic for local/non-deployed URLs ---
     const smithStudioURL = new URL(smithStudioBaseUrl);
-    
+
     // Make sure deploymentUrl exists before using it
     const deploymentUrl = inbox.deploymentUrl || "";
     const trimmedDeploymentUrl = deploymentUrl.replace(/\/$/, "");

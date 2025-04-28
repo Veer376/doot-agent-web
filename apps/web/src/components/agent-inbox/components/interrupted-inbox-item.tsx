@@ -3,7 +3,7 @@ import { InterruptedThreadData } from "../types";
 import React from "react";
 import { InboxItemStatuses } from "./statuses";
 import { format } from "date-fns";
-import { useQueryParams } from "../hooks/use-query-params";
+import { useQueryState, parseAsString } from "nuqs";
 import { IMPROPER_SCHEMA, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
 import { ThreadIdCopyable } from "./thread-id";
 
@@ -20,7 +20,10 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
   isLast,
   onThreadClick,
 }: InterruptedInboxItem<ThreadValues>) => {
-  const { updateQueryParams } = useQueryParams();
+  const [, setSelectedThreadIdParam] = useQueryState(
+    VIEW_STATE_THREAD_QUERY_PARAM,
+    parseAsString,
+  );
   const firstInterrupt = threadData.interrupts?.[0];
 
   const descriptionPreview = firstInterrupt?.description?.slice(0, 65);
@@ -38,20 +41,16 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
     "MM/dd h:mm a",
   );
 
-  const handleThreadClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent default click behavior
+  const handleThreadClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
 
     // Call the onThreadClick callback first to save scroll position
     if (onThreadClick) {
       onThreadClick(threadData.thread.thread_id);
     }
 
-    // Navigate immediately using the NextJS router approach
-    // The scroll option is set to false in updateQueryParams to prevent auto-scrolling
-    updateQueryParams(
-      VIEW_STATE_THREAD_QUERY_PARAM,
-      threadData.thread.thread_id,
-    );
+    // Add await here
+    await setSelectedThreadIdParam(threadData.thread.thread_id);
   };
 
   const hasDescriptionValue =

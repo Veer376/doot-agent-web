@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useQueryParams } from "../hooks/use-query-params";
+import { useQueryState, parseAsString } from "nuqs";
 import { Layers, Loader, TriangleAlert, ZapOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INBOX_PARAM } from "../constants";
@@ -60,34 +60,36 @@ export function InboxButtons({
 }: {
   changeInbox: (inbox: ThreadStatusWithAll) => void;
 }) {
-  const { searchParams } = useQueryParams();
-  const selectedInbox = searchParams.get(INBOX_PARAM) || "interrupted";
+  const [selectedInbox] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted"),
+  );
 
   return (
     <div className="flex w-full items-center justify-start gap-2">
       <InboxButton
         label="All"
-        selectedInbox={selectedInbox}
+        selectedInbox={selectedInbox || ""}
         onClick={() => changeInbox("all")}
       />
       <InboxButton
         label="Interrupted"
-        selectedInbox={selectedInbox}
+        selectedInbox={selectedInbox || ""}
         onClick={() => changeInbox("interrupted")}
       />
       <InboxButton
         label="Idle"
-        selectedInbox={selectedInbox}
+        selectedInbox={selectedInbox || ""}
         onClick={() => changeInbox("idle")}
       />
       <InboxButton
         label="Busy"
-        selectedInbox={selectedInbox}
+        selectedInbox={selectedInbox || ""}
         onClick={() => changeInbox("busy")}
       />
       <InboxButton
         label="Error"
-        selectedInbox={selectedInbox}
+        selectedInbox={selectedInbox || ""}
         onClick={() => changeInbox("error")}
       />
     </div>

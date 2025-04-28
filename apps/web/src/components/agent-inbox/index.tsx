@@ -1,12 +1,17 @@
 import React from "react";
-import { useQueryParams } from "./hooks/use-query-params";
+
+import {
+  useQueryState,
+  useQueryStates,
+  parseAsString,
+  parseAsInteger,
+} from "nuqs";
 import {
   INBOX_PARAM,
   VIEW_STATE_THREAD_QUERY_PARAM,
   OFFSET_PARAM,
   LIMIT_PARAM,
 } from "./constants";
-import { ThreadStatusWithAll } from "./types";
 import { AgentInboxView } from "./inbox-view";
 import { ThreadView } from "./thread-view";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
@@ -17,15 +22,27 @@ import { useAgentsContext } from "@/providers/Agents";
 export function AgentInbox<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
-  const { searchParams, updateQueryParams, getSearchParam } = useQueryParams();
+  const [selectedThreadIdParam] = useQueryState(
+    VIEW_STATE_THREAD_QUERY_PARAM,
+    parseAsString,
+  );
+
+  const [selectedInbox, setSelectedInbox] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted") as any,
+  );
+
+  // Use useQueryStates for pagination params
+  const [, setPaginationParams] = useQueryStates({
+    [OFFSET_PARAM]: parseAsInteger.withDefault(0),
+    [LIMIT_PARAM]: parseAsInteger.withDefault(10),
+  });
+
   const { selectedAgentId } = useAgentsContext();
-  const [_selectedInbox, setSelectedInbox] =
-    React.useState<ThreadStatusWithAll>("interrupted");
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
 
-  const selectedThreadIdParam = searchParams.get(VIEW_STATE_THREAD_QUERY_PARAM);
   const isStateViewOpen = !!selectedThreadIdParam;
   const prevIsStateViewOpen = React.useRef(false);
 
@@ -51,14 +68,15 @@ export function AgentInbox<
     processedAgentIdRef.current = selectedAgentId;
 
     // Use setTimeout to break potential render cycles
-    setTimeout(() => {
+    setTimeout(async () => {
       // When agent selection changes, update relevant query params
-      updateQueryParams(
-        [INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM],
-        ["interrupted", "0", "10"],
-      );
+      await setSelectedInbox("interrupted");
+      await setPaginationParams({
+        [OFFSET_PARAM]: 0,
+        [LIMIT_PARAM]: 10,
+      });
     }, 0);
-  }, [selectedAgentId]);
+  }, [selectedAgentId, setSelectedInbox, setPaginationParams]);
 
   // Effect to handle transitions between list and thread views
   React.useEffect(() => {
@@ -123,49 +141,29 @@ export function AgentInbox<
     }
   }, [isStateViewOpen, restoreScrollPosition, navigationSignature]);
 
+  // Initialize parameters if needed
   React.useEffect(() => {
     try {
       if (typeof window === "undefined") return;
 
-      const currentInbox = getSearchParam(INBOX_PARAM) as
-        | ThreadStatusWithAll
-        | undefined;
-      if (!currentInbox) {
-        // Set default inbox if none selected, and ensure offset, limit, and inbox (tab) are set
-        updateQueryParams(
-          [INBOX_PARAM, OFFSET_PARAM, LIMIT_PARAM],
-          ["interrupted", "0", "10"],
-        );
-      } else {
-        setSelectedInbox(currentInbox);
+      // With nuqs, default values are handled automatically by the parsers
+      // This effect can be simplified
+      if (!selectedInbox) {
+        // Set default inbox
+        const initializeParams = async () => {
+          await setSelectedInbox("interrupted");
+          await setPaginationParams({
+            [OFFSET_PARAM]: 0,
+            [LIMIT_PARAM]: 10,
+          });
+        };
 
-        // Ensure offset and limit exist whenever inbox is changed
-        const offsetParam = getSearchParam(OFFSET_PARAM);
-        const limitParam = getSearchParam(LIMIT_PARAM);
-
-        if (!offsetParam || !limitParam) {
-          const paramsToUpdate = [];
-          const valuesToUpdate = [];
-
-          if (!offsetParam) {
-            paramsToUpdate.push(OFFSET_PARAM);
-            valuesToUpdate.push("0");
-          }
-
-          if (!limitParam) {
-            paramsToUpdate.push(LIMIT_PARAM);
-            valuesToUpdate.push("10");
-          }
-
-          if (paramsToUpdate.length > 0) {
-            updateQueryParams(paramsToUpdate, valuesToUpdate);
-          }
-        }
+        initializeParams();
       }
     } catch (e) {
-      logger.error("Error updating query params & setting inbox", e);
+      logger.error("Error initializing query params", e);
     }
-  }, [searchParams]);
+  }, [selectedInbox, setSelectedInbox, setPaginationParams]);
 
   if (isStateViewOpen) {
     return <ThreadView threadId={selectedThreadIdParam} />;

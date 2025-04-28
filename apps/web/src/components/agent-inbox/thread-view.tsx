@@ -4,14 +4,17 @@ import { useThreadsContext } from "./contexts/ThreadContext";
 import { ThreadData } from "./types";
 import React from "react";
 import { cn } from "@/lib/utils";
-import { useQueryParams } from "./hooks/use-query-params";
+import { useQueryState, parseAsString } from "nuqs";
 import { IMPROPER_SCHEMA, VIEW_STATE_THREAD_QUERY_PARAM } from "./constants";
 import { logger } from "./utils/logger";
 
 export function ThreadView<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ threadId }: { threadId: string }) {
-  const { updateQueryParams } = useQueryParams();
+  const [, setSelectedThreadIdParam] = useQueryState(
+    VIEW_STATE_THREAD_QUERY_PARAM,
+    parseAsString,
+  );
   const { threadData: threads, loading } = useThreadsContext<ThreadValues>();
   const [threadData, setThreadData] =
     React.useState<ThreadData<ThreadValues>>();
@@ -64,7 +67,7 @@ export function ThreadView<
         }
       } else {
         // Route the user back to the inbox view.
-        updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+        setSelectedThreadIdParam(null);
       }
     } catch (e) {
       logger.error("Error updating query params & setting thread data", e);

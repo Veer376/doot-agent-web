@@ -19,7 +19,7 @@ import {
 } from "../constants";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useQueryParams } from "../hooks/use-query-params";
+import { useQueryStates, parseAsString } from "nuqs";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { useState } from "react";
 
@@ -116,7 +116,9 @@ export function ThreadActionsView<
   setThreadData,
 }: ThreadActionsViewProps<ThreadValues>) {
   const { agentInboxes, fetchSingleThread } = useThreadsContext<ThreadValues>();
-  const { updateQueryParams } = useQueryParams();
+  const [, setQueryParams] = useQueryStates({
+    [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   // Get the selected inbox object
@@ -217,8 +219,12 @@ export function ThreadActionsView<
     if (handleShowSidePanel) {
       handleShowSidePanel(state, description);
     } else {
-      updateQueryParams("thread_state", String(state));
-      updateQueryParams("thread_description", String(description));
+      setQueryParams({
+        [VIEW_STATE_THREAD_QUERY_PARAM]: String(state),
+      });
+      setQueryParams({
+        [VIEW_STATE_THREAD_QUERY_PARAM]: String(description),
+      });
     }
   };
 
@@ -253,7 +259,9 @@ export function ThreadActionsView<
                 tooltip="Back to inbox"
                 variant="ghost"
                 onClick={() => {
-                  updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+                  setQueryParams({
+                    [VIEW_STATE_THREAD_QUERY_PARAM]: "",
+                  });
                 }}
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -327,7 +335,9 @@ export function ThreadActionsView<
               tooltip="Back to inbox"
               variant="ghost"
               onClick={() => {
-                updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+                setQueryParams({
+                  [VIEW_STATE_THREAD_QUERY_PARAM]: "",
+                });
               }}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -451,7 +461,9 @@ export function ThreadActionsView<
             tooltip="Back to inbox"
             variant="ghost"
             onClick={() => {
-              updateQueryParams(VIEW_STATE_THREAD_QUERY_PARAM);
+              setQueryParams({
+                [VIEW_STATE_THREAD_QUERY_PARAM]: "",
+              });
             }}
           >
             <ArrowLeft className="h-5 w-5" />

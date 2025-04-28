@@ -51,7 +51,9 @@ export function hasDeployedInboxes(): boolean {
 
   try {
     const inboxes: AgentInbox[] = JSON.parse(inboxesStr);
-    return inboxes.some((inbox) => inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl));
+    return inboxes.some(
+      (inbox) => inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl),
+    );
   } catch (e) {
     logger.error("Error checking for deployed inboxes:", e);
     return false;

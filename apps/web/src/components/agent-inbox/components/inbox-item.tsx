@@ -1,9 +1,5 @@
-import {
-  ThreadData,
-  ThreadStatusWithAll,
-  InterruptedThreadData,
-} from "../types";
-import { useQueryParams } from "../hooks/use-query-params";
+import { ThreadData, InterruptedThreadData } from "../types";
+import { useQueryState, parseAsString } from "nuqs";
 import { InterruptedInboxItem } from "./interrupted-inbox-item";
 import { GenericInboxItem } from "./generic-inbox-item";
 import { INBOX_PARAM } from "../constants";
@@ -19,12 +15,12 @@ interface InboxItemProps<
 export function InboxItem<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ threadData, isLast, onThreadClick }: InboxItemProps<ThreadValues>) {
-  const { searchParams } = useQueryParams();
+  const [selectedInbox] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted"),
+  );
 
-  const inbox = (searchParams.get(INBOX_PARAM) ||
-    "interrupted") as ThreadStatusWithAll;
-
-  if (inbox === "all") {
+  if (selectedInbox === "all") {
     if (threadData.status === "interrupted") {
       const interruptedData = threadData as InterruptedThreadData<ThreadValues>;
       if (interruptedData.interrupts?.length) {
@@ -66,7 +62,7 @@ export function InboxItem<
     }
   }
 
-  if (inbox === "interrupted" && threadData.status === "interrupted") {
+  if (selectedInbox === "interrupted" && threadData.status === "interrupted") {
     const interruptedData = threadData as InterruptedThreadData<ThreadValues>;
     if (interruptedData.interrupts?.length) {
       return (
@@ -90,7 +86,7 @@ export function InboxItem<
     }
   }
 
-  if (inbox !== "interrupted" && threadData.status !== "interrupted") {
+  if (selectedInbox !== "interrupted" && threadData.status !== "interrupted") {
     // Convert human_response_needed to idle for GenericInboxItem
     const adaptedStatus =
       threadData.status === "human_response_needed"

@@ -3,7 +3,7 @@ import { Thread } from "@langchain/langgraph-sdk";
 import { ThreadIdCopyable } from "./thread-id";
 import { InboxItemStatuses } from "./statuses";
 import { format } from "date-fns";
-import { useQueryParams } from "../hooks/use-query-params";
+import { useQueryState, parseAsString } from "nuqs";
 import {
   STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
   VIEW_STATE_THREAD_QUERY_PARAM,
@@ -31,7 +31,10 @@ interface GenericInboxItemProps<
 export function GenericInboxItem<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ threadData, isLast }: GenericInboxItemProps<ThreadValues>) {
-  const { updateQueryParams } = useQueryParams();
+  const [, setSelectedThreadIdParam] = useQueryState(
+    VIEW_STATE_THREAD_QUERY_PARAM,
+    parseAsString,
+  );
   const { agentInboxes } = useThreadsContext();
 
   const selectedInbox = agentInboxes.find((i) => i.selected);
@@ -86,12 +89,7 @@ export function GenericInboxItem<
 
   return (
     <div
-      onClick={() =>
-        updateQueryParams(
-          VIEW_STATE_THREAD_QUERY_PARAM,
-          threadData.thread.thread_id,
-        )
-      }
+      onClick={() => setSelectedThreadIdParam(threadData.thread.thread_id)}
       className={cn(
         "grid h-[71px] w-full cursor-pointer grid-cols-12 p-4 py-4.5 transition-colors ease-in-out hover:bg-gray-50/90",
         !isLast && "border-b-[1px] border-gray-200",

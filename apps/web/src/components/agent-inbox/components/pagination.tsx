@@ -10,23 +10,24 @@ import {
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useQueryParams } from "../hooks/use-query-params";
-import { ThreadStatusWithAll } from "../types";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { toast } from "sonner";
 import { INBOX_PARAM, LIMIT_PARAM, OFFSET_PARAM } from "../constants";
 
 function DisplayLimitSelect() {
-  const { searchParams, updateQueryParams } = useQueryParams();
+  const [fetchLimitParam, setFetchLimitParam] = useQueryState(
+    LIMIT_PARAM,
+    parseAsInteger.withDefault(10),
+  );
   const { loading } = useThreadsContext();
   const fetchLimitOptions = ["10", "25", "50", "100"];
-  const fetchLimitParam = Number(searchParams.get(LIMIT_PARAM) || 10);
 
   return (
     <Select
       disabled={loading}
       value={fetchLimitParam.toString()}
       onValueChange={async (v) => {
-        updateQueryParams(LIMIT_PARAM, v);
+        await setFetchLimitParam(Number(v));
       }}
     >
       <SelectTrigger className="h-8 w-[180px]">
@@ -50,41 +51,45 @@ function DisplayLimitSelect() {
 }
 
 export function Pagination() {
-  const { searchParams, getSearchParam, updateQueryParams } = useQueryParams();
+  // Get individual parameters
+  const [offsetParam, setOffsetParam] = useQueryState(
+    OFFSET_PARAM,
+    parseAsInteger.withDefault(0),
+  );
+
+  const [limitParam] = useQueryState(
+    LIMIT_PARAM,
+    parseAsInteger.withDefault(10),
+  );
+
+  const [selectedInbox] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted"),
+  );
+
   const { hasMoreThreads, loading } = useThreadsContext();
 
-  const isPreviousDisabled =
-    Number(searchParams.get(OFFSET_PARAM) || 0) === 0 || loading;
+  const isPreviousDisabled = offsetParam === 0 || loading;
   const isNextDisabled = !hasMoreThreads || loading;
 
   const handleClickNext = async () => {
-    const selectedInbox = getSearchParam(INBOX_PARAM) as
-      | ThreadStatusWithAll
-      | undefined;
     if (!selectedInbox) {
       toast.error("No inbox selected");
       return;
     }
 
-    const offsetParam = Number(searchParams.get(OFFSET_PARAM) || 0);
-    const fetchLimitParam = Number(searchParams.get(LIMIT_PARAM) || 10);
-    const newOffset = offsetParam + fetchLimitParam;
-    updateQueryParams(OFFSET_PARAM, newOffset.toString());
+    const newOffset = offsetParam + limitParam;
+    await setOffsetParam(newOffset);
   };
 
   const handleClickPrevious = async () => {
-    const selectedInbox = getSearchParam(INBOX_PARAM) as
-      | ThreadStatusWithAll
-      | undefined;
     if (!selectedInbox) {
       toast.error("No inbox selected");
       return;
     }
 
-    const offsetParam = Number(getSearchParam(OFFSET_PARAM) || 0);
-    const fetchLimitParam = Number(getSearchParam(LIMIT_PARAM) || 10);
-    const newOffset = Math.max(offsetParam - fetchLimitParam, 0);
-    updateQueryParams(OFFSET_PARAM, newOffset.toString());
+    const newOffset = Math.max(offsetParam - limitParam, 0);
+    await setOffsetParam(newOffset);
   };
 
   return (

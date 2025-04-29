@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
 import { getCollectionName } from "../../hooks/use-rag";
+import { toast } from "sonner";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -49,6 +50,8 @@ export function DocumentsCard({
 
   const [textInput, setTextInput] = useState("");
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const filteredDocuments = useMemo(
     () =>
@@ -70,13 +73,40 @@ export function DocumentsCard({
   );
 
   // Handle adding files to staging
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+
+    const allowedTypes = ["application/pdf", "text/plain", "text/html"];
+    const filteredFiles = Array.from(files).filter((file) =>
+      allowedTypes.includes(file.type),
+    );
+
+    // TODO: Add user feedback if files are filtered out
+    console.log("Selected files:", filteredFiles);
+    setStagedFiles((prevFiles) => [...prevFiles, ...filteredFiles]);
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      setStagedFiles((prevFiles) => [...prevFiles, ...Array.from(files)]);
-      // Reset file input value to allow selecting the same file again
-      event.target.value = "";
-    }
+    handleFiles(event.target.files);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    handleFiles(event.dataTransfer.files);
   };
 
   // Handle removing a file from staging
@@ -99,6 +129,8 @@ export function DocumentsCard({
       return;
     }
 
+    setIsUploading(true);
+    const loadingToast = toast.loading("Uploading files", { richColors: true });
     // Convert File[] to FileList as expected by the hook
     const dataTransfer = new DataTransfer();
     stagedFiles.forEach((file) => dataTransfer.items.add(file));
@@ -106,6 +138,9 @@ export function DocumentsCard({
 
     await handleDocumentFileUpload(fileList, selectedCollection.name);
 
+    toast.success("Files uploaded successfully", { richColors: true });
+    setIsUploading(false);
+    toast.dismiss(loadingToast);
     setStagedFiles([]); // Clear staged files after initiating upload
   };
 
@@ -116,8 +151,17 @@ export function DocumentsCard({
     }
 
     if (textInput.trim()) {
+      setIsUploading(true);
+      const loadingToast = toast.loading("Uploading text document", {
+        richColors: true,
+      });
       await handleDocumentTextUpload(textInput, selectedCollection.name);
-      setTextInput(""); // Clear text input after upload
+      setTextInput("");
+      setIsUploading(false);
+      toast.dismiss(loadingToast);
+      toast.success("Text document uploaded successfully", {
+        richColors: true,
+      });
     }
   };
 
@@ -137,7 +181,12 @@ export function DocumentsCard({
               <TabsTrigger value="text">Add Text</TabsTrigger>
             </TabsList>
             <TabsContent value="file">
-              <div className="flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center">
+              <div
+                className={`flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center ${isDragging ? "border-primary bg-muted/50" : ""}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <FileUp className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                 <p className="text-muted-foreground mb-2 text-sm">
                   Drag and drop files here or click to browse
@@ -148,6 +197,7 @@ export function DocumentsCard({
                   id="file-upload"
                   multiple
                   onChange={handleFileSelect}
+                  accept=".pdf,.txt,.html"
                 />
                 <Label htmlFor="file-upload">
                   <Button
@@ -184,7 +234,7 @@ export function DocumentsCard({
                   </ul>
                   <Button
                     onClick={handleUploadStagedFiles}
-                    disabled={!selectedCollection} // Disable if no collection selected
+                    disabled={!selectedCollection || isUploading}
                     className="mt-2 w-full"
                   >
                     <FileUp className="mr-2 h-4 w-4" />
@@ -203,7 +253,7 @@ export function DocumentsCard({
                 />
                 <Button
                   onClick={handleTextUpload}
-                  disabled={!textInput.trim()}
+                  disabled={!textInput.trim() || isUploading}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Text Document
@@ -219,6 +269,7 @@ export function DocumentsCard({
             <DocumentsTable
               documents={currentDocuments}
               selectedCollection={selectedCollection}
+              actionsDisabled={isUploading}
             />
           </div>
         )}

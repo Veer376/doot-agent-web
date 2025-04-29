@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { Wrench } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ToolCard, ToolCardLoading } from "./components/tool-card";
 import { useMCPContext } from "@/providers/MCP";
 import { Badge } from "@/components/ui/badge";
-import _, { debounce } from "lodash";
+import _ from "lodash";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 
@@ -38,7 +38,8 @@ function TotalToolsBadge({
  */
 export default function ToolsInterface(): React.ReactNode {
   const { tools, loading } = useMCPContext();
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } = useSearchTools(tools);
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
+    useSearchTools(tools);
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">

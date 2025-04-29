@@ -56,7 +56,8 @@ export function AgentFieldsForm({
   agentId,
 }: AgentFieldsFormProps) {
   const { tools } = useMCPContext();
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } = useSearchTools(tools);
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
+    useSearchTools(tools);
 
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">

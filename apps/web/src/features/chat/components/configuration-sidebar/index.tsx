@@ -52,7 +52,8 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
     ConfigurableFieldMCPMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } = useSearchTools(tools);
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
+    useSearchTools(tools);
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
 
   useEffect(() => {

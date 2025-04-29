@@ -10,7 +10,6 @@ import {
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
-import { END } from "@langchain/langgraph/web";
 import React from "react";
 import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
 import {
@@ -448,7 +447,7 @@ export function ThreadsProvider<
     try {
       await client.threads.updateState(threadId, {
         values: null,
-        asNode: END,
+        asNode: "__end__",
       });
 
       setThreadData((prev) => {

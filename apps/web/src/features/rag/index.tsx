@@ -1,19 +1,38 @@
 "use client";
 
-import React from "react";
+import type React from "react";
+import { useState } from "react";
+import { DocumentsCard } from "./components/documents-card";
+import { CollectionsCard } from "./components/collections-card";
+import { useRagContext } from "./providers/RAG";
 
-/**
- * The parent component containing the RAG interface.
- */
-export default function RAGInterface(): React.ReactNode {
+export default function RAGInterface() {
+  const { selectedCollection, setSelectedCollection, collections } =
+    useRagContext();
+  const [currentPage, setCurrentPage] = useState(1);
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+    <div className="container mx-auto p-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {/* Collections Section */}
+        <div className="md:col-span-1">
+          <CollectionsCard
+            collections={collections}
+            selectedCollection={selectedCollection}
+            setSelectedCollection={setSelectedCollection}
+            setCurrentPage={setCurrentPage}
+          />
+        </div>
+
+        {/* Documents Section */}
+        <div className="md:col-span-2">
+          <DocumentsCard
+            selectedCollection={selectedCollection}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
+        </div>
       </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
     </div>
   );
 }

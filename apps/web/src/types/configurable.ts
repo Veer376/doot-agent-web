@@ -62,3 +62,9 @@ export type ConfigurableFieldUIMetadata<V = unknown> = {
    */
   step?: number;
 };
+
+export type ConfigurableFieldMCPMetadata = {
+  label: string;
+  type: "tools_list";
+  default?: string[];
+};

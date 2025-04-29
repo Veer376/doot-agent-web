@@ -453,18 +453,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-checkpoint@npm:~0.0.17":
-  version: 0.0.17
-  resolution: "@langchain/langgraph-checkpoint@npm:0.0.17"
-  dependencies:
-    uuid: ^10.0.0
-  peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.4.0"
-  checksum: c8dc429e66ff5b0f31037c493c4f8687196f1800d52b48e8ff04829742cd7200af66ce46dee93ff3c0f6b6e6c2af36336f09626a5ce296ec610383a3bd7131ef
-  languageName: node
-  linkType: hard
-
-"@langchain/langgraph-sdk@npm:^0.0.70, @langchain/langgraph-sdk@npm:~0.0.32":
+"@langchain/langgraph-sdk@npm:^0.0.70":
   version: 0.0.70
   resolution: "@langchain/langgraph-sdk@npm:0.0.70"
   dependencies:
@@ -484,25 +473,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:0.2.67":
-  version: 0.2.67
-  resolution: "@langchain/langgraph@npm:0.2.67"
-  dependencies:
-    "@langchain/langgraph-checkpoint": ~0.0.17
-    "@langchain/langgraph-sdk": ~0.0.32
-    uuid: ^10.0.0
-    zod: ^3.23.8
-  peerDependencies:
-    "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.40 < 0.4.0"
-    zod-to-json-schema: ^3.x
-  peerDependenciesMeta:
-    zod-to-json-schema:
-      optional: true
-  checksum: 7b561ee10aba726f1d66dea7b8770d405723f64e641f149f0e397bc59d1c2448abad0199d5d5f8cfdf0a8a7a49e0731a62f0203bc4f9fa49fc7f6b3222619066
-  languageName: node
-  linkType: hard
-
-"@modelcontextprotocol/sdk@npm:^1.10.1":
+"@modelcontextprotocol/sdk@npm:^1.10.2":
   version: 1.10.2
   resolution: "@modelcontextprotocol/sdk@npm:1.10.2"
   dependencies:
@@ -8353,9 +8324,8 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph": 0.2.67
     "@langchain/langgraph-sdk": ^0.0.70
-    "@modelcontextprotocol/sdk": ^1.10.1
+    "@modelcontextprotocol/sdk": ^1.10.2
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4
     "@radix-ui/react-checkbox": 1.1.2

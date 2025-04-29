@@ -10,8 +10,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { configSchemaToConfigurableFields } from "@/lib/ui-config";
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import {
+  configSchemaToConfigurableFields,
+  configSchemaToConfigurableTools,
+} from "@/lib/ui-config";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldUIMetadata,
+} from "@/types/configurable";
 import { Bot, LoaderCircle, Pencil, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -28,6 +34,9 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
   const { refreshAgents } = useAgentsContext();
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
+  >([]);
+  const [toolConfigurations, setToolConfigurations] = useState<
+    ConfigurableFieldMCPMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -50,6 +59,8 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
       .then((schemas) => {
         if (!schemas) return;
         const configFields = configSchemaToConfigurableFields(schemas);
+        const toolConfig = configSchemaToConfigurableTools(schemas);
+
         const configFieldsWithDefaults = configFields.map((f) => {
           const defaultConfig =
             agent.config?.configurable?.[f.label] ?? f.default;
@@ -58,7 +69,18 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
             default: defaultConfig,
           };
         });
+        const configToolsWithDefaults = toolConfig.map((f) => {
+          const defaultConfig =
+            agent.config?.configurable?.[f.label] ?? f.default;
+          return {
+            ...f,
+            default: defaultConfig as string[],
+          };
+        });
+
         setConfigurations(configFieldsWithDefaults);
+        setToolConfigurations(configToolsWithDefaults);
+
         setName(agent.name);
         setDescription((agent.metadata?.description ?? "") as string);
         setConfig(agent.config?.configurable ?? {});

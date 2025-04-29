@@ -300,3 +300,58 @@ export function ConfigField({
     </div>
   );
 }
+
+export function ConfigFieldTool({
+  id,
+  label,
+  description,
+  agentId,
+  className,
+  toolId,
+}: Pick<
+  ConfigFieldProps,
+  "id" | "label" | "description" | "agentId" | "className"
+> & { toolId: string }) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:selected-tools`;
+  const checked = (
+    store.configsByAgentId[actualAgentId][toolId] as string[]
+  ).some((t) => t === label);
+
+  const handleCheckedChange = (checked: boolean) => {
+    if (checked) {
+      store.updateConfig(actualAgentId, toolId, [
+        ...(store.configsByAgentId[actualAgentId][toolId] as string[]),
+        label,
+      ]);
+    } else {
+      store.updateConfig(
+        actualAgentId,
+        toolId,
+        (store.configsByAgentId[actualAgentId][toolId] as string[]).filter(
+          (t) => t !== label,
+        ),
+      );
+    }
+  };
+
+  return (
+    <div className={cn("space-y-2", className)}>
+      <div className="flex items-center justify-between">
+        <Label
+          htmlFor={id}
+          className="text-sm font-medium"
+        >
+          {_.startCase(label)}
+        </Label>
+        <Switch
+          id={id}
+          checked={checked} // Use currentValue
+          onCheckedChange={handleCheckedChange}
+        />
+      </div>
+
+      {description && <p className="text-xs text-gray-500">{description}</p>}
+    </div>
+  );
+}

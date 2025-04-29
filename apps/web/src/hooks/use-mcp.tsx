@@ -41,7 +41,6 @@ export default function useMCP() {
     });
 
     await mcp.connect(connectionClient);
-    console.log("CONNECTED TO MCP SERVER 💻✅");
     return mcp;
   };
 
@@ -64,9 +63,7 @@ export default function useMCP() {
       name,
       version,
     });
-    console.log("LISTING TOOLS 📚");
     const tools = await mcp.listTools();
-    console.log("TOOLS", tools);
     return tools.tools;
   };
   return { getTools, createAndConnectMCPClient, tools, setTools };

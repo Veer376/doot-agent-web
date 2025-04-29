@@ -10,8 +10,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useAgents } from "@/hooks/use-agents";
-import { configSchemaToConfigurableFields } from "@/lib/ui-config";
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import {
+  configSchemaToConfigurableFields,
+  configSchemaToConfigurableTools,
+} from "@/lib/ui-config";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldUIMetadata,
+} from "@/types/configurable";
 import { Bot, CirclePlus, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +40,9 @@ export function CreateAgentDialog({
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);
+  const [toolConfigurations, setToolConfigurations] = useState<
+    ConfigurableFieldMCPMetadata[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -55,7 +64,10 @@ export function CreateAgentDialog({
       .then((schemas) => {
         if (!schemas) return;
         const configFields = configSchemaToConfigurableFields(schemas);
+        const toolConfig = configSchemaToConfigurableTools(schemas);
+
         setConfigurations(configFields);
+        setToolConfigurations(toolConfig);
       })
       .finally(() => setLoading(false));
   }, [agentId, deploymentId, open]);

@@ -58,7 +58,7 @@ async function getAgents(
       return assistants.map((assistant) => ({
         ...assistant,
         deploymentId: deployment.id,
-        supportedConfigs,
+        supportedConfigs: supportedConfigs as ["tools" | "rag"],
       }));
     },
   );

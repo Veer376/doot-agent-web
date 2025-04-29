@@ -214,7 +214,7 @@ export function useRag(): UseRagReturn {
       }
 
       setDocuments((prevDocs) =>
-        prevDocs.filter((doc) => doc.metadata?.id !== id),
+        prevDocs.filter((doc) => doc.metadata.file_id !== id),
       );
     },
     [selectedCollection],

@@ -8,13 +8,13 @@ import {
   ConfigField,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
+import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";
 import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
-import { useState, useMemo } from "react";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -56,19 +56,8 @@ export function AgentFieldsForm({
   agentId,
 }: AgentFieldsFormProps) {
   const { tools } = useMCPContext();
-  const [toolSearchTerm, setToolSearchTerm] = useState("");
-
-  // Filter tools based on the search term
-  const filteredTools = useMemo(() => {
-    return tools.filter((tool) => {
-      return (
-        _.startCase(tool.name)
-          .toLowerCase()
-          .includes(toolSearchTerm.toLowerCase()) ||
-        tool.name.toLowerCase().includes(toolSearchTerm.toLowerCase())
-      );
-    });
-  }, [tools, toolSearchTerm]);
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
+    useSearchTools(tools);
 
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">
@@ -131,7 +120,7 @@ export function AgentFieldsForm({
           <div className="flex w-full flex-col items-start justify-start gap-2 space-y-2">
             <p className="text-lg font-semibold tracking-tight">Agent Tools</p>
             <Search
-              onSearchChange={setToolSearchTerm}
+              onSearchChange={debouncedSetSearchTerm}
               placeholder="Search tools..."
               className="w-full"
             />

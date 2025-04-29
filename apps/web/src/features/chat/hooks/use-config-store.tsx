@@ -9,12 +9,12 @@ import {
 
 interface ConfigState {
   configsByAgentId: Record<string, Record<string, any>>;
-  getAgentConfig: (agentId: string) => Record<string, any>;
-  updateConfig: (agentId: string, key: string, value: any) => void;
-  resetConfig: (agentId: string) => void;
+  getAgentConfig: (_agentId: string) => Record<string, any>;
+  updateConfig: (_agentId: string, _key: string, _value: any) => void;
+  resetConfig: (_agentId: string) => void;
   setDefaultConfig: (
-    agentId: string,
-    configurations:
+    _agentId: string,
+    _configurations:
       | ConfigurableFieldMCPMetadata[]
       | ConfigurableFieldUIMetadata[],
   ) => void;

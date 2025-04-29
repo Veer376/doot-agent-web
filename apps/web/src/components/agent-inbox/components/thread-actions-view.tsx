@@ -40,7 +40,10 @@ interface ThreadActionsViewProps<
   threadTitle: string;
   showState: boolean;
   showDescription: boolean;
-  handleShowSidePanel?: (showState: boolean, showDescription: boolean) => void;
+  handleShowSidePanel?: (
+    _showState: boolean,
+    _showDescription: boolean,
+  ) => void;
   setThreadData: React.Dispatch<
     React.SetStateAction<ThreadData<ThreadValues> | undefined>
   >;
@@ -542,7 +545,14 @@ export function ThreadActionsView<
         setSelectedSubmitType={actions?.setSelectedSubmitType ?? (() => {})}
         setHasAddedResponse={actions?.setHasAddedResponse ?? (() => {})}
         setHasEdited={actions?.setHasEdited ?? (() => {})}
-        handleSubmit={actions?.handleSubmit ?? (async () => {})}
+        handleSubmit={
+          actions?.handleSubmit ??
+          (async (
+            _e:
+              | React.MouseEvent<HTMLButtonElement, MouseEvent>
+              | React.KeyboardEvent,
+          ) => {})
+        }
       />
     </div>
   );

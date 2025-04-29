@@ -4,7 +4,7 @@ import { Input } from "./input";
 import { cn } from "@/lib/utils";
 
 interface SearchProps {
-  onSearchChange: (term: string) => void;
+  onSearchChange: (_term: string) => void;
   placeholder?: string;
   className?: string;
 }

@@ -39,17 +39,17 @@ type ThreadContentType<
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
   agentInboxes: AgentInbox[];
-  deleteAgentInbox: (id: string) => void;
-  changeAgentInbox: (graphId: string, replaceAll?: boolean) => void;
-  addAgentInbox: (agentInbox: AgentInbox) => void;
-  updateAgentInbox: (updatedInbox: AgentInbox) => void;
-  ignoreThread: (threadId: string) => Promise<void>;
-  fetchThreads: (inbox: ThreadStatusWithAll) => Promise<void>;
+  deleteAgentInbox: (_id: string) => void;
+  changeAgentInbox: (_graphId: string, _replaceAll?: boolean) => void;
+  addAgentInbox: (_agentInbox: AgentInbox) => void;
+  updateAgentInbox: (_updatedInbox: AgentInbox) => void;
+  ignoreThread: (_threadId: string) => Promise<void>;
+  fetchThreads: (_inbox: ThreadStatusWithAll) => Promise<void>;
   clearThreadData: () => void;
   sendHumanResponse: <TStream extends boolean = false>(
-    threadId: string,
-    response: HumanResponse[],
-    options?: {
+    _threadId: string,
+    _response: HumanResponse[],
+    _options?: {
       stream?: TStream;
     },
   ) => TStream extends true
@@ -61,7 +61,7 @@ type ThreadContentType<
         | undefined
     : Promise<Run> | undefined;
   fetchSingleThread: (
-    threadId: string,
+    _threadId: string,
   ) => Promise<ThreadData<ThreadValues> | undefined>;
 };
 
@@ -71,10 +71,10 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 
 interface GetClientArgs {
   agentInboxes: AgentInbox[];
-  getItem: (key: string) => string | null | undefined;
+  getItem: (_key: string) => string | null | undefined;
 }
 
-const getClient = ({ agentInboxes, getItem }: GetClientArgs) => {
+const getClient = ({ agentInboxes }: GetClientArgs) => {
   if (agentInboxes.length === 0) {
     toast.error("Agent inbox not found", {
       description: "Please add an inbox in settings.",

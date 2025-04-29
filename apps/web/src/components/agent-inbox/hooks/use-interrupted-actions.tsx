@@ -27,13 +27,13 @@ interface UseInterruptedActionsInput<
 interface UseInterruptedActionsValue {
   // Actions
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
   handleIgnore: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
   handleResolve: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
 
   // State values

@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 
 interface SidebarButtonsProps {
   historyOpen: boolean;
-  setHistoryOpen: (open: boolean) => void;
+  setHistoryOpen: (_open: boolean) => void;
   configOpen: boolean;
-  setConfigOpen: (open: boolean) => void;
+  setConfigOpen: (_open: boolean) => void;
 }
 
 export function SidebarButtons({

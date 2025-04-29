@@ -9,7 +9,7 @@ interface InboxItemProps<
 > {
   threadData: ThreadData<ThreadValues>;
   isLast: boolean;
-  onThreadClick?: (id: string) => void;
+  onThreadClick?: (_id: string) => void;
 }
 
 export function InboxItem<

@@ -101,8 +101,8 @@ interface UseRagReturn {
   collectionsLoading: boolean;
   setCollectionsLoading: Dispatch<SetStateAction<boolean>>;
   getCollections: () => Promise<Collection[]>;
-  createCollection: (name: string) => Promise<Collection | undefined>;
-  deleteCollection: (name: string) => Promise<string | undefined>;
+  createCollection: (_name: string) => Promise<Collection | undefined>;
+  deleteCollection: (_name: string) => Promise<string | undefined>;
 
   // Selected collection
   selectedCollection: Collection | undefined;
@@ -114,17 +114,17 @@ interface UseRagReturn {
   documentsLoading: boolean;
   setDocumentsLoading: Dispatch<SetStateAction<boolean>>;
   listDocuments: (
-    collectionId: string,
-    args?: { limit?: number; offset?: number },
+    _collectionId: string,
+    _args?: { limit?: number; offset?: number },
   ) => Promise<Document[]>;
-  deleteDocument: (id: string) => Promise<void>;
+  deleteDocument: (_id: string) => Promise<void>;
   handleFileUpload: (
-    files: FileList | null,
-    collectionName: string,
+    _files: FileList | null,
+    _collectionName: string,
   ) => Promise<void>;
   handleTextUpload: (
-    textInput: string,
-    collectionName: string,
+    _textInput: string,
+    _collectionName: string,
   ) => Promise<void>;
 }
 

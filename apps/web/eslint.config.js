@@ -23,10 +23,24 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
-          args: "none",
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+          args: "all",
+        },
+      ],
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+          args: "all",
+          varsIgnorePattern: "^(React|_|InterruptedInboxItem)",
         },
       ],
       "react-refresh/only-export-components": [

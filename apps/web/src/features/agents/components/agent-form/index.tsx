@@ -34,13 +34,13 @@ export function AgentFieldsFormLoading() {
 
 interface AgentFieldsFormProps {
   name: string;
-  setName: (name: string) => void;
+  setName: (_name: string) => void;
   description: string;
-  setDescription: (description: string) => void;
+  setDescription: (_description: string) => void;
   configurations: ConfigurableFieldUIMetadata[];
   toolConfigurations: ConfigurableFieldMCPMetadata[];
   config: Record<string, any>;
-  setConfig: (config: Record<string, any>) => void;
+  setConfig: (_config: Record<string, any>) => void;
   agentId: string;
 }
 

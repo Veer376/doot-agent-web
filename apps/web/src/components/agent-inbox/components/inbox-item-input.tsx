@@ -82,7 +82,7 @@ interface InboxItemInputProps {
   setHasEdited: React.Dispatch<React.SetStateAction<boolean>>;
 
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
 }
 
@@ -98,9 +98,9 @@ function ResponseComponent({
   streaming: boolean;
   showArgsInResponse: boolean;
   interruptValue: HumanInterrupt;
-  onResponseChange: (change: string, response: HumanResponseWithEdits) => void;
+  onResponseChange: (_value: string, _response: HumanResponseWithEdits) => void;
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
 }) {
   const res = humanResponse.find((r) => r.type === "response");
@@ -108,10 +108,10 @@ function ResponseComponent({
     return null;
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      e.preventDefault();
-      handleSubmit(e);
+  const handleKeyDown = (_e: React.KeyboardEvent) => {
+    if ((_e.metaKey || _e.ctrlKey) && _e.key === "Enter") {
+      _e.preventDefault();
+      handleSubmit(_e);
     }
   };
 
@@ -166,7 +166,7 @@ function AcceptComponent({
   streaming: boolean;
   actionRequestArgs: Record<string, any>;
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
 }) {
   return (
@@ -199,12 +199,12 @@ function EditAndOrAcceptComponent({
   initialValues: Record<string, string>;
   interruptValue: HumanInterrupt;
   onEditChange: (
-    text: string | string[],
-    response: HumanResponseWithEdits,
-    key: string | string[],
+    _text: string | string[],
+    _response: HumanResponseWithEdits,
+    _key: string | string[],
   ) => void;
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
 }) {
   const defaultRows = React.useRef<Record<string, number>>({});
@@ -259,10 +259,10 @@ function EditAndOrAcceptComponent({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      e.preventDefault();
-      handleSubmit(e);
+  const handleKeyDown = (_e: React.KeyboardEvent) => {
+    if ((_e.metaKey || _e.ctrlKey) && _e.key === "Enter") {
+      _e.preventDefault();
+      handleSubmit(_e);
     }
   };
 

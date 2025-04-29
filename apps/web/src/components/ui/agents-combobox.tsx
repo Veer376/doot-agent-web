@@ -35,9 +35,9 @@ export interface AgentsComboboxProps {
    */
   placeholder?: string;
   open?: boolean;
-  setOpen?: (v: boolean) => void;
+  setOpen?: (_open: boolean) => void;
   value?: string;
-  setValue?: (value: string) => void;
+  setValue?: (_value: string) => void;
   className?: string;
   trigger?: React.ReactNode;
   triggerAsChild?: boolean;

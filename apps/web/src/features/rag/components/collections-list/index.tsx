@@ -1,6 +1,4 @@
 "use client";
-
-import type React from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -34,7 +32,7 @@ function DeleteCollection({
   onDelete,
 }: {
   collection: Collection;
-  onDelete: (name: string) => void;
+  onDelete: (_name: string) => void;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -77,12 +75,12 @@ function DeleteCollection({
 interface CollectionsListProps {
   collections: Collection[];
   selectedCollection: Collection | undefined;
-  onSelect: (name: string) => void;
-  onDelete: (name: string) => void;
+  onSelect: (_name: string) => void;
+  onDelete: (_name: string) => void;
   currentPage: number;
   itemsPerPage: number;
   totalCollections: number;
-  onPageChange: (page: number) => void;
+  onPageChange: (_page: number) => void;
 }
 
 export function CollectionsList({

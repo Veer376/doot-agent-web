@@ -45,7 +45,7 @@ interface ConfigFieldProps {
   className?: string;
   // Optional props for external state management
   value?: any;
-  setValue?: (value: any) => void;
+  setValue?: (_value: any) => void;
   agentId: string;
 }
 

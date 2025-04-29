@@ -58,7 +58,7 @@ function InboxButton({
 export function InboxButtons({
   changeInbox,
 }: {
-  changeInbox: (inbox: ThreadStatusWithAll) => void;
+  changeInbox: (_inbox: ThreadStatusWithAll) => void;
 }) {
   const [selectedInbox] = useQueryState(
     INBOX_PARAM,

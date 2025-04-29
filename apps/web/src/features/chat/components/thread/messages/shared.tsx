@@ -74,7 +74,7 @@ export function BranchSwitcher({
 }: {
   branch: string | undefined;
   branchOptions: string[] | undefined;
-  onSelect: (branch: string) => void;
+  onSelect: (_branch: string) => void;
   isLoading: boolean;
 }) {
   if (!branchOptions || !branch) return null;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ThreadIdCopyable } from "./thread-id";
+import { logger } from "../utils/logger";
 
 // Helper to check for complex types (Array or Object)
 function isComplexValue(value: any): boolean {
@@ -58,7 +59,8 @@ const renderCollapsedValue = (
           {truncateString(strValue, 200)}
         </code>
       );
-    } catch (_) {
+    } catch (error) {
+      logger.error("Error creating preview:", error);
       return <span className="text-red-500">Error creating preview</span>;
     }
   }
@@ -76,7 +78,8 @@ const renderTableCellValue = (value: any): React.ReactNode => {
           {JSON.stringify(value, null, 2)}
         </code>
       );
-    } catch (_) {
+    } catch (error) {
+      logger.error("Error stringifying:", error);
       return <span className="text-red-500">Error stringifying</span>;
     }
   }
@@ -108,7 +111,11 @@ export function GenericInterruptValue({
       // Alternative: check string length if preferred
       // const contentStr = JSON.stringify(interrupt);
       // shouldShowExpandButton = contentStr.length > 200;
-    } catch (_) {
+    } catch (error) {
+      logger.error(
+        "Error determining if expand button should be shown:",
+        error,
+      );
       shouldShowExpandButton = false; // Don't show button if error
     }
   }

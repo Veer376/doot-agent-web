@@ -135,7 +135,7 @@ export function InboxSidebar() {
                             {deployment.name}
                           </div>
 
-                          {agentsByGraph.map((graphAgents, graphIdx) => {
+                          {agentsByGraph.map((graphAgents) => {
                             if (graphAgents.length === 0) return null;
 
                             // Use the first agent's graph_id as the group identifier
@@ -145,7 +145,7 @@ export function InboxSidebar() {
                               <React.Fragment
                                 key={`${deployment.id}-${graphId}`}
                               >
-                                {graphAgents.map((agent, agentIdx) => {
+                                {graphAgents.map((agent) => {
                                   const isDeployed = isDeployedUrl(
                                     deployment.deploymentUrl || "",
                                   );

@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TooltipIconButton } from "@/components/ui/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

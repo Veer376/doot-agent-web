@@ -12,7 +12,7 @@ import useInterruptedActions from "../hooks/use-interrupted-actions";
 import { constructOpenInStudioURL } from "../utils";
 import { ThreadIdCopyable } from "./thread-id";
 import { InboxItemInput } from "./inbox-item-input";
-import { TooltipIconButton } from "@/components/ui/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import {
   STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
   VIEW_STATE_THREAD_QUERY_PARAM,

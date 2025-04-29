@@ -11,7 +11,7 @@ import {
 import { UploadCloud, House } from "lucide-react";
 import React from "react";
 import { useSidebar } from "@/components/ui/sidebar";
-import { TooltipIconButton } from "../ui/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
 import { LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY } from "../agent-inbox/constants";
@@ -20,7 +20,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../ui/tooltip";
+} from "@/components/ui/tooltip";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAgentsContext } from "@/providers/Agents";
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";

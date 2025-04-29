@@ -336,7 +336,7 @@ export function ConfigFieldTool({
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("w-full space-y-2", className)}>
       <div className="flex items-center justify-between">
         <Label
           htmlFor={id}

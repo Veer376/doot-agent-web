@@ -1,10 +1,21 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { ConfigField } from "@/features/chat/components/configuration-sidebar/config-field";
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import { Search } from "@/components/ui/tool-search";
+import {
+  ConfigField,
+  ConfigFieldTool,
+} from "@/features/chat/components/configuration-sidebar/config-field";
+import { useMCPContext } from "@/providers/MCP";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldUIMetadata,
+} from "@/types/configurable";
+import _ from "lodash";
+import { useState, useMemo } from "react";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -28,6 +39,7 @@ interface AgentFieldsFormProps {
   description: string;
   setDescription: (description: string) => void;
   configurations: ConfigurableFieldUIMetadata[];
+  toolConfigurations: ConfigurableFieldMCPMetadata[];
   config: Record<string, any>;
   setConfig: (config: Record<string, any>) => void;
   agentId: string;
@@ -39,10 +51,26 @@ export function AgentFieldsForm({
   description,
   setDescription,
   configurations,
+  toolConfigurations,
   config,
   setConfig,
   agentId,
 }: AgentFieldsFormProps) {
+  const { tools } = useMCPContext();
+  const [toolSearchTerm, setToolSearchTerm] = useState("");
+
+  // Filter tools based on the search term
+  const filteredTools = useMemo(() => {
+    return tools.filter((tool) => {
+      return (
+        _.startCase(tool.name)
+          .toLowerCase()
+          .includes(toolSearchTerm.toLowerCase()) ||
+        tool.name.toLowerCase().includes(toolSearchTerm.toLowerCase())
+      );
+    });
+  }, [tools, toolSearchTerm]);
+
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">
       <div className="flex w-full flex-col items-start justify-start gap-2 space-y-2">
@@ -95,6 +123,32 @@ export function AgentFieldsForm({
                 agentId={agentId}
               />
             ))}
+          </div>
+        </>
+      )}
+      {toolConfigurations.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex w-full flex-col items-start justify-start gap-2 space-y-2">
+            <p className="text-lg font-semibold tracking-tight">Agent Tools</p>
+            <Search
+              onSearchChange={setToolSearchTerm}
+              placeholder="Search tools..."
+              className="w-full"
+            />
+            <div className="max-h-[500px] flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
+              {filteredTools.map((c, index) => (
+                <ConfigFieldTool
+                  key={`${c.name}-${index}`}
+                  id={c.name}
+                  label={c.name}
+                  description={c.description}
+                  agentId={agentId}
+                  toolId={toolConfigurations[0]?.label}
+                  className="border-b-[1px] py-4"
+                />
+              ))}
+            </div>
           </div>
         </>
       )}

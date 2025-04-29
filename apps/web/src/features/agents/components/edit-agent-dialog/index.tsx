@@ -194,6 +194,7 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
             description={description}
             setDescription={setDescription}
             configurations={configurations}
+            toolConfigurations={toolConfigurations}
             config={config}
             setConfig={setConfig}
             agentId={agent.assistant_id}

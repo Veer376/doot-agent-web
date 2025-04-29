@@ -146,6 +146,7 @@ export function CreateAgentDialog({
             description={description}
             setDescription={setDescription}
             configurations={configurations}
+            toolConfigurations={toolConfigurations}
             config={config}
             setConfig={setConfig}
             agentId={agentId}

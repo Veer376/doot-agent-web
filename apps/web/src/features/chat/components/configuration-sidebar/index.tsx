@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Save, Trash2, Plus, Search } from "lucide-react";
+import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -32,37 +32,11 @@ import {
 import { toast } from "sonner";
 import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
-import { Input } from "@/components/ui/input";
+import { Search } from "@/components/ui/tool-search";
 
 export interface AIConfigPanelProps {
   className?: string;
   open: boolean;
-}
-
-interface ToolSearchProps {
-  onSearchChange: (term: string) => void;
-}
-
-function ToolSearch({ onSearchChange }: ToolSearchProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const term = event.target.value;
-    setSearchTerm(term);
-    onSearchChange(term);
-  };
-
-  return (
-    <div className="mb-4 flex items-center rounded-lg border-[1px] border-slate-200 px-2">
-      <Search className="mr-2 size-4 text-slate-400" />
-      <Input
-        className="h-8 border-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
-        placeholder="Search tools..."
-        value={searchTerm}
-        onChange={handleInputChange}
-      />
-    </div>
-  );
 }
 
 export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
@@ -251,7 +225,10 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
                 className="m-0 overflow-y-auto p-4"
               >
                 <ConfigSection title="Available Tools">
-                  <ToolSearch onSearchChange={setToolSearchTerm} />
+                  <Search
+                    onSearchChange={setToolSearchTerm}
+                    placeholder="Search tools..."
+                  />
                   {agentId &&
                     filteredTools.map((c, index) => (
                       <ConfigFieldTool

@@ -1,33 +1,7 @@
 import { Copy, CopyCheck } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-export function ThreadIdTooltip({ threadId }: { threadId: string }) {
-  const firstThreeChars = threadId.slice(0, 3);
-  const lastThreeChars = threadId.slice(-3);
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger>
-          <p className="rounded-md bg-gray-100 px-1 py-[2px] font-mono text-[10px] leading-[12px] tracking-tighter">
-            {firstThreeChars}...{lastThreeChars}
-          </p>
-        </TooltipTrigger>
-        <TooltipContent>
-          <ThreadIdCopyable threadId={threadId} />
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 export function ThreadIdCopyable({
   threadId,

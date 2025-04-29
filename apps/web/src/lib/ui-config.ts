@@ -26,7 +26,6 @@ export function configSchemaToConfigurableFields(
   }
 
   const fields: ConfigurableFieldUIMetadata[] = [];
-  const mcpFields: ConfigurableFieldMCPMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
     if (
       typeof value === "object" &&

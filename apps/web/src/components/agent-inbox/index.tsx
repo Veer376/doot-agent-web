@@ -42,6 +42,7 @@ export function AgentInbox<
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
+  const updateInProgress = React.useRef(false);
 
   const isStateViewOpen = !!selectedThreadIdParam;
   const prevIsStateViewOpen = React.useRef(false);
@@ -61,20 +62,30 @@ export function AgentInbox<
   // Effect to update parameters when selectedAgentId changes
   React.useEffect(() => {
     // Skip if no selectedAgentId or if we've already processed this agent ID
-    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current)
+    if (
+      !selectedAgentId ||
+      selectedAgentId === processedAgentIdRef.current ||
+      updateInProgress.current
+    )
       return;
 
     // Update ref to prevent processing the same agent multiple times
     processedAgentIdRef.current = selectedAgentId;
+    updateInProgress.current = true;
 
     // Use setTimeout to break potential render cycles
     setTimeout(async () => {
-      // When agent selection changes, update relevant query params
-      await setSelectedInbox("interrupted");
-      await setPaginationParams({
-        [OFFSET_PARAM]: 0,
-        [LIMIT_PARAM]: 10,
-      });
+      try {
+        // When agent selection changes, update relevant query params
+        await setSelectedInbox("interrupted");
+        await setPaginationParams({
+          [OFFSET_PARAM]: 0,
+          [LIMIT_PARAM]: 10,
+        });
+      } finally {
+        // Always reset the update flag
+        updateInProgress.current = false;
+      }
     }, 0);
   }, [selectedAgentId, setSelectedInbox, setPaginationParams]);
 

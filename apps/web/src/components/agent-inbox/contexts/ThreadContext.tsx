@@ -111,6 +111,7 @@ export function ThreadsProvider<
   const { selectedAgentId, agents } = useAgentsContext();
   const deployments = getDeployments();
   const processedAgentIdRef = React.useRef<string | null>(null);
+  const lastFetchTimeRef = React.useRef<number>(0);
 
   // Use useQueryStates to get and set parameters
   const [queryParams, _setQueryParams] = useQueryStates({
@@ -362,6 +363,18 @@ export function ThreadsProvider<
     if (!inboxParam) {
       return;
     }
+
+    // Use ref to track last fetch time
+    const currentTime = Date.now();
+
+    // Debounce fetches to once every 500ms
+    if (currentTime - lastFetchTimeRef.current < 500) {
+      logger.log("Debouncing thread fetch request - too soon after last fetch");
+      return;
+    }
+
+    lastFetchTimeRef.current = currentTime;
+
     try {
       fetchThreads(inboxParam);
     } catch (e) {

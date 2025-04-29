@@ -374,6 +374,22 @@ export function useInboxes() {
    */
   const changeAgentInbox = useCallback(
     (id: string, replaceAll?: boolean) => {
+      // Prevent rapid changes with a debounce ref
+      const debounceKey = `inbox-change-debounce-${id}`;
+      const now = Date.now();
+      const lastChange = parseInt(sessionStorage.getItem(debounceKey) || "0");
+
+      // Debounce changes to the same inbox ID within 500ms
+      if (now - lastChange < 500) {
+        logger.log(
+          `Debouncing change to inbox ${id}, too soon after last change`,
+        );
+        return;
+      }
+
+      // Store timestamp of this change
+      sessionStorage.setItem(debounceKey, now.toString());
+
       // Update React state
       setAgentInboxes((prevInboxes) =>
         prevInboxes.map((inbox) => ({

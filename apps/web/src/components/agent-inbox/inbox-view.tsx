@@ -68,11 +68,22 @@ export function AgentInboxView<
         setHasAttemptedRefresh(true);
 
         logger.log("Automatically refreshing inbox IDs...");
-        await forceInboxBackfill();
+        try {
+          await forceInboxBackfill();
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+          // Set a flag to prevent multiple page reloads
+          const reloadKey = "inbox-page-reloaded";
+          if (sessionStorage.getItem(reloadKey) !== "true") {
+            sessionStorage.setItem(reloadKey, "true");
+
+            // Delay reload to avoid race conditions
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+          }
+        } catch (error) {
+          logger.error("Error during auto-refresh:", error);
+        }
       }
     };
 

@@ -400,7 +400,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/core@npm:^0.3.42":
+"@langchain/core@npm:^0.3.44":
   version: 0.3.49
   resolution: "@langchain/core@npm:0.3.49"
   dependencies:
@@ -2107,7 +2107,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4, @tailwindcss/oxide-linux-x64-gnu@npm:^4.0.1":
+"@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4":
   version: 4.1.4
   resolution: "@tailwindcss/oxide-linux-x64-gnu@npm:4.1.4"
   conditions: os=linux & cpu=x64 & libc=glibc
@@ -5238,13 +5238,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lightningcss-linux-x64-gnu@npm:^1.29.1":
-  version: 1.29.3
-  resolution: "lightningcss-linux-x64-gnu@npm:1.29.3"
-  conditions: os=linux & cpu=x64 & libc=glibc
-  languageName: node
-  linkType: hard
-
 "lightningcss-linux-x64-musl@npm:1.29.2":
   version: 1.29.2
   resolution: "lightningcss-linux-x64-musl@npm:1.29.2"
@@ -6305,15 +6298,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "open-agent-platform@workspace:."
   dependencies:
-    "@tailwindcss/oxide-linux-x64-gnu": ^4.0.1
-    lightningcss-linux-x64-gnu: ^1.29.1
     turbo: ^2.5.0
     typescript: ^5
-  dependenciesMeta:
-    "@tailwindcss/oxide-linux-x64-gnu":
-      optional: true
-    lightningcss-linux-x64-gnu:
-      optional: true
   languageName: unknown
   linkType: soft
 

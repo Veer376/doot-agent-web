@@ -6,12 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Search } from "@/components/ui/tool-search";
 import {
   ConfigField,
+  ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";
 import {
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
@@ -19,7 +21,7 @@ import _ from "lodash";
 export function AgentFieldsFormLoading() {
   return (
     <div className="flex w-full flex-col items-start justify-start gap-2 space-y-2">
-      {Array.from({ length: 5 }).map((_, index) => (
+      {Array.from({ length: 2 }).map((_, index) => (
         <div
           key={`loading-${index}`}
           className="flex w-full flex-col items-start justify-start gap-2"
@@ -42,6 +44,7 @@ interface AgentFieldsFormProps {
   config: Record<string, any>;
   setConfig: (config: Record<string, any>) => void;
   agentId: string;
+  ragConfigurations: ConfigurableFieldRAGMetadata[];
 }
 
 export function AgentFieldsForm({
@@ -54,6 +57,7 @@ export function AgentFieldsForm({
   config,
   setConfig,
   agentId,
+  ragConfigurations,
 }: AgentFieldsFormProps) {
   const { tools } = useMCPContext();
   const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
@@ -125,17 +129,19 @@ export function AgentFieldsForm({
               className="w-full"
             />
             <div className="max-h-[500px] w-full flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
-              {filteredTools.map((c, index) => (
-                <ConfigFieldTool
-                  key={`${c.name}-${index}`}
-                  id={c.name}
-                  label={c.name}
-                  description={c.description}
-                  agentId={agentId}
-                  toolId={toolConfigurations[0]?.label}
-                  className="border-b-[1px] py-4"
-                />
-              ))}
+              {toolConfigurations[0]?.label
+                ? filteredTools.map((c, index) => (
+                    <ConfigFieldTool
+                      key={`${c.name}-${index}`}
+                      id={c.name}
+                      label={c.name}
+                      description={c.description}
+                      agentId={agentId}
+                      toolId={toolConfigurations[0].label}
+                      className="border-b-[1px] py-4"
+                    />
+                  ))
+                : null}
               {filteredTools.length === 0 && toolSearchTerm && (
                 <p className="my-4 w-full text-center text-sm text-slate-500">
                   No tools found matching "{toolSearchTerm}".
@@ -147,6 +153,19 @@ export function AgentFieldsForm({
                 </p>
               )}
             </div>
+          </div>
+        </>
+      )}
+      {ragConfigurations.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <p className="text-lg font-semibold tracking-tight">Agent RAG</p>
+            <ConfigFieldRAG
+              id={ragConfigurations[0].label}
+              label={ragConfigurations[0].label}
+              agentId={agentId}
+            />
           </div>
         </>
       )}

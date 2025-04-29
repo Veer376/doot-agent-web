@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
 import { Search } from "@/components/ui/tool-search";
+import { useSearchTools } from "@/hooks/use-search-tools";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -51,7 +52,7 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
     ConfigurableFieldMCPMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const [toolSearchTerm, setToolSearchTerm] = useState("");
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } = useSearchTools(tools);
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
 
   useEffect(() => {
@@ -113,18 +114,6 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
     toast.success("Agent configuration saved successfully");
   };
-
-  // Filter tools based on the search term
-  const filteredTools = useMemo(() => {
-    return tools.filter((tool) => {
-      return (
-        _.startCase(tool.name)
-          .toLowerCase()
-          .includes(toolSearchTerm.toLowerCase()) ||
-        tool.name.toLowerCase().includes(toolSearchTerm.toLowerCase())
-      );
-    });
-  }, [tools, toolSearchTerm]);
 
   return (
     <div
@@ -226,7 +215,7 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
               >
                 <ConfigSection title="Available Tools">
                   <Search
-                    onSearchChange={setToolSearchTerm}
+                    onSearchChange={debouncedSetSearchTerm}
                     placeholder="Search tools..."
                   />
                   {agentId &&

@@ -1,17 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Save, Trash2, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ConfigField } from "@/features/chat/components/configuration-sidebar/config-field";
+import {
+  ConfigField,
+  ConfigFieldTool,
+} from "@/features/chat/components/configuration-sidebar/config-field";
 import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
-import { configSchemaToConfigurableFields } from "@/lib/ui-config";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldUIMetadata,
+} from "@/types/configurable";
+import {
+  configSchemaToConfigurableFields,
+  configSchemaToConfigurableTools,
+} from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";
 import {
@@ -22,56 +31,31 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import _ from "lodash";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { useMCPContext } from "@/providers/MCP";
+import { Search } from "@/components/ui/tool-search";
 
 export interface AIConfigPanelProps {
   className?: string;
   open: boolean;
 }
 
-function ToolConfigField({
-  id,
-  label,
-  description,
-}: {
-  id: string;
-  label: string;
-  description?: string;
-}) {
-  const [checked, setChecked] = useState(false);
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          {_.startCase(label)}
-        </Label>
-        <Switch
-          id={id}
-          checked={checked}
-          onCheckedChange={setChecked}
-        />
-      </div>
-      {description && <p className="text-xs text-gray-500">{description}</p>}
-    </div>
-  );
-}
-
 export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
   const { configsByAgentId, resetConfig } = useConfigStore();
+  const { tools } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);
+  const [toolConfigurations, setToolConfigurations] = useState<
+    ConfigurableFieldMCPMetadata[]
+  >([]);
   const [loading, setLoading] = useState(false);
+  const [toolSearchTerm, setToolSearchTerm] = useState("");
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
 
   useEffect(() => {
-    if (!agentId || !deploymentId) return;
+    if (!agentId || !deploymentId || loading) return;
 
     setLoading(true);
     getAgent(agentId, deploymentId)
@@ -84,6 +68,7 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
         const schema = await getAgentConfigSchema(agentId, deploymentId);
         if (!schema) return;
         const configFields = configSchemaToConfigurableFields(schema);
+        const toolConfig = configSchemaToConfigurableTools(schema);
 
         const configFieldsWithDefaults = configFields.map((f) => {
           const defaultConfig = a.config?.configurable?.[f.label] ?? f.default;
@@ -93,10 +78,20 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
           };
         });
 
+        const configToolsWithDefaults = toolConfig.map((f) => {
+          const defaultConfig = a.config?.configurable?.[f.label] ?? f.default;
+          return {
+            ...f,
+            default: defaultConfig as string[],
+          };
+        });
+
         setConfigurations(configFieldsWithDefaults);
+        setToolConfigurations(configToolsWithDefaults);
         // Set default config values based on configuration fields
         const { setDefaultConfig } = useConfigStore.getState();
         setDefaultConfig(agentId, configFieldsWithDefaults);
+        setDefaultConfig(`${agentId}:selected-tools`, configToolsWithDefaults);
       })
       .catch((e) => {
         console.error("Failed to get agent", e);
@@ -118,6 +113,18 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
     toast.success("Agent configuration saved successfully");
   };
+
+  // Filter tools based on the search term
+  const filteredTools = useMemo(() => {
+    return tools.filter((tool) => {
+      return (
+        _.startCase(tool.name)
+          .toLowerCase()
+          .includes(toolSearchTerm.toLowerCase()) ||
+        tool.name.toLowerCase().includes(toolSearchTerm.toLowerCase())
+      );
+    });
+  }, [tools, toolSearchTerm]);
 
   return (
     <div
@@ -172,14 +179,14 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
           <Tabs
             defaultValue="general"
-            className="flex flex-1 flex-col overflow-hidden"
+            className="flex flex-1 flex-col overflow-y-auto"
           >
             <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="tools">Tools</TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 overflow-y-auto">
               <TabsContent
                 value="general"
                 className="m-0 p-4"
@@ -213,43 +220,42 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
                 </ConfigSection>
               </TabsContent>
 
-              {/* TODO: Replace with actual tools */}
               <TabsContent
                 value="tools"
-                className="m-0 p-4"
+                className="m-0 overflow-y-auto p-4"
               >
-                <ConfigSection
-                  title="Available Tools"
-                  action={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Plus className="mr-1 h-4 w-4" />
-                      Add Tool
-                    </Button>
-                  }
-                >
-                  <ToolConfigField
-                    id="enableWebSearch"
-                    label="Web Search"
-                    description="Allow the AI to search the web for information"
+                <ConfigSection title="Available Tools">
+                  <Search
+                    onSearchChange={setToolSearchTerm}
+                    placeholder="Search tools..."
                   />
-                  <ToolConfigField
-                    id="enableCalculator"
-                    label="Calculator"
-                    description="Enable mathematical calculations"
-                  />
-                  <ToolConfigField
-                    id="enableCodeInterpreter"
-                    label="Code Interpreter"
-                    description="Run code snippets and return results"
-                  />
-                  <ToolConfigField
-                    id="enableImageGeneration"
-                    label="Image Generation"
-                    description="Generate images from text descriptions"
-                  />
+                  {agentId &&
+                    filteredTools.length > 0 &&
+                    filteredTools.map((c, index) => (
+                      <ConfigFieldTool
+                        key={`${c.name}-${index}`}
+                        id={c.name}
+                        label={c.name}
+                        description={c.description}
+                        agentId={agentId}
+                        toolId={toolConfigurations[0]?.label}
+                      />
+                    ))}
+                  {agentId && filteredTools.length === 0 && toolSearchTerm && (
+                    <p className="mt-4 text-center text-sm text-slate-500">
+                      No tools found matching "{toolSearchTerm}".
+                    </p>
+                  )}
+                  {!agentId && (
+                    <p className="mt-4 text-center text-sm text-slate-500">
+                      Select an agent to see tools.
+                    </p>
+                  )}
+                  {agentId && tools.length === 0 && !toolSearchTerm && (
+                    <p className="mt-4 text-center text-sm text-slate-500">
+                      No tools available for this agent.
+                    </p>
+                  )}
                 </ConfigSection>
               </TabsContent>
             </ScrollArea>

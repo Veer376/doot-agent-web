@@ -1,4 +1,7 @@
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldUIMetadata,
+} from "@/types/configurable";
 import { GraphSchema } from "@langchain/langgraph-sdk";
 
 /**
@@ -33,6 +36,15 @@ export function configSchemaToConfigurableFields(
       value.metadata.x_lg_ui_config &&
       typeof value.metadata.x_lg_ui_config === "object"
     ) {
+      if (
+        "type" in value.metadata.x_lg_ui_config &&
+        ["mcp_server_url", "tools_list"].includes(
+          value.metadata.x_lg_ui_config.type as string,
+        )
+      ) {
+        // Do not set configurable fields for MCP in this func.
+        continue;
+      }
       const uiConfig = value.metadata.x_lg_ui_config as Omit<
         ConfigurableFieldUIMetadata,
         "label"
@@ -46,6 +58,44 @@ export function configSchemaToConfigurableFields(
       fields.push({
         label: key,
         type: "text",
+      });
+    }
+  }
+  return fields;
+}
+
+export function configSchemaToConfigurableTools(
+  schema: GraphSchema["config_schema"],
+): ConfigurableFieldMCPMetadata[] {
+  if (!schema || !schema.properties) {
+    return [];
+  }
+
+  const fields: ConfigurableFieldMCPMetadata[] = [];
+  for (const [key, value] of Object.entries(schema.properties)) {
+    if (
+      typeof value === "object" &&
+      "metadata" in value &&
+      value.metadata &&
+      typeof value.metadata === "object" &&
+      "x_lg_ui_config" in value.metadata &&
+      value.metadata.x_lg_ui_config &&
+      typeof value.metadata.x_lg_ui_config === "object" &&
+      "type" in value.metadata.x_lg_ui_config &&
+      value.metadata.x_lg_ui_config.type &&
+      value.metadata.x_lg_ui_config.type === "tools_list"
+    ) {
+      const castType = value.metadata.x_lg_ui_config.type as "tools_list";
+      fields.push({
+        label: key,
+        type: castType,
+        default:
+          (
+            value.metadata.x_lg_ui_config as Record<
+              string,
+              string[] | undefined
+            >
+          )?.default ?? [],
       });
     }
   }

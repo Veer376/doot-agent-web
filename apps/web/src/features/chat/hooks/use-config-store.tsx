@@ -2,7 +2,10 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ConfigurableFieldUIMetadata } from "@/types/configurable";
+import {
+  ConfigurableFieldUIMetadata,
+  ConfigurableFieldMCPMetadata,
+} from "@/types/configurable";
 
 interface ConfigState {
   configsByAgentId: Record<string, Record<string, any>>;
@@ -11,7 +14,9 @@ interface ConfigState {
   resetConfig: (agentId: string) => void;
   setDefaultConfig: (
     agentId: string,
-    configurations: ConfigurableFieldUIMetadata[],
+    configurations:
+      | ConfigurableFieldMCPMetadata[]
+      | ConfigurableFieldUIMetadata[],
   ) => void;
 }
 

@@ -135,7 +135,7 @@ export function AgentFieldsForm({
               placeholder="Search tools..."
               className="w-full"
             />
-            <div className="max-h-[500px] flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
+            <div className="max-h-[500px] w-full flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
               {filteredTools.map((c, index) => (
                 <ConfigFieldTool
                   key={`${c.name}-${index}`}
@@ -147,6 +147,16 @@ export function AgentFieldsForm({
                   className="border-b-[1px] py-4"
                 />
               ))}
+              {filteredTools.length === 0 && toolSearchTerm && (
+                <p className="my-4 w-full text-center text-sm text-slate-500">
+                  No tools found matching "{toolSearchTerm}".
+                </p>
+              )}
+              {tools.length === 0 && !toolSearchTerm && (
+                <p className="my-4 w-full text-center text-sm text-slate-500">
+                  No tools available for this agent.
+                </p>
+              )}
             </div>
           </div>
         </>

@@ -230,6 +230,7 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
                     placeholder="Search tools..."
                   />
                   {agentId &&
+                    filteredTools.length > 0 &&
                     filteredTools.map((c, index) => (
                       <ConfigFieldTool
                         key={`${c.name}-${index}`}

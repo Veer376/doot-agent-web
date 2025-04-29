@@ -74,7 +74,7 @@ export function DocumentsCard({
 
   // Handle adding files to staging
   const handleFiles = (files: File[] | null) => {
-    if (!files || files.length === 0) return;
+    if (!files?.length) return;
 
     const allowedTypes = ["application/pdf", "text/plain", "text/html"];
     const filteredFiles = files.filter((file) =>
@@ -114,8 +114,7 @@ export function DocumentsCard({
     const supportedFiles: File[] = [];
     const unsupportedFiles: File[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (const file of files) {
       const fileExtension = file.name
         .substring(file.name.lastIndexOf("."))
         .toLowerCase();

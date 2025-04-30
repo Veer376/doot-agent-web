@@ -58,7 +58,7 @@ type AgentsContextType = {
   /**
    * Function to change the selected agent
    */
-  changeSelectedAgent: (_agentId: string) => void;
+  changeSelectedAgent: (agentId: string) => void;
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 

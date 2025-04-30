@@ -76,7 +76,7 @@ export default function useInterruptedActions<
     INBOX_PARAM,
     parseAsString.withDefault("interrupted"),
   );
-
+  const [agentInboxId] = useQueryState("agentInbox");
   const [, setSelectedThreadId] = useQueryState(
     VIEW_STATE_THREAD_QUERY_PARAM,
     parseAsString,
@@ -133,6 +133,10 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => {
     e.preventDefault();
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found");
+      return;
+    }
     if (!threadData || !setThreadData) {
       toast.error("Thread data is not available");
       return;
@@ -273,8 +277,9 @@ export default function useInterruptedActions<
         if (updatedThreadData && updatedThreadData?.status === "interrupted") {
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
         } else {
+          const [assistantId, deploymentId] = agentInboxId.split(":");
           // Re-fetch threads before routing back so the inbox is up to date
-          await fetchThreads(selectedInbox as ThreadStatusWithAll);
+          await fetchThreads(assistantId, deploymentId);
           // Clear the selected thread ID to go back to inbox view
           await setSelectedThreadId(null);
         }
@@ -297,6 +302,10 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found");
+      return;
+    }
     if (!threadData || !setThreadData) {
       toast.error("Thread data is not available");
       return;
@@ -317,7 +326,9 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
-    await fetchThreads(selectedInbox as ThreadStatusWithAll);
+    const [assistantId, deploymentId] = agentInboxId.split(":");
+    // Re-fetch threads before routing back so the inbox is up to date
+    await fetchThreads(assistantId, deploymentId);
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -331,6 +342,10 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found");
+      return;
+    }
     if (!threadData || !setThreadData) {
       toast.error("Thread data is not available");
       return;
@@ -344,7 +359,8 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await ignoreThread(threadData.thread.thread_id);
-    await fetchThreads(selectedInbox as ThreadStatusWithAll);
+    const [assistantId, deploymentId] = agentInboxId.split(":");
+    await fetchThreads(assistantId, deploymentId);
 
     setLoading(false);
     // Clear the selected thread ID to go back to inbox view

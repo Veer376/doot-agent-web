@@ -3,7 +3,6 @@ import { useQueryState, parseAsString } from "nuqs";
 import { Layers, Loader, TriangleAlert, ZapOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INBOX_PARAM } from "../constants";
-import { ThreadStatusWithAll } from "../types";
 
 const idleInboxesSVG = (
   <svg
@@ -55,12 +54,8 @@ function InboxButton({
   );
 }
 
-export function InboxButtons({
-  changeInbox,
-}: {
-  changeInbox: (inbox: ThreadStatusWithAll) => void;
-}) {
-  const [selectedInbox] = useQueryState(
+export function InboxButtons() {
+  const [selectedInbox, setSelectedInbox] = useQueryState(
     INBOX_PARAM,
     parseAsString.withDefault("interrupted"),
   );
@@ -70,27 +65,27 @@ export function InboxButtons({
       <InboxButton
         label="All"
         selectedInbox={selectedInbox || ""}
-        onClick={() => changeInbox("all")}
+        onClick={() => setSelectedInbox("all")}
       />
       <InboxButton
         label="Interrupted"
         selectedInbox={selectedInbox || ""}
-        onClick={() => changeInbox("interrupted")}
+        onClick={() => setSelectedInbox("interrupted")}
       />
       <InboxButton
         label="Idle"
         selectedInbox={selectedInbox || ""}
-        onClick={() => changeInbox("idle")}
+        onClick={() => setSelectedInbox("idle")}
       />
       <InboxButton
         label="Busy"
         selectedInbox={selectedInbox || ""}
-        onClick={() => changeInbox("busy")}
+        onClick={() => setSelectedInbox("busy")}
       />
       <InboxButton
         label="Error"
         selectedInbox={selectedInbox || ""}
-        onClick={() => changeInbox("error")}
+        onClick={() => setSelectedInbox("error")}
       />
     </div>
   );

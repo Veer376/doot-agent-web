@@ -4,9 +4,7 @@ import React from "react";
 import { Pagination } from "./components/pagination";
 import { Inbox as InboxIcon, LoaderCircle } from "lucide-react";
 import { InboxButtons } from "./components/inbox-buttons";
-import { ThreadLoadingIndicator } from "./components/ThreadLoadingIndicator";
-import { useInboxQueryState } from "./hooks/useInboxQueryState";
-import { useInboxChange } from "./hooks/useInboxChange";
+import { useQueryState, parseAsString } from "nuqs";
 
 interface AgentInboxViewProps<
   _ThreadValues extends Record<string, any> = Record<string, any>,
@@ -18,11 +16,10 @@ interface AgentInboxViewProps<
 export function AgentInboxView<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ saveScrollPosition, containerRef }: AgentInboxViewProps<ThreadValues>) {
-  const [inboxState, updateInboxState] = useInboxQueryState();
-  const selectedInbox = inboxState.status;
-
-  // Use the dedicated hook for inbox changes
-  const { changeInbox } = useInboxChange();
+  const [selectedInbox] = useQueryState(
+    "inbox",
+    parseAsString.withDefault("interrupted"),
+  );
 
   const { loading, threadData, isChangingThreads } =
     useThreadsContext<ThreadValues>();
@@ -104,22 +101,14 @@ export function AgentInboxView<
     }
   };
 
-  // Simple refresh function
-  const handleRefresh = () => {
-    updateInboxState({
-      offset: 0,
-    });
-  };
-
   return (
     <div
       ref={containerRef}
       className="h-full min-w-[1000px] overflow-y-auto"
     >
       <div className="pt-4 pl-5">
-        <InboxButtons changeInbox={changeInbox} />
+        <InboxButtons />
       </div>
-      <ThreadLoadingIndicator />
       <div
         ref={scrollableContentRef}
         className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 mt-3 flex h-full max-h-fit w-full flex-col items-start overflow-y-auto border-y-[1px] border-gray-50"
@@ -140,15 +129,9 @@ export function AgentInboxView<
               <InboxIcon className="h-6 w-6" />
               <p className="font-medium">No threads found in this inbox</p>
             </div>
-            <button
-              onClick={handleRefresh}
-              className="mt-4 text-blue-600 hover:underline focus:outline-none"
-            >
-              Click to refresh
-            </button>
           </div>
         )}
-        {isLoading && (
+        {isLoading && threadData.length === 0 && (
           <div className="flex w-full items-center justify-center py-16">
             <div className="flex items-center justify-center gap-2 text-gray-700">
               <LoaderCircle className="h-6 w-6 animate-spin" />

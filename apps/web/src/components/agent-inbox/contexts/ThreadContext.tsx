@@ -3,14 +3,13 @@
 import {
   HumanResponse,
   ThreadData,
-  ThreadStatusWithAll,
   EnhancedThreadStatus,
 } from "@/components/agent-inbox/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
-import React, { useTransition } from "react";
-import { useQueryState } from "nuqs";
+import React, { Dispatch, SetStateAction, useTransition } from "react";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { IMPROPER_SCHEMA } from "../constants";
 import {
   getInterruptFromThread,
@@ -18,8 +17,6 @@ import {
   processThreadWithoutInterrupts,
 } from "./utils";
 import { logger } from "../utils/logger";
-import { v4 as uuidv4 } from "uuid";
-import { useInboxQueryState } from "../hooks/useInboxQueryState";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -28,10 +25,9 @@ type ThreadContentType<
   isChangingThreads: boolean;
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
-  currentInboxStatus: ThreadStatusWithAll;
   ignoreThread: (threadId: string) => Promise<void>;
-  fetchThreads: (inbox: ThreadStatusWithAll) => Promise<void>;
-  clearThreadData: () => void;
+  fetchThreads: (agentId: string, deploymentId: string) => Promise<void>;
+  setThreadData: Dispatch<SetStateAction<ThreadData<Record<string, any>>[]>>;
   sendHumanResponse: <TStream extends boolean = false>(
     _threadId: string,
     _response: HumanResponse[],
@@ -60,59 +56,32 @@ function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const [agentInboxId] = useQueryState("agentInbox");
-  const activeRequests = React.useRef<AbortController[]>([]);
-  const currentRequestIdRef = React.useRef<string | null>(null);
   const [isPending] = useTransition();
 
   // Get thread filter query params using the custom hook
-  const [inboxState] = useInboxQueryState();
-  const inboxParam = inboxState.status;
-  const offsetParam = inboxState.offset;
-  const limitParam = inboxState.limit;
+  const [inboxParam] = useQueryState(
+    "inbox",
+    parseAsString.withDefault("interrupted"),
+  );
+  const [offsetParam] = useQueryState("offset", parseAsInteger.withDefault(0));
+  const [limitParam] = useQueryState("limit", parseAsInteger.withDefault(10));
 
   const [loading, setLoading] = React.useState(false);
   const [threadData, setThreadData] = React.useState<
-    ThreadData<ThreadValues>[]
+    ThreadData<Record<string, any>>[]
   >([]);
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
-  const clearThreadData = React.useCallback(() => {
-    setThreadData([]);
-  }, []);
-
   const fetchThreads = React.useCallback(
-    async (inbox: ThreadStatusWithAll, requestId?: string) => {
-      // Cancel any previous requests
-      activeRequests.current.forEach((controller) => {
-        try {
-          controller.abort();
-        } catch (e) {
-          // Ignore abort errors
-        }
-      });
-      activeRequests.current = [];
-
-      setLoading(true);
-
-      await fetchThreadsFromAPI(inbox, requestId);
-    },
-    [offsetParam, limitParam],
-  );
-
-  // Helper function to fetch threads from API
-  const fetchThreadsFromAPI = React.useCallback(
-    async (inbox: ThreadStatusWithAll, requestId?: string) => {
+    async (agentId: string, deploymentId: string) => {
       if (!agentInboxId) {
         toast.error("No agent inbox ID found", {
           richColors: true,
         });
         return;
       }
-      // If a requestId was passed and it's different from current, abort
-      if (requestId && requestId !== currentRequestIdRef.current) {
-        return; // This is a stale request, ignore it
-      }
-      const [assistantId, deploymentId] = agentInboxId.split(":");
+
+      setLoading(true);
 
       const client = createClient(deploymentId);
 
@@ -138,14 +107,10 @@ function ThreadsProviderInternal<
           return;
         }
 
-        // Create abort controller for this request
-        const controller = new AbortController();
-        activeRequests.current.push(controller);
-
         // Handle inbox filtering differently based on type
         let statusInput: { status?: ThreadStatus } = {};
-        if (inbox !== "all" && inbox !== "human_response_needed") {
-          statusInput = { status: inbox as ThreadStatus };
+        if (inboxParam !== "all" && inboxParam !== "human_response_needed") {
+          statusInput = { status: inboxParam as ThreadStatus };
         }
 
         const threadSearchArgs = {
@@ -153,16 +118,11 @@ function ThreadsProviderInternal<
           limit,
           ...statusInput,
           metadata: {
-            assistant_id: assistantId,
+            assistant_id: agentId,
           },
         };
 
         const threads = await client.threads.search(threadSearchArgs);
-
-        // Check if this is still the current request before proceeding
-        if (requestId && requestId !== currentRequestIdRef.current) {
-          return; // This is a stale request, don't update state
-        }
 
         const processedData: ThreadData<ThreadValues>[] = [];
 
@@ -173,7 +133,7 @@ function ThreadsProviderInternal<
 
             // Handle special cases for human_response_needed inbox
             if (
-              inbox === "human_response_needed" &&
+              inboxParam === "human_response_needed" &&
               currentThread.status !== "interrupted"
             ) {
               return {
@@ -242,11 +202,6 @@ function ThreadsProviderInternal<
           },
         );
 
-        // Check if this is still the current request before updating state
-        if (requestId && requestId !== currentRequestIdRef.current) {
-          return; // This is a stale request, don't update state
-        }
-
         // Process all threads concurrently
         const results = await Promise.all(processPromises);
         processedData.push(...results);
@@ -258,11 +213,6 @@ function ThreadsProviderInternal<
           );
         });
 
-        // Final check before updating state
-        if (requestId && requestId !== currentRequestIdRef.current) {
-          return; // This is a stale request, don't update state
-        }
-
         setThreadData(sortedData);
         setHasMoreThreads(threads.length === limit);
       } catch (e) {
@@ -273,7 +223,7 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [limitParam, offsetParam],
+    [offsetParam, limitParam],
   );
 
   // Effect to fetch threads when parameters change
@@ -281,37 +231,29 @@ function ThreadsProviderInternal<
     if (typeof window === "undefined") {
       return;
     }
-    if (!agentInboxId || !inboxParam) {
+    if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
+      console.log("Missing required parameters", {
+        agentInboxId,
+        inboxParam,
+        offsetParam,
+        limitParam,
+      });
       return;
     }
 
-    // Cancel any existing requests before starting a new one
-    activeRequests.current.forEach((controller) => {
-      try {
-        controller.abort();
-      } catch (e) {
-        // Ignore abort errors
-      }
-    });
-    activeRequests.current = [];
-
-    // Generate a unique request ID for this fetch
-    const requestId = uuidv4();
-    currentRequestIdRef.current = requestId;
-
-    // Set loading state immediately
-    setLoading(true);
+    const [assistantId, deploymentId] = agentInboxId.split(":");
 
     try {
+      console.log("FETCHING THREADS");
       // Fetch threads
-      fetchThreads(inboxParam, requestId);
+      fetchThreads(assistantId, deploymentId);
     } catch (e) {
       logger.error("Error occurred while fetching threads", e);
       toast.error("Failed to load threads. Please try again.");
       // Always reset loading state in case of error
       setLoading(false);
     }
-  }, [inboxParam, offsetParam, limitParam, fetchThreads, clearThreadData]);
+  }, [agentInboxId, inboxParam, offsetParam, limitParam, fetchThreads]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
@@ -468,32 +410,16 @@ function ThreadsProviderInternal<
     }
   };
 
-  // Clean up on component unmount
-  React.useEffect(() => {
-    return () => {
-      // Cancel all pending requests on unmount
-      activeRequests.current.forEach((controller) => {
-        try {
-          controller.abort();
-        } catch (e) {
-          // Ignore abort errors
-        }
-      });
-      activeRequests.current = [];
-    };
-  }, []);
-
   const contextValue: ThreadContentType = {
     loading,
     isChangingThreads: isPending,
     threadData,
     hasMoreThreads,
-    currentInboxStatus: inboxState.status,
     ignoreThread,
     sendHumanResponse,
     fetchThreads,
     fetchSingleThread,
-    clearThreadData,
+    setThreadData,
   };
 
   return (

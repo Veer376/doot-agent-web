@@ -32,19 +32,27 @@ import {
 } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
+import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
+  const { setThreadData, fetchThreads } = useThreadsContext();
   const { agents, loading } = useAgentsContext();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
   const deployments = getDeployments();
 
-  // Replace useQueryParams with nuqs
-  const [, setPaginationParams] = useQueryStates({
-    offset: parseAsInteger.withDefault(0),
-    limit: parseAsInteger.withDefault(10),
-    inbox: parseAsString.withDefault("interrupted"),
-  });
+  const [_offset, setOffset] = useQueryState(
+    "offset",
+    parseAsInteger.withDefault(0),
+  );
+  const [_limit, setLimit] = useQueryState(
+    "limit",
+    parseAsInteger.withDefault(10),
+  );
+  const [_inbox, setInbox] = useQueryState(
+    "inbox",
+    parseAsString.withDefault("interrupted"),
+  );
 
   const lastSelectedAgentRef = React.useRef<string | null>(null);
 
@@ -59,13 +67,14 @@ function InboxSidebarInternal() {
     lastSelectedAgentRef.current = agentId;
 
     // Update selected agent in context
-    setAgentInboxId(agentId);
+    await setAgentInboxId(agentId);
+    setThreadData([]);
 
-    await setPaginationParams({
-      offset: 0,
-      limit: 10,
-      inbox: "interrupted",
-    });
+    await setOffset(0);
+    await setLimit(10);
+    await setInbox("interrupted");
+
+    await fetchThreads(agent.assistant_id, agent.deploymentId);
   };
 
   return (

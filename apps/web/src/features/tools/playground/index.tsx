@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export default function ToolsPlaygroundInterface() {
-  const { tools, loading } = useMCPContext();
+  const { tools, loading, callTool } = useMCPContext();
   const router = useRouter();
 
   const [selectedToolName, setSelectedToolName] = useQueryState("tool");
@@ -22,6 +22,7 @@ export default function ToolsPlaygroundInterface() {
   const [inputValues, setInputValues] = useState({});
   const [response, setResponse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (loading || selectedTool || !tools.length) return;
@@ -39,6 +40,7 @@ export default function ToolsPlaygroundInterface() {
       router.replace("/tools");
       return;
     }
+    setErrorMessage("");
     setSelectedTool(tool);
   }, [tools, loading, selectedToolName]);
 
@@ -50,15 +52,21 @@ export default function ToolsPlaygroundInterface() {
     if (!selectedTool) return;
     setIsLoading(true);
     setResponse(null);
-    /* Remove setActiveTab("response") from the handleSubmit function */
+    setErrorMessage("");
+    
+    try {
+      console.log("inputValues", inputValues)
+      const toolRes = await callTool({
+        name: selectedTool.name,
+        args: inputValues,
+      });
+      setResponse(toolRes);
+    } catch (e: any) {
+      console.error('Error calling tool', e);
+      setErrorMessage(e.message);
+      toast.error("Tool call failed. Please try again.", { richColors: true });
+    }
 
-    // Simulate running the tool
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setResponse({
-      status: "success",
-      data: `Response from ${selectedTool.name} with input: ${JSON.stringify(inputValues)}`,
-    });
     setIsLoading(false);
   };
 
@@ -73,6 +81,7 @@ export default function ToolsPlaygroundInterface() {
         <ToolListCommand
           value={selectedTool}
           setValue={(t) => {
+            setErrorMessage("");
             setSelectedTool(t);
             setSelectedToolName(t.name);
           }}
@@ -122,6 +131,7 @@ export default function ToolsPlaygroundInterface() {
           <ResponseViewer
             response={response}
             isLoading={isLoading}
+            errorMessage={errorMessage}
           />
         </div>
       </div>

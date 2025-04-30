@@ -4,16 +4,27 @@ import type React from "react";
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ResponseViewerProps {
   response: any;
   isLoading: boolean;
+  errorMessage?: string;
 }
 
-export function ResponseViewer({ response, isLoading }: ResponseViewerProps) {
+export function ResponseViewer({ response, isLoading, errorMessage }: ResponseViewerProps) {
   const [viewMode, setViewMode] = useState<"pretty" | "raw">("pretty");
+
+  if (errorMessage) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-md border border-red-200 bg-red-50 p-6 text-red-700">
+        <AlertTriangle className="mb-3 h-8 w-8 text-red-500" />
+        <p className="mb-1 text-lg font-semibold">Error</p>
+        <p className="text-center text-sm">{errorMessage}</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

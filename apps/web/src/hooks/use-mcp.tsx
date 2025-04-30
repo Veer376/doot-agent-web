@@ -16,7 +16,13 @@ function getMCPUrlOrThrow() {
  * Custom hook for interacting with the Model Context Protocol (MCP).
  * Provides functions to connect to an MCP server and list available tools.
  */
-export default function useMCP() {
+export default function useMCP({
+  name,
+  version,
+}: {
+  name: string;
+  version: string;
+}) {
   const [tools, setTools] = useState<Tool[]>([]);
   /**
    * Creates an MCP client and connects it to the specified server URL.
@@ -26,13 +32,7 @@ export default function useMCP() {
    * @param options.version - The version of the client.
    * @returns A promise that resolves to the connected MCP client instance.
    */
-  const createAndConnectMCPClient = async ({
-    name,
-    version,
-  }: {
-    name: string;
-    version: string;
-  }) => {
+  const createAndConnectMCPClient = async () => {
     const url = getMCPUrlOrThrow();
     const connectionClient = new StreamableHTTPClientTransport(new URL(url));
     const mcp = new Client({
@@ -52,19 +52,36 @@ export default function useMCP() {
    * @param options.version - The version of the client.
    * @returns A promise that resolves to an array of available tools.
    */
-  const getTools = async ({
-    name,
-    version,
-  }: {
-    name: string;
-    version: string;
-  }): Promise<Tool[]> => {
-    const mcp = await createAndConnectMCPClient({
-      name,
-      version,
-    });
+  const getTools = async (): Promise<Tool[]> => {
+    const mcp = await createAndConnectMCPClient();
     const tools = await mcp.listTools();
     return tools.tools;
   };
-  return { getTools, createAndConnectMCPClient, tools, setTools };
+
+  /**
+   * Calls a tool on the MCP server.
+   * @param name - The name of the tool.
+   * @param version - The version of the tool. Optional.
+   * @param args - The arguments to pass to the tool.
+   * @returns A promise that resolves to the response from the tool.
+   */
+  const callTool = async ({
+    name,
+    args,
+    version,
+  }: {
+    name: string;
+    args: Record<string, any>;
+    version?: string;
+  }) => {
+    const mcp = await createAndConnectMCPClient();
+    const response = await mcp.callTool({
+      name,
+      version,
+      arguments: args,
+    });
+    return response;
+  }
+
+  return { getTools, callTool, createAndConnectMCPClient, tools, setTools };
 }

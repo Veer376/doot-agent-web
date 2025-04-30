@@ -27,7 +27,7 @@ export function ToolDetailsDialog({ tool, children }: ToolDetailsDialogProps) {
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             <span className="text-muted-foreground font-medium">
-            Tool Details -{" "}
+              Tool Details -{" "}
             </span>
             {_.startCase(tool.name)}
           </DialogTitle>

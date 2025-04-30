@@ -7,14 +7,18 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "@/components/ui/command"
-import { useMCPContext } from "@/providers/MCP"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { ChevronsUpDown, Loader2 } from "lucide-react"
-import _ from "lodash"
-import { Tool } from "@/types/tool"
-import { useState } from "react"
+} from "@/components/ui/command";
+import { useMCPContext } from "@/providers/MCP";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ChevronsUpDown, Loader2 } from "lucide-react";
+import _ from "lodash";
+import { Tool } from "@/types/tool";
+import { useState } from "react";
 
 interface ToolListCommandProps {
   value: Tool;
@@ -53,7 +57,10 @@ export function ToolListCommand({
         <Command
           filter={(value, search) => {
             if (!value) return 0;
-            if (value.toLowerCase().includes(search.toLowerCase()) || _.startCase(value).toLowerCase().includes(search.toLowerCase())) {
+            if (
+              value.toLowerCase().includes(search.toLowerCase()) ||
+              _.startCase(value).toLowerCase().includes(search.toLowerCase())
+            ) {
               return 1;
             }
             return 0;
@@ -62,10 +69,12 @@ export function ToolListCommand({
           <CommandInput placeholder="Search tools..." />
           <CommandList>
             <CommandEmpty>No tools found.</CommandEmpty>
-            {loading && !tools.length && <CommandEmpty className="flex items-center gap-1">
-              <Loader2 className="animate-spin size-4" />
-              Loading tools...
-              </CommandEmpty>}
+            {loading && !tools.length && (
+              <CommandEmpty className="flex items-center gap-1">
+                <Loader2 className="size-4 animate-spin" />
+                Loading tools...
+              </CommandEmpty>
+            )}
             {tools.map((tool, index) => (
               <CommandItem
                 key={`${tool.name}:${index}`}

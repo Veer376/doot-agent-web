@@ -22,7 +22,9 @@ interface SchemaFormProps {
 }
 
 export function SchemaForm({ schema, onChange, values }: SchemaFormProps) {
-  const [formValues, setFormValues] = useState<Record<string, any>>(values || {});
+  const [formValues, setFormValues] = useState<Record<string, any>>(
+    values || {},
+  );
 
   useEffect(() => {
     // Initialize default values from schema

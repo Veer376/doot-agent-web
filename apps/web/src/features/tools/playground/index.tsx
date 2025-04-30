@@ -17,7 +17,7 @@ export default function ToolsPlaygroundInterface() {
   const { tools, loading } = useMCPContext();
   const router = useRouter();
 
-  const [selectedToolName, setSelectedToolName] = useQueryState("tool")
+  const [selectedToolName, setSelectedToolName] = useQueryState("tool");
   const [selectedTool, setSelectedTool] = useState<Tool>();
   const [inputValues, setInputValues] = useState({});
   const [response, setResponse] = useState<any>(null);
@@ -70,15 +70,20 @@ export default function ToolsPlaygroundInterface() {
     <div className="container mx-auto mb-8 h-full p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tools Playground</h1>
-        <ToolListCommand value={selectedTool} setValue={(t) => {
-          setSelectedTool(t);
-          setSelectedToolName(t.name);
-        }} />
+        <ToolListCommand
+          value={selectedTool}
+          setValue={(t) => {
+            setSelectedTool(t);
+            setSelectedToolName(t.name);
+          }}
+        />
       </div>
       <div className="border-b py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-medium">{_.startCase(selectedTool.name)}</h2>
+            <h2 className="text-lg font-medium">
+              {_.startCase(selectedTool.name)}
+            </h2>
             <p className="text-sm text-gray-500">{selectedTool.description}</p>
           </div>
           <Button
@@ -100,7 +105,7 @@ export default function ToolsPlaygroundInterface() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 py-6 md:grid-cols-[1fr_auto_1fr] md:gap-6 h-[85%]">
+      <div className="grid h-[85%] grid-cols-1 gap-4 py-6 md:grid-cols-[1fr_auto_1fr] md:gap-6">
         <div className="space-y-4">
           <h3 className="text-md font-medium">Input</h3>
           <SchemaForm
@@ -110,7 +115,7 @@ export default function ToolsPlaygroundInterface() {
           />
         </div>
 
-        <div className="hidden border-l border-gray-200 dark:border-gray-700 md:block" />
+        <div className="hidden border-l border-gray-200 md:block dark:border-gray-700" />
 
         <div className="space-y-4">
           <h3 className="text-md font-medium">Response</h3>

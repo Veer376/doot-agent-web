@@ -26,7 +26,9 @@ export function ToolCard({ tool }: ToolCardProps) {
         {/* <CardTitle className="w-fit max-w-[95%] truncate rounded bg-gray-100 px-2 py-1 font-mono font-semibold tracking-tight text-orange-600">
           {tool.name}
         </CardTitle> */}
-        <CardTitle className="text-lg font-medium truncate pb-2">{tool.name}</CardTitle>
+        <CardTitle className="truncate pb-2 text-lg font-medium">
+          {tool.name}
+        </CardTitle>
 
         <CardDescription className="line-clamp-3">
           {tool.description}

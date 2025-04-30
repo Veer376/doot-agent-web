@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ConfigField,
+  ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";
@@ -15,12 +16,10 @@ import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import {
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
-import {
-  configSchemaToConfigurableFields,
-  configSchemaToConfigurableTools,
-} from "@/lib/ui-config";
+import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";
 import {
@@ -33,6 +32,7 @@ import { toast } from "sonner";
 import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
 import { Search } from "@/components/ui/tool-search";
+import { useSearchTools } from "@/hooks/use-search-tools";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -50,13 +50,19 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
   const [toolConfigurations, setToolConfigurations] = useState<
     ConfigurableFieldMCPMetadata[]
   >([]);
+  const [ragConfigurations, setRagConfigurations] = useState<
+    ConfigurableFieldRAGMetadata[]
+  >([]);
   const [loading, setLoading] = useState(false);
-  const [toolSearchTerm, setToolSearchTerm] = useState("");
+  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
+    useSearchTools(tools);
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
+  const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
 
   useEffect(() => {
     if (!agentId || !deploymentId || loading) return;
 
+    setSupportedConfigs([]);
     setLoading(true);
     getAgent(agentId, deploymentId)
       .then(async (a) => {
@@ -67,31 +73,29 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
         const schema = await getAgentConfigSchema(agentId, deploymentId);
         if (!schema) return;
-        const configFields = configSchemaToConfigurableFields(schema);
-        const toolConfig = configSchemaToConfigurableTools(schema);
 
-        const configFieldsWithDefaults = configFields.map((f) => {
-          const defaultConfig = a.config?.configurable?.[f.label] ?? f.default;
-          return {
-            ...f,
-            default: defaultConfig,
-          };
-        });
+        const { configFields, toolConfig, ragConfig } =
+          extractConfigurationsFromAgent({
+            agent: a,
+            schema,
+          });
 
-        const configToolsWithDefaults = toolConfig.map((f) => {
-          const defaultConfig = a.config?.configurable?.[f.label] ?? f.default;
-          return {
-            ...f,
-            default: defaultConfig as string[],
-          };
-        });
+        setConfigurations(configFields);
 
-        setConfigurations(configFieldsWithDefaults);
-        setToolConfigurations(configToolsWithDefaults);
         // Set default config values based on configuration fields
         const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(agentId, configFieldsWithDefaults);
-        setDefaultConfig(`${agentId}:selected-tools`, configToolsWithDefaults);
+        setDefaultConfig(agentId, configFields);
+
+        if (toolConfig.length) {
+          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
+          setToolConfigurations(toolConfig);
+          setSupportedConfigs((prev) => [...prev, "tools"]);
+        }
+        if (ragConfig.length) {
+          setDefaultConfig(`${agentId}:rag`, ragConfig);
+          setRagConfigurations(ragConfig);
+          setSupportedConfigs((prev) => [...prev, "rag"]);
+        }
       })
       .catch((e) => {
         console.error("Failed to get agent", e);
@@ -113,18 +117,6 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
     toast.success("Agent configuration saved successfully");
   };
-
-  // Filter tools based on the search term
-  const filteredTools = useMemo(() => {
-    return tools.filter((tool) => {
-      return (
-        _.startCase(tool.name)
-          .toLowerCase()
-          .includes(toolSearchTerm.toLowerCase()) ||
-        tool.name.toLowerCase().includes(toolSearchTerm.toLowerCase())
-      );
-    });
-  }, [tools, toolSearchTerm]);
 
   return (
     <div
@@ -183,7 +175,12 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
           >
             <TabsList className="flex-shrink-0 justify-start bg-transparent px-4 pt-2">
               <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="tools">Tools</TabsTrigger>
+              {supportedConfigs.includes("tools") && (
+                <TabsTrigger value="tools">Tools</TabsTrigger>
+              )}
+              {supportedConfigs.includes("rag") && (
+                <TabsTrigger value="rag">RAG</TabsTrigger>
+              )}
             </TabsList>
 
             <ScrollArea className="flex-1 overflow-y-auto">
@@ -220,44 +217,65 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
                 </ConfigSection>
               </TabsContent>
 
-              <TabsContent
-                value="tools"
-                className="m-0 overflow-y-auto p-4"
-              >
-                <ConfigSection title="Available Tools">
-                  <Search
-                    onSearchChange={setToolSearchTerm}
-                    placeholder="Search tools..."
-                  />
-                  {agentId &&
-                    filteredTools.length > 0 &&
-                    filteredTools.map((c, index) => (
-                      <ConfigFieldTool
-                        key={`${c.name}-${index}`}
-                        id={c.name}
-                        label={c.name}
-                        description={c.description}
+              {supportedConfigs.includes("tools") && (
+                <TabsContent
+                  value="tools"
+                  className="m-0 overflow-y-auto p-4"
+                >
+                  <ConfigSection title="Available Tools">
+                    <Search
+                      onSearchChange={debouncedSetSearchTerm}
+                      placeholder="Search tools..."
+                    />
+                    {agentId &&
+                      filteredTools.length > 0 &&
+                      filteredTools.map((c, index) => (
+                        <ConfigFieldTool
+                          key={`${c.name}-${index}`}
+                          id={c.name}
+                          label={c.name}
+                          description={c.description}
+                          agentId={agentId}
+                          toolId={toolConfigurations[0]?.label}
+                        />
+                      ))}
+                    {agentId &&
+                      filteredTools.length === 0 &&
+                      toolSearchTerm && (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          No tools found matching "{toolSearchTerm}".
+                        </p>
+                      )}
+                    {!agentId && (
+                      <p className="mt-4 text-center text-sm text-slate-500">
+                        Select an agent to see tools.
+                      </p>
+                    )}
+                    {agentId && tools.length === 0 && !toolSearchTerm && (
+                      <p className="mt-4 text-center text-sm text-slate-500">
+                        No tools available for this agent.
+                      </p>
+                    )}
+                  </ConfigSection>
+                </TabsContent>
+              )}
+
+              {supportedConfigs.includes("rag") && (
+                <TabsContent
+                  value="rag"
+                  className="m-0 overflow-y-auto p-4"
+                >
+                  <ConfigSection title="Agent RAG">
+                    {agentId && (
+                      <ConfigFieldRAG
+                        id={ragConfigurations[0].label}
+                        label={ragConfigurations[0].label}
                         agentId={agentId}
-                        toolId={toolConfigurations[0]?.label}
                       />
-                    ))}
-                  {agentId && filteredTools.length === 0 && toolSearchTerm && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
-                      No tools found matching "{toolSearchTerm}".
-                    </p>
-                  )}
-                  {!agentId && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
-                      Select an agent to see tools.
-                    </p>
-                  )}
-                  {agentId && tools.length === 0 && !toolSearchTerm && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
-                      No tools available for this agent.
-                    </p>
-                  )}
-                </ConfigSection>
-              </TabsContent>
+                    )}
+                  </ConfigSection>
+                </TabsContent>
+              )}
             </ScrollArea>
           </Tabs>
         </div>

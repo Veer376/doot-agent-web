@@ -73,11 +73,11 @@ export function DocumentsCard({
   );
 
   // Handle adding files to staging
-  const handleFiles = (files: FileList | null) => {
-    if (!files) return;
+  const handleFiles = (files: File[] | null) => {
+    if (!files?.length) return;
 
     const allowedTypes = ["application/pdf", "text/plain", "text/html"];
-    const filteredFiles = Array.from(files).filter((file) =>
+    const filteredFiles = files.filter((file) =>
       allowedTypes.includes(file.type),
     );
 
@@ -87,7 +87,9 @@ export function DocumentsCard({
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleFiles(event.target.files);
+    if (event.target.files) {
+      handleFiles(Array.from(event.target.files));
+    }
   };
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
@@ -106,7 +108,34 @@ export function DocumentsCard({
     event.preventDefault();
     event.stopPropagation();
     setIsDragging(false);
-    handleFiles(event.dataTransfer.files);
+
+    const files = event.dataTransfer.files;
+    const acceptedExtensions = [".pdf", ".txt", ".html"];
+    const supportedFiles: File[] = [];
+    const unsupportedFiles: File[] = [];
+
+    for (const file of files) {
+      const fileExtension = file.name
+        .substring(file.name.lastIndexOf("."))
+        .toLowerCase();
+      if (acceptedExtensions.includes(fileExtension)) {
+        supportedFiles.push(file);
+      } else {
+        unsupportedFiles.push(file);
+      }
+    }
+
+    if (unsupportedFiles.length > 0) {
+      const unsupportedNames = unsupportedFiles.map((f) => f.name).join(", ");
+      toast.error(
+        `Unsupported file types: ${unsupportedNames}. Please use PDF, TXT, or HTML.`,
+        { richColors: true },
+      );
+    }
+
+    if (supportedFiles.length > 0) {
+      handleFiles(supportedFiles);
+    }
   };
 
   // Handle removing a file from staging

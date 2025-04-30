@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import {
   ConfigurableFieldUIMetadata,
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
 } from "@/types/configurable";
 
 interface ConfigState {
@@ -16,8 +17,10 @@ interface ConfigState {
     _agentId: string,
     _configurations:
       | ConfigurableFieldMCPMetadata[]
-      | ConfigurableFieldUIMetadata[],
+      | ConfigurableFieldUIMetadata[]
+      | ConfigurableFieldRAGMetadata[],
   ) => void;
+  resetStore: () => void;
 }
 
 export const useConfigStore = create<ConfigState>()(
@@ -86,6 +89,9 @@ export const useConfigStore = create<ConfigState>()(
           },
         }));
       },
+
+      // Clear everything from the store
+      resetStore: () => set({ configsByAgentId: {} }),
     }),
     {
       name: "ai-config-storage", // Keep the same storage key, but manage agents inside

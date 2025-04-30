@@ -12,7 +12,6 @@ type RagContextType = ReturnType<typeof useRag>;
 const RagContext = createContext<RagContextType | null>(null);
 
 export const RagProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  // TODO: Fetch initial collections here and pass to the useRag hook.
   const ragState = useRag();
 
   useEffect(() => {

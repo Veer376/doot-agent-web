@@ -19,6 +19,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
+import { useRagContext } from "@/features/rag/providers/RAG";
 
 interface Option {
   label: string;
@@ -314,6 +315,11 @@ export function ConfigFieldTool({
 > & { toolId: string }) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
+
+  if (!store.configsByAgentId[actualAgentId]?.[toolId]) {
+    return null;
+  }
+
   const checked = (
     store.configsByAgentId[actualAgentId][toolId] as string[]
   ).some((t) => t === label);
@@ -352,6 +358,56 @@ export function ConfigFieldTool({
       </div>
 
       {description && <p className="text-xs text-gray-500">{description}</p>}
+    </div>
+  );
+}
+
+export function ConfigFieldRAG({
+  id,
+  label,
+  agentId,
+  className,
+}: Pick<ConfigFieldProps, "id" | "label" | "agentId" | "className">) {
+  const { collections } = useRagContext();
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:rag`;
+
+  if (!store.configsByAgentId[actualAgentId]?.[label]) {
+    return null;
+  }
+
+  const handleChange = (newValue: any) => {
+    store.updateConfig(actualAgentId, label, newValue);
+  };
+
+  return (
+    <div className={cn("w-full", className)}>
+      <div className="flex flex-col items-start gap-2">
+        <Label
+          htmlFor={id}
+          className="text-sm font-medium"
+        >
+          Selected Collection
+        </Label>
+        <Select
+          value={store.configsByAgentId[actualAgentId][label] ?? ""}
+          onValueChange={handleChange}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={"Select a collection"} />
+          </SelectTrigger>
+          <SelectContent>
+            {collections.map((collection) => (
+              <SelectItem
+                key={collection.uuid}
+                value={collection.name}
+              >
+                {collection.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

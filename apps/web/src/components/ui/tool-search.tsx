@@ -26,7 +26,7 @@ export function Search({
     <div
       className={cn(
         className,
-        "mb-4 flex items-center rounded-lg border-[1px] border-slate-200 px-2",
+        "flex items-center rounded-lg border-[1px] border-slate-200 px-2",
       )}
     >
       <SearchIcon className="size-4 text-slate-400" />

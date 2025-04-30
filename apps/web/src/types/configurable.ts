@@ -68,3 +68,14 @@ export type ConfigurableFieldMCPMetadata = {
   type: "tools_list";
   default?: string[];
 };
+
+export type ConfigurableFieldRAGMetadata = {
+  /**
+   * The key in the graph's config schema for the RAG field.
+   */
+  label: string;
+  type: "rag";
+  default?: {
+    collection?: string;
+  };
+};

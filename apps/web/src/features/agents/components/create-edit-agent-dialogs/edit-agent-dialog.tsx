@@ -7,42 +7,51 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import {
-  configSchemaToConfigurableFields,
-  configSchemaToConfigurableTools,
-} from "@/lib/ui-config";
+import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import {
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
-import { Bot, LoaderCircle, Pencil, Trash, X } from "lucide-react";
+import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
-import { AgentFieldsForm, AgentFieldsFormLoading } from "../agent-form";
+import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
+import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 
 interface EditAgentDialogProps {
   agent: Agent;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditAgentDialog({ agent }: EditAgentDialogProps) {
+export function EditAgentDialog({
+  agent,
+  open,
+  onOpenChange,
+}: EditAgentDialogProps) {
   const { getAgentConfigSchema, updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
+  const { configsByAgentId } = useConfigStore();
+  console.log("configsByAgentId", configsByAgentId);
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);
   const [toolConfigurations, setToolConfigurations] = useState<
     ConfigurableFieldMCPMetadata[]
   >([]);
+  const [ragConfigurations, setRagConfigurations] = useState<
+    ConfigurableFieldRAGMetadata[]
+  >([]);
+
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [config, setConfig] = useState<Record<string, any>>({});
-  const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -58,28 +67,29 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
     getAgentConfigSchema(agent.assistant_id, agent.deploymentId)
       .then((schemas) => {
         if (!schemas) return;
-        const configFields = configSchemaToConfigurableFields(schemas);
-        const toolConfig = configSchemaToConfigurableTools(schemas);
+        const { configFields, toolConfig, ragConfig } =
+          extractConfigurationsFromAgent({
+            agent,
+            schema: schemas,
+          });
 
-        const configFieldsWithDefaults = configFields.map((f) => {
-          const defaultConfig =
-            agent.config?.configurable?.[f.label] ?? f.default;
-          return {
-            ...f,
-            default: defaultConfig,
-          };
-        });
-        const configToolsWithDefaults = toolConfig.map((f) => {
-          const defaultConfig =
-            agent.config?.configurable?.[f.label] ?? f.default;
-          return {
-            ...f,
-            default: defaultConfig as string[],
-          };
-        });
+        const agentId = agent.assistant_id;
 
-        setConfigurations(configFieldsWithDefaults);
-        setToolConfigurations(configToolsWithDefaults);
+        setConfigurations(configFields);
+        setToolConfigurations(toolConfig);
+
+        // Set default config values based on configuration fields
+        const { setDefaultConfig } = useConfigStore.getState();
+        setDefaultConfig(agentId, configFields);
+
+        if (toolConfig.length) {
+          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
+          setToolConfigurations(toolConfig);
+        }
+        if (ragConfig.length) {
+          setDefaultConfig(`${agentId}:rag`, ragConfig);
+          setRagConfigurations(ragConfig);
+        }
 
         setName(agent.name);
         setDescription((agent.metadata?.description ?? "") as string);
@@ -118,7 +128,7 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
 
     toast.success("Agent updated successfully!");
 
-    setOpen(false);
+    onOpenChange(false);
     clearState();
     // Do not await so that the refresh is non-blocking
     refreshAgents();
@@ -138,7 +148,7 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
 
     toast.success("Agent deleted successfully!");
 
-    setOpen(false);
+    onOpenChange(false);
     clearState();
     // Do not await so that the refresh is non-blocking
     refreshAgents();
@@ -157,21 +167,12 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
     <AlertDialog
       open={open}
       onOpenChange={(c) => {
-        setOpen(c);
+        onOpenChange(c);
         if (!c) {
           clearState();
         }
       }}
     >
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="secondary"
-          className="flex items-center justify-center gap-1"
-        >
-          <Pencil className="size-4" />
-          <span>Edit</span>
-        </Button>
-      </AlertDialogTrigger>
       <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
         <AlertDialogHeader>
           <div className="flex items-center justify-between">
@@ -198,6 +199,7 @@ export function EditAgentDialog({ agent }: EditAgentDialogProps) {
             config={config}
             setConfig={setConfig}
             agentId={agent.assistant_id}
+            ragConfigurations={ragConfigurations}
           />
         )}
         <AlertDialogFooter>

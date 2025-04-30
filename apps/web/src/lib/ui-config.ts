@@ -1,8 +1,9 @@
 import {
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
-import { GraphSchema } from "@langchain/langgraph-sdk";
+import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
 
 /**
  * Converts a LangGraph configuration schema into an array of UI metadata
@@ -38,7 +39,7 @@ export function configSchemaToConfigurableFields(
     ) {
       if (
         "type" in value.metadata.x_lg_ui_config &&
-        ["mcp_server_url", "tools_list"].includes(
+        ["mcp_server_url", "tools_list", "rag"].includes(
           value.metadata.x_lg_ui_config.type as string,
         )
       ) {
@@ -100,4 +101,95 @@ export function configSchemaToConfigurableTools(
     }
   }
   return fields;
+}
+
+export function configSchemaToRagConfig(
+  schema: GraphSchema["config_schema"],
+): ConfigurableFieldRAGMetadata | undefined {
+  if (!schema || !schema.properties) {
+    return undefined;
+  }
+
+  let ragField: ConfigurableFieldRAGMetadata | undefined;
+  for (const [key, value] of Object.entries(schema.properties)) {
+    if (
+      typeof value === "object" &&
+      "metadata" in value &&
+      value.metadata &&
+      typeof value.metadata === "object" &&
+      "x_lg_ui_config" in value.metadata &&
+      value.metadata.x_lg_ui_config &&
+      typeof value.metadata.x_lg_ui_config === "object" &&
+      "type" in value.metadata.x_lg_ui_config &&
+      value.metadata.x_lg_ui_config.type &&
+      value.metadata.x_lg_ui_config.type === "rag"
+    ) {
+      const castType = value.metadata.x_lg_ui_config.type as "rag";
+      ragField = {
+        label: key,
+        type: castType,
+        default:
+          (
+            value.metadata.x_lg_ui_config as {
+              default?: { collection?: string };
+            }
+          )?.default ?? undefined,
+      };
+    }
+  }
+  return ragField;
+}
+
+type ExtractedConfigs = {
+  configFields: ConfigurableFieldUIMetadata[];
+  toolConfig: ConfigurableFieldMCPMetadata[];
+  ragConfig: ConfigurableFieldRAGMetadata[];
+};
+
+export function extractConfigurationsFromAgent({
+  agent,
+  schema,
+}: {
+  agent: Assistant;
+  schema: Record<string, any>;
+}): ExtractedConfigs {
+  const configFields = configSchemaToConfigurableFields(schema);
+  const toolConfig = configSchemaToConfigurableTools(schema);
+  const ragConfig = configSchemaToRagConfig(schema);
+
+  const configFieldsWithDefaults = configFields.map((f) => {
+    const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
+    return {
+      ...f,
+      default: defaultConfig,
+    };
+  });
+
+  const configToolsWithDefaults = toolConfig.map((f) => {
+    const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
+    return {
+      ...f,
+      default: defaultConfig as string[],
+    };
+  });
+
+  const configRagWithDefaults = ragConfig
+    ? {
+        ...ragConfig,
+        default: {
+          collection:
+            (
+              agent.config.configurable?.[ragConfig.label] as {
+                collection?: string;
+              }
+            )?.collection ?? ragConfig.default?.collection,
+        },
+      }
+    : undefined;
+
+  return {
+    configFields: configFieldsWithDefaults,
+    toolConfig: configToolsWithDefaults,
+    ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
+  };
 }

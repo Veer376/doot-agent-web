@@ -261,31 +261,6 @@ export function processThreadWithoutInterrupts<
   };
 }
 
-type ThreadFilterMetadata =
-  | {
-      graph_id: string;
-    }
-  | {
-      assistant_id: string;
-    };
-
-export function getThreadFilterMetadata(
-  agentInboxes: AgentInbox[],
-): ThreadFilterMetadata | undefined {
-  const graphAssistantId = agentInboxes.find((i) => i.selected)?.graphId;
-  if (graphAssistantId) {
-    if (validate(graphAssistantId)) {
-      return {
-        assistant_id: graphAssistantId,
-      };
-    } else {
-      return {
-        graph_id: graphAssistantId,
-      };
-    }
-  }
-}
-
 /**
  * Helper function for debugging interrupt structures.
  * Can be called from browser console or added to specific components

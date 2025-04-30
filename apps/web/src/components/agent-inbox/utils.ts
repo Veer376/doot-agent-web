@@ -9,6 +9,9 @@ import {
 } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
+import { Agent } from "@/types/agent";
+import { getDeployments } from "@/lib/environment/deployments";
+import { toast } from "sonner";
 
 export function prettifyText(action: string) {
   return startCase(action.replace(/_/g, " "));
@@ -105,52 +108,49 @@ export function unknownToPrettyDate(input: unknown): string | undefined {
 }
 
 export function constructOpenInStudioURL(
-  inbox: AgentInbox,
+  agentId: string,
+  deploymentId: string,
   threadId?: string,
 ): string {
+  const deployments = getDeployments();
   const smithStudioBaseUrl = "https://smith.langchain.com/studio/thread";
 
-  // Check if deploymentUrl exists before using it
-  if (inbox.deploymentUrl && isDeployedUrl(inbox.deploymentUrl)) {
-    const projectId = extractProjectId(inbox.id);
-    const tenantId = inbox.tenantId;
+  const selectedDeployment = deployments.find((d) => d.id === deploymentId);
+  if (!selectedDeployment) {
+    toast.error("Failed to find selected deployment", { richColors: true });
+    return "";
+  }
 
-    if (projectId && tenantId && threadId) {
+  // Check if deploymentUrl exists before using it
+  if (isDeployedUrl(selectedDeployment.deploymentUrl)) {
+    if (selectedDeployment.id && selectedDeployment.tenantId && threadId) {
       const url = new URL(smithStudioBaseUrl);
-      url.searchParams.set("organizationId", tenantId);
-      url.searchParams.set("hostProjectId", projectId);
+      url.searchParams.set("organizationId", selectedDeployment.tenantId);
+      url.searchParams.set("hostProjectId", selectedDeployment.id);
       url.searchParams.set("threadId", threadId);
       return url.toString();
-    } else {
-      // Handle missing data for deployed graph - return a non-functional link or log error
-      console.warn(
-        "Cannot construct Studio URL for deployed graph: Missing projectId, tenantId, or threadId",
-        {
-          inboxId: inbox.id,
-          hasProjectId: !!projectId,
-          hasTenantId: !!tenantId,
-          hasThreadId: !!threadId,
-        },
-      );
-      return "#"; // Return a placeholder/non-functional link
     }
-  } else {
-    // --- Logic for local/non-deployed URLs ---
-    const smithStudioURL = new URL(smithStudioBaseUrl);
-
-    // Make sure deploymentUrl exists before using it
-    const deploymentUrl = inbox.deploymentUrl || "";
-    const trimmedDeploymentUrl = deploymentUrl.replace(/\/$/, "");
-
-    if (threadId) {
-      smithStudioURL.searchParams.append("threadId", threadId);
-    }
-
-    smithStudioURL.searchParams.append("baseUrl", trimmedDeploymentUrl);
-    // -----------------------------------------------------
-
-    return smithStudioURL.toString();
+    // Invalid deployment config;
+    return "";
   }
+
+  // --- Logic for local/non-deployed URLs ---
+  const smithStudioURL = new URL(smithStudioBaseUrl);
+
+  // Make sure deploymentUrl exists before using it
+  const trimmedDeploymentUrl = selectedDeployment.deploymentUrl.replace(
+    /\/$/,
+    "",
+  );
+
+  if (threadId) {
+    smithStudioURL.searchParams.append("threadId", threadId);
+  }
+
+  smithStudioURL.searchParams.append("baseUrl", trimmedDeploymentUrl);
+  // -----------------------------------------------------
+
+  return smithStudioURL.toString();
 }
 
 export function createDefaultHumanResponse(

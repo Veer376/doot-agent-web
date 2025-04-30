@@ -19,7 +19,7 @@ import {
 } from "../constants";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useQueryStates, parseAsString } from "nuqs";
+import { useQueryStates, parseAsString, useQueryState } from "nuqs";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { useState } from "react";
 
@@ -118,15 +118,12 @@ export function ThreadActionsView<
   handleShowSidePanel,
   setThreadData,
 }: ThreadActionsViewProps<ThreadValues>) {
-  const { agentInboxes, fetchSingleThread } = useThreadsContext<ThreadValues>();
+  const [agentInboxId] = useQueryState("agentInbox");
+  const { fetchSingleThread } = useThreadsContext<ThreadValues>();
   const [, setQueryParams] = useQueryStates({
     [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,
   });
   const [refreshing, setRefreshing] = useState(false);
-
-  // Get the selected inbox object
-  const selectedInbox = agentInboxes.find((i) => i.selected);
-  const deploymentUrl = selectedInbox?.deploymentUrl;
 
   // Only use interrupted actions for interrupted threads
   const isInterrupted =
@@ -146,14 +143,12 @@ export function ThreadActionsView<
     setThreadData,
   });
 
-  const handleOpenInStudio = () => {
-    if (!selectedInbox) {
-      toast.error("No agent inbox selected.");
-      return;
-    }
+  const handleOpenInStudio = (id: string) => {
+    const [assistantId, deploymentId] = id.split(":");
 
     const studioUrl = constructOpenInStudioURL(
-      selectedInbox, // Pass the full inbox object
+      assistantId,
+      deploymentId,
       threadData.thread.thread_id,
     );
 
@@ -190,8 +185,8 @@ export function ThreadActionsView<
 
   const handleRefreshThread = async () => {
     // Use selectedInbox here as well
-    if (!selectedInbox) {
-      toast.error("No agent inbox selected.");
+    if (!agentInboxId) {
+      toast.error("No agent inbox selected.", { richColors: true });
       return;
     }
 
@@ -278,12 +273,12 @@ export function ThreadActionsView<
             </div>
             {/* Right-side controls with ButtonGroup */}
             <div className="flex flex-row items-center justify-start gap-2">
-              {deploymentUrl && (
+              {agentInboxId && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="flex items-center gap-1 bg-white"
-                  onClick={handleOpenInStudio}
+                  onClick={() => handleOpenInStudio(agentInboxId)}
                 >
                   Studio
                 </Button>
@@ -358,12 +353,12 @@ export function ThreadActionsView<
             <ThreadIdCopyable threadId={threadData.thread.thread_id} />
           </div>
           <div className="flex flex-row items-center justify-start gap-2">
-            {deploymentUrl && (
+            {agentInboxId && (
               <Button
                 size="sm"
                 variant="outline"
                 className="flex items-center gap-1 bg-white"
-                onClick={handleOpenInStudio}
+                onClick={() => handleOpenInStudio(agentInboxId)}
               >
                 Studio
               </Button>
@@ -480,12 +475,12 @@ export function ThreadActionsView<
           <ThreadIdCopyable threadId={threadData.thread.thread_id} />
         </div>
         <div className="flex flex-row items-center justify-start gap-2">
-          {deploymentUrl && (
+          {agentInboxId && (
             <Button
               size="sm"
               variant="outline"
               className="flex items-center gap-1 bg-white"
-              onClick={handleOpenInStudio}
+              onClick={() => handleOpenInStudio(agentInboxId)}
             >
               Studio
             </Button>

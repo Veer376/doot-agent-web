@@ -24,7 +24,7 @@ export interface InboxQueryState {
 /**
  * Ensures that an inbox is selected if inboxes are available
  * If no inbox is currently selected, selects the first available inbox
- * 
+ *
  * @param inboxes - Array of available AgentInbox objects
  * @param currentInboxId - Currently selected inbox ID from URL state
  * @param updateState - Function to update the inbox state
@@ -33,21 +33,21 @@ export interface InboxQueryState {
 export function ensureInboxSelected(
   inboxes: AgentInbox[],
   currentInboxId: string | null,
-  updateState: (updates: Partial<InboxQueryState>) => void
+  updateState: (updates: Partial<InboxQueryState>) => void,
 ): AgentInbox | null {
   // If there are no inboxes, nothing to select
   if (!inboxes.length) {
     return null;
   }
-  
+
   // If there's already a selected inbox that exists in the inbox list, use it
-  if (currentInboxId && inboxes.some(inbox => inbox.id === currentInboxId)) {
-    return inboxes.find(inbox => inbox.id === currentInboxId) || null;
+  if (currentInboxId && inboxes.some((inbox) => inbox.id === currentInboxId)) {
+    return inboxes.find((inbox) => inbox.id === currentInboxId) || null;
   }
-  
+
   // Otherwise, select the first available inbox
   const firstInbox = inboxes[0];
-  
+
   // Update the URL state to reflect the selected inbox
   updateState({
     inboxId: firstInbox.id,
@@ -55,7 +55,7 @@ export function ensureInboxSelected(
     limit: 10,
     status: "interrupted",
   });
-  
+
   return firstInbox;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
   useQueryState,
@@ -19,10 +19,7 @@ import { ThreadView } from "./thread-view";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
-import {
-  AgentSelectionProvider,
-  useAgentSelection,
-} from "./contexts/AgentSelectionContext";
+import { useAgentsContext } from "@/providers/Agents";
 
 // Wrap the actual implementation in the provider
 function AgentInboxWithProvider<
@@ -44,7 +41,7 @@ function AgentInboxWithProvider<
     [LIMIT_PARAM]: parseAsInteger.withDefault(10),
   });
 
-  const { selectedAgentId } = useAgentSelection();
+  const [agentInboxId] = useQueryState("agentInbox");
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -69,14 +66,14 @@ function AgentInboxWithProvider<
   React.useEffect(() => {
     // Skip if no selectedAgentId or if we've already processed this agent ID
     if (
-      !selectedAgentId ||
-      selectedAgentId === processedAgentIdRef.current ||
+      !agentInboxId ||
+      agentInboxId === processedAgentIdRef.current ||
       updateInProgress.current
     )
       return;
 
     // Update ref to prevent processing the same agent multiple times
-    processedAgentIdRef.current = selectedAgentId;
+    processedAgentIdRef.current = agentInboxId;
     updateInProgress.current = true;
 
     // Use setTimeout to break potential render cycles
@@ -93,7 +90,7 @@ function AgentInboxWithProvider<
         updateInProgress.current = false;
       }
     }, 0);
-  }, [selectedAgentId, setSelectedInbox, setPaginationParams]);
+  }, [agentInboxId, setSelectedInbox, setPaginationParams]);
 
   // Effect to handle transitions between list and thread views
   React.useEffect(() => {
@@ -198,9 +195,15 @@ function AgentInboxWithProvider<
 export function AgentInbox<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
-  return (
-    <AgentSelectionProvider>
-      <AgentInboxWithProvider<ThreadValues> />
-    </AgentSelectionProvider>
-  );
+  const { agents } = useAgentsContext();
+  const [agentId, setAgentId] = useQueryState("agentInbox");
+
+  useEffect(() => {
+    if (!agents.length || agentId) return;
+
+    const firstAgent = agents[0];
+    setAgentId(`${firstAgent.assistant_id}:${firstAgent.deploymentId}`);
+  }, [agents, agentId, agents]);
+
+  return <AgentInboxWithProvider<ThreadValues> />;
 }

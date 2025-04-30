@@ -11,36 +11,19 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import React, { useTransition } from "react";
-import {
-  useQueryState,
-  useQueryStates,
-  parseAsString,
-  parseAsInteger,
-} from "nuqs";
-import {
-  INBOX_PARAM,
-  LIMIT_PARAM,
-  OFFSET_PARAM,
-  IMPROPER_SCHEMA,
-} from "../constants";
+import { useQueryState } from "nuqs";
+import { IMPROPER_SCHEMA } from "../constants";
 import {
   getInterruptFromThread,
-  getThreadFilterMetadata,
   processInterruptedThread,
   processThreadWithoutInterrupts,
 } from "./utils";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useInboxes } from "../hooks/use-inboxes";
 import { logger } from "../utils/logger";
 import { useAgentsContext } from "@/providers/Agents";
 import { v4 as uuidv4 } from "uuid";
 import { getDeployments } from "@/lib/environment/deployments";
-import { Deployment } from "@/types/deployment";
-import {
-  useAgentSelection,
-  AgentSelectionProvider,
-} from "./AgentSelectionContext";
-import { useInboxQueryState, ensureInboxSelected } from "../hooks/useInboxQueryState";
+import { useInboxQueryState } from "../hooks/useInboxQueryState";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -49,13 +32,7 @@ type ThreadContentType<
   isChangingThreads: boolean;
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
-  agentInboxes: AgentInbox[];
-  selectedInbox: AgentInbox | null;
   currentInboxStatus: ThreadStatusWithAll;
-  deleteAgentInbox: (id: string) => void;
-  changeAgentInbox: (graphId: string, _replaceAll?: boolean) => void;
-  addAgentInbox: (agentInbox: AgentInbox) => void;
-  updateAgentInbox: (updatedInbox: AgentInbox) => void;
   ignoreThread: (threadId: string) => Promise<void>;
   fetchThreads: (inbox: ThreadStatusWithAll) => Promise<void>;
   clearThreadData: () => void;
@@ -82,47 +59,12 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
   undefined,
 );
 
-interface GetClientArgs {
-  agentInboxes: AgentInbox[];
-  getItem: (key: string) => string | null | undefined;
-}
-
-const getClient = ({ agentInboxes }: GetClientArgs) => {
-  if (agentInboxes.length === 0) {
-    toast.error("Agent inbox not found", {
-      description: "Please add an inbox in settings.",
-      duration: 3000,
-    });
-    return;
-  }
-  const selectedInbox = agentInboxes.find((i) => i.selected);
-  if (!selectedInbox) {
-    toast.error("No selected inbox", {
-      description: "Please select an agent inbox.",
-      duration: 5000,
-    });
-    return;
-  }
-
-  const deploymentId = selectedInbox.deploymentId;
-  if (!deploymentId) {
-    toast.error("Missing deployment ID", {
-      description:
-        "Please ensure your selected agent inbox has a deployment ID.",
-      duration: 5000,
-    });
-    return;
-  }
-
-  return createClient(deploymentId);
-};
-
 // Internal component that uses the context
 function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { getItem } = useLocalStorage();
-  const { selectedAgentId } = useAgentSelection();
+  const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
   const { agents } = useAgentsContext();
   const deployments = getDeployments();
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -142,83 +84,9 @@ function ThreadsProviderInternal<
   >([]);
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
-  const {
-    agentInboxes,
-    selectedInbox,
-    addAgentInbox,
-    deleteAgentInbox,
-    changeAgentInbox,
-    updateAgentInbox,
-    isChangingInbox,
-  } = useInboxes();
-
   const clearThreadData = React.useCallback(() => {
     setThreadData([]);
   }, []);
-
-  // Effect for loading threads when selectedAgentId changes
-  React.useEffect(() => {
-    // Skip if no selectedAgentId or if we've already processed this agent ID
-    if (!selectedAgentId || selectedAgentId === processedAgentIdRef.current)
-      return;
-
-    // Update ref to prevent processing the same agent multiple times
-    processedAgentIdRef.current = selectedAgentId;
-
-    // Extract assistant_id and deploymentId from selectedAgentId
-    const [assistantId, deploymentId] = selectedAgentId.split(":");
-    if (!assistantId || !deploymentId) return;
-
-    // Find or create an agent inbox for this agent
-    const existingInbox = agentInboxes.find(
-      (inbox) =>
-        inbox.graphId === assistantId &&
-        (inbox.deploymentId === deploymentId ||
-          (inbox.deploymentUrl && inbox.deploymentUrl.includes(deploymentId))),
-    );
-
-    if (existingInbox) {
-      // If inbox exists, select it
-      changeAgentInbox(existingInbox.id);
-    } else {
-      // Create a new agent inbox for this agent
-      const agent = agents.find(
-        (a) =>
-          a.assistant_id === assistantId && a.deploymentId === deploymentId,
-      );
-
-      if (agent) {
-        // Create and add new inbox using agent data
-        const deployment = deployments.find(
-          (d: Deployment) => d.id === agent.deploymentId,
-        );
-
-        if (deployment) {
-          const newInbox: AgentInbox = {
-            id: uuidv4(),
-            graphId: agent.graph_id,
-            deploymentId: agent.deploymentId,
-            deploymentUrl: deployment.deploymentUrl,
-            name: agent.name,
-            selected: true,
-            createdAt: new Date().toISOString(),
-          };
-
-          // Use setTimeout to break the render cycle and prevent infinite loops
-          setTimeout(() => {
-            addAgentInbox(newInbox);
-          }, 0);
-        }
-      }
-    }
-  }, [
-    selectedAgentId,
-    agentInboxes,
-    agents,
-    deployments,
-    changeAgentInbox,
-    addAgentInbox,
-  ]);
 
   const fetchThreads = React.useCallback(
     async (inbox: ThreadStatusWithAll, requestId?: string) => {
@@ -236,25 +104,25 @@ function ThreadsProviderInternal<
 
       await fetchThreadsFromAPI(inbox, requestId);
     },
-    [agentInboxes, offsetParam, limitParam],
+    [offsetParam, limitParam],
   );
 
   // Helper function to fetch threads from API
   const fetchThreadsFromAPI = React.useCallback(
     async (inbox: ThreadStatusWithAll, requestId?: string) => {
+      if (!agentInboxId) {
+        toast.error("No agent inbox ID found", {
+          richColors: true,
+        });
+        return;
+      }
       // If a requestId was passed and it's different from current, abort
       if (requestId && requestId !== currentRequestIdRef.current) {
         return; // This is a stale request, ignore it
       }
+      const [assistantId, deploymentId] = agentInboxId.split(":");
 
-      const client = getClient({
-        agentInboxes,
-        getItem,
-      });
-      if (!client) {
-        setLoading(false);
-        return;
-      }
+      const client = createClient(deploymentId);
 
       try {
         // Use the values from queryParams
@@ -288,13 +156,13 @@ function ThreadsProviderInternal<
           statusInput = { status: inbox as ThreadStatus };
         }
 
-        const metadataInput = getThreadFilterMetadata(agentInboxes);
-
         const threadSearchArgs = {
           offset,
           limit,
           ...statusInput,
-          ...(metadataInput ? { metadata: metadataInput } : {}),
+          metadata: {
+            assistant_id: assistantId,
+          },
         };
 
         const threads = await client.threads.search(threadSearchArgs);
@@ -413,7 +281,7 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [agentInboxes, getItem, limitParam, offsetParam],
+    [getItem, limitParam, offsetParam],
   );
 
   // Effect to fetch threads when parameters change
@@ -421,20 +289,8 @@ function ThreadsProviderInternal<
     if (typeof window === "undefined") {
       return;
     }
-    if (!agentInboxes.length) {
+    if (!agentInboxId || !inboxParam) {
       return;
-    }
-    
-    if (!inboxParam) {
-      return;
-    }
-    if (!selectedInbox) {
-      return;
-    }
-
-    // If we're changing inboxes, clear thread data immediately to prevent flash of old data
-    if (isChangingInbox) {
-      clearThreadData();
     }
 
     // Cancel any existing requests before starting a new one
@@ -463,35 +319,19 @@ function ThreadsProviderInternal<
       // Always reset loading state in case of error
       setLoading(false);
     }
-  }, [
-    inboxParam,
-    offsetParam,
-    limitParam,
-    agentInboxes,
-    fetchThreads,
-    isChangingInbox,
-    clearThreadData,
-    selectedInbox,
-  ]);
-  
-  // Add a separate effect that runs ONLY when agentInboxes changes
-  // This ensures an inbox is selected without creating an infinite loop
-  React.useEffect(() => {
-    if (agentInboxes.length > 0 && !inboxState.inboxId) {
-      // Only run if we have inboxes but none selected
-      ensureInboxSelected(agentInboxes, inboxState.inboxId, updateInboxState);
-    }
-  }, [agentInboxes, inboxState.inboxId, updateInboxState]);
+  }, [inboxParam, offsetParam, limitParam, fetchThreads, clearThreadData]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
-      const client = getClient({
-        agentInboxes,
-        getItem,
-      });
-      if (!client) {
+      if (!agentInboxId) {
+        toast.error("No agent inbox ID found when fetching thread.", {
+          richColors: true,
+        });
         return;
       }
+
+      const [_, deploymentId] = agentInboxId.split(":");
+      const client = createClient(deploymentId);
 
       try {
         const thread = await client.threads.get(threadId);
@@ -554,17 +394,20 @@ function ThreadsProviderInternal<
         return undefined;
       }
     },
-    [agentInboxes, getItem, inboxParam],
+    [getItem, inboxParam],
   );
 
   const ignoreThread = async (threadId: string) => {
-    const client = getClient({
-      agentInboxes,
-      getItem,
-    });
-    if (!client) {
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found when fetching thread.", {
+        richColors: true,
+      });
       return;
     }
+
+    const [_, deploymentId] = agentInboxId.split(":");
+    const client = createClient(deploymentId);
+
     try {
       setLoading(true);
       await client.threads.updateState(threadId, {
@@ -603,32 +446,26 @@ function ThreadsProviderInternal<
           }>
         | undefined
     : Promise<Run> | undefined => {
-    const graphId = agentInboxes.find((i) => i.selected)?.graphId;
-    if (!graphId) {
-      toast.error("No assistant/graph ID found", {
-        description:
-          "Assistant/graph IDs are required to send responses. Please add an assistant/graph ID in the settings.",
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found when fetching thread.", {
+        richColors: true,
       });
-      return undefined;
-    }
-
-    const client = getClient({
-      agentInboxes,
-      getItem,
-    });
-    if (!client) {
       return;
     }
+
+    const [assistantId, deploymentId] = agentInboxId.split(":");
+    const client = createClient(deploymentId);
+
     try {
       if (options?.stream) {
-        return client.runs.stream(threadId, graphId, {
+        return client.runs.stream(threadId, assistantId, {
           command: {
             resume: response,
           },
           streamMode: "events",
         }) as any; // Type assertion needed due to conditional return type
       }
-      return client.runs.create(threadId, graphId, {
+      return client.runs.create(threadId, assistantId, {
         command: {
           resume: response,
         },
@@ -656,16 +493,10 @@ function ThreadsProviderInternal<
 
   const contextValue: ThreadContentType = {
     loading,
-    isChangingThreads: isPending || isChangingInbox,
+    isChangingThreads: isPending,
     threadData,
     hasMoreThreads,
-    agentInboxes,
-    selectedInbox,
     currentInboxStatus: inboxState.status,
-    deleteAgentInbox,
-    changeAgentInbox,
-    addAgentInbox,
-    updateAgentInbox,
     ignoreThread,
     sendHumanResponse,
     fetchThreads,
@@ -685,11 +516,7 @@ export function ThreadsProvider<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <AgentSelectionProvider>
-      <ThreadsProviderInternal<ThreadValues>>
-        {children}
-      </ThreadsProviderInternal>
-    </AgentSelectionProvider>
+    <ThreadsProviderInternal<ThreadValues>>{children}</ThreadsProviderInternal>
   );
 }
 

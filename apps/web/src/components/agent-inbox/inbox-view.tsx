@@ -1,13 +1,9 @@
 import { useThreadsContext } from "@/components/agent-inbox/contexts/ThreadContext";
 import { InboxItem } from "./components/inbox-item";
 import React from "react";
-import { ThreadStatusWithAll } from "./types";
 import { Pagination } from "./components/pagination";
 import { Inbox as InboxIcon, LoaderCircle } from "lucide-react";
 import { InboxButtons } from "./components/inbox-buttons";
-import { BackfillBanner } from "./components/backfill-banner";
-import { forceInboxBackfill } from "./utils/backfill";
-import { logger } from "./utils/logger";
 import { ThreadLoadingIndicator } from "./components/ThreadLoadingIndicator";
 import { useInboxQueryState } from "./hooks/useInboxQueryState";
 import { useInboxChange } from "./hooks/useInboxChange";
@@ -24,67 +20,17 @@ export function AgentInboxView<
 >({ saveScrollPosition, containerRef }: AgentInboxViewProps<ThreadValues>) {
   const [inboxState, updateInboxState] = useInboxQueryState();
   const selectedInbox = inboxState.status;
-  
+
   // Use the dedicated hook for inbox changes
   const { changeInbox } = useInboxChange();
 
-  const { loading, threadData, agentInboxes, isChangingThreads } =
+  const { loading, threadData, isChangingThreads } =
     useThreadsContext<ThreadValues>();
-    
+
   const scrollableContentRef = React.useRef<HTMLDivElement>(null);
-  const [hasAttemptedRefresh, setHasAttemptedRefresh] = React.useState(false);
 
   // Effective loading state
   const isLoading = loading || isChangingThreads;
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sessionId = new Date().toDateString();
-      const hasRefreshed = localStorage.getItem(`inbox-refreshed-${sessionId}`);
-      setHasAttemptedRefresh(hasRefreshed === "true");
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const autoRefreshInboxes = async () => {
-      if (typeof window === "undefined") return;
-
-      const sessionId = new Date().toDateString();
-      const hasRefreshed = localStorage.getItem(`inbox-refreshed-${sessionId}`);
-
-      if (hasRefreshed === "true") return;
-
-      if (
-        !loading &&
-        !hasAttemptedRefresh &&
-        threadData.length === 0 &&
-        agentInboxes.length > 0
-      ) {
-        localStorage.setItem(`inbox-refreshed-${sessionId}`, "true");
-        setHasAttemptedRefresh(true);
-
-        logger.log("Automatically refreshing inbox IDs...");
-        try {
-          await forceInboxBackfill();
-
-          // Set a flag to prevent multiple page reloads
-          const reloadKey = "inbox-page-reloaded";
-          if (localStorage.getItem(reloadKey) !== "true") {
-            localStorage.setItem(reloadKey, "true");
-
-            // Delay reload to avoid race conditions
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
-          }
-        } catch (error) {
-          logger.error("Error during auto-refresh:", error);
-        }
-      }
-    };
-
-    autoRefreshInboxes();
-  }, [loading, threadData, agentInboxes, hasAttemptedRefresh]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -130,7 +76,7 @@ export function AgentInboxView<
       }),
     [selectedInbox, threadData],
   );
-  
+
   // Only show no threads when we're not loading
   const noThreadsFound = !threadDataToRender.length && !isLoading;
 
@@ -160,8 +106,8 @@ export function AgentInboxView<
 
   // Simple refresh function
   const handleRefresh = () => {
-    updateInboxState({ 
-      offset: 0
+    updateInboxState({
+      offset: 0,
     });
   };
 
@@ -171,7 +117,6 @@ export function AgentInboxView<
       className="h-full min-w-[1000px] overflow-y-auto"
     >
       <div className="pt-4 pl-5">
-        <BackfillBanner />
         <InboxButtons changeInbox={changeInbox} />
       </div>
       <ThreadLoadingIndicator />

@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Sidebar,
   SidebarContent,
@@ -14,36 +15,29 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
-import { LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY } from "../agent-inbox/constants";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useAgentsContext } from "@/providers/Agents";
-import {
-  AgentSelectionProvider,
-  useAgentSelection,
-} from "../agent-inbox/contexts/AgentSelectionContext";
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
-import { useRouter } from "next/navigation";
-import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
-import { useInboxes } from "../agent-inbox/hooks/use-inboxes";
-import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
-import { AgentInbox } from "../agent-inbox/types";
+import {
+  useQueryStates,
+  parseAsString,
+  parseAsInteger,
+  useQueryState,
+} from "nuqs";
+import { useAgentsContext } from "@/providers/Agents";
+import { Agent } from "@/types/agent";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
   const { agents, loading } = useAgentsContext();
-  const { selectedAgentId, changeSelectedAgent } = useAgentSelection();
-  const [langchainApiKey, setLangchainApiKey] = React.useState("");
-  const { getItem } = useLocalStorage();
+  const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
   const deployments = getDeployments();
-  const router = useRouter();
 
   // Replace useQueryParams with nuqs
   const [, setPaginationParams] = useQueryStates({
@@ -53,48 +47,25 @@ function InboxSidebarInternal() {
   });
 
   const lastSelectedAgentRef = React.useRef<string | null>(null);
-  const { agentInboxes, deleteAgentInbox } = useInboxes();
-
-  React.useEffect(() => {
-    try {
-      if (typeof window === "undefined" || langchainApiKey) {
-        return;
-      }
-
-      const langchainApiKeyLS = getItem(LANGCHAIN_API_KEY_LOCAL_STORAGE_KEY);
-      if (langchainApiKeyLS) {
-        setLangchainApiKey(langchainApiKeyLS);
-      }
-    } catch (e) {
-      console.error("Error getting/setting LangSmith API key", e);
-    }
-  }, [langchainApiKey]);
 
   // Function to handle agent selection
-  const handleAgentSelect = (agent: any) => {
+  const handleAgentSelect = async (agent: Agent) => {
     const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
 
     // Skip if already selected to prevent loops
-    if (agentId === selectedAgentId) return;
+    if (agentId === agentInboxId) return;
 
     // Update ref to track last selected agent
     lastSelectedAgentRef.current = agentId;
 
     // Update selected agent in context
-    changeSelectedAgent(agentId);
+    setAgentInboxId(agentId);
 
-    // Use timeout to break potential render cycles and allow state to settle
-    setTimeout(async () => {
-      // Update query params to load appropriate thread data
-      await setPaginationParams({
-        offset: 0,
-        limit: 10,
-        inbox: "interrupted",
-      });
-
-      // Refresh to ensure UI updates
-      router.refresh();
-    }, 10);
+    await setPaginationParams({
+      offset: 0,
+      limit: 10,
+      inbox: "interrupted",
+    });
   };
 
   return (
@@ -159,8 +130,7 @@ function InboxSidebarInternal() {
                                   const isDefault = isDefaultAssistant(agent);
                                   // Check if this agent is selected
                                   const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
-                                  const isSelected =
-                                    selectedAgentId === agentId;
+                                  const isSelected = agentInboxId === agentId;
 
                                   return (
                                     <SidebarMenuItem
@@ -205,32 +175,6 @@ function InboxSidebarInternal() {
                                           </TooltipContent>
                                         </Tooltip>
                                       </TooltipProvider>
-                                      {isSelected &&
-                                        agentInboxes.find(
-                                          (inbox: AgentInbox) =>
-                                            inbox.graphId === agent.graph_id &&
-                                            inbox.deploymentId ===
-                                              agent.deploymentId,
-                                        ) && (
-                                          <div
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <DropdownDialogMenu
-                                              item={
-                                                agentInboxes.find(
-                                                  (inbox: AgentInbox) =>
-                                                    inbox.graphId ===
-                                                      agent.graph_id &&
-                                                    inbox.deploymentId ===
-                                                      agent.deploymentId,
-                                                )!
-                                              }
-                                              deleteAgentInbox={
-                                                deleteAgentInbox
-                                              }
-                                            />
-                                          </div>
-                                        )}
                                     </SidebarMenuItem>
                                   );
                                 })}
@@ -254,11 +198,7 @@ function InboxSidebarInternal() {
 
 // Exported component with the provider
 export function InboxSidebar() {
-  return (
-    <AgentSelectionProvider>
-      <InboxSidebarInternal />
-    </AgentSelectionProvider>
-  );
+  return <InboxSidebarInternal />;
 }
 
 const sidebarTriggerSVG = (

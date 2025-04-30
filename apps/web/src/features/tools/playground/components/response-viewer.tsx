@@ -13,7 +13,11 @@ interface ResponseViewerProps {
   errorMessage?: string;
 }
 
-export function ResponseViewer({ response, isLoading, errorMessage }: ResponseViewerProps) {
+export function ResponseViewer({
+  response,
+  isLoading,
+  errorMessage,
+}: ResponseViewerProps) {
   const [viewMode, setViewMode] = useState<"pretty" | "raw">("pretty");
 
   if (errorMessage) {
@@ -74,84 +78,64 @@ export function ResponseViewer({ response, isLoading, errorMessage }: ResponseVi
 }
 
 function PrettyView({ response }: { response: any }) {
-  // Check if the response has the expected structure
-  const isExpectedFormat = response && Array.isArray(response.content);
-
   return (
     <div className="rounded-md border bg-gray-50 p-4">
-      <div className="space-y-4">
-        {isExpectedFormat ? (
-          // Render the specific structure
-          response.content.map((item: any, index: number) => (
-            <div
-              key={`content-${index}`}
-              className="space-y-2 border-l-2 border-gray-300 pl-4 pt-2 first:pt-0"
-            >
-              <div className="text-sm font-semibold text-gray-500">{index}</div>
-              {Object.entries(item).map(([key, value]: [string, any]) => (
-                <div
-                  key={key}
-                  className="grid grid-cols-3 gap-4"
-                >
-                  <div className="font-medium text-gray-700">{key}</div>
-                  <div className="col-span-2">{renderValue(value)}</div>
-                </div>
-              ))}
-            </div>
-          ))
-        ) : (
-          // Fallback to rendering generic objects if the structure doesn't match
-          Object.entries(response).map(([key, value]: [string, any]) => (
-            <div
-              key={key}
-              className="grid grid-cols-3 gap-4"
-            >
-              <div className="font-medium text-gray-700">{key}</div>
-              <div className="col-span-2">{renderValue(value)}</div>
-            </div>
-          ))
-        )}
-      </div>
+      {renderValue(response, true)}
     </div>
   );
 }
 
-function renderValue(value: any): React.ReactNode {
+// Add an isRoot parameter to avoid wrapping the top-level object in unnecessary borders/padding
+function renderValue(value: any, isRoot = false): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-gray-400">null</span>;
   }
 
   if (typeof value === "object" && Array.isArray(value)) {
     return (
-      <div className="space-y-2">
+      <div
+        className={cn(!isRoot && "space-y-1 border-l-2 border-gray-200 pl-3")}
+      >
         {value.length === 0 ? (
-          <span className="text-gray-400">Empty array</span>
+          <span className="text-gray-400">[] (Empty array)</span>
         ) : (
-          value.map((item, index) => (
-            <div
-              key={index}
-              className="border-l-2 border-gray-200 pl-4"
-            >
-              {renderValue(item)}
-            </div>
-          ))
+          value.map((item, index) => <div key={index}>{renderValue(item)}</div>)
         )}
       </div>
     );
   }
 
   if (typeof value === "object") {
+    const entries = Object.entries(value);
     return (
-      <div className="space-y-2 border-l-2 border-gray-200 pl-4">
-        {Object.entries(value).map(([k, v]) => (
-          <div
-            key={k}
-            className="grid grid-cols-3 gap-4"
-          >
-            <div className="font-medium text-gray-700">{k}</div>
-            <div className="col-span-2">{renderValue(v)}</div>
-          </div>
-        ))}
+      <div
+        className={cn(
+          "space-y-1",
+          !isRoot && "border-l-2 border-gray-200 pl-3",
+        )}
+      >
+        {entries.length === 0 ? (
+          <span className="text-gray-400">{"{{}} (Empty object)"}</span>
+        ) : (
+          entries.map(([k, v]) => {
+            // Determine if the value itself will render a container (object or array)
+            const valueRendersContainer = typeof v === "object" && v !== null;
+            return (
+              <div
+                key={k}
+                className="flex flex-wrap gap-x-2"
+              >
+                <span className="font-medium text-gray-700">{k}:</span>
+                {/* Render value directly if it's an object/array, otherwise wrap primitives */}
+                {valueRendersContainer ? (
+                  renderValue(v, false) // Pass false for isRoot
+                ) : (
+                  <div className="flex-1">{renderValue(v, false)}</div> // Pass false for isRoot
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     );
   }

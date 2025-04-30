@@ -24,6 +24,13 @@ export default function ToolsPlaygroundInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const resetState = () => {
+    setInputValues({});
+    setResponse(null);
+    setErrorMessage("");
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (loading || selectedTool || !tools.length) return;
 
@@ -40,7 +47,7 @@ export default function ToolsPlaygroundInterface() {
       router.replace("/tools");
       return;
     }
-    setErrorMessage("");
+    resetState();
     setSelectedTool(tool);
   }, [tools, loading, selectedToolName]);
 
@@ -53,16 +60,17 @@ export default function ToolsPlaygroundInterface() {
     setIsLoading(true);
     setResponse(null);
     setErrorMessage("");
-    
+
     try {
-      console.log("inputValues", inputValues)
+      console.log("inputValues", inputValues);
       const toolRes = await callTool({
         name: selectedTool.name,
         args: inputValues,
       });
       setResponse(toolRes);
+      setInputValues({});
     } catch (e: any) {
-      console.error('Error calling tool', e);
+      console.error("Error calling tool", e);
       setErrorMessage(e.message);
       toast.error("Tool call failed. Please try again.", { richColors: true });
     }
@@ -81,7 +89,7 @@ export default function ToolsPlaygroundInterface() {
         <ToolListCommand
           value={selectedTool}
           setValue={(t) => {
-            setErrorMessage("");
+            resetState();
             setSelectedTool(t);
             setSelectedToolName(t.name);
           }}

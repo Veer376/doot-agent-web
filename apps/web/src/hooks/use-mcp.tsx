@@ -81,7 +81,7 @@ export default function useMCP({
       arguments: args,
     });
     return response;
-  }
+  };
 
   return { getTools, callTool, createAndConnectMCPClient, tools, setTools };
 }

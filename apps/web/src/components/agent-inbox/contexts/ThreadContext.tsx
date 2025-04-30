@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AgentInbox,
   HumanResponse,
   ThreadData,
   ThreadStatusWithAll,
@@ -18,11 +17,8 @@ import {
   processInterruptedThread,
   processThreadWithoutInterrupts,
 } from "./utils";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { logger } from "../utils/logger";
-import { useAgentsContext } from "@/providers/Agents";
 import { v4 as uuidv4 } from "uuid";
-import { getDeployments } from "@/lib/environment/deployments";
 import { useInboxQueryState } from "../hooks/useInboxQueryState";
 
 type ThreadContentType<
@@ -63,17 +59,13 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { getItem } = useLocalStorage();
-  const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
-  const { agents } = useAgentsContext();
-  const deployments = getDeployments();
-  const processedAgentIdRef = React.useRef<string | null>(null);
+  const [agentInboxId] = useQueryState("agentInbox");
   const activeRequests = React.useRef<AbortController[]>([]);
   const currentRequestIdRef = React.useRef<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   // Get thread filter query params using the custom hook
-  const [inboxState, updateInboxState] = useInboxQueryState();
+  const [inboxState] = useInboxQueryState();
   const inboxParam = inboxState.status;
   const offsetParam = inboxState.offset;
   const limitParam = inboxState.limit;
@@ -281,7 +273,7 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [getItem, limitParam, offsetParam],
+    [limitParam, offsetParam],
   );
 
   // Effect to fetch threads when parameters change
@@ -394,7 +386,7 @@ function ThreadsProviderInternal<
         return undefined;
       }
     },
-    [getItem, inboxParam],
+    [inboxParam],
   );
 
   const ignoreThread = async (threadId: string) => {

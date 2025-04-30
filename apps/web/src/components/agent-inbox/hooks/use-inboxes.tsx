@@ -10,11 +10,12 @@ import {
   INBOX_PARAM,
 } from "../constants";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { AgentInbox } from "../types";
 import { useRouter } from "next/navigation";
 import { logger } from "../utils/logger";
 import { runInboxBackfill } from "../utils/backfill";
+import { useInboxQueryState, InboxQueryState } from "./useInboxQueryState";
 
 /**
  * Hook for managing agent inboxes
@@ -29,16 +30,7 @@ import { runInboxBackfill } from "../utils/backfill";
  * @returns {Object} Object containing agent inboxes and methods to manage them
  */
 export function useInboxes() {
-  const [queryParams, setQueryParams] = useQueryStates({
-    [AGENT_INBOX_PARAM]: parseAsString,
-    [OFFSET_PARAM]: parseAsInteger,
-    [LIMIT_PARAM]: parseAsInteger,
-    [INBOX_PARAM]: parseAsString,
-    [NO_INBOXES_FOUND_PARAM]: parseAsString,
-  });
-
-  const agentInboxParam = queryParams[AGENT_INBOX_PARAM];
-
+  const [inboxState, updateInboxState] = useInboxQueryState();
   const router = useRouter();
   const { getItem, setItem } = useLocalStorage();
   const [agentInboxes, setAgentInboxes] = useState<AgentInbox[]>([]);
@@ -81,6 +73,17 @@ export function useInboxes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Helper function to enhance inboxes with selected status based on URL
+  const enhanceInboxesWithSelectedStatus = useCallback(
+    (inboxes: Omit<AgentInbox, "selected">[]): AgentInbox[] => {
+      return inboxes.map((inbox) => ({
+        ...inbox,
+        selected: inbox.id === inboxState.inboxId,
+      }));
+    },
+    [inboxState.inboxId],
+  );
+
   /**
    * Load agent inboxes from local storage and set up proper selection state
    * Accepts optional preloaded inboxes to avoid re-reading localStorage immediately after backfill.
@@ -91,9 +94,10 @@ export function useInboxes() {
         return;
       }
 
-      let currentInboxes: AgentInbox[] = [];
+      let currentInboxes: Omit<AgentInbox, "selected">[] = [];
       if (preloadedInboxes) {
-        currentInboxes = preloadedInboxes;
+        // Extract everything except selected property for clean storage
+        currentInboxes = preloadedInboxes.map(({ selected, ...rest }) => rest);
         logger.log("Using preloaded inboxes for selection logic");
       } else {
         const agentInboxesStr = getItem(AGENT_INBOXES_LOCAL_STORAGE_KEY);
@@ -111,17 +115,13 @@ export function useInboxes() {
             );
             // Handle error state appropriately
             setAgentInboxes([]);
-            setQueryParams({
-              [NO_INBOXES_FOUND_PARAM]: "true",
-            });
+            updateInboxState({ noInboxesFound: true });
             return;
           }
         } else {
           logger.log("No inboxes in localStorage for selection logic");
           setAgentInboxes([]);
-          setQueryParams({
-            [NO_INBOXES_FOUND_PARAM]: "true",
-          });
+          updateInboxState({ noInboxesFound: true });
           return;
         }
       }
@@ -129,9 +129,7 @@ export function useInboxes() {
       if (!currentInboxes.length) {
         logger.log("No current inboxes to process selection logic");
         setAgentInboxes([]);
-        setQueryParams({
-          [NO_INBOXES_FOUND_PARAM]: "true",
-        });
+        updateInboxState({ noInboxesFound: true });
         return;
       }
 
@@ -143,97 +141,52 @@ export function useInboxes() {
         };
       });
 
-      const agentInboxSearchParam = agentInboxParam;
-      logger.log(
-        "Agent inbox search param for selection:",
-        agentInboxSearchParam,
-      );
+      // Update React state with the inboxes and apply selected status based on URL
+      const inboxesWithSelectedStatus =
+        enhanceInboxesWithSelectedStatus(currentInboxes);
+      setAgentInboxes(inboxesWithSelectedStatus);
 
-      // If there is no agent inbox search param, or the search param does not match any inbox
-      // update search param and local storage
-      if (!agentInboxSearchParam) {
-        const selectedInbox = currentInboxes.find((inbox) => inbox.selected);
-        if (!selectedInbox) {
-          currentInboxes[0].selected = true;
-          setQueryParams({
-            [AGENT_INBOX_PARAM]: currentInboxes[0].id,
-            [OFFSET_PARAM]: 0,
-            [LIMIT_PARAM]: 10,
-            [INBOX_PARAM]: "interrupted",
-          });
-          setAgentInboxes(currentInboxes);
-          setItem(
-            AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(currentInboxes),
-          );
-        } else {
-          setQueryParams({
-            [AGENT_INBOX_PARAM]: selectedInbox.id,
-            [OFFSET_PARAM]: 0,
-            [LIMIT_PARAM]: 10,
-            [INBOX_PARAM]: "interrupted",
-          });
-          setAgentInboxes(currentInboxes);
-          setItem(
-            AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(currentInboxes),
-          );
-        }
+      // Save to localStorage without any selected flags
+      const cleanInboxes = currentInboxes.map((inbox) => {
+        // Create a new object without the selected property for storage
+        return { ...inbox };
+      });
 
-        // Mark initial load as complete
-        if (!initialLoadComplete.current) {
-          initialLoadComplete.current = true;
-        }
+      setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify(cleanInboxes));
 
-        return;
+      const currentInboxId = inboxState.inboxId;
+
+      // If there is no inbox ID in URL, select the first one
+      if (!currentInboxId) {
+        updateInboxState({
+          inboxId: currentInboxes[0].id,
+          offset: 0,
+          limit: 10,
+          status: "interrupted",
+        });
       }
 
-      let finalSelectedInboxId: string | null = null;
-
-      // Param exists: Find inbox by param ID
-      const selectedByParam = currentInboxes.find(
-        (inbox) => inbox.id === agentInboxSearchParam,
-      );
-
-      if (selectedByParam) {
-        finalSelectedInboxId = selectedByParam.id;
-        logger.log("Found inbox by search param:", finalSelectedInboxId);
-      } else {
-        // Param exists but inbox not found: Select first
-        finalSelectedInboxId = currentInboxes[0]?.id || null;
-        logger.log(
-          "Inbox for search param not found, selecting first inbox:",
-          finalSelectedInboxId,
-        );
-        if (finalSelectedInboxId) {
-          // Update URL to reflect the actual selection
-          setQueryParams({
-            [AGENT_INBOX_PARAM]: finalSelectedInboxId,
-          });
-        }
-      }
-
-      // Apply the selection to the inboxes array
-      const updatedInboxes = currentInboxes.map((inbox) => ({
-        ...inbox,
-        selected: inbox.id === finalSelectedInboxId,
-      }));
-
-      // Update state only if it has changed to avoid loops
-      if (JSON.stringify(updatedInboxes) !== JSON.stringify(agentInboxes)) {
-        logger.log(
-          "Updating agentInboxes state with selection:",
-          updatedInboxes,
-        );
-        setAgentInboxes(updatedInboxes);
+      // Mark initial load as complete
+      if (!initialLoadComplete.current) {
+        initialLoadComplete.current = true;
       }
     },
     [
       getItem,
-      agentInboxes, // Include agentInboxes state to compare against
-      setQueryParams,
+      setItem,
+      updateInboxState,
+      inboxState.inboxId,
+      enhanceInboxesWithSelectedStatus,
     ],
   );
+
+  // Helper to get the currently selected inbox based on URL state
+  const getSelectedInbox = useCallback(() => {
+    if (!inboxState.inboxId || !agentInboxes.length) return null;
+    return (
+      agentInboxes.find((inbox) => inbox.id === inboxState.inboxId) || null
+    );
+  }, [agentInboxes, inboxState.inboxId]);
 
   /**
    * Add a new agent inbox
@@ -250,41 +203,50 @@ export function useInboxes() {
 
       // Handle empty inboxes
       if (!agentInboxesStr || agentInboxesStr === "[]") {
-        setAgentInboxes([newInbox]);
-        setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify([newInbox]));
-        // Set agent inbox, offset, and limit
-        setQueryParams({
-          [AGENT_INBOX_PARAM]: newInbox.id,
-          [OFFSET_PARAM]: 0,
-          [LIMIT_PARAM]: 10,
-          [INBOX_PARAM]: "interrupted",
+        // Set with selected status derived from URL
+        setAgentInboxes([{ ...newInbox, selected: true }]);
+
+        // Don't store selected flag in localStorage
+        const { selected, ...cleanInbox } = newInbox;
+        setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify([cleanInbox]));
+
+        // Update URL state - this is the source of truth for selection
+        updateInboxState({
+          inboxId: newInbox.id,
+          offset: 0,
+          limit: 10,
+          status: "interrupted",
         });
         return;
       }
 
       try {
-        const parsedAgentInboxes: AgentInbox[] = JSON.parse(agentInboxesStr);
+        const parsedAgentInboxes: Omit<AgentInbox, "selected">[] =
+          JSON.parse(agentInboxesStr);
 
-        // Add the new inbox and mark as selected
-        const updatedInboxes = parsedAgentInboxes.map((inbox) => ({
-          ...inbox,
-          selected: false,
-        }));
+        // Remove selected property from new inbox for storage
+        const { selected, ...cleanNewInbox } = newInbox;
 
-        updatedInboxes.push({
-          ...newInbox,
-          selected: true,
-        });
+        // Add the new inbox to storage without selected flag
+        const cleanInboxes = [...parsedAgentInboxes, cleanNewInbox];
 
-        setAgentInboxes(updatedInboxes);
-        setItem(
-          AGENT_INBOXES_LOCAL_STORAGE_KEY,
-          JSON.stringify(updatedInboxes),
+        // For React state, use our helper to set selected based on URL
+        // but after URL update, this new inbox will be selected
+        setAgentInboxes(
+          enhanceInboxesWithSelectedStatus([
+            ...parsedAgentInboxes,
+            cleanNewInbox,
+          ]),
         );
 
-        // Update URL to show the new inbox
-        setQueryParams({
-          [AGENT_INBOX_PARAM]: newInbox.id,
+        setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify(cleanInboxes));
+
+        // Update URL to show the new inbox - this is our source of truth
+        updateInboxState({
+          inboxId: newInbox.id,
+          offset: 0,
+          limit: 10,
+          status: "interrupted",
         });
 
         // Use router refresh to update the UI without full page reload
@@ -294,7 +256,13 @@ export function useInboxes() {
         toast.error("Failed to add agent inbox. Please try again.");
       }
     },
-    [getItem, setItem, setQueryParams, router],
+    [
+      getItem,
+      setItem,
+      updateInboxState,
+      router,
+      enhanceInboxesWithSelectedStatus,
+    ],
   );
 
   /**
@@ -310,19 +278,16 @@ export function useInboxes() {
       }
 
       try {
-        const parsedAgentInboxes: AgentInbox[] = JSON.parse(agentInboxesStr);
-        const wasSelected =
-          parsedAgentInboxes.find((inbox) => inbox.id === id)?.selected ||
-          false;
+        const parsedAgentInboxes: Omit<AgentInbox, "selected">[] =
+          JSON.parse(agentInboxesStr);
+        const isCurrentlySelected = inboxState.inboxId === id;
         const updatedInboxes = parsedAgentInboxes.filter(
           (inbox) => inbox.id !== id,
         );
 
         // Handle empty result
         if (!updatedInboxes.length) {
-          setQueryParams({
-            [NO_INBOXES_FOUND_PARAM]: "true",
-          });
+          updateInboxState({ noInboxesFound: true, inboxId: null });
           setAgentInboxes([]);
           setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify([]));
 
@@ -331,30 +296,23 @@ export function useInboxes() {
           return;
         }
 
-        // Update state
-        setAgentInboxes(updatedInboxes);
+        // Update state with selected status based on URL
+        setAgentInboxes(enhanceInboxesWithSelectedStatus(updatedInboxes));
+
+        // Store without selected flags
+        setItem(
+          AGENT_INBOXES_LOCAL_STORAGE_KEY,
+          JSON.stringify(updatedInboxes),
+        );
 
         // If we deleted the selected inbox, select the first one
-        if (wasSelected && updatedInboxes.length > 0) {
-          const firstInbox = updatedInboxes[0];
-          const selectedInboxes = updatedInboxes.map((inbox) => ({
-            ...inbox,
-            selected: inbox.id === firstInbox.id,
-          }));
-
-          setAgentInboxes(selectedInboxes);
-          setItem(
-            AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(selectedInboxes),
-          );
-          setQueryParams({
-            [AGENT_INBOX_PARAM]: firstInbox.id,
+        if (isCurrentlySelected && updatedInboxes.length > 0) {
+          updateInboxState({
+            inboxId: updatedInboxes[0].id,
+            offset: 0,
+            limit: 10,
+            status: "interrupted",
           });
-        } else {
-          setItem(
-            AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(updatedInboxes),
-          );
         }
 
         // Refresh data without full page reload
@@ -364,7 +322,14 @@ export function useInboxes() {
         toast.error("Failed to delete agent inbox. Please try again.");
       }
     },
-    [getItem, setItem, setQueryParams, router],
+    [
+      getItem,
+      setItem,
+      updateInboxState,
+      router,
+      inboxState.inboxId,
+      enhanceInboxesWithSelectedStatus,
+    ],
   );
 
   /**
@@ -374,59 +339,24 @@ export function useInboxes() {
    */
   const changeAgentInbox = useCallback(
     (id: string, replaceAll?: boolean) => {
-      // Prevent rapid changes with a debounce ref
-      const debounceKey = `inbox-change-debounce-${id}`;
-      const now = Date.now();
-      const lastChange = parseInt(sessionStorage.getItem(debounceKey) || "0");
-
-      // Debounce changes to the same inbox ID within 500ms
-      if (now - lastChange < 500) {
-        logger.log(
-          `Debouncing change to inbox ${id}, too soon after last change`,
-        );
+      // Validate the inbox exists
+      if (!agentInboxes.some((inbox) => inbox.id === id)) {
+        logger.error(`Attempted to select non-existent inbox: ${id}`);
+        toast.error("Cannot find the requested inbox.");
         return;
       }
 
-      // Store timestamp of this change
-      sessionStorage.setItem(debounceKey, now.toString());
-
-      // Update React state
-      setAgentInboxes((prevInboxes) =>
-        prevInboxes.map((inbox) => ({
-          ...inbox,
-          selected: inbox.id === id,
-        })),
-      );
-
-      // Update localStorage
-      const agentInboxesStr = getItem(AGENT_INBOXES_LOCAL_STORAGE_KEY);
-      if (agentInboxesStr && agentInboxesStr !== "[]") {
-        try {
-          const parsedInboxes: AgentInbox[] = JSON.parse(agentInboxesStr);
-          const updatedInboxes = parsedInboxes.map((inbox) => ({
-            ...inbox,
-            selected: inbox.id === id,
-          }));
-
-          setItem(
-            AGENT_INBOXES_LOCAL_STORAGE_KEY,
-            JSON.stringify(updatedInboxes),
-          );
-        } catch (error) {
-          logger.error("Error updating selected inbox in localStorage", error);
-        }
-      }
-      // ToDo: Implement With Nuqs and instead of using router.push
-      // Update URL parameters
+      // Force update of URL state, which will trigger data loading
+      // This is our source of truth for selection
       if (!replaceAll) {
-        // Set agent inbox, offset, limit, and inbox param
-        setQueryParams({
-          [AGENT_INBOX_PARAM]: id,
-          [OFFSET_PARAM]: 0,
-          [LIMIT_PARAM]: 10,
-          [INBOX_PARAM]: "interrupted",
+        updateInboxState({
+          inboxId: id,
+          offset: 0,
+          limit: 10,
+          status: "interrupted",
         });
       } else {
+        // For hard navigation cases (back/forward, etc.), we'll still use URL directly
         const url = new URL(window.location.href);
         const newParams = new URLSearchParams({
           [AGENT_INBOX_PARAM]: id,
@@ -438,7 +368,7 @@ export function useInboxes() {
         window.location.href = newUrl;
       }
     },
-    [getItem, setItem, setQueryParams, router],
+    [agentInboxes, updateInboxState],
   );
 
   /**
@@ -454,7 +384,8 @@ export function useInboxes() {
       }
 
       try {
-        const parsedInboxes: AgentInbox[] = JSON.parse(agentInboxesStr);
+        const parsedInboxes: Omit<AgentInbox, "selected">[] =
+          JSON.parse(agentInboxesStr);
         const currentInbox = parsedInboxes.find(
           (inbox) => inbox.id === updatedInbox.id,
         );
@@ -464,15 +395,16 @@ export function useInboxes() {
           return;
         }
 
-        const wasSelected = currentInbox.selected;
-
+        // Store without the selected flag
+        const { selected, ...cleanUpdatedInbox } = updatedInbox;
         const updatedInboxes = parsedInboxes.map((inbox) =>
-          inbox.id === updatedInbox.id
-            ? { ...updatedInbox, selected: wasSelected }
-            : inbox,
+          inbox.id === updatedInbox.id ? cleanUpdatedInbox : inbox,
         );
 
-        setAgentInboxes(updatedInboxes);
+        // Add selected status based on URL for React state
+        setAgentInboxes(enhanceInboxesWithSelectedStatus(updatedInboxes));
+
+        // Store without selected flags
         setItem(
           AGENT_INBOXES_LOCAL_STORAGE_KEY,
           JSON.stringify(updatedInboxes),
@@ -485,15 +417,21 @@ export function useInboxes() {
         toast.error("Failed to update agent inbox. Please try again.");
       }
     },
-    [getItem, setItem, router],
+    [getItem, setItem, router, enhanceInboxesWithSelectedStatus],
   );
 
+  // Calculate the currently selected inbox based on the URL state
+  const selectedInbox = getSelectedInbox();
+
   return {
+    // Provide both the raw inboxes array and a derived currently selected inbox
     agentInboxes,
+    selectedInbox,
     getAgentInboxes,
     addAgentInbox,
     deleteAgentInbox,
     changeAgentInbox,
     updateAgentInbox,
+    isChangingInbox: inboxState.isTransitioning,
   };
 }

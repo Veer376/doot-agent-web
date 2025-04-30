@@ -1,13 +1,6 @@
 import { useThreadsContext } from "@/components/agent-inbox/contexts/ThreadContext";
 import { InboxItem } from "./components/inbox-item";
 import React from "react";
-import {
-  useQueryState,
-  useQueryStates,
-  parseAsString,
-  parseAsInteger,
-} from "nuqs";
-import { INBOX_PARAM, LIMIT_PARAM, OFFSET_PARAM } from "./constants";
 import { ThreadStatusWithAll } from "./types";
 import { Pagination } from "./components/pagination";
 import { Inbox as InboxIcon, LoaderCircle } from "lucide-react";
@@ -15,6 +8,8 @@ import { InboxButtons } from "./components/inbox-buttons";
 import { BackfillBanner } from "./components/backfill-banner";
 import { forceInboxBackfill } from "./utils/backfill";
 import { logger } from "./utils/logger";
+import { ThreadLoadingIndicator } from "./components/ThreadLoadingIndicator";
+import { useInboxQueryState } from "./hooks/useInboxQueryState";
 
 interface AgentInboxViewProps<
   _ThreadValues extends Record<string, any> = Record<string, any>,
@@ -26,15 +21,8 @@ interface AgentInboxViewProps<
 export function AgentInboxView<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ saveScrollPosition, containerRef }: AgentInboxViewProps<ThreadValues>) {
-  const [selectedInbox, setSelectedInbox] = useQueryState(
-    INBOX_PARAM,
-    parseAsString.withDefault("interrupted"),
-  );
-
-  const [, setPaginationParams] = useQueryStates({
-    [OFFSET_PARAM]: parseAsInteger.withDefault(0),
-    [LIMIT_PARAM]: parseAsInteger.withDefault(10),
-  });
+  const [inboxState, updateInboxState] = useInboxQueryState();
+  const selectedInbox = inboxState.status;
 
   const { loading, threadData, agentInboxes, clearThreadData } =
     useThreadsContext<ThreadValues>();
@@ -73,8 +61,8 @@ export function AgentInboxView<
 
           // Set a flag to prevent multiple page reloads
           const reloadKey = "inbox-page-reloaded";
-          if (sessionStorage.getItem(reloadKey) !== "true") {
-            sessionStorage.setItem(reloadKey, "true");
+          if (localStorage.getItem(reloadKey) !== "true") {
+            localStorage.setItem(reloadKey, "true");
 
             // Delay reload to avoid race conditions
             setTimeout(() => {
@@ -127,12 +115,13 @@ export function AgentInboxView<
   }, [containerRef, saveScrollPosition]);
 
   const changeInbox = async (inbox: ThreadStatusWithAll) => {
+    // Clear data before changing to prevent flashing old data
     clearThreadData();
 
-    await setSelectedInbox(inbox);
-    await setPaginationParams({
-      [OFFSET_PARAM]: 0,
-      [LIMIT_PARAM]: 10,
+    updateInboxState({
+      status: inbox,
+      offset: 0,
+      limit: 10,
     });
   };
 
@@ -179,6 +168,7 @@ export function AgentInboxView<
         <BackfillBanner />
         <InboxButtons changeInbox={changeInbox} />
       </div>
+      <ThreadLoadingIndicator />
       <div
         ref={scrollableContentRef}
         className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 mt-3 flex h-full max-h-fit w-full flex-col items-start overflow-y-auto border-y-[1px] border-gray-50"
@@ -194,18 +184,24 @@ export function AgentInboxView<
           );
         })}
         {noThreadsFound && !loading && (
-          <div className="flex w-full flex-col items-center justify-center p-4">
+          <div className="flex w-full flex-col items-center justify-center py-16">
             <div className="mb-4 flex items-center justify-center gap-2 text-gray-700">
               <InboxIcon className="h-6 w-6" />
-              <p className="font-medium">No threads found</p>
+              <p className="font-medium">No threads found in this inbox</p>
             </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 text-blue-600 hover:underline focus:outline-none"
+            >
+              Click to refresh
+            </button>
           </div>
         )}
-        {noThreadsFound && loading && (
-          <div className="flex w-full items-center justify-center p-4">
+        {loading && (
+          <div className="flex w-full items-center justify-center py-16">
             <div className="flex items-center justify-center gap-2 text-gray-700">
-              <p className="font-medium">Loading</p>
               <LoaderCircle className="h-6 w-6 animate-spin" />
+              <p className="font-medium">Loading threads...</p>
             </div>
           </div>
         )}

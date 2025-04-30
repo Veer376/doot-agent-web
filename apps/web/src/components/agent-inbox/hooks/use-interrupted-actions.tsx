@@ -3,7 +3,6 @@ import {
   HumanResponseWithEdits,
   SubmitType,
   ThreadData,
-  ThreadStatusWithAll,
   InterruptedThreadData,
 } from "../types";
 import { toast } from "sonner";

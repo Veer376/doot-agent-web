@@ -1,6 +1,5 @@
 import { Thread, ThreadState } from "@langchain/langgraph-sdk";
-import { AgentInbox, HumanInterrupt, ThreadData } from "../types";
-import { validate } from "uuid";
+import { HumanInterrupt, ThreadData } from "../types";
 import { IMPROPER_SCHEMA } from "../constants";
 
 // TODO: Delete this once interrupt issue fixed.

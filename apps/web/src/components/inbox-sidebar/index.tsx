@@ -24,12 +24,7 @@ import {
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
-import {
-  useQueryStates,
-  parseAsString,
-  parseAsInteger,
-  useQueryState,
-} from "nuqs";
+import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";

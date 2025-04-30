@@ -181,7 +181,7 @@ function ThreadsProviderInternal<
                       !interrupt?.action_request?.action,
                   ),
                 };
-              } catch (e) {
+              } catch (_) {
                 // If all else fails, mark as invalid schema
                 return {
                   status: "interrupted" as const,

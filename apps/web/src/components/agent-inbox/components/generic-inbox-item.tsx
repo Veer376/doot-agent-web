@@ -11,7 +11,6 @@ import {
 import { GenericThreadData } from "../types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useThreadsContext } from "../contexts/ThreadContext";
 
 import { constructOpenInStudioURL } from "../utils";
 

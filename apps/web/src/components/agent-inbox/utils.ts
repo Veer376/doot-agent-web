@@ -1,15 +1,9 @@
 import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
 import { format } from "date-fns";
 import { startCase } from "lodash";
-import {
-  HumanInterrupt,
-  HumanResponseWithEdits,
-  SubmitType,
-  AgentInbox,
-} from "./types";
+import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
-import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { toast } from "sonner";
 

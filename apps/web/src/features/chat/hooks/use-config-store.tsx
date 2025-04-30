@@ -10,9 +10,9 @@ import {
 
 interface ConfigState {
   configsByAgentId: Record<string, Record<string, any>>;
-  getAgentConfig: (_agentId: string) => Record<string, any>;
-  updateConfig: (_agentId: string, _key: string, _value: any) => void;
-  resetConfig: (_agentId: string) => void;
+  getAgentConfig: (agentId: string) => Record<string, any>;
+  updateConfig: (agentId: string, _key: string, _value: any) => void;
+  resetConfig: (agentId: string) => void;
   setDefaultConfig: (
     _agentId: string,
     _configurations:

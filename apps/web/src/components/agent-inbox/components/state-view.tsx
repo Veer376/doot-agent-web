@@ -246,7 +246,7 @@ export function StateViewObject(props: StateViewProps) {
 
 interface StateViewComponentProps {
   threadData: ThreadData<Record<string, any>>;
-  handleShowSidePanel: (_showState: boolean, _showDescription: boolean) => void;
+  handleShowSidePanel: (showState: boolean, showDescription: boolean) => void;
   view: "description" | "state";
 }
 

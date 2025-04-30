@@ -18,7 +18,7 @@ export function DropdownDialogMenu({
   deleteAgentInbox,
 }: {
   item: AgentInbox;
-  deleteAgentInbox: (_id: string) => void;
+  deleteAgentInbox: (id: string) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);

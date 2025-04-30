@@ -185,7 +185,7 @@ export function getInterruptFromThread(
               allow_accept: false,
             },
           } as HumanInterrupt;
-        } catch (_err) {
+        } catch (_) {
           return {
             action_request: { action: IMPROPER_SCHEMA, args: {} },
             config: {
@@ -201,7 +201,7 @@ export function getInterruptFromThread(
       return result;
     }
     return undefined;
-  } catch (_err) {
+  } catch (_) {
     return [
       {
         action_request: { action: IMPROPER_SCHEMA, args: {} },

@@ -19,7 +19,7 @@ import { logger } from "./utils/logger";
 interface AgentInboxViewProps<
   _ThreadValues extends Record<string, any> = Record<string, any>,
 > {
-  saveScrollPosition: (_element?: HTMLElement | null) => void;
+  saveScrollPosition: (element?: HTMLElement | null) => void;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 

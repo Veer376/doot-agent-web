@@ -69,7 +69,7 @@ export function AssistantMessage({
 }: {
   message: Message | undefined;
   isLoading: boolean;
-  handleRegenerate: (_parentCheckpoint: Checkpoint | null | undefined) => void;
+  handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
   const content = message?.content ?? [];
   const contentString = getContentString(content);

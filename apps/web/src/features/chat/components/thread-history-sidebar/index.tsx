@@ -49,7 +49,7 @@ const formatDate = (date: string) => {
 export interface ThreadHistorySidebarProps {
   className?: string;
   open: boolean;
-  setOpen: (_open: boolean) => void;
+  setOpen: (open: boolean) => void;
 }
 
 export function ThreadHistorySidebar({

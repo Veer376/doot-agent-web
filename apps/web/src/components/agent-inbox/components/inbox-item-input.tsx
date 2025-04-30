@@ -98,7 +98,7 @@ function ResponseComponent({
   streaming: boolean;
   showArgsInResponse: boolean;
   interruptValue: HumanInterrupt;
-  onResponseChange: (_value: string, _response: HumanResponseWithEdits) => void;
+  onResponseChange: (value: string, _response: HumanResponseWithEdits) => void;
   handleSubmit: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
@@ -108,10 +108,10 @@ function ResponseComponent({
     return null;
   }
 
-  const handleKeyDown = (_e: React.KeyboardEvent) => {
-    if ((_e.metaKey || _e.ctrlKey) && _e.key === "Enter") {
-      _e.preventDefault();
-      handleSubmit(_e);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
@@ -259,10 +259,10 @@ function EditAndOrAcceptComponent({
     }
   };
 
-  const handleKeyDown = (_e: React.KeyboardEvent) => {
-    if ((_e.metaKey || _e.ctrlKey) && _e.key === "Enter") {
-      _e.preventDefault();
-      handleSubmit(_e);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 

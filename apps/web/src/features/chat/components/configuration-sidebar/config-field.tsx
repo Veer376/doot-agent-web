@@ -46,7 +46,7 @@ interface ConfigFieldProps {
   className?: string;
   // Optional props for external state management
   value?: any;
-  setValue?: (_value: any) => void;
+  setValue?: (value: any) => void;
   agentId: string;
 }
 
@@ -97,7 +97,7 @@ export function ConfigField({
       // If parsing succeeds, call handleChange with the raw string and clear error
       handleChange(jsonString); // Use the unified handleChange
       setJsonError(null);
-    } catch (_error) {
+    } catch (_) {
       // If parsing fails, update state with invalid string but set error
       // This allows the user to see their invalid input and the error message
       if (isExternallyManaged) {
@@ -116,7 +116,7 @@ export function ConfigField({
       // Directly use handleChange to update with the formatted string
       handleChange(formatted);
       setJsonError(null); // Clear error on successful format
-    } catch (_error) {
+    } catch (_) {
       // If formatting fails (because input is not valid JSON), set the error state
       // Do not change the underlying value that failed to parse/format
       setJsonError("Invalid JSON format");

@@ -24,7 +24,7 @@ export default tseslint.config(
         "warn",
         { args: "none", argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      "no-unused-vars": "off", 
+      "no-unused-vars": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

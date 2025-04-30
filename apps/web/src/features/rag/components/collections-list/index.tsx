@@ -32,7 +32,7 @@ function DeleteCollection({
   onDelete,
 }: {
   collection: Collection;
-  onDelete: (_name: string) => void;
+  onDelete: (name: string) => void;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -75,12 +75,12 @@ function DeleteCollection({
 interface CollectionsListProps {
   collections: Collection[];
   selectedCollection: Collection | undefined;
-  onSelect: (_name: string) => void;
-  onDelete: (_name: string) => void;
+  onSelect: (name: string) => void;
+  onDelete: (name: string) => void;
   currentPage: number;
   itemsPerPage: number;
   totalCollections: number;
-  onPageChange: (_page: number) => void;
+  onPageChange: (page: number) => void;
 }
 
 export function CollectionsList({

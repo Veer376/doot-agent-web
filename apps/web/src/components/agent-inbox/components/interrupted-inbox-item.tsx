@@ -12,7 +12,7 @@ interface InterruptedInboxItem<
 > {
   threadData: InterruptedThreadData<ThreadValues>;
   isLast: boolean;
-  onThreadClick: (_id: string) => void;
+  onThreadClick: (id: string) => void;
 }
 
 export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({

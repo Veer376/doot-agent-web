@@ -39,12 +39,12 @@ type ThreadContentType<
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
   agentInboxes: AgentInbox[];
-  deleteAgentInbox: (_id: string) => void;
-  changeAgentInbox: (_graphId: string, _replaceAll?: boolean) => void;
-  addAgentInbox: (_agentInbox: AgentInbox) => void;
-  updateAgentInbox: (_updatedInbox: AgentInbox) => void;
-  ignoreThread: (_threadId: string) => Promise<void>;
-  fetchThreads: (_inbox: ThreadStatusWithAll) => Promise<void>;
+  deleteAgentInbox: (id: string) => void;
+  changeAgentInbox: (graphId: string, _replaceAll?: boolean) => void;
+  addAgentInbox: (agentInbox: AgentInbox) => void;
+  updateAgentInbox: (updatedInbox: AgentInbox) => void;
+  ignoreThread: (threadId: string) => Promise<void>;
+  fetchThreads: (inbox: ThreadStatusWithAll) => Promise<void>;
   clearThreadData: () => void;
   sendHumanResponse: <TStream extends boolean = false>(
     _threadId: string,
@@ -71,7 +71,7 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 
 interface GetClientArgs {
   agentInboxes: AgentInbox[];
-  getItem: (_key: string) => string | null | undefined;
+  getItem: (key: string) => string | null | undefined;
 }
 
 const getClient = ({ agentInboxes }: GetClientArgs) => {
@@ -310,7 +310,7 @@ export function ThreadsProvider<
                       !interrupt?.action_request?.action,
                   ),
                 };
-              } catch (_e) {
+              } catch (e) {
                 // If all else fails, mark as invalid schema
                 return {
                   status: "interrupted" as const,

@@ -25,7 +25,7 @@ export function isDeployedUrl(url: string): boolean {
       parsedUrl.protocol === "https:" &&
       !parsedUrl.hostname.includes("localhost")
     );
-  } catch (_e) {
+  } catch (_) {
     // If parsing fails, assume it's not a valid deployed URL
     return false;
   }

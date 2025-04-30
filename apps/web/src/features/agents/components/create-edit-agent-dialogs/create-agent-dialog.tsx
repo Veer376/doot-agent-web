@@ -92,7 +92,6 @@ export function CreateAgentDialog({
       return;
 
     if (configurations.length || toolConfigurations.length) {
-      console.log("CLEARING");
       // Clear before fetching new schemas
       setConfigurations([]);
       setToolConfigurations([]);

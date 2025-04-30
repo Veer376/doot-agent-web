@@ -62,7 +62,7 @@ export default function ToolsInterface(): React.ReactNode {
       </div>
 
       <Separator />
-      <div className="flex flex-wrap gap-4 space-y-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading &&
           !filteredTools.length &&
           Array.from({ length: 6 }).map((_, index) => (

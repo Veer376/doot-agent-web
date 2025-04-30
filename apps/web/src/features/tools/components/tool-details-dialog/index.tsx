@@ -12,6 +12,7 @@ import {
 import { Tool } from "@/types/tool";
 import { ReactNode } from "react";
 import { SchemaRenderer } from "./schema-renderer";
+import _ from "lodash";
 
 interface ToolDetailsDialogProps {
   tool: Tool;
@@ -24,11 +25,11 @@ export function ToolDetailsDialog({ tool, children }: ToolDetailsDialogProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            Tool Details -{" "}
-            <span className="rounded bg-gray-100 px-2 py-1 font-mono text-lg font-semibold tracking-tight text-orange-600">
-              {tool.name}
+          <DialogTitle className="text-lg font-semibold">
+            <span className="text-muted-foreground font-medium">
+              Tool Details -{" "}
             </span>
+            {_.startCase(tool.name)}
           </DialogTitle>
           <DialogDescription>
             {tool.description || "No description provided"}

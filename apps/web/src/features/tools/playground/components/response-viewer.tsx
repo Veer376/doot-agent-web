@@ -74,18 +74,43 @@ export function ResponseViewer({ response, isLoading, errorMessage }: ResponseVi
 }
 
 function PrettyView({ response }: { response: any }) {
+  // Check if the response has the expected structure
+  const isExpectedFormat = response && Array.isArray(response.content);
+
   return (
     <div className="rounded-md border bg-gray-50 p-4">
-      <div className="space-y-2">
-        {Object.entries(response).map(([key, value]: [string, any]) => (
-          <div
-            key={key}
-            className="grid grid-cols-3 gap-4"
-          >
-            <div className="font-medium text-gray-700">{key}</div>
-            <div className="col-span-2">{renderValue(value)}</div>
-          </div>
-        ))}
+      <div className="space-y-4">
+        {isExpectedFormat ? (
+          // Render the specific structure
+          response.content.map((item: any, index: number) => (
+            <div
+              key={`content-${index}`}
+              className="space-y-2 border-l-2 border-gray-300 pl-4 pt-2 first:pt-0"
+            >
+              <div className="text-sm font-semibold text-gray-500">{index}</div>
+              {Object.entries(item).map(([key, value]: [string, any]) => (
+                <div
+                  key={key}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  <div className="font-medium text-gray-700">{key}</div>
+                  <div className="col-span-2">{renderValue(value)}</div>
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          // Fallback to rendering generic objects if the structure doesn't match
+          Object.entries(response).map(([key, value]: [string, any]) => (
+            <div
+              key={key}
+              className="grid grid-cols-3 gap-4"
+            >
+              <div className="font-medium text-gray-700">{key}</div>
+              <div className="col-span-2">{renderValue(value)}</div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/tooltip";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAgentsContext } from "@/providers/Agents";
+import {
+  AgentSelectionProvider,
+  useAgentSelection,
+} from "../agent-inbox/contexts/AgentSelectionContext";
 import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
@@ -32,9 +36,10 @@ import { useInboxes } from "../agent-inbox/hooks/use-inboxes";
 import { DropdownDialogMenu } from "../agent-inbox/components/dropdown-and-dialog";
 import { AgentInbox } from "../agent-inbox/types";
 
-export function InboxSidebar() {
-  const { agents, loading, selectedAgentId, changeSelectedAgent } =
-    useAgentsContext();
+// Internal component that uses the context
+function InboxSidebarInternal() {
+  const { agents, loading } = useAgentsContext();
+  const { selectedAgentId, changeSelectedAgent } = useAgentSelection();
   const [langchainApiKey, setLangchainApiKey] = React.useState("");
   const { getItem } = useLocalStorage();
   const deployments = getDeployments();
@@ -244,6 +249,15 @@ export function InboxSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+  );
+}
+
+// Exported component with the provider
+export function InboxSidebar() {
+  return (
+    <AgentSelectionProvider>
+      <InboxSidebarInternal />
+    </AgentSelectionProvider>
   );
 }
 

@@ -11,7 +11,12 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import React from "react";
-import { useQueryStates, parseAsString, parseAsInteger } from "nuqs";
+import {
+  useQueryState,
+  useQueryStates,
+  parseAsString,
+  parseAsInteger,
+} from "nuqs";
 import {
   INBOX_PARAM,
   LIMIT_PARAM,
@@ -31,6 +36,10 @@ import { useAgentsContext } from "@/providers/Agents";
 import { v4 as uuidv4 } from "uuid";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
+import {
+  useAgentSelection,
+  AgentSelectionProvider,
+} from "./AgentSelectionContext";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -104,25 +113,31 @@ const getClient = ({ agentInboxes }: GetClientArgs) => {
   return createClient(deploymentId);
 };
 
-export function ThreadsProvider<
+// Internal component that uses the context
+function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { getItem } = useLocalStorage();
-  const { selectedAgentId, agents } = useAgentsContext();
+  const { selectedAgentId } = useAgentSelection();
+  const { agents } = useAgentsContext();
   const deployments = getDeployments();
   const processedAgentIdRef = React.useRef<string | null>(null);
   const lastFetchTimeRef = React.useRef<number>(0);
 
-  // Use useQueryStates to get and set parameters
-  const [queryParams, _setQueryParams] = useQueryStates({
-    [LIMIT_PARAM]: parseAsInteger.withDefault(10),
-    [OFFSET_PARAM]: parseAsInteger.withDefault(0),
-    [INBOX_PARAM]: parseAsString.withDefault("interrupted"),
-  });
-
-  const limitParam = queryParams[LIMIT_PARAM];
-  const offsetParam = queryParams[OFFSET_PARAM];
-  const inboxParam = queryParams[INBOX_PARAM] as ThreadStatusWithAll;
+  // Get thread filter query params
+  const [inboxParamRaw] = useQueryState(
+    INBOX_PARAM,
+    parseAsString.withDefault("interrupted"),
+  );
+  const inboxParam = inboxParamRaw as ThreadStatusWithAll;
+  const [offsetParam, setOffsetParam] = useQueryState(
+    OFFSET_PARAM,
+    parseAsInteger.withDefault(0),
+  );
+  const [limitParam, setLimitParam] = useQueryState(
+    LIMIT_PARAM,
+    parseAsInteger.withDefault(10),
+  );
 
   const [loading, setLoading] = React.useState(false);
   const [threadData, setThreadData] = React.useState<
@@ -553,6 +568,19 @@ export function ThreadsProvider<
     <ThreadsContext.Provider value={contextValue}>
       {children}
     </ThreadsContext.Provider>
+  );
+}
+
+// Export the wrapped provider
+export function ThreadsProvider<
+  ThreadValues extends Record<string, any> = Record<string, any>,
+>({ children }: { children: React.ReactNode }): React.ReactElement {
+  return (
+    <AgentSelectionProvider>
+      <ThreadsProviderInternal<ThreadValues>>
+        {children}
+      </ThreadsProviderInternal>
+    </AgentSelectionProvider>
   );
 }
 

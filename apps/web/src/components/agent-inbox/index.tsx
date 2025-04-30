@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import {
@@ -17,9 +19,13 @@ import { ThreadView } from "./thread-view";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
-import { useAgentsContext } from "@/providers/Agents";
+import {
+  AgentSelectionProvider,
+  useAgentSelection,
+} from "./contexts/AgentSelectionContext";
 
-export function AgentInbox<
+// Wrap the actual implementation in the provider
+function AgentInboxWithProvider<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
   const [selectedThreadIdParam] = useQueryState(
@@ -38,7 +44,7 @@ export function AgentInbox<
     [LIMIT_PARAM]: parseAsInteger.withDefault(10),
   });
 
-  const { selectedAgentId } = useAgentsContext();
+  const { selectedAgentId } = useAgentSelection();
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -185,5 +191,16 @@ export function AgentInbox<
       saveScrollPosition={saveScrollPosition}
       containerRef={containerRef as React.RefObject<HTMLDivElement>}
     />
+  );
+}
+
+// Export the wrapped component
+export function AgentInbox<
+  ThreadValues extends Record<string, any> = Record<string, any>,
+>() {
+  return (
+    <AgentSelectionProvider>
+      <AgentInboxWithProvider<ThreadValues> />
+    </AgentSelectionProvider>
   );
 }

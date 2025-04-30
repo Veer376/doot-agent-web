@@ -81,8 +81,6 @@ export function DocumentsCard({
       allowedTypes.includes(file.type),
     );
 
-    // TODO: Add user feedback if files are filtered out
-    console.log("Selected files:", filteredFiles);
     setStagedFiles((prevFiles) => [...prevFiles, ...filteredFiles]);
   };
 

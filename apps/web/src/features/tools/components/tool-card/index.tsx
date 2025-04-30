@@ -14,6 +14,7 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import NextLink from "next/link";
+import _ from "lodash";
 
 interface ToolCardProps {
   tool: Tool;
@@ -23,11 +24,8 @@ export function ToolCard({ tool }: ToolCardProps) {
   return (
     <Card className="border border-gray-200 shadow-xs">
       <CardHeader>
-        {/* <CardTitle className="w-fit max-w-[95%] truncate rounded bg-gray-100 px-2 py-1 font-mono font-semibold tracking-tight text-orange-600">
-          {tool.name}
-        </CardTitle> */}
         <CardTitle className="truncate pb-2 text-lg font-medium">
-          {tool.name}
+          {_.startCase(tool.name)}
         </CardTitle>
 
         <CardDescription className="line-clamp-3">

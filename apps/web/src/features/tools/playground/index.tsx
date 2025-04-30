@@ -62,7 +62,6 @@ export default function ToolsPlaygroundInterface() {
     setErrorMessage("");
 
     try {
-      console.log("inputValues", inputValues);
       const toolRes = await callTool({
         name: selectedTool.name,
         args: inputValues,

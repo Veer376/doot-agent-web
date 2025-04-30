@@ -36,8 +36,6 @@ export function EditAgentDialog({
 }: EditAgentDialogProps) {
   const { getAgentConfigSchema, updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
-  const { configsByAgentId } = useConfigStore();
-  console.log("configsByAgentId", configsByAgentId);
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
   >([]);

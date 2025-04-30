@@ -8,15 +8,8 @@ import { GraphCard } from "./graph-card";
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
-import { Agent } from "@/types/agent";
-import { Deployment } from "@/types/deployment";
 import { GraphsLoading } from "./graphs-loading";
-
-interface GraphGroup {
-  agents: Agent[];
-  deployment: Deployment;
-  graphId: string; // Assuming graph_id is the searchable identifier
-}
+import { GraphGroup } from "../../types";
 
 export function GraphList() {
   const { agents, loading: agentsLoading } = useAgentsContext();

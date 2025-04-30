@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,29 +14,72 @@ import {
 import { AgentCard } from "../agent-card";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { useAgentsContext } from "@/providers/Agents";
+import { getDeployments } from "@/lib/environment/deployments";
+import { GraphGroup } from "../../types";
+import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import _ from "lodash";
 
 export function AgentDashboard() {
-  const { agents } = useAgentsContext();
+  const { agents, loading: agentsLoading } = useAgentsContext();
+  const deployments = getDeployments();
   const [searchQuery, setSearchQuery] = useState("");
   const [graphFilter, setGraphFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const filteredAgents = agents.filter((agent) => {
-    // Apply search filter
-    if (
-      searchQuery &&
-      !agent.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false;
+  const allGraphGroups: GraphGroup[] = useMemo(() => {
+    if (agentsLoading) return [];
+    const groups: GraphGroup[] = [];
+    deployments.forEach((deployment) => {
+      const agentsInDeployment = agents.filter(
+        (agent) =>
+          agent.deploymentId === deployment.id && !isDefaultAssistant(agent),
+      );
+      const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
+      agentsGroupedByGraphs.forEach((agentGroup) => {
+        if (agentGroup.length > 0) {
+          const graphId = agentGroup[0].graph_id;
+          groups.push({
+            agents: agentGroup,
+            deployment,
+            graphId,
+          });
+        }
+      });
+    });
+    return groups;
+  }, [agents, deployments, agentsLoading]);
+
+  const filteredAgents = useMemo(() => {
+    // 1. Filter groups based on the graphFilter dropdown
+    let groupsMatchingGraphFilter: GraphGroup[];
+
+    if (graphFilter === "all") {
+      groupsMatchingGraphFilter = allGraphGroups;
+    } else {
+      // Parse the combined ID "deploymentId:graphId"
+      const [selectedDeploymentId, selectedGraphId] = graphFilter.split(":");
+      groupsMatchingGraphFilter = allGraphGroups.filter(
+        (group) =>
+          group.deployment.id === selectedDeploymentId &&
+          group.graphId === selectedGraphId,
+      );
     }
 
-    // Apply graph filter
-    if (graphFilter !== "all" && agent.graph_id !== graphFilter) {
-      return false;
+    // 2. Get all agents from the groups that matched the graph filter
+    const agentsInFilteredGroups = groupsMatchingGraphFilter.flatMap(
+      (group) => group.agents,
+    );
+
+    // 3. Filter these agents based on the search query
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    if (!lowerCaseQuery) {
+      return agentsInFilteredGroups; // No search query, return all agents from filtered groups
     }
 
-    return true;
-  });
+    return agentsInFilteredGroups.filter((agent) =>
+      agent.name.toLowerCase().includes(lowerCaseQuery),
+    );
+  }, [allGraphGroups, graphFilter, searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -68,12 +111,15 @@ export function AgentDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Graphs</SelectItem>
-              {mockGraphs.map((graph) => (
+              {allGraphGroups.map((graph) => (
                 <SelectItem
-                  key={graph.id}
-                  value={graph.id}
+                  key={`${graph.deployment.id}:${graph.graphId}`}
+                  value={`${graph.deployment.id}:${graph.graphId}`} // Use combined ID for value
                 >
-                  {graph.name}
+                  <span className="text-muted-foreground">
+                    [{graph.deployment.name}]
+                  </span>
+                  {_.startCase(graph.graphId)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -86,7 +132,7 @@ export function AgentDashboard() {
           {filteredAgents.length}{" "}
           {filteredAgents.length === 1 ? "Agent" : "Agents"}
         </h2>
-        <Select defaultValue="newest">
+        {/* <Select defaultValue="newest">
           <SelectTrigger className="h-8 w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -96,7 +142,7 @@ export function AgentDashboard() {
             <SelectItem value="name-asc">Name (A-Z)</SelectItem>
             <SelectItem value="name-desc">Name (Z-A)</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
       </div>
 
       {filteredAgents.length === 0 ? (

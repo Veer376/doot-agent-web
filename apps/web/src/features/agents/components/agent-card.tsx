@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Brain, Edit, MessageSquare, Wrench } from "lucide-react";
+import { Bot, Brain, Cloud, Edit, MessageSquare, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +15,13 @@ import { EditAgentDialog } from "./create-edit-agent-dialogs/edit-agent-dialog";
 import _ from "lodash";
 import NextLink from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { getDeployments } from "@/lib/environment/deployments";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AgentCardProps {
   agent: Agent;
@@ -23,6 +30,10 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const deployments = getDeployments();
+  const selectedDeployment = deployments.find(
+    (d) => d.id === agent.deploymentId,
+  );
 
   return (
     <>
@@ -34,11 +45,34 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           <div className="flex items-start justify-between">
             <CardTitle className="flex w-full items-center gap-2">
               <p>{_.startCase(agent.name)}</p>
-              {showDeployment && (
-                <Badge variant="outline">
-                  <Bot />
-                  {_.startCase(agent.graph_id)}
-                </Badge>
+              {showDeployment && selectedDeployment && (
+                <div className="flex items-center gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="outline">
+                          <Cloud />
+                          {_.startCase(selectedDeployment.name)}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        The deployment the graph & agent belongs to.
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="outline">
+                          <Bot />
+                          {_.startCase(agent.graph_id)}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        The graph the agent belongs to.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
             </CardTitle>
           </div>

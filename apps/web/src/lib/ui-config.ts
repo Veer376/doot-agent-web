@@ -39,7 +39,7 @@ export function configSchemaToConfigurableFields(
     ) {
       if (
         "type" in value.metadata.x_lg_ui_config &&
-        ["mcp_server_url", "tools_list", "rag"].includes(
+        ["mcp", "rag"].includes(
           value.metadata.x_lg_ui_config.type as string,
         )
       ) {
@@ -192,4 +192,13 @@ export function extractConfigurationsFromAgent({
     toolConfig: configToolsWithDefaults,
     ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
   };
+}
+
+
+export function getConfigurableDefaults(configFields: ConfigurableFieldUIMetadata[]): Record<string, any> {
+  const defaults: Record<string, any> = {};
+  configFields.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
+  return defaults;
 }

@@ -8,7 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { extractConfigurationsFromAgent } from "@/lib/ui-config";
+import { extractConfigurationsFromAgent, getConfigurableDefaults } from "@/lib/ui-config";
 import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
@@ -111,9 +111,12 @@ export function CreateAgentDialog({
         setConfigurations(configFields);
         setToolConfigurations(toolConfig);
 
+
         // Set default config values based on configuration fields
         const { setDefaultConfig } = useConfigStore.getState();
         setDefaultConfig(agentId, configFields);
+        const configurableDefaults = getConfigurableDefaults(configFields);
+        setConfig(configurableDefaults);
 
         if (toolConfig.length) {
           setDefaultConfig(`${agentId}:selected-tools`, toolConfig);

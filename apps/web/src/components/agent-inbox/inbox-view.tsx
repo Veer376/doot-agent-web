@@ -10,6 +10,7 @@ import { forceInboxBackfill } from "./utils/backfill";
 import { logger } from "./utils/logger";
 import { ThreadLoadingIndicator } from "./components/ThreadLoadingIndicator";
 import { useInboxQueryState } from "./hooks/useInboxQueryState";
+import { useInboxChange } from "./hooks/useInboxChange";
 
 interface AgentInboxViewProps<
   _ThreadValues extends Record<string, any> = Record<string, any>,
@@ -23,11 +24,18 @@ export function AgentInboxView<
 >({ saveScrollPosition, containerRef }: AgentInboxViewProps<ThreadValues>) {
   const [inboxState, updateInboxState] = useInboxQueryState();
   const selectedInbox = inboxState.status;
+  
+  // Use the dedicated hook for inbox changes
+  const { changeInbox } = useInboxChange();
 
-  const { loading, threadData, agentInboxes, clearThreadData } =
+  const { loading, threadData, agentInboxes, isChangingThreads } =
     useThreadsContext<ThreadValues>();
+    
   const scrollableContentRef = React.useRef<HTMLDivElement>(null);
   const [hasAttemptedRefresh, setHasAttemptedRefresh] = React.useState(false);
+
+  // Effective loading state
+  const isLoading = loading || isChangingThreads;
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -114,17 +122,6 @@ export function AgentInboxView<
     };
   }, [containerRef, saveScrollPosition]);
 
-  const changeInbox = async (inbox: ThreadStatusWithAll) => {
-    // Clear data before changing to prevent flashing old data
-    clearThreadData();
-
-    updateInboxState({
-      status: inbox,
-      offset: 0,
-      limit: 10,
-    });
-  };
-
   const threadDataToRender = React.useMemo(
     () =>
       threadData.filter((t) => {
@@ -133,7 +130,9 @@ export function AgentInboxView<
       }),
     [selectedInbox, threadData],
   );
-  const noThreadsFound = !threadDataToRender.length;
+  
+  // Only show no threads when we're not loading
+  const noThreadsFound = !threadDataToRender.length && !isLoading;
 
   const handleThreadClick = () => {
     if (
@@ -157,6 +156,13 @@ export function AgentInboxView<
         }
       });
     }
+  };
+
+  // Simple refresh function
+  const handleRefresh = () => {
+    updateInboxState({ 
+      offset: 0
+    });
   };
 
   return (
@@ -183,21 +189,21 @@ export function AgentInboxView<
             />
           );
         })}
-        {noThreadsFound && !loading && (
+        {noThreadsFound && (
           <div className="flex w-full flex-col items-center justify-center py-16">
             <div className="mb-4 flex items-center justify-center gap-2 text-gray-700">
               <InboxIcon className="h-6 w-6" />
               <p className="font-medium">No threads found in this inbox</p>
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRefresh}
               className="mt-4 text-blue-600 hover:underline focus:outline-none"
             >
               Click to refresh
             </button>
           </div>
         )}
-        {loading && (
+        {isLoading && (
           <div className="flex w-full items-center justify-center py-16">
             <div className="flex items-center justify-center gap-2 text-gray-700">
               <LoaderCircle className="h-6 w-6 animate-spin" />

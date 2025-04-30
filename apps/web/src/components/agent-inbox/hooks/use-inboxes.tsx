@@ -15,7 +15,7 @@ import { AgentInbox } from "../types";
 import { useRouter } from "next/navigation";
 import { logger } from "../utils/logger";
 import { runInboxBackfill } from "../utils/backfill";
-import { useInboxQueryState, InboxQueryState } from "./useInboxQueryState";
+import { useInboxQueryState, InboxQueryState, ensureInboxSelected } from "./useInboxQueryState";
 
 /**
  * Hook for managing agent inboxes
@@ -154,12 +154,13 @@ export function useInboxes() {
 
       setItem(AGENT_INBOXES_LOCAL_STORAGE_KEY, JSON.stringify(cleanInboxes));
 
-      const currentInboxId = inboxState.inboxId;
-
-      // If there is no inbox ID in URL, select the first one
-      if (!currentInboxId) {
+      // Use the utility function to ensure an inbox is selected
+      // but only if no inbox is currently selected
+      if (!inboxState.inboxId && inboxesWithSelectedStatus.length > 0) {
+        // Use direct access rather than ensureInboxSelected to avoid potential loops
+        const firstInbox = inboxesWithSelectedStatus[0];
         updateInboxState({
-          inboxId: currentInboxes[0].id,
+          inboxId: firstInbox.id,
           offset: 0,
           limit: 10,
           status: "interrupted",

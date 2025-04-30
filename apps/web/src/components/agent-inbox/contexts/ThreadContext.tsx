@@ -40,7 +40,7 @@ import {
   useAgentSelection,
   AgentSelectionProvider,
 } from "./AgentSelectionContext";
-import { useInboxQueryState } from "../hooks/useInboxQueryState";
+import { useInboxQueryState, ensureInboxSelected } from "../hooks/useInboxQueryState";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -424,6 +424,7 @@ function ThreadsProviderInternal<
     if (!agentInboxes.length) {
       return;
     }
+    
     if (!inboxParam) {
       return;
     }
@@ -472,6 +473,15 @@ function ThreadsProviderInternal<
     clearThreadData,
     selectedInbox,
   ]);
+  
+  // Add a separate effect that runs ONLY when agentInboxes changes
+  // This ensures an inbox is selected without creating an infinite loop
+  React.useEffect(() => {
+    if (agentInboxes.length > 0 && !inboxState.inboxId) {
+      // Only run if we have inboxes but none selected
+      ensureInboxSelected(agentInboxes, inboxState.inboxId, updateInboxState);
+    }
+  }, [agentInboxes, inboxState.inboxId, updateInboxState]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {

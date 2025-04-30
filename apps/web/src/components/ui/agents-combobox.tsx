@@ -35,7 +35,7 @@ export interface AgentsComboboxProps {
    */
   placeholder?: string;
   open?: boolean;
-  setOpen?: (v: boolean) => void;
+  setOpen?: (open: boolean) => void;
   value?: string;
   setValue?: (value: string) => void;
   className?: string;
@@ -120,7 +120,7 @@ export function AgentsCombobox({
       </PopoverTrigger>
       <PopoverContent className="min-w-[200px] p-0">
         <Command
-          filter={(value, search) => {
+          filter={(value: string, search: string) => {
             const name = getNameFromValue(value, agents);
             if (!name) return 0;
             if (name.toLowerCase().includes(search.toLowerCase())) {
@@ -162,7 +162,7 @@ export function AgentsCombobox({
                       <CommandItem
                         key={`${item.assistant_id}:${item.deploymentId}`}
                         value={`${item.assistant_id}:${item.deploymentId}`}
-                        onSelect={(currentValue) => {
+                        onSelect={(currentValue: string) => {
                           setValue?.(
                             currentValue === value ? "" : currentValue,
                           );

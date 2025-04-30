@@ -29,7 +29,7 @@ export function useAgents() {
     try {
       const client = createClient(deploymentId);
       const schemas = await client.assistants.getSchemas(agentId);
-      return schemas.config_schema;
+      return schemas.config_schema ?? undefined;
     } catch (e) {
       console.error("Failed to get agent config schema", e);
       toast.error("Failed to get agent config schema");

@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
 import { useRagContext } from "@/features/rag/providers/RAG";
+import { ConfigurableFieldMCPMetadata } from "@/types/configurable";
 
 interface Option {
   label: string;
@@ -316,28 +317,28 @@ export function ConfigFieldTool({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
 
-  if (!store.configsByAgentId[actualAgentId]?.[toolId]) {
+  const defaults = store.configsByAgentId[actualAgentId]?.[toolId] as
+    | ConfigurableFieldMCPMetadata["default"]
+    | undefined;
+
+  if (!defaults) {
     return null;
   }
 
-  const checked = (
-    store.configsByAgentId[actualAgentId][toolId] as string[]
-  ).some((t) => t === label);
+  const checked = defaults.tools?.some((t) => t === label);
 
   const handleCheckedChange = (checked: boolean) => {
     if (checked) {
-      store.updateConfig(actualAgentId, toolId, [
-        ...(store.configsByAgentId[actualAgentId][toolId] as string[]),
-        label,
-      ]);
+      store.updateConfig(actualAgentId, toolId, {
+        ...defaults,
+        // Remove duplicates
+        tools: Array.from(new Set<string>([...(defaults.tools || []), label])),
+      });
     } else {
-      store.updateConfig(
-        actualAgentId,
-        toolId,
-        (store.configsByAgentId[actualAgentId][toolId] as string[]).filter(
-          (t) => t !== label,
-        ),
-      );
+      store.updateConfig(actualAgentId, toolId, {
+        ...defaults,
+        tools: defaults.tools?.filter((t) => t !== label),
+      });
     }
   };
 

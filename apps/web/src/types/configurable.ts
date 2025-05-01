@@ -65,8 +65,11 @@ export type ConfigurableFieldUIMetadata<V = unknown> = {
 
 export type ConfigurableFieldMCPMetadata = {
   label: string;
-  type: "tools_list";
-  default?: string[];
+  type: "mcp";
+  default?: {
+    tools?: string[];
+    url?: string;
+  };
 };
 
 export type ConfigurableFieldRAGMetadata = {

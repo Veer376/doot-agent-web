@@ -32,7 +32,21 @@ export function useAgents() {
       return schemas.config_schema ?? undefined;
     } catch (e) {
       console.error("Failed to get agent config schema", e);
-      toast.error("Failed to get agent config schema");
+      toast.error("Failed to get agent config schema", {
+        description: (
+          <div className="flex flex-col items-start gap-2">
+            <p>
+              Agent ID:{" "}
+              <span className="font-mono font-semibold">{agentId}</span>
+            </p>
+            <p>
+              Deployment ID:{" "}
+              <span className="font-mono font-semibold">{deploymentId}</span>
+            </p>
+          </div>
+        ),
+        richColors: true,
+      });
     }
   };
 

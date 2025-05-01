@@ -11,15 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { Button } from "@/components/ui/button";
 
 /**
  * The /agents page.
  * Contains the list of all agents the user has access to.
  */
 export default function AgentsPage(): React.ReactNode {
-  const { resetStore, configsByAgentId } = useConfigStore();
   return (
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
@@ -39,14 +36,6 @@ export default function AgentsPage(): React.ReactNode {
           </Breadcrumb>
         </div>
       </header>
-      <Button
-        onClick={() => {
-          resetStore();
-          console.log("configsByAgentId", configsByAgentId);
-        }}
-      >
-        Reset
-      </Button>
       <AgentsInterface />
     </React.Suspense>
   );

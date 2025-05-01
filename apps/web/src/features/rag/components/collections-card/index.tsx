@@ -37,13 +37,19 @@ export function CollectionsCard({
   setSelectedCollection,
   setCurrentPage,
 }: CollectionsCardProps) {
-  const { createCollection, deleteCollection, listDocuments, setDocuments } =
-    useRagContext();
+  const {
+    createCollection,
+    deleteCollection,
+    listDocuments,
+    setDocuments,
+    updateCollection,
+  } = useRagContext();
 
   const [open, setOpen] = useState(false);
 
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
 
   // State for pagination
   const [collectionsCurrentPage, setCollectionsCurrentPage] = useState(1);
@@ -62,7 +68,9 @@ export function CollectionsCard({
     const loadingToast = toast.loading("Creating collection", {
       richColors: true,
     });
-    const success = await createCollection(newCollectionName);
+    const success = await createCollection(newCollectionName, {
+      description: newCollectionDescription,
+    });
     toast.dismiss(loadingToast);
     if (success) {
       setNewCollectionName(""); // Clear input fields on success
@@ -98,6 +106,19 @@ export function CollectionsCard({
       const docs = await listDocuments(newSelectedCollection.name);
       setDocuments(docs);
     }
+  };
+
+  const handleUpdateCollection = async (
+    currentName: string,
+    name: string,
+    metadata: Record<string, any>,
+  ) => {
+    const loadingToast = toast.loading("Updating collection", {
+      richColors: true,
+    });
+    await updateCollection(currentName, name, metadata);
+    toast.dismiss(loadingToast);
+    toast.success("Collection updated successfully", { richColors: true });
   };
 
   return (
@@ -138,6 +159,20 @@ export function CollectionsCard({
                   className="col-span-3"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="collection-description"
+                  className="text-right"
+                >
+                  Description
+                </Label>
+                <Input
+                  id="collection-description"
+                  value={newCollectionDescription}
+                  onChange={(e) => setNewCollectionDescription(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -165,6 +200,7 @@ export function CollectionsCard({
             setDocuments(documents);
           }}
           onDelete={(name) => handleDeleteCollection(name)}
+          onEdit={handleUpdateCollection}
           currentPage={collectionsCurrentPage}
           itemsPerPage={collectionsItemsPerPage}
           totalCollections={collections.length}

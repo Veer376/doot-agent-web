@@ -75,13 +75,6 @@ export function ConfigField({
     ? externalValue
     : store.configsByAgentId[agentId][id];
 
-  // console.log("currentValue", {
-  //   currentValue,
-  //   id,
-  //   agentId,
-  //   configsByAgentId: store.configsByAgentId,
-  // });
-
   const handleChange = (newValue: any) => {
     setJsonError(null); // Clear JSON error on any change
     if (isExternallyManaged) {

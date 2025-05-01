@@ -232,19 +232,12 @@ function ThreadsProviderInternal<
       return;
     }
     if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
-      console.log("Missing required parameters", {
-        agentInboxId,
-        inboxParam,
-        offsetParam,
-        limitParam,
-      });
       return;
     }
 
     const [assistantId, deploymentId] = agentInboxId.split(":");
 
     try {
-      console.log("FETCHING THREADS");
       // Fetch threads
       fetchThreads(assistantId, deploymentId);
     } catch (e) {

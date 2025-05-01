@@ -119,16 +119,12 @@ export function configSchemaToRagConfig(
       value.metadata.x_lg_ui_config.type &&
       value.metadata.x_lg_ui_config.type === "rag"
     ) {
-      const castType = value.metadata.x_lg_ui_config.type as "rag";
+      const castConfig = value.metadata
+        .x_lg_ui_config as ConfigurableFieldRAGMetadata;
       ragField = {
         label: key,
-        type: castType,
-        default:
-          (
-            value.metadata.x_lg_ui_config as {
-              default?: { collection?: string };
-            }
-          )?.default ?? undefined,
+        type: castConfig.type,
+        default: castConfig.default,
       };
     }
   }
@@ -160,8 +156,11 @@ export function extractConfigurationsFromAgent({
     };
   });
 
+  const configurable =
+    agent.config?.configurable ?? ({} as Record<string, any>);
+
   const configToolsWithDefaults = toolConfig.map((f) => {
-    const defaultConfig = (agent.config?.configurable?.[f.label] ??
+    const defaultConfig = (configurable[f.label] ??
       f.default) as ConfigurableFieldMCPMetadata["default"];
     return {
       ...f,
@@ -173,12 +172,12 @@ export function extractConfigurationsFromAgent({
     ? {
         ...ragConfig,
         default: {
-          collection:
+          collections:
             (
-              agent.config.configurable?.[ragConfig.label] as {
-                collection?: string;
+              configurable[ragConfig.label] as {
+                collections?: string[];
               }
-            )?.collection ?? ragConfig.default?.collection,
+            )?.collections ?? ragConfig.default?.collections,
         },
       }
     : undefined;

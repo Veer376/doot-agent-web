@@ -39,10 +39,14 @@ export default function AgentsPage(): React.ReactNode {
           </Breadcrumb>
         </div>
       </header>
-      <Button onClick={() => {
-        resetStore();
-        console.log("configsByAgentId", configsByAgentId);
-      }}>Reset</Button>
+      <Button
+        onClick={() => {
+          resetStore();
+          console.log("configsByAgentId", configsByAgentId);
+        }}
+      >
+        Reset
+      </Button>
       <AgentsInterface />
     </React.Suspense>
   );

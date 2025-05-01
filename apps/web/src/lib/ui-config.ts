@@ -39,9 +39,7 @@ export function configSchemaToConfigurableFields(
     ) {
       if (
         "type" in value.metadata.x_lg_ui_config &&
-        ["mcp", "rag"].includes(
-          value.metadata.x_lg_ui_config.type as string,
-        )
+        ["mcp", "rag"].includes(value.metadata.x_lg_ui_config.type as string)
       ) {
         // Do not set configurable fields for MCP in this func.
         continue;
@@ -84,19 +82,16 @@ export function configSchemaToConfigurableTools(
       typeof value.metadata.x_lg_ui_config === "object" &&
       "type" in value.metadata.x_lg_ui_config &&
       value.metadata.x_lg_ui_config.type &&
-      value.metadata.x_lg_ui_config.type === "tools_list"
+      value.metadata.x_lg_ui_config.type === "mcp"
     ) {
-      const castType = value.metadata.x_lg_ui_config.type as "tools_list";
+      const castType = value.metadata.x_lg_ui_config.type as "mcp";
+      const defaultValues = (
+        value.metadata.x_lg_ui_config as Record<string, any>
+      )?.default as ConfigurableFieldMCPMetadata["default"];
       fields.push({
         label: key,
         type: castType,
-        default:
-          (
-            value.metadata.x_lg_ui_config as Record<
-              string,
-              string[] | undefined
-            >
-          )?.default ?? [],
+        default: defaultValues,
       });
     }
   }
@@ -166,10 +161,11 @@ export function extractConfigurationsFromAgent({
   });
 
   const configToolsWithDefaults = toolConfig.map((f) => {
-    const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
+    const defaultConfig = (agent.config?.configurable?.[f.label] ??
+      f.default) as ConfigurableFieldMCPMetadata["default"];
     return {
       ...f,
-      default: defaultConfig as string[],
+      default: defaultConfig,
     };
   });
 
@@ -194,8 +190,9 @@ export function extractConfigurationsFromAgent({
   };
 }
 
-
-export function getConfigurableDefaults(configFields: ConfigurableFieldUIMetadata[]): Record<string, any> {
+export function getConfigurableDefaults(
+  configFields: ConfigurableFieldUIMetadata[],
+): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
     defaults[field.label] = field.default;

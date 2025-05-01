@@ -1,16 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
 import {
   Pagination,
   PaginationContent,
@@ -19,53 +8,24 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { MoreVertical, Trash2, Edit } from "lucide-react";
 import type { Collection } from "@/types/collection";
 import {
   DEFAULT_COLLECTION_NAME,
   getCollectionName,
 } from "../../hooks/use-rag";
 import { cn } from "@/lib/utils";
-import { DeleteCollectionAlert } from "./delete-collection-alert";
-import { EditCollectionDialog } from "./edit-collection-dialog";
-
-function CollectionActions({
-  collection,
-  onDelete,
-  onEdit,
-}: {
-  collection: Collection;
-  onDelete: (name: string) => void;
-  onEdit: (currentName: string, name: string, metadata: Record<string, any>) => Promise<void>;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48 p-1" align="end">
-        <div className="flex flex-col space-y-1">
-          <EditCollectionDialog collection={collection} handleEditCollection={onEdit} />
-          <DeleteCollectionAlert collection={collection} onDelete={onDelete} />
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
+import { CollectionActions } from "./collection-actions";
 
 interface CollectionsListProps {
   collections: Collection[];
   selectedCollection: Collection | undefined;
   onSelect: (name: string) => void;
   onDelete: (name: string) => void;
-  onEdit: (currentName: string, name: string, metadata: Record<string, any>) => Promise<void>;
+  onEdit: (
+    currentName: string,
+    name: string,
+    metadata: Record<string, any>,
+  ) => Promise<void>;
   currentPage: number;
   itemsPerPage: number;
   totalCollections: number;

@@ -37,8 +37,13 @@ export function CollectionsCard({
   setSelectedCollection,
   setCurrentPage,
 }: CollectionsCardProps) {
-  const { createCollection, deleteCollection, listDocuments, setDocuments, updateCollection } =
-    useRagContext();
+  const {
+    createCollection,
+    deleteCollection,
+    listDocuments,
+    setDocuments,
+    updateCollection,
+  } = useRagContext();
 
   const [open, setOpen] = useState(false);
 
@@ -103,7 +108,11 @@ export function CollectionsCard({
     }
   };
 
-  const handleUpdateCollection = async (currentName: string, name: string, metadata: Record<string, any>) => {
+  const handleUpdateCollection = async (
+    currentName: string,
+    name: string,
+    metadata: Record<string, any>,
+  ) => {
     const loadingToast = toast.loading("Updating collection", {
       richColors: true,
     });

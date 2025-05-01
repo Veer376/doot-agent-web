@@ -33,7 +33,7 @@ export function DeleteCollectionAlert({
           size="sm"
           className="w-full justify-start px-2 py-1.5 text-sm"
         >
-          <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+          <Trash2 className="text-destructive mr-2 h-4 w-4" />
           <span>Delete</span>
         </Button>
       </AlertDialogTrigger>

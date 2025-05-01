@@ -102,8 +102,15 @@ interface UseRagReturn {
   collectionsLoading: boolean;
   setCollectionsLoading: Dispatch<SetStateAction<boolean>>;
   getCollections: () => Promise<Collection[]>;
-  createCollection: (name: string, metadata?: Record<string, any>) => Promise<Collection | undefined>;
-  updateCollection: (currentName: string, newName: string, metadata: Record<string, any>) => Promise<Collection | undefined>;
+  createCollection: (
+    name: string,
+    metadata?: Record<string, any>,
+  ) => Promise<Collection | undefined>;
+  updateCollection: (
+    currentName: string,
+    newName: string,
+    metadata: Record<string, any>,
+  ) => Promise<Collection | undefined>;
   deleteCollection: (name: string) => Promise<string | undefined>;
 
   // Selected collection
@@ -297,7 +304,10 @@ export function useRag(): UseRagReturn {
   }, []);
 
   const createCollection = useCallback(
-    async (name: string, metadata: Record<string, any> = {}): Promise<Collection | undefined> => {
+    async (
+      name: string,
+      metadata: Record<string, any> = {},
+    ): Promise<Collection | undefined> => {
       const url = getApiUrlOrThrow();
       url.pathname = "/collections";
 
@@ -337,40 +347,53 @@ export function useRag(): UseRagReturn {
   );
 
   const updateCollection = useCallback(
-    async (currentName: string, newName: string, metadata: Record<string, any>): Promise<Collection | undefined> => {
+    async (
+      currentName: string,
+      newName: string,
+      metadata: Record<string, any>,
+    ): Promise<Collection | undefined> => {
       // Find the collection to update
-      const collectionToUpdate = collections.find((c) => c.name === currentName);
-      
+      const collectionToUpdate = collections.find(
+        (c) => c.name === currentName,
+      );
+
       if (!collectionToUpdate) {
-        toast.error(`Collection with name "${currentName}" not found.`, { richColors: true });
+        toast.error(`Collection with name "${currentName}" not found.`, {
+          richColors: true,
+        });
         return undefined;
       }
-      
+
       const trimmedNewName = newName.trim();
       if (!trimmedNewName) {
         toast.error("Collection name cannot be empty.", { richColors: true });
         return undefined;
       }
-      
+
       // Check if the new name already exists (only if name is changing)
       if (trimmedNewName !== currentName) {
         const nameExists = collections.some(
-          (c) => c.name.toLowerCase() === trimmedNewName.toLowerCase() && c.name !== currentName
+          (c) =>
+            c.name.toLowerCase() === trimmedNewName.toLowerCase() &&
+            c.name !== currentName,
         );
         if (nameExists) {
-          toast.warning(`Collection with name "${trimmedNewName}" already exists.`, { richColors: true });
+          toast.warning(
+            `Collection with name "${trimmedNewName}" already exists.`,
+            { richColors: true },
+          );
           return undefined;
         }
       }
-      
+
       const url = getApiUrlOrThrow();
       url.pathname = `/collections/${currentName}`;
-      
+
       const updateData = {
         name: trimmedNewName,
         metadata: metadata,
       };
-      
+
       const response = await fetch(url.toString(), {
         method: "PATCH",
         headers: {
@@ -378,26 +401,28 @@ export function useRag(): UseRagReturn {
         },
         body: JSON.stringify(updateData),
       });
-      
+
       if (!response.ok) {
-        toast.error(`Failed to update collection: ${response.statusText}`, { richColors: true });
+        toast.error(`Failed to update collection: ${response.statusText}`, {
+          richColors: true,
+        });
         return undefined;
       }
-      
+
       const updatedCollection = await response.json();
-      
+
       // Update the collections state
       setCollections((prevCollections) =>
         prevCollections.map((collection) =>
-          collection.name === currentName ? updatedCollection : collection
-        )
+          collection.name === currentName ? updatedCollection : collection,
+        ),
       );
-      
+
       // Update selected collection if it was the one that got updated
       if (selectedCollection && selectedCollection.name === currentName) {
         setSelectedCollection(updatedCollection);
       }
-      
+
       return updatedCollection;
     },
     [collections, selectedCollection],

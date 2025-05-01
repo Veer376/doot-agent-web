@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
 import { cn } from "@/lib/utils";
-import { ConfigurableFieldMCPMetadata, ConfigurableFieldRAGMetadata } from "@/types/configurable";
+import {
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
+} from "@/types/configurable";
 
 interface Option {
   label: string;
@@ -387,13 +390,17 @@ export function ConfigFieldRAG({
   const actualAgentId = `${agentId}:rag`;
   const [open, setOpen] = useState(false);
 
-  const defaults = store.configsByAgentId[actualAgentId]?.[label] as ConfigurableFieldRAGMetadata["default"];
+  const defaults = store.configsByAgentId[actualAgentId]?.[
+    label
+  ] as ConfigurableFieldRAGMetadata["default"];
 
   if (!defaults) {
     return null;
   }
 
-  const selectedCollections = defaults.collections?.length ? defaults.collections : [];
+  const selectedCollections = defaults.collections?.length
+    ? defaults.collections
+    : [];
 
   const handleSelect = (collectionName: string) => {
     const newValue = selectedCollections.some((s) => s === collectionName)
@@ -406,64 +413,61 @@ export function ConfigFieldRAG({
   };
 
   return (
-    <div className={cn("w-full flex flex-col items-start gap-2", className)}>
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          Selected Collections
-        </Label>
-        <Popover
-          open={open}
-          onOpenChange={setOpen}
-        >
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between"
-            >
-              {selectedCollections.length > 0 
-                ? selectedCollections.length > 1
-                  ? `${selectedCollections.length} collections selected`
-                  : selectedCollections[0]
-                : "Select collections"}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0">
-            <Command className="w-full">
-              <CommandInput placeholder="Search collections..." />
-              <CommandList>
-                <CommandEmpty>No collections found.</CommandEmpty>
-                <CommandGroup>
-                  {collections.map((collection) => (
-                    <CommandItem
-                      key={collection.uuid}
-                      value={collection.name}
-                      onSelect={(v) => {
-                        console.log("ON SELECT", v)
-                        handleSelect(collection.name);
-                      }}
-                      className="flex items-center justify-between"
-                    >
-                      <span>{collection.name}</span>
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          selectedCollections.includes(collection.name)
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+    <div className={cn("flex w-full flex-col items-start gap-2", className)}>
+      <Label
+        htmlFor={id}
+        className="text-sm font-medium"
+      >
+        Selected Collections
+      </Label>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedCollections.length > 0
+              ? selectedCollections.length > 1
+                ? `${selectedCollections.length} collections selected`
+                : selectedCollections[0]
+              : "Select collections"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command className="w-full">
+            <CommandInput placeholder="Search collections..." />
+            <CommandList>
+              <CommandEmpty>No collections found.</CommandEmpty>
+              <CommandGroup>
+                {collections.map((collection) => (
+                  <CommandItem
+                    key={collection.uuid}
+                    value={collection.name}
+                    onSelect={(v) => handleSelect(collection.name)}
+                    className="flex items-center justify-between"
+                  >
+                    <span>{collection.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        selectedCollections.includes(collection.name)
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

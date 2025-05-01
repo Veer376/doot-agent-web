@@ -119,7 +119,8 @@ export function configSchemaToRagConfig(
       value.metadata.x_lg_ui_config.type &&
       value.metadata.x_lg_ui_config.type === "rag"
     ) {
-      const castConfig = value.metadata.x_lg_ui_config as ConfigurableFieldRAGMetadata;
+      const castConfig = value.metadata
+        .x_lg_ui_config as ConfigurableFieldRAGMetadata;
       ragField = {
         label: key,
         type: castConfig.type,
@@ -155,7 +156,8 @@ export function extractConfigurationsFromAgent({
     };
   });
 
-  const configurable = agent.config?.configurable ?? {} as Record<string, any>;
+  const configurable =
+    agent.config?.configurable ?? ({} as Record<string, any>);
 
   const configToolsWithDefaults = toolConfig.map((f) => {
     const defaultConfig = (configurable[f.label] ??

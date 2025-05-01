@@ -19,56 +19,44 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Trash2 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { MoreVertical, Trash2, Edit } from "lucide-react";
 import type { Collection } from "@/types/collection";
 import {
   DEFAULT_COLLECTION_NAME,
   getCollectionName,
 } from "../../hooks/use-rag";
 import { cn } from "@/lib/utils";
+import { DeleteCollectionAlert } from "./delete-collection-alert";
+import { EditCollectionDialog } from "./edit-collection-dialog";
 
-function DeleteCollection({
+function CollectionActions({
   collection,
   onDelete,
+  onEdit,
 }: {
   collection: Collection;
   onDelete: (name: string) => void;
+  onEdit: (currentName: string, name: string, metadata: Record<string, any>) => Promise<void>;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <AlertDialog>
-        <AlertDialogTrigger
-          asChild
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-          >
-            <Trash2 className="text-destructive h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the collection "{collection.name}
-              "? This will also delete all associated documents.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => onDelete(collection.name)}
-              className="bg-destructive hover:bg-destructive/90 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button variant="ghost" size="icon" className="h-6 w-6">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-1" align="end">
+        <div className="flex flex-col space-y-1">
+          <EditCollectionDialog collection={collection} handleEditCollection={onEdit} />
+          <DeleteCollectionAlert collection={collection} onDelete={onDelete} />
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -77,6 +65,7 @@ interface CollectionsListProps {
   selectedCollection: Collection | undefined;
   onSelect: (name: string) => void;
   onDelete: (name: string) => void;
+  onEdit: (currentName: string, name: string, metadata: Record<string, any>) => Promise<void>;
   currentPage: number;
   itemsPerPage: number;
   totalCollections: number;
@@ -88,6 +77,7 @@ export function CollectionsList({
   selectedCollection,
   onSelect,
   onDelete,
+  onEdit,
   currentPage,
   itemsPerPage,
   totalCollections,
@@ -115,9 +105,10 @@ export function CollectionsList({
           >
             <span>{getCollectionName(collection.name)}</span>
             {collection.name !== DEFAULT_COLLECTION_NAME && (
-              <DeleteCollection
+              <CollectionActions
                 collection={collection}
                 onDelete={onDelete}
+                onEdit={onEdit}
               />
             )}
           </div>

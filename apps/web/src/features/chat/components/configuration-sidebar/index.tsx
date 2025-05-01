@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, ForwardedRef } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +39,10 @@ export interface AIConfigPanelProps {
   open: boolean;
 }
 
-export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
+export const ConfigurationSidebar = forwardRef<
+  HTMLDivElement,
+  AIConfigPanelProps
+>(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
   const { tools } = useMCPContext();
   const [agentId] = useQueryState("agentId");
@@ -120,6 +123,7 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
 
   return (
     <div
+      ref={ref}
       className={cn(
         "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
         open ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
@@ -282,4 +286,6 @@ export function ConfigurationSidebar({ className, open }: AIConfigPanelProps) {
       )}
     </div>
   );
-}
+});
+
+ConfigurationSidebar.displayName = "ConfigurationSidebar";

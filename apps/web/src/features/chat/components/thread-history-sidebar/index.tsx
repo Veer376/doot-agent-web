@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Message, Thread } from "@langchain/langgraph-sdk";
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, ForwardedRef } from "react";
 import { useQueryState } from "nuqs";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
@@ -52,11 +52,10 @@ export interface ThreadHistorySidebarProps {
   setOpen: (open: boolean) => void;
 }
 
-export function ThreadHistorySidebar({
-  className,
-  open,
-  setOpen,
-}: ThreadHistorySidebarProps) {
+export const ThreadHistorySidebar = forwardRef<
+  HTMLDivElement,
+  ThreadHistorySidebarProps
+>(({ className, open, setOpen }, ref: ForwardedRef<HTMLDivElement>) => {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId] = useQueryState("agentId");
@@ -98,6 +97,7 @@ export function ThreadHistorySidebar({
 
   return (
     <div
+      ref={ref}
       className={cn(
         "fixed top-0 right-0 z-10 h-screen border-l border-gray-200 bg-white shadow-lg transition-all duration-300",
         open ? "w-80 md:w-xl" : "w-0 overflow-hidden border-l-0",
@@ -157,4 +157,6 @@ export function ThreadHistorySidebar({
       )}
     </div>
   );
-}
+});
+
+ThreadHistorySidebar.displayName = "ThreadHistorySidebar";

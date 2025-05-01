@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,26 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { cn } from "@/lib/utils";
-import { AlertCircle } from "lucide-react";
+import { useRagContext } from "@/features/rag/providers/RAG";
+import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
-import { useRagContext } from "@/features/rag/providers/RAG";
-import { ConfigurableFieldMCPMetadata } from "@/types/configurable";
+import { cn } from "@/lib/utils";
+import { ConfigurableFieldMCPMetadata, ConfigurableFieldRAGMetadata } from "@/types/configurable";
 
 interface Option {
   label: string;
@@ -372,43 +385,85 @@ export function ConfigFieldRAG({
   const { collections } = useRagContext();
   const store = useConfigStore();
   const actualAgentId = `${agentId}:rag`;
+  const [open, setOpen] = useState(false);
 
-  if (!store.configsByAgentId[actualAgentId]?.[label]) {
+  const defaults = store.configsByAgentId[actualAgentId]?.[label] as ConfigurableFieldRAGMetadata["default"];
+
+  if (!defaults) {
     return null;
   }
 
-  const handleChange = (newValue: any) => {
-    store.updateConfig(actualAgentId, label, newValue);
+  const selectedCollections = defaults.collections?.length ? defaults.collections : [];
+
+  const handleSelect = (collectionName: string) => {
+    const newValue = selectedCollections.some((s) => s === collectionName)
+      ? selectedCollections.filter((s) => s !== collectionName)
+      : [...selectedCollections, collectionName];
+    store.updateConfig(actualAgentId, label, {
+      ...defaults,
+      collections: Array.from(new Set(newValue)),
+    });
   };
 
   return (
-    <div className={cn("w-full", className)}>
-      <div className="flex flex-col items-start gap-2">
+    <div className={cn("w-full flex flex-col items-start gap-2", className)}>
         <Label
           htmlFor={id}
           className="text-sm font-medium"
         >
-          Selected Collection
+          Selected Collections
         </Label>
-        <Select
-          value={store.configsByAgentId[actualAgentId][label] ?? ""}
-          onValueChange={handleChange}
+        <Popover
+          open={open}
+          onOpenChange={setOpen}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={"Select a collection"} />
-          </SelectTrigger>
-          <SelectContent>
-            {collections.map((collection) => (
-              <SelectItem
-                key={collection.uuid}
-                value={collection.name}
-              >
-                {collection.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {selectedCollections.length > 0 
+                ? selectedCollections.length > 1
+                  ? `${selectedCollections.length} collections selected`
+                  : selectedCollections[0]
+                : "Select collections"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command className="w-full">
+              <CommandInput placeholder="Search collections..." />
+              <CommandList>
+                <CommandEmpty>No collections found.</CommandEmpty>
+                <CommandGroup>
+                  {collections.map((collection) => (
+                    <CommandItem
+                      key={collection.uuid}
+                      value={collection.name}
+                      onSelect={(v) => {
+                        console.log("ON SELECT", v)
+                        handleSelect(collection.name);
+                      }}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{collection.name}</span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          selectedCollections.includes(collection.name)
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
     </div>
   );
 }

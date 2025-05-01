@@ -79,6 +79,6 @@ export type ConfigurableFieldRAGMetadata = {
   label: string;
   type: "rag";
   default?: {
-    collection?: string;
+    collections?: string[];
   };
 };

@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
+// This is a string only containing the access token
 const MCP_ACCESS_TOKEN = process.env.MCP_SERVER_ACCESS_TOKEN;
+// This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
 
 /**

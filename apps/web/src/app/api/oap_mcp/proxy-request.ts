@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
-const MCP_TOKEN = process.env.MCP_SERVER_ACCESS_TOKEN;
+const MCP_ACCESS_TOKEN = process.env.MCP_SERVER_ACCESS_TOKEN;
+const MCP_TOKENS = process.env.MCP_TOKENS;
 
 /**
  * Proxies requests from the client to the MCP server.
@@ -21,10 +22,10 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
-  if (!MCP_TOKEN) {
+  if (!MCP_ACCESS_TOKEN && !MCP_TOKENS) {
     return new Response(
       JSON.stringify({
-        message: "MCP_SERVER_ACCESS_TOKEN environment variable is not set.",
+        message: "MCP_SERVER_ACCESS_TOKEN or MCP_TOKENS environment variable is not set.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
@@ -47,7 +48,32 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       headers.append(key, value);
     }
   });
-  headers.set("Authorization", `Bearer ${MCP_TOKEN}`);
+  if (MCP_ACCESS_TOKEN) {
+    headers.set("Authorization", `Bearer ${MCP_ACCESS_TOKEN}`);
+  } else if (MCP_TOKENS) {
+    try {
+      const { access_token } = JSON.parse(MCP_TOKENS);
+      if (!access_token) {
+        throw new Error("MCP_TOKENS env variable is not set.");
+      }
+      headers.set("Authorization", `Bearer ${access_token}`);
+    } catch (e) {
+      console.error("Failed to parse MCP_TOKENS env variable", e)
+      return new Response(
+        JSON.stringify({
+          message: "Failed to parse MCP_TOKENS env variable.",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+  } else {
+    return new Response(
+      JSON.stringify({
+        message: "MCP_TOKENS or MCP_ACCESS_TOKEN environment variable is not set.",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
   // Determine body based on method
   let body: BodyInit | null | undefined = undefined;

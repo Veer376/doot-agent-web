@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
-// This is a string only containing the access token
-const MCP_ACCESS_TOKEN = process.env.MCP_SERVER_ACCESS_TOKEN;
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
 
@@ -24,10 +22,10 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
-  if (!MCP_ACCESS_TOKEN && !MCP_TOKENS) {
+  if (!MCP_TOKENS) {
     return new Response(
       JSON.stringify({
-        message: "MCP_SERVER_ACCESS_TOKEN or MCP_TOKENS environment variable is not set.",
+        message: "MCP_TOKENS environment variable is not set.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
@@ -50,28 +48,18 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       headers.append(key, value);
     }
   });
-  if (MCP_ACCESS_TOKEN) {
-    headers.set("Authorization", `Bearer ${MCP_ACCESS_TOKEN}`);
-  } else if (MCP_TOKENS) {
-    try {
-      const { access_token } = JSON.parse(MCP_TOKENS);
-      if (!access_token) {
-        throw new Error("MCP_TOKENS env variable is not set.");
-      }
-      headers.set("Authorization", `Bearer ${access_token}`);
-    } catch (e) {
-      console.error("Failed to parse MCP_TOKENS env variable", e)
-      return new Response(
-        JSON.stringify({
-          message: "Failed to parse MCP_TOKENS env variable.",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      );
+
+  try {
+    const { access_token } = JSON.parse(MCP_TOKENS);
+    if (!access_token) {
+      throw new Error("MCP_TOKENS env variable is not set.");
     }
-  } else {
+    headers.set("Authorization", `Bearer ${access_token}`);
+  } catch (e) {
+    console.error("Failed to parse MCP_TOKENS env variable", e);
     return new Response(
       JSON.stringify({
-        message: "MCP_TOKENS or MCP_ACCESS_TOKEN environment variable is not set.",
+        message: "Failed to parse MCP_TOKENS env variable.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );

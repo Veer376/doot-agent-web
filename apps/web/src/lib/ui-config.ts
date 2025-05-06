@@ -210,10 +210,3 @@ export function getConfigurableDefaults(
   });
   return defaults;
 }
-
-export function getConfigurableFields(
-  configs: Record<string, any>,
-  agentId: string,
-): Record<string, any> {
-  return {};
-}

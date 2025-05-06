@@ -5,7 +5,9 @@ import {
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
 
-function getUiConfig(value: unknown): { type: string, [key: string]: any } | undefined {
+function getUiConfig(
+  value: unknown,
+): { type: string; [key: string]: any } | undefined {
   if (
     typeof value !== "object" ||
     !value ||
@@ -65,10 +67,7 @@ export function configSchemaToConfigurableFields(
     }
 
     if (uiConfig) {
-      const config = uiConfig as Omit<
-      ConfigurableFieldUIMetadata,
-      "label"
-    >;
+      const config = uiConfig as Omit<ConfigurableFieldUIMetadata, "label">;
       fields.push({
         label: key,
         ...config,
@@ -212,6 +211,9 @@ export function getConfigurableDefaults(
   return defaults;
 }
 
-export function getConfigurableFields(configs: Record<string, any>, agentId: string): Record<string, any> {
+export function getConfigurableFields(
+  configs: Record<string, any>,
+  agentId: string,
+): Record<string, any> {
   return {};
 }

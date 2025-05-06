@@ -73,7 +73,6 @@ export function Thread() {
   );
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
-  const { configsByAgentId } = useConfigStore();
 
   const stream = useStreamContext();
   const messages = stream.messages;
@@ -134,8 +133,6 @@ export function Thread() {
       type: "human",
       content: input,
     };
-
-    console.log(getAgentConfig(agentId))
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(

@@ -143,7 +143,12 @@ export function AgentFieldsForm({
                       toolId={toolConfigurations[0].label}
                       className="border-b-[1px] py-4"
                       value={config[toolConfigurations[0].label]}
-                      setValue={(v) => setConfig({ ...config, [toolConfigurations[0].label]: v })}
+                      setValue={(v) =>
+                        setConfig({
+                          ...config,
+                          [toolConfigurations[0].label]: v,
+                        })
+                      }
                     />
                   ))
                 : null}

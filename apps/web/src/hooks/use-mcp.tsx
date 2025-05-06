@@ -89,5 +89,12 @@ export default function useMCP({
     return response;
   };
 
-  return { getTools, callTool, createAndConnectMCPClient, tools, setTools, cursor };
+  return {
+    getTools,
+    callTool,
+    createAndConnectMCPClient,
+    tools,
+    setTools,
+    cursor,
+  };
 }

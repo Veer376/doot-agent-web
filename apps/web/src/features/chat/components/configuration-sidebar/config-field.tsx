@@ -330,33 +330,44 @@ export function ConfigFieldTool({
   setValue: externalSetValue, // Rename to avoid conflict
 }: Pick<
   ConfigFieldProps,
-  "id" | "label" | "description" | "agentId" | "className" | "value" | "setValue"
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
 > & { toolId: string }) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
 
   const isExternallyManaged = externalSetValue !== undefined;
 
-  const defaults = (isExternallyManaged ? externalValue : store.configsByAgentId[actualAgentId]?.[toolId]) as
-    | ConfigurableFieldMCPMetadata["default"]
-    | undefined;
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[toolId]
+  ) as ConfigurableFieldMCPMetadata["default"] | undefined;
 
   if (!defaults) {
-    console.log("DEFAULTS FALSE", label, externalValue)
     return null;
   }
 
   const checked = defaults.tools?.some((t) => t === label);
 
   const handleCheckedChange = (checked: boolean) => {
-    const newValue = checked ? {
-      ...defaults,
-      // Remove duplicates
-      tools: Array.from(new Set<string>([...(defaults.tools || []), label])),
-    } : {
-      ...defaults,
-      tools: defaults.tools?.filter((t) => t !== label),
-    }
+    const newValue = checked
+      ? {
+          ...defaults,
+          // Remove duplicates
+          tools: Array.from(
+            new Set<string>([...(defaults.tools || []), label]),
+          ),
+        }
+      : {
+          ...defaults,
+          tools: defaults.tools?.filter((t) => t !== label),
+        };
 
     if (isExternallyManaged) {
       externalSetValue(newValue);

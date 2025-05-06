@@ -117,7 +117,11 @@ export function CreateAgentDialog({
         // Set default config values based on configuration fields
         const { setDefaultConfig } = useConfigStore.getState();
         setDefaultConfig(agentId, configFields);
-        const configurableDefaults = getConfigurableDefaults(configFields, toolConfig, ragConfig);
+        const configurableDefaults = getConfigurableDefaults(
+          configFields,
+          toolConfig,
+          ragConfig,
+        );
         setConfig(configurableDefaults);
 
         if (toolConfig.length) {

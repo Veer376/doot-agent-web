@@ -24,6 +24,7 @@ export default function useMCP({
   version: string;
 }) {
   const [tools, setTools] = useState<Tool[]>([]);
+  const [cursor, setCursor] = useState("");
   /**
    * Creates an MCP client and connects it to the specified server URL.
    * @param url - The URL of the MCP server.
@@ -52,9 +53,14 @@ export default function useMCP({
    * @param options.version - The version of the client.
    * @returns A promise that resolves to an array of available tools.
    */
-  const getTools = async (): Promise<Tool[]> => {
+  const getTools = async (nextCursor?: string): Promise<Tool[]> => {
     const mcp = await createAndConnectMCPClient();
-    const tools = await mcp.listTools();
+    const tools = await mcp.listTools({ cursor: nextCursor });
+    if (tools.nextCursor) {
+      setCursor(tools.nextCursor);
+    } else {
+      setCursor("");
+    }
     return tools.tools;
   };
 
@@ -83,5 +89,5 @@ export default function useMCP({
     return response;
   };
 
-  return { getTools, callTool, createAndConnectMCPClient, tools, setTools };
+  return { getTools, callTool, createAndConnectMCPClient, tools, setTools, cursor };
 }

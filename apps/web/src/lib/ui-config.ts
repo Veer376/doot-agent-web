@@ -5,6 +5,37 @@ import {
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
 
+function getUiConfig(value: unknown): { type: string, [key: string]: any } | undefined {
+  if (
+    typeof value !== "object" ||
+    !value ||
+    (!("metadata" in value) && !("x_lg_ui_config" in value))
+  ) {
+    return undefined;
+  }
+  const uiConfig: Record<string, any> =
+    "metadata" in value
+      ? (value.metadata as Record<string, any>).x_lg_ui_config
+      : (value as Record<string, any>).x_lg_ui_config;
+  if (!uiConfig) {
+    return undefined;
+  }
+
+  if (
+    typeof uiConfig === "object" &&
+    "type" in uiConfig &&
+    uiConfig.type &&
+    typeof uiConfig.type === "string"
+  ) {
+    return {
+      ...uiConfig,
+      type: uiConfig.type,
+    };
+  }
+
+  return undefined;
+}
+
 /**
  * Converts a LangGraph configuration schema into an array of UI metadata
  * for configurable fields.
@@ -28,37 +59,28 @@ export function configSchemaToConfigurableFields(
 
   const fields: ConfigurableFieldUIMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
-    if (
-      typeof value === "object" &&
-      "metadata" in value &&
-      value.metadata &&
-      typeof value.metadata === "object" &&
-      "x_lg_ui_config" in value.metadata &&
-      value.metadata.x_lg_ui_config &&
-      typeof value.metadata.x_lg_ui_config === "object"
-    ) {
-      if (
-        "type" in value.metadata.x_lg_ui_config &&
-        ["mcp", "rag"].includes(value.metadata.x_lg_ui_config.type as string)
-      ) {
-        // Do not set configurable fields for MCP in this func.
-        continue;
-      }
-      const uiConfig = value.metadata.x_lg_ui_config as Omit<
-        ConfigurableFieldUIMetadata,
-        "label"
-      >;
-      fields.push({
-        label: key,
-        ...uiConfig,
-      });
-    } else {
-      // If the `x_lg_ui_config` metadata is not found, default to text input
-      fields.push({
-        label: key,
-        type: "text",
-      });
+    const uiConfig = getUiConfig(value);
+    if (uiConfig && ["mcp", "rag"].includes(uiConfig.type)) {
+      continue;
     }
+
+    if (uiConfig) {
+      const config = uiConfig as Omit<
+      ConfigurableFieldUIMetadata,
+      "label"
+    >;
+      fields.push({
+        label: key,
+        ...config,
+      });
+      continue;
+    }
+
+    // If the `x_lg_ui_config` metadata is not found/is missing the `type` field, default to text input
+    fields.push({
+      label: key,
+      type: "text",
+    });
   }
   return fields;
 }
@@ -72,28 +94,20 @@ export function configSchemaToConfigurableTools(
 
   const fields: ConfigurableFieldMCPMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
-    if (
-      typeof value === "object" &&
-      "metadata" in value &&
-      value.metadata &&
-      typeof value.metadata === "object" &&
-      "x_lg_ui_config" in value.metadata &&
-      value.metadata.x_lg_ui_config &&
-      typeof value.metadata.x_lg_ui_config === "object" &&
-      "type" in value.metadata.x_lg_ui_config &&
-      value.metadata.x_lg_ui_config.type &&
-      value.metadata.x_lg_ui_config.type === "mcp"
-    ) {
-      const castType = value.metadata.x_lg_ui_config.type as "mcp";
-      const defaultValues = (
-        value.metadata.x_lg_ui_config as Record<string, any>
-      )?.default as ConfigurableFieldMCPMetadata["default"];
-      fields.push({
-        label: key,
-        type: castType,
-        default: defaultValues,
-      });
+    const uiConfig = getUiConfig(value);
+    if (!uiConfig || uiConfig.type !== "mcp") {
+      continue;
     }
+
+    fields.push({
+      label: key,
+      type: uiConfig.type,
+      default: {
+        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        tools: [],
+        ...(uiConfig.default ?? {}),
+      },
+    });
   }
   return fields;
 }
@@ -107,26 +121,17 @@ export function configSchemaToRagConfig(
 
   let ragField: ConfigurableFieldRAGMetadata | undefined;
   for (const [key, value] of Object.entries(schema.properties)) {
-    if (
-      typeof value === "object" &&
-      "metadata" in value &&
-      value.metadata &&
-      typeof value.metadata === "object" &&
-      "x_lg_ui_config" in value.metadata &&
-      value.metadata.x_lg_ui_config &&
-      typeof value.metadata.x_lg_ui_config === "object" &&
-      "type" in value.metadata.x_lg_ui_config &&
-      value.metadata.x_lg_ui_config.type &&
-      value.metadata.x_lg_ui_config.type === "rag"
-    ) {
-      const castConfig = value.metadata
-        .x_lg_ui_config as ConfigurableFieldRAGMetadata;
-      ragField = {
-        label: key,
-        type: castConfig.type,
-        default: castConfig.default,
-      };
+    const uiConfig = getUiConfig(value);
+    if (!uiConfig || uiConfig.type !== "rag") {
+      continue;
     }
+
+    ragField = {
+      label: key,
+      type: uiConfig.type,
+      default: uiConfig.default,
+    };
+    break;
   }
   return ragField;
 }
@@ -191,10 +196,22 @@ export function extractConfigurationsFromAgent({
 
 export function getConfigurableDefaults(
   configFields: ConfigurableFieldUIMetadata[],
+  toolConfig: ConfigurableFieldMCPMetadata[],
+  ragConfig: ConfigurableFieldRAGMetadata[],
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
     defaults[field.label] = field.default;
   });
+  toolConfig.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
+  ragConfig.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
   return defaults;
+}
+
+export function getConfigurableFields(configs: Record<string, any>, agentId: string): Record<string, any> {
+  return {};
 }

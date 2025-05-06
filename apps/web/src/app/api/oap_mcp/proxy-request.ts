@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL;
+const NEXT_PUBLIC_MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
 
@@ -14,10 +14,10 @@ const MCP_TOKENS = process.env.MCP_TOKENS;
  * @returns The response from the MCP server.
  */
 export async function proxyRequest(req: NextRequest): Promise<Response> {
-  if (!MCP_SERVER_URL) {
+  if (!NEXT_PUBLIC_MCP_SERVER_URL) {
     return new Response(
       JSON.stringify({
-        message: "MCP_SERVER_URL environment variable is not set.",
+        message: "NEXT_PUBLIC_MCP_SERVER_URL environment variable is not set.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
@@ -37,7 +37,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
 
   // Construct the target URL
-  const targetUrl = `${MCP_SERVER_URL}${path}${url.search}`;
+  const targetUrl = `${NEXT_PUBLIC_MCP_SERVER_URL}${path}${url.search}`;
 
   // Prepare headers, forwarding original headers except Host
   // and adding Authorization

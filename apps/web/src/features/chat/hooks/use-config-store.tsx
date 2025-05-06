@@ -30,7 +30,14 @@ export const useConfigStore = create<ConfigState>()(
 
       getAgentConfig: (agentId: string) => {
         const state = get();
-        return state.configsByAgentId[agentId] || {};
+        const baseConfig = state.configsByAgentId[agentId];
+        const toolsConfig = state.configsByAgentId[`${agentId}:selected-tools`];
+        const ragConfig = state.configsByAgentId[`${agentId}:rag`];
+        return {
+          ...baseConfig,
+          ...toolsConfig,
+          ...ragConfig,
+        };
       },
 
       updateConfig: (agentId, key, value) =>

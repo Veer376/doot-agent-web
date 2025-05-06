@@ -75,6 +75,13 @@ export function ToolResult({ message }: { message: ToolMessage }) {
     if (typeof message.content === "string") {
       parsedContent = JSON.parse(message.content);
       isJsonContent = true;
+    } else if (typeof message.content === "object") {
+      if (Array.isArray(message.content) && message.content.length === 1) {
+        parsedContent = message.content[0];
+      } else {
+        parsedContent = message.content;
+      }
+      isJsonContent = true;
     }
   } catch {
     // Content is not JSON, use as is

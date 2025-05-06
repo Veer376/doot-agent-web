@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
+import { AuthProvider } from "@/providers/Auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <NuqsAdapter>
-          <SidebarLayout>{children}</SidebarLayout>
+          <AuthProvider>
+            <SidebarLayout>{children}</SidebarLayout>
+          </AuthProvider>
         </NuqsAdapter>
       </body>
     </html>

@@ -23,9 +23,6 @@ export async function GET(request: NextRequest) {
       }
 
       // Successfully authenticated
-      console.log("Authentication successful, redirecting to:", redirectTo);
-    } else {
-      console.log("No code parameter found in URL");
     }
 
     // Redirect to the requested page or home

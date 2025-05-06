@@ -49,7 +49,6 @@ export default function SigninPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("redirecting to /");
       router.push("/");
     }
   }, [isAuthenticated, router]);
@@ -78,7 +77,6 @@ export default function SigninPage() {
 
       // Show success message and set up manual redirect timer
       setIsSuccess(true);
-      console.log("Sign in successful", result);
 
       // Set a timer to show manual redirect button after 5 seconds
       setTimeout(() => {

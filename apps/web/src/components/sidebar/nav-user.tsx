@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -53,12 +54,14 @@ export function NavUser() {
 
       if (error) {
         console.error("Error signing out:", error);
+        toast.error("Error signing out", { richColors: true });
         return;
       }
 
       router.push("/signin");
     } catch (err) {
       console.error("Error during sign out:", err);
+      toast.error("Error signing out", { richColors: true });
     } finally {
       setIsSigningOut(false);
     }

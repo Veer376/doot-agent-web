@@ -10,12 +10,6 @@ import { Button } from "@/components/ui/button";
 import _ from "lodash";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-} from "@/components/ui/pagination";
 
 function TotalToolsBadge({
   toolsCount,
@@ -51,7 +45,7 @@ export default function ToolsInterface(): React.ReactNode {
 
   const handleLoadMore = async () => {
     if (!cursor) return;
-    
+
     setLoadingMore(true);
     try {
       const newTools = await getTools(cursor);
@@ -107,11 +101,11 @@ export default function ToolsInterface(): React.ReactNode {
           </p>
         )}
       </div>
-      
+
       {!toolSearchTerm && cursor && (
         <div className="mt-4 flex justify-center">
-          <Button 
-            onClick={handleLoadMore} 
+          <Button
+            onClick={handleLoadMore}
             disabled={loadingMore}
             variant="outline"
             className="gap-1 px-2.5"

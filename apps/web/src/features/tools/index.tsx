@@ -49,7 +49,7 @@ export default function ToolsInterface(): React.ReactNode {
     setLoadingMore(true);
     try {
       const newTools = await getTools(cursor);
-      setTools([...tools, ...newTools]);
+      setTools((prevTools) => [...prevTools, ...newTools]);
     } catch (error) {
       console.error("Error loading more tools:", error);
     } finally {

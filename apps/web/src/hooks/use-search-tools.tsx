@@ -13,6 +13,7 @@ export function useSearchTools(tools: Tool[]) {
 
   // Filter tools based on the search term
   const filteredTools = useMemo(() => {
+    if (!toolSearchTerm) return tools;
     return tools.filter((tool) => {
       return (
         _.startCase(tool.name)

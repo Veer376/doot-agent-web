@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Search } from "@/components/ui/tool-search";
+import { Button } from "@/components/ui/button";
 import {
   ConfigField,
   ConfigFieldRAG,
@@ -17,6 +18,7 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
+import { useState } from "react";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -59,7 +61,8 @@ export function AgentFieldsForm({
   agentId,
   ragConfigurations,
 }: AgentFieldsFormProps) {
-  const { tools } = useMCPContext();
+  const { tools, setTools, getTools, cursor, loading } = useMCPContext();
+  const [loadingMore, setLoadingMore] = useState(false);
   const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
     useSearchTools(tools);
 
@@ -139,6 +142,13 @@ export function AgentFieldsForm({
                       agentId={agentId}
                       toolId={toolConfigurations[0].label}
                       className="border-b-[1px] py-4"
+                      value={config[toolConfigurations[0].label]}
+                      setValue={(v) =>
+                        setConfig({
+                          ...config,
+                          [toolConfigurations[0].label]: v,
+                        })
+                      }
                     />
                   ))
                 : null}
@@ -151,6 +161,28 @@ export function AgentFieldsForm({
                 <p className="my-4 w-full text-center text-sm text-slate-500">
                   No tools available for this agent.
                 </p>
+              )}
+              {cursor && !toolSearchTerm && (
+                <div className="flex justify-center py-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      setLoadingMore(true);
+                      try {
+                        const moreTool = await getTools(cursor);
+                        setTools([...tools, ...moreTool]);
+                      } catch (error) {
+                        console.error("Failed to load more tools:", error);
+                      } finally {
+                        setLoadingMore(false);
+                      }
+                    }}
+                    disabled={loadingMore || loading}
+                  >
+                    {loadingMore ? "Loading..." : "Load More Tools"}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -165,6 +197,7 @@ export function AgentFieldsForm({
               id={ragConfigurations[0].label}
               label={ragConfigurations[0].label}
               agentId={agentId}
+              // TODO: Start supporting externally managed field.
             />
           </div>
         </>

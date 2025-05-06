@@ -17,7 +17,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
  * Only use during development
  */
 export function AuthDebug() {
-  const { user, session, isAuthenticated, isLoading, signOut } = useAuthContext();
+  const { user, session, isAuthenticated, isLoading, signOut } =
+    useAuthContext();
   const [showDetails, setShowDetails] = useState(false);
 
   // Only enable in development mode

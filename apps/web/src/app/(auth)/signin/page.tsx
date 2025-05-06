@@ -49,7 +49,7 @@ export default function SigninPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("redirecting to /")
+      console.log("redirecting to /");
       router.push("/");
     }
   }, [isAuthenticated, router]);
@@ -79,7 +79,7 @@ export default function SigninPage() {
       // Show success message and set up manual redirect timer
       setIsSuccess(true);
       console.log("Sign in successful", result);
-      
+
       // Set a timer to show manual redirect button after 5 seconds
       setTimeout(() => {
         setShowManualRedirect(true);
@@ -104,7 +104,7 @@ export default function SigninPage() {
       } else {
         // Show success message for Google sign-in too
         setIsSuccess(true);
-        
+
         // Set a timer to show manual redirect button after 5 seconds
         setTimeout(() => {
           setShowManualRedirect(true);
@@ -135,13 +135,13 @@ export default function SigninPage() {
           )}
 
           {isSuccess && (
-            <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
               <AlertDescription className="flex flex-col gap-2">
                 <span>Success! We're redirecting you to the dashboard...</span>
                 {showManualRedirect && (
-                  <Button 
-                    onClick={() => router.push('/')} 
-                    variant="outline" 
+                  <Button
+                    onClick={() => router.push("/")}
+                    variant="outline"
                     className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
                   >
                     Go to Dashboard Now
@@ -197,7 +197,11 @@ export default function SigninPage() {
               className="w-full"
               disabled={isLoading || isSuccess}
             >
-              {isLoading ? "Signing in..." : isSuccess ? "Signed In Successfully" : "Sign In"}
+              {isLoading
+                ? "Signing in..."
+                : isSuccess
+                  ? "Signed In Successfully"
+                  : "Sign In"}
             </Button>
           </form>
 

@@ -31,19 +31,21 @@ export class SupabaseAuthProvider implements AuthProvider {
 
     // Extract metadata from user_metadata
     const metadata = supabaseUser.user_metadata || {};
-    
+
     // Determine name - prefer explicit first_name/last_name from our app
     // but fall back to name from Google/OAuth or email username
-    const firstName = metadata.first_name || (metadata.name?.split(' ')[0]) || null;
-    const lastName = metadata.last_name || 
-      (metadata.name?.split(' ').slice(1).join(' ')) || null;
-    
-    // Construct display name from available data
-    const displayName = 
-      (firstName && lastName) ? `${firstName} ${lastName}` :
-      metadata.name || 
-      supabaseUser.email?.split("@")[0] || 
+    const firstName =
+      metadata.first_name || metadata.name?.split(" ")[0] || null;
+    const lastName =
+      metadata.last_name ||
+      metadata.name?.split(" ").slice(1).join(" ") ||
       null;
+
+    // Construct display name from available data
+    const displayName =
+      firstName && lastName
+        ? `${firstName} ${lastName}`
+        : metadata.name || supabaseUser.email?.split("@")[0] || null;
 
     return {
       id: supabaseUser.id,
@@ -222,13 +224,17 @@ export class SupabaseAuthProvider implements AuthProvider {
       const metadata: Record<string, any> = {
         ...attributes.metadata,
       };
-      
+
       // Handle specific fields for our application
-      if (attributes.firstName !== undefined) metadata.first_name = attributes.firstName;
-      if (attributes.lastName !== undefined) metadata.last_name = attributes.lastName;
-      if (attributes.companyName !== undefined) metadata.company_name = attributes.companyName;
-      if (attributes.avatarUrl !== undefined) metadata.avatar_url = attributes.avatarUrl;
-      
+      if (attributes.firstName !== undefined)
+        metadata.first_name = attributes.firstName;
+      if (attributes.lastName !== undefined)
+        metadata.last_name = attributes.lastName;
+      if (attributes.companyName !== undefined)
+        metadata.company_name = attributes.companyName;
+      if (attributes.avatarUrl !== undefined)
+        metadata.avatar_url = attributes.avatarUrl;
+
       // If first and last name are provided, update the name field too
       if (attributes.firstName && attributes.lastName) {
         metadata.name = `${attributes.firstName} ${attributes.lastName}`.trim();

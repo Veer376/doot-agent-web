@@ -104,7 +104,7 @@ export default function SignupPage() {
           last_name: formValues.lastName,
           company_name: formValues.companyName || null,
           name: `${formValues.firstName} ${formValues.lastName}`.trim(),
-        }
+        },
       });
 
       if (error) {
@@ -175,7 +175,7 @@ export default function SignupPage() {
                   <p className="text-destructive text-sm">{errors.firstName}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
@@ -194,7 +194,12 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name <span className="text-muted-foreground text-xs">(Optional)</span></Label>
+              <Label htmlFor="companyName">
+                Company Name{" "}
+                <span className="text-muted-foreground text-xs">
+                  (Optional)
+                </span>
+              </Label>
               <Input
                 id="companyName"
                 name="companyName"
@@ -208,7 +213,7 @@ export default function SignupPage() {
                 <p className="text-destructive text-sm">{errors.companyName}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

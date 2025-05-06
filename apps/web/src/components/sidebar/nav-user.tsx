@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronsUpDown,
-  LogOut,
-  User,
-  Loader2,
-} from "lucide-react";
+import { ChevronsUpDown, LogOut, User, Loader2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -26,7 +21,6 @@ import {
 import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
 
-
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user: authUser, signOut, isAuthenticated } = useAuthContext();
@@ -36,32 +30,32 @@ export function NavUser() {
   // Use auth user if available, otherwise use default user
   const displayUser = authUser
     ? {
-      name: authUser.displayName || authUser.email?.split("@")[0] || "User",
-      email: authUser.email || "",
-      avatar: authUser.avatarUrl || "",
-      company: authUser.companyName || "",
-      firstName: authUser.firstName || "",
-      lastName: authUser.lastName || "",
-    }
+        name: authUser.displayName || authUser.email?.split("@")[0] || "User",
+        email: authUser.email || "",
+        avatar: authUser.avatarUrl || "",
+        company: authUser.companyName || "",
+        firstName: authUser.firstName || "",
+        lastName: authUser.lastName || "",
+      }
     : {
-      name: "Guest",
-      email: "Not signed in",
-      avatar: "",
-      company: "",
-      firstName: "",
-      lastName: "",
-    };
+        name: "Guest",
+        email: "Not signed in",
+        avatar: "",
+        company: "",
+        firstName: "",
+        lastName: "",
+      };
 
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true);
       const { error } = await signOut();
-      
+
       if (error) {
         console.error("Error signing out:", error);
         return;
       }
-      
+
       router.push("/signin");
     } catch (err) {
       console.error("Error during sign out:", err);
@@ -79,9 +73,7 @@ export function NavUser() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-16"
-            >
+            <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-16">
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
                   src={displayUser.avatar}
@@ -97,7 +89,7 @@ export function NavUser() {
                 </span>
                 <span className="truncate text-xs">{displayUser.email}</span>
                 {"company" in displayUser && (
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="text-muted-foreground truncate text-xs">
                     {displayUser.company}
                   </span>
                 )}
@@ -128,7 +120,7 @@ export function NavUser() {
                   </span>
                   <span className="truncate text-xs">{displayUser.email}</span>
                   {"company" in displayUser && (
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="text-muted-foreground truncate text-xs">
                       {displayUser.company}
                     </span>
                   )}
@@ -138,7 +130,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
 
             {isAuthenticated ? (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleSignOut}
                 disabled={isSigningOut}
               >

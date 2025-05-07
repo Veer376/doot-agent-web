@@ -110,7 +110,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <AgentsCombobox
               agents={agents}
               value={value}
-              setValue={(v) => handleValueChange(v)}
+              setValue={(v) =>
+                Array.isArray(v)
+                  ? handleValueChange(v[0])
+                  : handleValueChange(v)
+              }
               open={open}
               setOpen={setOpen}
             />

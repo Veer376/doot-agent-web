@@ -43,22 +43,26 @@ async function getAgents(
 
       const supportedConfigs: string[] = [];
       if (schema) {
-        const { toolConfig, ragConfig } = extractConfigurationsFromAgent({
-          agent: defaultAssistant,
-          schema,
-        });
+        const { toolConfig, ragConfig, agentsConfig } =
+          extractConfigurationsFromAgent({
+            agent: defaultAssistant,
+            schema,
+          });
         if (toolConfig.length) {
           supportedConfigs.push("tools");
         }
         if (ragConfig.length) {
           supportedConfigs.push("rag");
         }
+        if (agentsConfig.length) {
+          supportedConfigs.push("supervisor");
+        }
       }
 
       return assistants.map((assistant) => ({
         ...assistant,
         deploymentId: deployment.id,
-        supportedConfigs: supportedConfigs as ["tools" | "rag"],
+        supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
       }));
     },
   );

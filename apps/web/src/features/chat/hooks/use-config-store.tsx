@@ -6,6 +6,7 @@ import {
   ConfigurableFieldUIMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldAgentsMetadata,
 } from "@/types/configurable";
 
 interface ConfigState {
@@ -18,7 +19,8 @@ interface ConfigState {
     configurations:
       | ConfigurableFieldMCPMetadata[]
       | ConfigurableFieldUIMetadata[]
-      | ConfigurableFieldRAGMetadata[],
+      | ConfigurableFieldRAGMetadata[]
+      | ConfigurableFieldAgentsMetadata[],
   ) => void;
   resetStore: () => void;
 }
@@ -33,10 +35,12 @@ export const useConfigStore = create<ConfigState>()(
         const baseConfig = state.configsByAgentId[agentId];
         const toolsConfig = state.configsByAgentId[`${agentId}:selected-tools`];
         const ragConfig = state.configsByAgentId[`${agentId}:rag`];
+        const agentsConfig = state.configsByAgentId[`${agentId}:agents`];
         return {
           ...baseConfig,
           ...toolsConfig,
           ...ragConfig,
+          ...agentsConfig,
         };
       },
 

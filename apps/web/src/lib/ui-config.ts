@@ -1,4 +1,5 @@
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
@@ -135,10 +136,35 @@ export function configSchemaToRagConfig(
   return ragField;
 }
 
+export function configSchemaToAgentsConfig(
+  schema: GraphSchema["config_schema"],
+): ConfigurableFieldAgentsMetadata | undefined {
+  if (!schema || !schema.properties) {
+    return undefined;
+  }
+
+  let agentsField: ConfigurableFieldAgentsMetadata | undefined;
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const uiConfig = getUiConfig(value);
+    if (!uiConfig || uiConfig.type !== "agents") {
+      continue;
+    }
+
+    agentsField = {
+      label: key,
+      type: uiConfig.type,
+      default: uiConfig.default,
+    };
+    break;
+  }
+  return agentsField;
+}
+
 type ExtractedConfigs = {
   configFields: ConfigurableFieldUIMetadata[];
   toolConfig: ConfigurableFieldMCPMetadata[];
   ragConfig: ConfigurableFieldRAGMetadata[];
+  agentsConfig: ConfigurableFieldAgentsMetadata[];
 };
 
 export function extractConfigurationsFromAgent({
@@ -151,6 +177,7 @@ export function extractConfigurationsFromAgent({
   const configFields = configSchemaToConfigurableFields(schema);
   const toolConfig = configSchemaToConfigurableTools(schema);
   const ragConfig = configSchemaToRagConfig(schema);
+  const agentsConfig = configSchemaToAgentsConfig(schema);
 
   const configFieldsWithDefaults = configFields.map((f) => {
     const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
@@ -186,10 +213,30 @@ export function extractConfigurationsFromAgent({
       }
     : undefined;
 
+  const configurableAgentsWithDefaults = agentsConfig
+    ? {
+        ...agentsConfig,
+        default:
+          Array.isArray(configurable[agentsConfig.label]) &&
+          (configurable[agentsConfig.label] as any[]).length > 0
+            ? (configurable[agentsConfig.label] as {
+                agent_id?: string;
+                deployment_url?: string;
+                name?: string;
+              }[])
+            : Array.isArray(agentsConfig.default)
+              ? agentsConfig.default
+              : [],
+      }
+    : undefined;
+
   return {
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
     ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
+    agentsConfig: configurableAgentsWithDefaults
+      ? [configurableAgentsWithDefaults]
+      : [],
   };
 }
 
@@ -197,6 +244,7 @@ export function getConfigurableDefaults(
   configFields: ConfigurableFieldUIMetadata[],
   toolConfig: ConfigurableFieldMCPMetadata[],
   ragConfig: ConfigurableFieldRAGMetadata[],
+  agentsConfig: ConfigurableFieldAgentsMetadata[],
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
@@ -206,6 +254,9 @@ export function getConfigurableDefaults(
     defaults[field.label] = field.default;
   });
   ragConfig.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
+  agentsConfig.forEach((field) => {
     defaults[field.label] = field.default;
   });
   return defaults;

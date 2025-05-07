@@ -11,6 +11,7 @@ import {
 import { useAgents } from "@/hooks/use-agents";
 import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
@@ -45,6 +46,9 @@ export function EditAgentDialog({
   const [ragConfigurations, setRagConfigurations] = useState<
     ConfigurableFieldRAGMetadata[]
   >([]);
+  const [agentsConfigurations, setAgentsConfigurations] = useState<
+    ConfigurableFieldAgentsMetadata[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -65,7 +69,7 @@ export function EditAgentDialog({
     getAgentConfigSchema(agent.assistant_id, agent.deploymentId)
       .then((schemas) => {
         if (!schemas) return;
-        const { configFields, toolConfig, ragConfig } =
+        const { configFields, toolConfig, ragConfig, agentsConfig } =
           extractConfigurationsFromAgent({
             agent,
             schema: schemas,
@@ -87,6 +91,10 @@ export function EditAgentDialog({
         if (ragConfig.length) {
           setDefaultConfig(`${agentId}:rag`, ragConfig);
           setRagConfigurations(ragConfig);
+        }
+        if (agentsConfig.length) {
+          setDefaultConfig(`${agentId}:agents`, agentsConfig);
+          setAgentsConfigurations(agentsConfig);
         }
 
         setName(agent.name);
@@ -198,6 +206,7 @@ export function EditAgentDialog({
             setConfig={setConfig}
             agentId={agent.assistant_id}
             ragConfigurations={ragConfigurations}
+            agentsConfigurations={agentsConfigurations}
           />
         )}
         <AlertDialogFooter>

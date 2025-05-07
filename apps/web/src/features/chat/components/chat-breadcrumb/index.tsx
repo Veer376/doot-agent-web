@@ -84,7 +84,9 @@ function SelectedAgentSelect() {
           <AgentsCombobox
             agents={agents}
             value={value}
-            setValue={handleValueChange}
+            setValue={(v) =>
+              Array.isArray(v) ? handleValueChange(v[0]) : handleValueChange(v)
+            }
             open={open}
             setOpen={setOpen}
             trigger={

@@ -15,6 +15,12 @@ export const config = {
      * - favicon.ico (favicon file)
      * - api/auth (auth API routes)
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    
+    /*
+     * Match all API routes except for auth-related ones
+     * This allows the middleware to run on API routes and check authentication
+     */
+    "/api/((?!auth).*)" 
   ],
 };

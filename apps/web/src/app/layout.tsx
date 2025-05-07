@@ -1,10 +1,8 @@
+// This layout is for auth pages that don't need the sidebar
+import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
-import React from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { SidebarLayout } from "@/components/sidebar";
-import { AuthProvider } from "@/providers/Auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,19 +15,15 @@ export const metadata: Metadata = {
   description: "Open Agent Platform by LangChain",
 };
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <NuqsAdapter>
-          <AuthProvider>
-            <SidebarLayout>{children}</SidebarLayout>
-          </AuthProvider>
-        </NuqsAdapter>
+      <body>
+        <main>{children}</main>
       </body>
     </html>
   );

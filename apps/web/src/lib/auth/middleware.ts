@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const NO_AUTH_PATHS = [
+  "/debug-auth",
   "/signin",
   "/signup",
   "/forgot-password",

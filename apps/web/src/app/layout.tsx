@@ -22,7 +22,7 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <main>{children}</main>
       </body>
     </html>

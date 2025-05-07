@@ -176,6 +176,9 @@ export function Thread() {
       config: {
         configurable: getAgentConfig(agentId),
       },
+      metadata: {
+        supabaseAccessToken: session?.accessToken,
+      },
     });
   };
 

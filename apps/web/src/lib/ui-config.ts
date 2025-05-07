@@ -216,15 +216,16 @@ export function extractConfigurationsFromAgent({
   const configurableAgentsWithDefaults = agentsConfig
     ? {
         ...agentsConfig,
-        default: Array.isArray(configurable[agentsConfig.label]) && 
-                (configurable[agentsConfig.label] as any[]).length > 0
-          ? configurable[agentsConfig.label] as {
-              agent_id?: string;
-              deployment_url?: string;
-            }[]
-          : Array.isArray(agentsConfig.default)
-            ? agentsConfig.default
-            : []
+        default:
+          Array.isArray(configurable[agentsConfig.label]) &&
+          (configurable[agentsConfig.label] as any[]).length > 0
+            ? (configurable[agentsConfig.label] as {
+                agent_id?: string;
+                deployment_url?: string;
+              }[])
+            : Array.isArray(agentsConfig.default)
+              ? agentsConfig.default
+              : [],
       }
     : undefined;
 
@@ -232,7 +233,9 @@ export function extractConfigurationsFromAgent({
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
     ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
-    agentsConfig: configurableAgentsWithDefaults ? [configurableAgentsWithDefaults] : [],
+    agentsConfig: configurableAgentsWithDefaults
+      ? [configurableAgentsWithDefaults]
+      : [],
   };
 }
 

@@ -43,10 +43,11 @@ async function getAgents(
 
       const supportedConfigs: string[] = [];
       if (schema) {
-        const { toolConfig, ragConfig, agentsConfig } = extractConfigurationsFromAgent({
-          agent: defaultAssistant,
-          schema,
-        });
+        const { toolConfig, ragConfig, agentsConfig } =
+          extractConfigurationsFromAgent({
+            agent: defaultAssistant,
+            schema,
+          });
         if (toolConfig.length) {
           supportedConfigs.push("tools");
         }

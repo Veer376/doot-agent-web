@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Brain, Cloud, Edit, MessageSquare, User, Wrench } from "lucide-react";
+import {
+  Bot,
+  Brain,
+  Cloud,
+  Edit,
+  MessageSquare,
+  User,
+  Wrench,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -43,7 +51,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
-            <CardTitle className="flex flex-wrap w-full items-center gap-2">
+            <CardTitle className="flex w-full flex-wrap items-center gap-2">
               <p>{_.startCase(agent.name)}</p>
               {showDeployment && selectedDeployment && (
                 <div className="flex flex-wrap items-center gap-1">

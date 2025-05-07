@@ -123,7 +123,7 @@ export function AgentsCombobox({
   triggerAsChild,
 }: AgentsComboboxProps) {
   const deployments = getDeployments();
-  
+
   // Convert value to array for internal handling
   const selectedValues = React.useMemo(() => {
     if (!value) return [];
@@ -133,12 +133,12 @@ export function AgentsCombobox({
   // Handle selection of an item
   const handleSelect = (currentValue: string) => {
     if (!setValue) return;
-    
+
     if (multiple) {
       // For multiple selection mode
       const newValues = [...selectedValues];
       const index = newValues.indexOf(currentValue);
-      
+
       if (index === -1) {
         // Add the value if not already selected
         newValues.push(currentValue);
@@ -146,7 +146,7 @@ export function AgentsCombobox({
         // Remove the value if already selected
         newValues.splice(index, 1);
       }
-      
+
       setValue(newValues);
     } else {
       // For single selection mode (backward compatibility)
@@ -171,10 +171,10 @@ export function AgentsCombobox({
             aria-expanded={open}
             className="w-[200px] justify-between"
           >
-            {selectedValues.length > 0 
-              ? multiple 
+            {selectedValues.length > 0
+              ? multiple
                 ? getMultipleSelectedAgentValues(selectedValues, agents)
-                : getSelectedAgentValue(selectedValues[0], agents) 
+                : getSelectedAgentValue(selectedValues[0], agents)
               : placeholder}
             <ChevronsUpDown className="opacity-50" />
           </Button>
@@ -223,7 +223,7 @@ export function AgentsCombobox({
                     {allDeploymentAgents.map((item) => {
                       const itemValue = `${item.assistant_id}:${item.deploymentId}`;
                       const isSelected = selectedValues.includes(itemValue);
-                      
+
                       return (
                         <CommandItem
                           key={itemValue}
@@ -244,7 +244,7 @@ export function AgentsCombobox({
                             )}
                             <Check
                               className={cn(
-                                isSelected ? "opacity-100" : "opacity-0"
+                                isSelected ? "opacity-100" : "opacity-0",
                               )}
                             />
                           </div>

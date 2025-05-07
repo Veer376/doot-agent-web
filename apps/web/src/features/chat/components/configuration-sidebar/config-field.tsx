@@ -511,7 +511,7 @@ export function ConfigFieldAgents({
   | "className"
   | "value"
   | "setValue"
-> ) {
+>) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:agents`;
 
@@ -536,14 +536,16 @@ export function ConfigFieldAgents({
         externalSetValue([]);
         return;
       }
-  
+
       store.updateConfig(actualAgentId, label, []);
       return;
     }
 
     const newDefaults = ids.map((id) => {
       const [agent_id, deploymentId] = id.split(":");
-      const deployment_url = deployments.find((d) => d.id === deploymentId)?.deploymentUrl;
+      const deployment_url = deployments.find(
+        (d) => d.id === deploymentId,
+      )?.deploymentUrl;
       if (!deployment_url) {
         toast.error("Deployment not found");
       }
@@ -551,8 +553,8 @@ export function ConfigFieldAgents({
       return {
         agent_id,
         deployment_url,
-      }
-    })
+      };
+    });
 
     if (isExternallyManaged) {
       externalSetValue(newDefaults);
@@ -566,12 +568,19 @@ export function ConfigFieldAgents({
     <div className={cn("w-full space-y-2", className)}>
       <AgentsCombobox
         agents={agents}
-        value={defaults.map((defaultValue) => `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`)}
-        setValue={(v) => Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])}
+        value={defaults.map(
+          (defaultValue) =>
+            `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`,
+        )}
+        setValue={(v) =>
+          Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])
+        }
         multiple
       />
 
-      <p className="text-xs text-gray-500">The agents to make available to this supervisor.</p>
+      <p className="text-xs text-gray-500">
+        The agents to make available to this supervisor.
+      </p>
     </div>
   );
 }

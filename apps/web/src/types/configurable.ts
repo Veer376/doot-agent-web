@@ -89,5 +89,5 @@ export type ConfigurableFieldAgentsMetadata = {
   default?: {
     agent_id?: string;
     deployment_url?: string;
-  }[]
+  }[];
 };

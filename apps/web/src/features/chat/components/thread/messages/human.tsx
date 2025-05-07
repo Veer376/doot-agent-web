@@ -43,7 +43,7 @@ export function HumanMessage({
   isLoading: boolean;
 }) {
   const { session } = useAuthContext();
-  
+
   const [agentId] = useQueryState("agentId");
   const { getAgentConfig } = useConfigStore();
 

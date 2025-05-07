@@ -7,7 +7,7 @@ const NEXT_PUBLIC_MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 const MCP_TOKENS = process.env.MCP_TOKENS;
 // Token exchange endpoint
 const TOKEN_EXCHANGE_URL =
-  "https://e9b5-64-125-113-178.ngrok-free.app/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/oauth/token";
+  "https://api.bosslevel.dev/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/oauth/token";
 
 async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -56,7 +56,7 @@ async function getMcpAccessToken(supabaseToken: string) {
     );
     formData.append(
       "resource",
-      "https://e9b5-64-125-113-178.ngrok-free.app/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/oauth/token",
+      "https://api.bosslevel.dev/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/mcp",
     );
     formData.append(
       "subject_token_type",

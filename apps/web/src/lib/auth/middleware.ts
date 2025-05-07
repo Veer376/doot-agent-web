@@ -55,14 +55,14 @@ export async function updateSession(request: NextRequest) {
     !NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
   ) {
     // Check if this is an API request
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+    if (request.nextUrl.pathname.startsWith("/api/")) {
       // Return a JSON response with 401 Unauthorized status for API requests
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
-        { status: 401 }
+        { error: "Unauthorized", message: "Authentication required" },
+        { status: 401 },
       );
     }
-    
+
     // For non-API requests, redirect to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/signin";

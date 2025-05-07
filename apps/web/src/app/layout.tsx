@@ -1,4 +1,3 @@
-// This layout is for auth pages that don't need the sidebar
 import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";

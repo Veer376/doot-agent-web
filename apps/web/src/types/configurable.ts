@@ -82,3 +82,12 @@ export type ConfigurableFieldRAGMetadata = {
     collections?: string[];
   };
 };
+
+export type ConfigurableFieldAgentsMetadata = {
+  label: string;
+  type: "agents";
+  default?: {
+    agent_id?: string;
+    deployment_url?: string;
+  }[]
+};

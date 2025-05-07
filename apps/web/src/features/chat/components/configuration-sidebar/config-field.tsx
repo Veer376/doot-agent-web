@@ -34,9 +34,14 @@ import { Button } from "@/components/ui/button";
 import _ from "lodash";
 import { cn } from "@/lib/utils";
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
 } from "@/types/configurable";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { useAgentsContext } from "@/providers/Agents";
+import { getDeployments } from "@/lib/environment/deployments";
+import { toast } from "sonner";
 
 interface Option {
   label: string;
@@ -468,7 +473,7 @@ export function ConfigFieldRAG({
                   <CommandItem
                     key={collection.uuid}
                     value={collection.name}
-                    onSelect={(v) => handleSelect(collection.name)}
+                    onSelect={() => handleSelect(collection.name)}
                     className="flex items-center justify-between"
                   >
                     <span>{collection.name}</span>
@@ -487,6 +492,86 @@ export function ConfigFieldRAG({
           </Command>
         </PopoverContent>
       </Popover>
+    </div>
+  );
+}
+
+export function ConfigFieldAgents({
+  label,
+  agentId,
+  className,
+  value: externalValue, // Rename to avoid conflict
+  setValue: externalSetValue, // Rename to avoid conflict
+}: Pick<
+  ConfigFieldProps,
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
+> ) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:agents`;
+
+  const { agents } = useAgentsContext();
+  const deployments = getDeployments();
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldAgentsMetadata["default"] | undefined;
+
+  if (!defaults) {
+    return null;
+  }
+
+  const handleSelectChange = (ids: string[]) => {
+    if (!ids.length || ids.every((id) => !id)) {
+      if (isExternallyManaged) {
+        externalSetValue([]);
+        return;
+      }
+  
+      store.updateConfig(actualAgentId, label, []);
+      return;
+    }
+
+    const newDefaults = ids.map((id) => {
+      const [agent_id, deploymentId] = id.split(":");
+      const deployment_url = deployments.find((d) => d.id === deploymentId)?.deploymentUrl;
+      if (!deployment_url) {
+        toast.error("Deployment not found");
+      }
+
+      return {
+        agent_id,
+        deployment_url,
+      }
+    })
+
+    if (isExternallyManaged) {
+      externalSetValue(newDefaults);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, label, newDefaults);
+  };
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      <AgentsCombobox
+        agents={agents}
+        value={defaults.map((defaultValue) => `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`)}
+        setValue={(v) => Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])}
+        multiple
+      />
+
+      <p className="text-xs text-gray-500">The agents to make available to this supervisor.</p>
     </div>
   );
 }

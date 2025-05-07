@@ -22,14 +22,6 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
-  if (!MCP_TOKENS) {
-    return new Response(
-      JSON.stringify({
-        message: "MCP_TOKENS environment variable is not set.",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
-  }
 
   // Extract the path after '/api/oap_mcp/'
   // Example: /api/oap_mcp/foo/bar -> /foo/bar
@@ -49,20 +41,22 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     }
   });
 
-  try {
-    const { access_token } = JSON.parse(MCP_TOKENS);
-    if (!access_token) {
-      throw new Error("MCP_TOKENS env variable is not set.");
+  if (MCP_TOKENS) {
+    try {
+      const { access_token } = JSON.parse(MCP_TOKENS);
+      if (!access_token) {
+        throw new Error("MCP_TOKENS env variable is not set.");
+      }
+      headers.set("Authorization", `Bearer ${access_token}`);
+    } catch (e) {
+      console.error("Failed to parse MCP_TOKENS env variable", e);
+      return new Response(
+        JSON.stringify({
+          message: "Failed to parse MCP_TOKENS env variable.",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
     }
-    headers.set("Authorization", `Bearer ${access_token}`);
-  } catch (e) {
-    console.error("Failed to parse MCP_TOKENS env variable", e);
-    return new Response(
-      JSON.stringify({
-        message: "Failed to parse MCP_TOKENS env variable.",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
   }
 
   // Determine body based on method

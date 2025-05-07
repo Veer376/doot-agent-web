@@ -24,5 +24,5 @@ export default function AuthLayout({
     );
   }
 
-  return <>{children}</>;
+  return children;
 }

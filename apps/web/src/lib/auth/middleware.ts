@@ -2,10 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const NO_AUTH_PATHS = [
+  "/debug-auth",
   "/signin",
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/api/auth",
 ];
 
 export async function updateSession(request: NextRequest) {
@@ -53,7 +55,16 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
   ) {
-    // no user, potentially respond by redirecting the user to the login page
+    // Check if this is an API request
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      // Return a JSON response with 401 Unauthorized status for API requests
+      return NextResponse.json(
+        { error: "Unauthorized", message: "Authentication required" },
+        { status: 401 },
+      );
+    }
+
+    // For non-API requests, redirect to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/signin";
     return NextResponse.redirect(url);

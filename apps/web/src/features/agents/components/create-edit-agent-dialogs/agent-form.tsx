@@ -7,12 +7,14 @@ import { Search } from "@/components/ui/tool-search";
 import { Button } from "@/components/ui/button";
 import {
   ConfigField,
+  ConfigFieldAgents,
   ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
@@ -47,6 +49,7 @@ interface AgentFieldsFormProps {
   setConfig: (config: Record<string, any>) => void;
   agentId: string;
   ragConfigurations: ConfigurableFieldRAGMetadata[];
+  agentsConfigurations: ConfigurableFieldAgentsMetadata[];
 }
 
 export function AgentFieldsForm({
@@ -60,6 +63,7 @@ export function AgentFieldsForm({
   setConfig,
   agentId,
   ragConfigurations,
+  agentsConfigurations,
 }: AgentFieldsFormProps) {
   const { tools, setTools, getTools, cursor, loading } = useMCPContext();
   const [loadingMore, setLoadingMore] = useState(false);
@@ -198,6 +202,28 @@ export function AgentFieldsForm({
               label={ragConfigurations[0].label}
               agentId={agentId}
               // TODO: Start supporting externally managed field.
+            />
+          </div>
+        </>
+      )}
+      {agentsConfigurations.length > 0 && (
+        <>
+          <Separator />
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <p className="text-lg font-semibold tracking-tight">
+              Supervisor Agents
+            </p>
+            <ConfigFieldAgents
+              id={agentsConfigurations[0].label}
+              label={agentsConfigurations[0].label}
+              agentId={agentId}
+              value={config[agentsConfigurations[0].label]}
+              setValue={(v) =>
+                setConfig({
+                  ...config,
+                  [agentsConfigurations[0].label]: v,
+                })
+              }
             />
           </div>
         </>

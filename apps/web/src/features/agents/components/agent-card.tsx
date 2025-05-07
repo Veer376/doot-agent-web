@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Brain, Cloud, Edit, MessageSquare, Wrench } from "lucide-react";
+import {
+  Bot,
+  Brain,
+  Cloud,
+  Edit,
+  MessageSquare,
+  User,
+  Wrench,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -43,10 +51,10 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
-            <CardTitle className="flex w-full items-center gap-2">
+            <CardTitle className="flex w-full flex-wrap items-center gap-2">
               <p>{_.startCase(agent.name)}</p>
               {showDeployment && selectedDeployment && (
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
@@ -94,6 +102,12 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             <Badge variant="brand">
               <Brain />
               RAG
+            </Badge>
+          )}
+          {agent.supportedConfigs?.includes("supervisor") && (
+            <Badge variant="brand">
+              <User />
+              Supervisor
             </Badge>
           )}
         </CardContent>

@@ -20,7 +20,7 @@ export interface ConfigurableFieldOption {
 /**
  * The UI configuration for a field in the configurable object.
  */
-export type ConfigurableFieldUIMetadata<V = unknown> = {
+export type ConfigurableFieldUIMetadata = {
   /**
    * The label of the field. This will be what is rendered in the UI.
    */
@@ -30,7 +30,7 @@ export type ConfigurableFieldUIMetadata<V = unknown> = {
    *
    * @default undefined
    */
-  default?: V;
+  default?: unknown;
   /**
    * The type of the field.
    * @default "text"
@@ -81,4 +81,14 @@ export type ConfigurableFieldRAGMetadata = {
   default?: {
     collections?: string[];
   };
+};
+
+export type ConfigurableFieldAgentsMetadata = {
+  label: string;
+  type: "agents";
+  default?: {
+    agent_id?: string;
+    deployment_url?: string;
+    name?: string;
+  }[];
 };

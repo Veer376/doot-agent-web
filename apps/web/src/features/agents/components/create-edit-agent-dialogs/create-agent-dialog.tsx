@@ -13,6 +13,7 @@ import {
   getConfigurableDefaults,
 } from "@/lib/ui-config";
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
@@ -54,6 +55,9 @@ export function CreateAgentDialog({
   >([]);
   const [ragConfigurations, setRagConfigurations] = useState<
     ConfigurableFieldRAGMetadata[]
+  >([]);
+  const [agentsConfigurations, setAgentsConfigurations] = useState<
+    ConfigurableFieldAgentsMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -104,7 +108,7 @@ export function CreateAgentDialog({
     getAgentConfigSchema(selectedGraph.assistant_id, selectedDeployment.id)
       .then((schemas) => {
         if (!schemas) return;
-        const { configFields, toolConfig, ragConfig } =
+        const { configFields, toolConfig, ragConfig, agentsConfig } =
           extractConfigurationsFromAgent({
             agent: selectedGraph,
             schema: schemas,
@@ -121,6 +125,7 @@ export function CreateAgentDialog({
           configFields,
           toolConfig,
           ragConfig,
+          agentsConfig,
         );
         setConfig(configurableDefaults);
 
@@ -131,6 +136,10 @@ export function CreateAgentDialog({
         if (ragConfig.length) {
           setDefaultConfig(`${agentId}:rag`, ragConfig);
           setRagConfigurations(ragConfig);
+        }
+        if (agentsConfig.length) {
+          setDefaultConfig(`${agentId}:agents`, agentsConfig);
+          setAgentsConfigurations(agentsConfig);
         }
       })
       .finally(() => setLoading(false));
@@ -240,6 +249,7 @@ export function CreateAgentDialog({
             setConfig={setConfig}
             agentId={selectedGraph.assistant_id}
             ragConfigurations={ragConfigurations}
+            agentsConfigurations={agentsConfigurations}
           />
         ) : null}
         <AlertDialogFooter>

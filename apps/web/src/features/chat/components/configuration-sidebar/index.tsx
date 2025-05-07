@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ConfigField,
+  ConfigFieldAgents,
   ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
@@ -15,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import {
+  ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldUIMetadata,
@@ -56,6 +58,9 @@ export const ConfigurationSidebar = forwardRef<
   const [ragConfigurations, setRagConfigurations] = useState<
     ConfigurableFieldRAGMetadata[]
   >([]);
+  const [agentsConfigurations, setAgentsConfigurations] = useState<
+    ConfigurableFieldAgentsMetadata[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
     useSearchTools(tools);
@@ -77,7 +82,7 @@ export const ConfigurationSidebar = forwardRef<
         const schema = await getAgentConfigSchema(agentId, deploymentId);
         if (!schema) return;
 
-        const { configFields, toolConfig, ragConfig } =
+        const { configFields, toolConfig, ragConfig, agentsConfig } =
           extractConfigurationsFromAgent({
             agent: a,
             schema,
@@ -98,6 +103,11 @@ export const ConfigurationSidebar = forwardRef<
           setDefaultConfig(`${agentId}:rag`, ragConfig);
           setRagConfigurations(ragConfig);
           setSupportedConfigs((prev) => [...prev, "rag"]);
+        }
+        if (agentsConfig.length) {
+          setDefaultConfig(`${agentId}:agents`, agentsConfig);
+          setAgentsConfigurations(agentsConfig);
+          setSupportedConfigs((prev) => [...prev, "supervisor"]);
         }
       })
       .catch((e) => {
@@ -184,6 +194,9 @@ export const ConfigurationSidebar = forwardRef<
               )}
               {supportedConfigs.includes("rag") && (
                 <TabsTrigger value="rag">RAG</TabsTrigger>
+              )}
+              {supportedConfigs.includes("supervisor") && (
+                <TabsTrigger value="supervisor">Supervisor Agents</TabsTrigger>
               )}
             </TabsList>
 
@@ -274,6 +287,23 @@ export const ConfigurationSidebar = forwardRef<
                       <ConfigFieldRAG
                         id={ragConfigurations[0].label}
                         label={ragConfigurations[0].label}
+                        agentId={agentId}
+                      />
+                    )}
+                  </ConfigSection>
+                </TabsContent>
+              )}
+
+              {supportedConfigs.includes("supervisor") && (
+                <TabsContent
+                  value="supervisor"
+                  className="m-0 overflow-y-auto p-4"
+                >
+                  <ConfigSection title="Supervisor Agents">
+                    {agentId && (
+                      <ConfigFieldAgents
+                        id={agentsConfigurations[0].label}
+                        label={agentsConfigurations[0].label}
                         agentId={agentId}
                       />
                     )}

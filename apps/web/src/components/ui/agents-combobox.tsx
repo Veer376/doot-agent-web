@@ -120,7 +120,7 @@ export function AgentsCombobox({
 }: AgentsComboboxProps) {
   // Filter out default agents
   const filteredAgents = React.useMemo(() => {
-    return agents.filter(agent => !isDefaultAssistant(agent));
+    return agents.filter((agent) => !isDefaultAssistant(agent));
   }, [agents]);
   const deployments = getDeployments();
 

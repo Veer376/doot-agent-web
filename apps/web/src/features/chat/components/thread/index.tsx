@@ -21,6 +21,8 @@ import { Switch } from "@/components/ui/switch";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
+import { createClient } from "@supabase/supabase-js";
+import { useAuthContext } from "@/providers/Auth";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -73,6 +75,8 @@ export function Thread() {
   );
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
+
+  const { session } = useAuthContext();
 
   const stream = useStreamContext();
   const messages = stream.messages;
@@ -148,8 +152,11 @@ export function Thread() {
           ],
         }),
         config: {
-          configurable: getAgentConfig(agentId),
+          configurable: getAgentConfig(agentId)
         },
+        metadata: {
+          supabaseAccessToken: session?.accessToken,
+        }
       },
     );
 

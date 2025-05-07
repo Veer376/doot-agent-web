@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Star as DefaultStar } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -55,10 +55,10 @@ export interface AgentsComboboxProps {
 }
 
 /**
- * Returns the selected agent's name or "Default agent" if the selected agent is the default assistant.
+ * Returns the selected agent's name
  * @param value The value of the selected agent.
  * @param agents The array of agents.
- * @returns The name of the selected agent or "Default agent".
+ * @returns The name of the selected agent.
  */
 const getSelectedAgentValue = (
   value: string,
@@ -72,9 +72,7 @@ const getSelectedAgentValue = (
   );
 
   if (selectedAgent) {
-    return isDefaultAssistant(selectedAgent)
-      ? `Default agent - ${selectedAgent.graph_id}`
-      : selectedAgent.name;
+    return selectedAgent.name;
   }
   return "";
 };
@@ -103,9 +101,7 @@ const getNameFromValue = (value: string, agents: Agent[]) => {
   );
 
   if (selectedAgent) {
-    return isDefaultAssistant(selectedAgent)
-      ? `Default agent - ${selectedAgent.graph_id}`
-      : selectedAgent.name;
+    return selectedAgent.name;
   }
   return "";
 };
@@ -122,6 +118,10 @@ export function AgentsCombobox({
   trigger,
   triggerAsChild,
 }: AgentsComboboxProps) {
+  // Filter out default agents
+  const filteredAgents = React.useMemo(() => {
+    return agents.filter((agent) => !isDefaultAssistant(agent));
+  }, [agents]);
   const deployments = getDeployments();
 
   // Convert value to array for internal handling
@@ -173,8 +173,8 @@ export function AgentsCombobox({
           >
             {selectedValues.length > 0
               ? multiple
-                ? getMultipleSelectedAgentValues(selectedValues, agents)
-                : getSelectedAgentValue(selectedValues[0], agents)
+                ? getMultipleSelectedAgentValues(selectedValues, filteredAgents)
+                : getSelectedAgentValue(selectedValues[0], filteredAgents)
               : placeholder}
             <ChevronsUpDown className="opacity-50" />
           </Button>
@@ -183,7 +183,7 @@ export function AgentsCombobox({
       <PopoverContent className="min-w-[200px] p-0">
         <Command
           filter={(value: string, search: string) => {
-            const name = getNameFromValue(value, agents);
+            const name = getNameFromValue(value, filteredAgents);
             if (!name) return 0;
             if (name.toLowerCase().includes(search.toLowerCase())) {
               return 1;
@@ -195,8 +195,8 @@ export function AgentsCombobox({
           <CommandList>
             <CommandEmpty>No agents found.</CommandEmpty>
             {deployments.map((deployment) => {
-              // Filter agents for the current deployment
-              const deploymentAgents = agents.filter(
+              // Filter agents for the current deployment (excluding default agents)
+              const deploymentAgents = filteredAgents.filter(
                 (agent) => agent.deploymentId === deployment.id,
               );
               // Group filtered agents by graph (still needed for sorting/grouping logic)
@@ -234,14 +234,9 @@ export function AgentsCombobox({
                           {/* Prepend Graph ID to the name for visual grouping */}
                           <p className="line-clamp-1 flex-1 truncate pr-2">
                             <span className="text-muted-foreground mr-2 text-xs">{`[${item.graph_id}]`}</span>
-                            {isDefaultAssistant(item)
-                              ? "Default agent"
-                              : item.name}
+                            {item.name}
                           </p>
                           <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                            {isDefaultAssistant(item) && (
-                              <DefaultStar className="opacity-100" />
-                            )}
                             <Check
                               className={cn(
                                 isSelected ? "opacity-100" : "opacity-0",

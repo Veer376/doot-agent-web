@@ -222,6 +222,7 @@ export function extractConfigurationsFromAgent({
             ? (configurable[agentsConfig.label] as {
                 agent_id?: string;
                 deployment_url?: string;
+                name?: string;
               }[])
             : Array.isArray(agentsConfig.default)
               ? agentsConfig.default

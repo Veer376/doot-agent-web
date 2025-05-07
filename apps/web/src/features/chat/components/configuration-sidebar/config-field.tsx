@@ -553,6 +553,7 @@ export function ConfigFieldAgents({
       return {
         agent_id,
         deployment_url,
+        name: agents.find((a) => a.assistant_id === agent_id)?.name,
       };
     });
 

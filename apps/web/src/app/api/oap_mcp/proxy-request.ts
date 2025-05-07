@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
 const NEXT_PUBLIC_MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
@@ -191,7 +190,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
         status: response.status,
         statusText: response.statusText,
       });
-    } catch (e) {
+    } catch (_) {
       // If not JSON, use the raw response body
       const responseBody = await response.text();
       newResponse = new NextResponse(responseBody, {

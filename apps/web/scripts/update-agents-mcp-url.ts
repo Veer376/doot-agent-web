@@ -17,7 +17,7 @@ async function main() {
   for await (const deployment of deployments) {
     const client = new Client({
       apiUrl: deployment.deploymentUrl,
-      apiKey: process.env.LANGCHAIN_API_KEY,
+      apiKey: process.env.LANGSMITH_API_KEY,
     });
 
     // Collect all agents using pagination

@@ -72,7 +72,7 @@ export const ConfigurationSidebar = forwardRef<
   });
 
   useEffect(() => {
-    if (!agentId || !deploymentId || loading) return;
+    if (!agentId || !deploymentId || loading || !agents.length) return;
 
     const selectedAgent = agents.find(
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
@@ -83,7 +83,7 @@ export const ConfigurationSidebar = forwardRef<
     }
 
     getSchemaAndUpdateConfig(selectedAgent);
-  }, [agentId, deploymentId]);
+  }, [agentId, deploymentId, agents]);
 
   const handleSave = async () => {
     if (!agentId || !deploymentId) return;

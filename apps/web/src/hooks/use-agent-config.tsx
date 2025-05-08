@@ -54,7 +54,9 @@ export function useAgentConfig() {
     setLoading(false);
   };
 
-  const getSchemaAndUpdateConfig = async (agent: Agent) => {
+  const getSchemaAndUpdateConfig = async (agent: Agent, args?: {
+    isCreate?: boolean;
+  }) => {
     clearState();
 
     setLoading(true);
@@ -97,8 +99,12 @@ export function useAgentConfig() {
         supportedConfigs.push("supervisor");
       }
 
-      setName(agent.name);
-      setDescription((agent.metadata?.description ?? "") as string);
+      if (!args?.isCreate) {
+        // Don't set name/description for create agents, since these are user specified fields.
+        setName(agent.name);
+        setDescription((agent.metadata?.description ?? "") as string);
+      }
+
       const configurableDefaults = getConfigurableDefaults(
         configFields,
         toolConfig,
@@ -113,6 +119,7 @@ export function useAgentConfig() {
   };
 
   return {
+    clearState,
     getSchemaAndUpdateConfig,
     configurations,
     setConfigurations,

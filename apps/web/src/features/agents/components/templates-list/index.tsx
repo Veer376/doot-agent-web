@@ -116,7 +116,7 @@ export function TemplatesList() {
 
       <CreateAgentDialog
         open={false}
-        onOpenChange={() => { }}
+        onOpenChange={() => {}}
       />
     </div>
   );

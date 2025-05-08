@@ -41,7 +41,11 @@ async function getSupabaseToken(req: NextRequest) {
   }
 }
 
-async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: string, oauthUrl: string) {
+async function getMcpAccessToken(
+  supabaseToken: string,
+  mcpServerUrl: string,
+  oauthUrl: string,
+) {
   try {
     // Exchange Supabase token for MCP access token
     const formData = new URLSearchParams();
@@ -51,10 +55,7 @@ async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: string, oa
       "grant_type",
       "urn:ietf:params:oauth:grant-type:token-exchange",
     );
-    formData.append(
-      "resource",
-      mcpServerUrl,
-    );
+    formData.append("resource", mcpServerUrl);
     formData.append(
       "subject_token_type",
       "urn:ietf:params:oauth:token-type:access_token",
@@ -144,7 +145,11 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // If no token yet, try Supabase-JWT token exchange
   if (!accessToken && supabaseToken && NEXT_PUBLIC_MCP_OAUTH_URL) {
-    accessToken = await getMcpAccessToken(supabaseToken, NEXT_PUBLIC_MCP_SERVER_URL, NEXT_PUBLIC_MCP_OAUTH_URL);
+    accessToken = await getMcpAccessToken(
+      supabaseToken,
+      NEXT_PUBLIC_MCP_SERVER_URL,
+      NEXT_PUBLIC_MCP_OAUTH_URL,
+    );
   }
 
   // If we still don't have a token, return an error

@@ -18,19 +18,19 @@ import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import _ from "lodash";
 import { isDefaultAssistant } from "@/lib/agent-utils";
 
-interface GraphCardProps {
+interface TemplateCardProps {
   deployment: Deployment;
   agents: Agent[];
   toggleGraph: (id: string) => void;
   isOpen: boolean;
 }
 
-export function GraphCard({
+export function TemplateCard({
   deployment,
   agents,
   toggleGraph,
   isOpen,
-}: GraphCardProps) {
+}: TemplateCardProps) {
   const graphId = agents[0].graph_id;
   const graphDeploymentId = `${deployment.id}:${graphId}`;
   const agentsCount = agents.filter(

@@ -4,19 +4,19 @@ import { useState, useEffect, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
-import { GraphCard } from "./graph-card";
+import { TemplateCard } from "./templates-card";
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
-import { GraphsLoading } from "./graphs-loading";
+import { TemplatesLoading } from "./templates-loading";
 import { GraphGroup } from "../../types";
 
-export function GraphList() {
+export function TemplatesList() {
   const { agents, loading: agentsLoading } = useAgentsContext();
   const deployments = getDeployments();
 
   const [searchQueryState, setSearchQueryState] = useState("");
-  const [openGraphsState, setOpenGraphsState] = useState<string[]>([]);
+  const [openTemplatesState, setOpenTemplatesState] = useState<string[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function GraphList() {
 
   const toggleGraphState = (deploymentId: string, graphId: string) => {
     const uniqueGraphKey = `${deploymentId}:${graphId}`;
-    setOpenGraphsState((prev) =>
+    setOpenTemplatesState((prev) =>
       prev.includes(uniqueGraphKey)
         ? prev.filter((key) => key !== uniqueGraphKey)
         : [...prev, uniqueGraphKey],
@@ -66,7 +66,7 @@ export function GraphList() {
   };
 
   if (!isMounted || agentsLoading) {
-    return <GraphsLoading />;
+    return <TemplatesLoading />;
   }
 
   return (
@@ -101,12 +101,12 @@ export function GraphList() {
             ({ agents: agentGroup, deployment, graphId }) => {
               const uniqueGraphKey = `${deployment.id}:${graphId}`;
               return (
-                <GraphCard
+                <TemplateCard
                   key={uniqueGraphKey}
                   agents={agentGroup}
                   deployment={deployment}
                   toggleGraph={() => toggleGraphState(deployment.id, graphId)}
-                  isOpen={openGraphsState.includes(uniqueGraphKey)}
+                  isOpen={openTemplatesState.includes(uniqueGraphKey)}
                 />
               );
             },

@@ -54,9 +54,12 @@ export function useAgentConfig() {
     setLoading(false);
   };
 
-  const getSchemaAndUpdateConfig = async (agent: Agent, args?: {
-    isCreate?: boolean;
-  }) => {
+  const getSchemaAndUpdateConfig = async (
+    agent: Agent,
+    args?: {
+      isCreate?: boolean;
+    },
+  ) => {
     clearState();
 
     setLoading(true);

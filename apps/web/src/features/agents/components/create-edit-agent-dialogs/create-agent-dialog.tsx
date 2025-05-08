@@ -88,7 +88,7 @@ export function CreateAgentDialog({
       return;
 
     getSchemaAndUpdateConfig(selectedGraph, {
-      isCreate: true
+      isCreate: true,
     });
   }, [selectedGraph, selectedDeployment, open]);
 
@@ -152,7 +152,7 @@ export function CreateAgentDialog({
       onOpenChange={(c) => {
         onOpenChange(c);
         if (!c) {
-          console.log("clearing state")
+          console.log("clearing state");
           clearState();
         }
       }}

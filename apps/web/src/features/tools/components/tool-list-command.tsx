@@ -95,7 +95,7 @@ export function ToolListCommand({
                     setLoadingMore(true);
                     try {
                       const moreTool = await getTools(cursor);
-                      setTools([...tools, ...moreTool]);
+                      setTools((prevTools) => [...prevTools, ...moreTool]);
                     } catch (error) {
                       console.error("Failed to load more tools:", error);
                     } finally {

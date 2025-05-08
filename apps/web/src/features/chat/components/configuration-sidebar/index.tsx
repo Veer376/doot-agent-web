@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, forwardRef, ForwardedRef, useMemo } from "react";
+import { useEffect, useState, forwardRef, ForwardedRef } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,7 +36,6 @@ import { useMCPContext } from "@/providers/MCP";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
-import { Tool } from "@/types/tool";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -64,8 +63,11 @@ export const ConfigurationSidebar = forwardRef<
     ConfigurableFieldAgentsMetadata[]
   >([]);
   const [loading, setLoading] = useState(false);
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
-    useSearchTools(tools);
+
+  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
+    useSearchTools(tools, {
+      preSelectedTools: toolConfigurations[0]?.default?.tools,
+    });
   const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
     tools,
     setTools,
@@ -76,40 +78,6 @@ export const ConfigurationSidebar = forwardRef<
   });
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
   const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
-
-  const displayTools = useMemo(() => {
-    // If no tool configurations, just return filtered tools
-    if (!toolConfigurations.length || !toolConfigurations[0]?.default?.tools) {
-      return filteredTools;
-    }
-
-    const preSelectedToolNames = new Set(
-      toolConfigurations[0].default.tools || [],
-    );
-    const processedTools = new Set<string>();
-    const result: Tool[] = [];
-
-    // First add all pre-selected tools that match the search term (if any)
-    filteredTools.forEach((tool) => {
-      if (
-        preSelectedToolNames.has(tool.name) &&
-        !processedTools.has(tool.name)
-      ) {
-        result.push(tool);
-        processedTools.add(tool.name);
-      }
-    });
-
-    // Then add all other tools that match the search term
-    filteredTools.forEach((tool) => {
-      if (!processedTools.has(tool.name)) {
-        result.push(tool);
-        processedTools.add(tool.name);
-      }
-    });
-
-    return result;
-  }, [filteredTools, toolConfigurations]);
 
   useEffect(() => {
     if (!agentId || !deploymentId || loading) return;

@@ -20,9 +20,7 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
-import { useMemo } from "react";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
-import { Tool } from "@/types/tool";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -68,8 +66,10 @@ export function AgentFieldsForm({
   agentsConfigurations,
 }: AgentFieldsFormProps) {
   const { tools, setTools, getTools, cursor, loading } = useMCPContext();
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
-    useSearchTools(tools);
+  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
+    useSearchTools(tools, {
+      preSelectedTools: toolConfigurations[0]?.default?.tools,
+    });
 
   const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
     tools,
@@ -79,40 +79,6 @@ export function AgentFieldsForm({
     toolConfigurations,
     searchTerm: toolSearchTerm,
   });
-
-  const displayTools = useMemo(() => {
-    // If no tool configurations, just return filtered tools
-    if (!toolConfigurations.length || !toolConfigurations[0]?.default?.tools) {
-      return filteredTools;
-    }
-
-    const preSelectedToolNames = new Set(
-      toolConfigurations[0].default.tools || [],
-    );
-    const processedTools = new Set<string>();
-    const result: Tool[] = [];
-
-    // First add all pre-selected tools that match the search term (if any)
-    filteredTools.forEach((tool) => {
-      if (
-        preSelectedToolNames.has(tool.name) &&
-        !processedTools.has(tool.name)
-      ) {
-        result.push(tool);
-        processedTools.add(tool.name);
-      }
-    });
-
-    // Then add all other tools that match the search term
-    filteredTools.forEach((tool) => {
-      if (!processedTools.has(tool.name)) {
-        result.push(tool);
-        processedTools.add(tool.name);
-      }
-    });
-
-    return result;
-  }, [filteredTools, toolConfigurations]);
 
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">

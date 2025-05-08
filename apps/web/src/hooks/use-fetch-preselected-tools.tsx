@@ -71,8 +71,10 @@ export function useFetchPreselectedTools({
         return; // All pre-selected tools exist, no need to fetch more
       }
 
-      if (!cursor) {
+      if (!cursor && tools.length > 0) {
         setFetchedAllPreSelectedTools(true);
+        return; // No more tools to fetch
+      } else if (!cursor && tools.length === 0) {
         return; // No more tools to fetch
       }
 

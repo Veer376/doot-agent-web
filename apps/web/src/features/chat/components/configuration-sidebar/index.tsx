@@ -77,34 +77,39 @@ export const ConfigurationSidebar = forwardRef<
   const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
   const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
 
-    const displayTools = useMemo(() => {
-      // If no tool configurations, just return filtered tools
-      if (!toolConfigurations.length || !toolConfigurations[0]?.default?.tools) {
-        return filteredTools;
+  const displayTools = useMemo(() => {
+    // If no tool configurations, just return filtered tools
+    if (!toolConfigurations.length || !toolConfigurations[0]?.default?.tools) {
+      return filteredTools;
+    }
+
+    const preSelectedToolNames = new Set(
+      toolConfigurations[0].default.tools || [],
+    );
+    const processedTools = new Set<string>();
+    const result: Tool[] = [];
+
+    // First add all pre-selected tools that match the search term (if any)
+    filteredTools.forEach((tool) => {
+      if (
+        preSelectedToolNames.has(tool.name) &&
+        !processedTools.has(tool.name)
+      ) {
+        result.push(tool);
+        processedTools.add(tool.name);
       }
-      
-      const preSelectedToolNames = new Set(toolConfigurations[0].default.tools || []);
-      const processedTools = new Set<string>();
-      const result: Tool[] = [];
-      
-      // First add all pre-selected tools that match the search term (if any)
-      filteredTools.forEach(tool => {
-        if (preSelectedToolNames.has(tool.name) && !processedTools.has(tool.name)) {
-          result.push(tool);
-          processedTools.add(tool.name);
-        }
-      });
-      
-      // Then add all other tools that match the search term
-      filteredTools.forEach(tool => {
-        if (!processedTools.has(tool.name)) {
-          result.push(tool);
-          processedTools.add(tool.name);
-        }
-      });
-      
-      return result;
-    }, [filteredTools, toolConfigurations]);
+    });
+
+    // Then add all other tools that match the search term
+    filteredTools.forEach((tool) => {
+      if (!processedTools.has(tool.name)) {
+        result.push(tool);
+        processedTools.add(tool.name);
+      }
+    });
+
+    return result;
+  }, [filteredTools, toolConfigurations]);
 
   useEffect(() => {
     if (!agentId || !deploymentId || loading) return;
@@ -283,7 +288,7 @@ export const ConfigurationSidebar = forwardRef<
                       onSearchChange={debouncedSetSearchTerm}
                       placeholder="Search tools..."
                     />
-                    <div className="flex-1 overflow-y-auto rounded-md space-y-4">
+                    <div className="flex-1 space-y-4 overflow-y-auto rounded-md">
                       {agentId &&
                         displayTools.length > 0 &&
                         displayTools.map((c, index) => (

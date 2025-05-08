@@ -9,20 +9,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { extractConfigurationsFromAgent } from "@/lib/ui-config";
-import {
-  ConfigurableFieldAgentsMetadata,
-  ConfigurableFieldMCPMetadata,
-  ConfigurableFieldRAGMetadata,
-  ConfigurableFieldUIMetadata,
-} from "@/types/configurable";
+import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -35,25 +28,24 @@ export function EditAgentDialog({
   open,
   onOpenChange,
 }: EditAgentDialogProps) {
-  const { getAgentConfigSchema, updateAgent, deleteAgent } = useAgents();
+  const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
-  const [configurations, setConfigurations] = useState<
-    ConfigurableFieldUIMetadata[]
-  >([]);
-  const [toolConfigurations, setToolConfigurations] = useState<
-    ConfigurableFieldMCPMetadata[]
-  >([]);
-  const [ragConfigurations, setRagConfigurations] = useState<
-    ConfigurableFieldRAGMetadata[]
-  >([]);
-  const [agentsConfigurations, setAgentsConfigurations] = useState<
-    ConfigurableFieldAgentsMetadata[]
-  >([]);
-
-  const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [config, setConfig] = useState<Record<string, any>>({});
+  const {
+    getSchemaAndUpdateConfig,
+    configurations,
+    setConfigurations,
+    toolConfigurations,
+    ragConfigurations,
+    agentsConfigurations,
+    config,
+    setConfig,
+    loading,
+    setLoading,
+    name,
+    setName,
+    description,
+    setDescription,
+  } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -65,43 +57,7 @@ export function EditAgentDialog({
     )
       return;
 
-    setLoading(true);
-    getAgentConfigSchema(agent.assistant_id, agent.deploymentId)
-      .then((schemas) => {
-        if (!schemas) return;
-        const { configFields, toolConfig, ragConfig, agentsConfig } =
-          extractConfigurationsFromAgent({
-            agent,
-            schema: schemas,
-          });
-
-        const agentId = agent.assistant_id;
-
-        setConfigurations(configFields);
-        setToolConfigurations(toolConfig);
-
-        // Set default config values based on configuration fields
-        const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(agentId, configFields);
-
-        if (toolConfig.length) {
-          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
-          setToolConfigurations(toolConfig);
-        }
-        if (ragConfig.length) {
-          setDefaultConfig(`${agentId}:rag`, ragConfig);
-          setRagConfigurations(ragConfig);
-        }
-        if (agentsConfig.length) {
-          setDefaultConfig(`${agentId}:agents`, agentsConfig);
-          setAgentsConfigurations(agentsConfig);
-        }
-
-        setName(agent.name);
-        setDescription((agent.metadata?.description ?? "") as string);
-        setConfig(agent.config?.configurable ?? {});
-      })
-      .finally(() => setLoading(false));
+    getSchemaAndUpdateConfig(agent);
   }, [agent, open]);
 
   const handleSubmit = async (

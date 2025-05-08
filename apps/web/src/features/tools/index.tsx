@@ -14,9 +14,11 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 function TotalToolsBadge({
   toolsCount,
   loading,
+  hasMore,
 }: {
   toolsCount: number;
   loading: boolean;
+  hasMore: boolean;
 }) {
   if (loading) {
     return (
@@ -29,7 +31,7 @@ function TotalToolsBadge({
   return (
     <span className="flex items-center gap-2">
       {" "}
-      - <Badge variant="outline">{toolsCount}</Badge>
+      - <Badge variant="outline">{toolsCount} {hasMore && "+"}</Badge>
     </span>
   );
 }
@@ -67,6 +69,7 @@ export default function ToolsInterface(): React.ReactNode {
             <TotalToolsBadge
               toolsCount={tools.length}
               loading={loading}
+              hasMore={!!cursor}
             />
           </p>
         </div>

@@ -124,8 +124,6 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           </Button>
           <NextLink
             href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
-            target="_blank"
-            rel="noopener noreferrer"
           >
             <Button size="sm">
               <MessageSquare className="mr-2 h-3.5 w-3.5" />

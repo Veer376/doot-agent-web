@@ -31,11 +31,11 @@ const data = {
       url: "/tools",
       icon: Wrench,
     },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
-    },
+    // {
+    //   title: "Inbox",
+    //   url: "/inbox",
+    //   icon: Inbox,
+    // },
     {
       title: "RAG",
       url: "/rag",

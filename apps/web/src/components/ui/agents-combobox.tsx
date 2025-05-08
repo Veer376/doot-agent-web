@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { getDeployments } from "@/lib/environment/deployments";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
+  agentsLoading: boolean;
   /**
    * The placeholder text to display when no value is selected.
    * @default "Select an agent..."
@@ -117,6 +118,7 @@ export function AgentsCombobox({
   className,
   trigger,
   triggerAsChild,
+  agentsLoading,
 }: AgentsComboboxProps) {
   // Filter out default agents
   const filteredAgents = React.useMemo(() => {
@@ -193,7 +195,16 @@ export function AgentsCombobox({
         >
           <CommandInput placeholder="Search agents..." />
           <CommandList>
-            <CommandEmpty>No agents found.</CommandEmpty>
+            <CommandEmpty>
+              {agentsLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="size-4 animate-spin" />
+                  Loading agents...
+                </span>
+              ) : (
+                "No agents found."
+              )}
+            </CommandEmpty>
             {deployments.map((deployment) => {
               // Filter agents for the current deployment (excluding default agents)
               const deploymentAgents = filteredAgents.filter(

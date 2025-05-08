@@ -515,7 +515,7 @@ export function ConfigFieldAgents({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:agents`;
 
-  const { agents } = useAgentsContext();
+  const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
 
   const isExternallyManaged = externalSetValue !== undefined;
@@ -569,6 +569,7 @@ export function ConfigFieldAgents({
     <div className={cn("w-full space-y-2", className)}>
       <AgentsCombobox
         agents={agents}
+        agentsLoading={loading}
         value={defaults.map(
           (defaultValue) =>
             `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`,

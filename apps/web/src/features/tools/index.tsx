@@ -31,7 +31,10 @@ function TotalToolsBadge({
   return (
     <span className="flex items-center gap-2">
       {" "}
-      - <Badge variant="outline">{toolsCount} {hasMore && "+"}</Badge>
+      -{" "}
+      <Badge variant="outline">
+        {toolsCount} {hasMore && "+"}
+      </Badge>
     </span>
   );
 }

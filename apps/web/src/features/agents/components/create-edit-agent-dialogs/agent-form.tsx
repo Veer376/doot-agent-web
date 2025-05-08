@@ -20,7 +20,9 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
+import { Tool } from "@/types/tool";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -66,9 +68,46 @@ export function AgentFieldsForm({
   agentsConfigurations,
 }: AgentFieldsFormProps) {
   const { tools, setTools, getTools, cursor, loading } = useMCPContext();
-  const [loadingMore, setLoadingMore] = useState(false);
   const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
     useSearchTools(tools);
+
+  const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
+    tools,
+    setTools,
+    getTools,
+    cursor,
+    toolConfigurations,
+    searchTerm: toolSearchTerm,
+  });
+  
+  const displayTools = useMemo(() => {
+    // If no tool configurations, just return filtered tools
+    if (!toolConfigurations.length || !toolConfigurations[0]?.default?.tools) {
+      return filteredTools;
+    }
+    
+    const preSelectedToolNames = new Set(toolConfigurations[0].default.tools || []);
+    const processedTools = new Set<string>();
+    const result: Tool[] = [];
+    
+    // First add all pre-selected tools that match the search term (if any)
+    filteredTools.forEach(tool => {
+      if (preSelectedToolNames.has(tool.name) && !processedTools.has(tool.name)) {
+        result.push(tool);
+        processedTools.add(tool.name);
+      }
+    });
+    
+    // Then add all other tools that match the search term
+    filteredTools.forEach(tool => {
+      if (!processedTools.has(tool.name)) {
+        result.push(tool);
+        processedTools.add(tool.name);
+      }
+    });
+    
+    return result;
+  }, [filteredTools, toolConfigurations]);
 
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">
@@ -137,26 +176,26 @@ export function AgentFieldsForm({
             />
             <div className="max-h-[500px] w-full flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
               {toolConfigurations[0]?.label
-                ? filteredTools.map((c, index) => (
-                    <ConfigFieldTool
-                      key={`${c.name}-${index}`}
-                      id={c.name}
-                      label={c.name}
-                      description={c.description}
-                      agentId={agentId}
-                      toolId={toolConfigurations[0].label}
-                      className="border-b-[1px] py-4"
-                      value={config[toolConfigurations[0].label]}
-                      setValue={(v) =>
-                        setConfig({
-                          ...config,
-                          [toolConfigurations[0].label]: v,
-                        })
-                      }
-                    />
-                  ))
+                ? displayTools.map((c) => (
+                  <ConfigFieldTool
+                    key={`tool-${c.name}`}
+                    id={c.name}
+                    label={c.name}
+                    description={c.description}
+                    agentId={agentId}
+                    toolId={toolConfigurations[0].label}
+                    className="border-b-[1px] py-4"
+                    value={config[toolConfigurations[0].label]}
+                    setValue={(v) =>
+                      setConfig({
+                        ...config,
+                        [toolConfigurations[0].label]: v,
+                      })
+                    }
+                  />
+                ))
                 : null}
-              {filteredTools.length === 0 && toolSearchTerm && (
+              {displayTools.length === 0 && toolSearchTerm && (
                 <p className="my-4 w-full text-center text-sm text-slate-500">
                   No tools found matching "{toolSearchTerm}".
                 </p>
@@ -172,10 +211,10 @@ export function AgentFieldsForm({
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      setLoadingMore(true);
                       try {
+                        setLoadingMore(true);
                         const moreTool = await getTools(cursor);
-                        setTools([...tools, ...moreTool]);
+                        setTools((prevTools) => [...prevTools, ...moreTool]);
                       } catch (error) {
                         console.error("Failed to load more tools:", error);
                       } finally {
@@ -201,7 +240,7 @@ export function AgentFieldsForm({
               id={ragConfigurations[0].label}
               label={ragConfigurations[0].label}
               agentId={agentId}
-              // TODO: Start supporting externally managed field.
+            // TODO: Start supporting externally managed field.
             />
           </div>
         </>

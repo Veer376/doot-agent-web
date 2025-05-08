@@ -8,16 +8,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import {
-  extractConfigurationsFromAgent,
-  getConfigurableDefaults,
-} from "@/lib/ui-config";
-import {
-  ConfigurableFieldAgentsMetadata,
-  ConfigurableFieldMCPMetadata,
-  ConfigurableFieldRAGMetadata,
-  ConfigurableFieldUIMetadata,
-} from "@/types/configurable";
 import { Bot, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -27,7 +17,7 @@ import { Deployment } from "@/types/deployment";
 import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { useAgentConfig } from "@/hooks/use-agent-config";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -45,24 +35,24 @@ export function CreateAgentDialog({
   onOpenChange,
 }: CreateAgentDialogProps) {
   const deployments = getDeployments();
-  const { getAgentConfigSchema, createAgent } = useAgents();
+  const { createAgent } = useAgents();
   const { refreshAgents, agents } = useAgentsContext();
-  const [configurations, setConfigurations] = useState<
-    ConfigurableFieldUIMetadata[]
-  >([]);
-  const [toolConfigurations, setToolConfigurations] = useState<
-    ConfigurableFieldMCPMetadata[]
-  >([]);
-  const [ragConfigurations, setRagConfigurations] = useState<
-    ConfigurableFieldRAGMetadata[]
-  >([]);
-  const [agentsConfigurations, setAgentsConfigurations] = useState<
-    ConfigurableFieldAgentsMetadata[]
-  >([]);
-  const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [config, setConfig] = useState<Record<string, any>>({});
+  const {
+    getSchemaAndUpdateConfig,
+    configurations,
+    setConfigurations,
+    toolConfigurations,
+    setToolConfigurations,
+    ragConfigurations,
+    agentsConfigurations,
+    config,
+    setConfig,
+    loading,
+    name,
+    setName,
+    description,
+    setDescription,
+  } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
   const [selectedDeployment, setSelectedDeployment] = useState<Deployment>();
   // Use the default agent as the selected graph.
@@ -98,51 +88,7 @@ export function CreateAgentDialog({
     )
       return;
 
-    if (configurations.length || toolConfigurations.length) {
-      // Clear before fetching new schemas
-      setConfigurations([]);
-      setToolConfigurations([]);
-    }
-
-    setLoading(true);
-    getAgentConfigSchema(selectedGraph.assistant_id, selectedDeployment.id)
-      .then((schemas) => {
-        if (!schemas) return;
-        const { configFields, toolConfig, ragConfig, agentsConfig } =
-          extractConfigurationsFromAgent({
-            agent: selectedGraph,
-            schema: schemas,
-          });
-        const agentId = selectedGraph.assistant_id;
-
-        setConfigurations(configFields);
-        setToolConfigurations(toolConfig);
-
-        // Set default config values based on configuration fields
-        const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(agentId, configFields);
-        const configurableDefaults = getConfigurableDefaults(
-          configFields,
-          toolConfig,
-          ragConfig,
-          agentsConfig,
-        );
-        setConfig(configurableDefaults);
-
-        if (toolConfig.length) {
-          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
-          setToolConfigurations(toolConfig);
-        }
-        if (ragConfig.length) {
-          setDefaultConfig(`${agentId}:rag`, ragConfig);
-          setRagConfigurations(ragConfig);
-        }
-        if (agentsConfig.length) {
-          setDefaultConfig(`${agentId}:agents`, agentsConfig);
-          setAgentsConfigurations(agentsConfig);
-        }
-      })
-      .finally(() => setLoading(false));
+    getSchemaAndUpdateConfig(selectedGraph);
   }, [selectedGraph, selectedDeployment, open]);
 
   const handleSubmit = async (

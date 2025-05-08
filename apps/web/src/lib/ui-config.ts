@@ -172,7 +172,7 @@ export function extractConfigurationsFromAgent({
   schema,
 }: {
   agent: Assistant;
-  schema: Record<string, any>;
+  schema: GraphSchema["config_schema"];
 }): ExtractedConfigs {
   const configFields = configSchemaToConfigurableFields(schema);
   const toolConfig = configSchemaToConfigurableTools(schema);

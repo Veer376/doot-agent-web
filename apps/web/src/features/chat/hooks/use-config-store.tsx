@@ -73,13 +73,6 @@ export const useConfigStore = create<ConfigState>()(
       },
 
       setDefaultConfig: (agentId, configurations) => {
-        const state = get();
-        // Only set default config if it hasn't been set for this agentId yet
-        if (state.configsByAgentId[agentId]?.__defaultValues) {
-          return; // Defaults already set, potentially overwritten by user, don't reset
-        }
-
-        // Create default config object from configurations
         const defaultConfig: Record<string, any> = {};
         configurations.forEach((config) => {
           if (config.default !== undefined) {
@@ -87,16 +80,12 @@ export const useConfigStore = create<ConfigState>()(
           }
         });
 
-        // Store the default values for reset
         defaultConfig.__defaultValues = { ...defaultConfig };
 
         set((currentState) => ({
           configsByAgentId: {
             ...currentState.configsByAgentId,
-            // Initialize with defaults if no config exists yet for this agent
-            [agentId]: currentState.configsByAgentId[agentId]
-              ? currentState.configsByAgentId[agentId] // Keep existing if user already interacted
-              : defaultConfig,
+            [agentId]: defaultConfig,
           },
         }));
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, forwardRef, ForwardedRef } from "react";
+import { useEffect, forwardRef, ForwardedRef } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,13 +15,6 @@ import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
-import {
-  ConfigurableFieldAgentsMetadata,
-  ConfigurableFieldMCPMetadata,
-  ConfigurableFieldRAGMetadata,
-  ConfigurableFieldUIMetadata,
-} from "@/types/configurable";
-import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";
 import {
@@ -36,6 +29,8 @@ import { useMCPContext } from "@/providers/MCP";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
+import { useAgentConfig } from "@/hooks/use-agent-config";
+import { useAgentsContext } from "@/providers/Agents";
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -50,19 +45,18 @@ export const ConfigurationSidebar = forwardRef<
   const { tools, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
-  const [configurations, setConfigurations] = useState<
-    ConfigurableFieldUIMetadata[]
-  >([]);
-  const [toolConfigurations, setToolConfigurations] = useState<
-    ConfigurableFieldMCPMetadata[]
-  >([]);
-  const [ragConfigurations, setRagConfigurations] = useState<
-    ConfigurableFieldRAGMetadata[]
-  >([]);
-  const [agentsConfigurations, setAgentsConfigurations] = useState<
-    ConfigurableFieldAgentsMetadata[]
-  >([]);
-  const [loading, setLoading] = useState(false);
+
+  const { agents } = useAgentsContext();
+  const {
+    getSchemaAndUpdateConfig,
+    configurations,
+    toolConfigurations,
+    ragConfigurations,
+    agentsConfigurations,
+    loading,
+    supportedConfigs,
+  } = useAgentConfig();
+  const { updateAgent } = useAgents();
 
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
     useSearchTools(tools, {
@@ -76,57 +70,19 @@ export const ConfigurationSidebar = forwardRef<
     toolConfigurations,
     searchTerm: toolSearchTerm,
   });
-  const { getAgentConfigSchema, getAgent, updateAgent } = useAgents();
-  const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
 
   useEffect(() => {
     if (!agentId || !deploymentId || loading) return;
 
-    setSupportedConfigs([]);
-    setLoading(true);
-    getAgent(agentId, deploymentId)
-      .then(async (a) => {
-        if (!a) {
-          toast.error("Failed to get agent");
-          return;
-        }
+    const selectedAgent = agents.find(
+      (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
+    );
+    if (!selectedAgent) {
+      toast.error("Failed to get agent");
+      return;
+    }
 
-        const schema = await getAgentConfigSchema(agentId, deploymentId);
-        if (!schema) return;
-
-        const { configFields, toolConfig, ragConfig, agentsConfig } =
-          extractConfigurationsFromAgent({
-            agent: a,
-            schema,
-          });
-
-        setConfigurations(configFields);
-
-        // Set default config values based on configuration fields
-        const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(agentId, configFields);
-
-        if (toolConfig.length) {
-          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
-          setToolConfigurations(toolConfig);
-          setSupportedConfigs((prev) => [...prev, "tools"]);
-        }
-        if (ragConfig.length) {
-          setDefaultConfig(`${agentId}:rag`, ragConfig);
-          setRagConfigurations(ragConfig);
-          setSupportedConfigs((prev) => [...prev, "rag"]);
-        }
-        if (agentsConfig.length) {
-          setDefaultConfig(`${agentId}:agents`, agentsConfig);
-          setAgentsConfigurations(agentsConfig);
-          setSupportedConfigs((prev) => [...prev, "supervisor"]);
-        }
-      })
-      .catch((e) => {
-        console.error("Failed to get agent", e);
-        toast.error("Failed to get agent");
-      })
-      .finally(() => setLoading(false));
+    getSchemaAndUpdateConfig(selectedAgent);
   }, [agentId, deploymentId]);
 
   const handleSave = async () => {

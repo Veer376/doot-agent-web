@@ -4,9 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 const NEXT_PUBLIC_MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
-// Token exchange endpoint
-const TOKEN_EXCHANGE_URL =
-  "https://api.bosslevel.dev/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/oauth/token";
+const NEXT_PUBLIC_MCP_OAUTH_URL = process.env.NEXT_PUBLIC_MCP_OAUTH_URL;
 
 async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,7 +41,7 @@ async function getSupabaseToken(req: NextRequest) {
   }
 }
 
-async function getMcpAccessToken(supabaseToken: string) {
+async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: string, oauthUrl: string) {
   try {
     // Exchange Supabase token for MCP access token
     const formData = new URLSearchParams();
@@ -55,14 +53,14 @@ async function getMcpAccessToken(supabaseToken: string) {
     );
     formData.append(
       "resource",
-      "https://api.bosslevel.dev/v1/mcps/ms_0ujsszwN8NRY24YaXiTIE2VWDTS/mcp",
+      mcpServerUrl,
     );
     formData.append(
       "subject_token_type",
       "urn:ietf:params:oauth:token-type:access_token",
     );
 
-    const tokenResponse = await fetch(TOKEN_EXCHANGE_URL, {
+    const tokenResponse = await fetch(oauthUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -145,8 +143,8 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   }
 
   // If no token yet, try Supabase-JWT token exchange
-  if (!accessToken && supabaseToken) {
-    accessToken = await getMcpAccessToken(supabaseToken);
+  if (!accessToken && supabaseToken && NEXT_PUBLIC_MCP_OAUTH_URL) {
+    accessToken = await getMcpAccessToken(supabaseToken, NEXT_PUBLIC_MCP_SERVER_URL, NEXT_PUBLIC_MCP_OAUTH_URL);
   }
 
   // If we still don't have a token, return an error
@@ -161,6 +159,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // Set the Authorization header with the token
   headers.set("Authorization", `Bearer ${accessToken}`);
+  headers.set("Accept", "application/json");
 
   // Determine body based on method
   let body: BodyInit | null | undefined = undefined;
@@ -170,13 +169,14 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   }
 
   try {
+    console.log("Target URL:", targetUrl);
     // Make the proxied request
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body,
     });
-
+    console.log("Response status:", response.status);
     // Clone the response to create a new one we can modify
     const responseClone = response.clone();
 

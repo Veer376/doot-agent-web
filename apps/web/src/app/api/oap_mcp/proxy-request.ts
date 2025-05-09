@@ -28,7 +28,7 @@ async function getSupabaseToken(req: NextRequest) {
 
     // Get the session which contains the access token
     const {
-      data: { session },  
+      data: { session },
     } = await supabase.auth.getSession();
     if (!session) {
       return null;

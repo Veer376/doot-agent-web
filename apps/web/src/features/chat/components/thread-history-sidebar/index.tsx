@@ -67,7 +67,11 @@ export const ThreadHistorySidebar = forwardRef<
   useEffect(() => {
     if (!agentId || !deploymentId || !session?.accessToken) return;
 
-    const getAgentThreads = async (_agentId: string, _deploymentId: string, accessToken: string) => {
+    const getAgentThreads = async (
+      _agentId: string,
+      _deploymentId: string,
+      accessToken: string,
+    ) => {
       setLoading(true);
 
       try {

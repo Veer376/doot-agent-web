@@ -21,7 +21,9 @@ import { Client } from "@langchain/langgraph-sdk";
 
 async function createDefaultAssistant(client: Client) {
   if (!process.env.NEXT_PUBLIC_DEFAULT_GRAPH_NAME) {
-    throw new Error("Default graph name not found. Please ensure the environment variable NEXT_PUBLIC_DEFAULT_GRAPH_NAME is set.")
+    throw new Error(
+      "Default graph name not found. Please ensure the environment variable NEXT_PUBLIC_DEFAULT_GRAPH_NAME is set.",
+    );
   }
   try {
     const assistant = await client.assistants.create({
@@ -132,11 +134,16 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
 
   useEffect(() => {
-    if (agents.length > 0 || firstRequestMade.current || !session?.accessToken) return;
+    if (agents.length > 0 || firstRequestMade.current || !session?.accessToken)
+      return;
 
     firstRequestMade.current = true;
     setLoading(true);
-    getAgents(deployments, session.accessToken, agentsState.getAgentConfigSchema)
+    getAgents(
+      deployments,
+      session.accessToken,
+      agentsState.getAgentConfigSchema,
+    )
       .then(setAgents)
       .finally(() => setLoading(false));
   }, [session?.accessToken]);

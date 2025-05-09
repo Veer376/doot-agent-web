@@ -11,7 +11,7 @@ export function createClient(deploymentId: string, accessToken: string) {
     defaultHeaders: {
       Authorization: `Bearer ${accessToken}`,
       "x-supabase-access-token": accessToken,
-    }
+    },
   });
   return client;
 }

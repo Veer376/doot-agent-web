@@ -72,7 +72,7 @@ const StreamSession = ({
     defaultHeaders: {
       Authorization: `Bearer ${session?.accessToken}`,
       "x-supabase-access-token": session?.accessToken,
-    }
+    },
   });
 
   return (

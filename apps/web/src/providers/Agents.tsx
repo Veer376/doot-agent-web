@@ -85,6 +85,10 @@ type AgentsContextType = {
    * Whether the agents list is currently loading.
    */
   loading: boolean;
+  /**
+   * Whether the agents list is currently loading.
+   */
+  refreshAgentsLoading: boolean;
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
@@ -96,6 +100,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   const [agents, setAgents] = useState<Agent[]>([]);
   const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
+  const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
 
   useEffect(() => {
     if (agents.length > 0 || firstRequestMade.current) return;
@@ -109,6 +114,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 
   async function refreshAgents() {
     try {
+      setRefreshAgentsLoading(true);
       const newAgents = await getAgents(
         deployments,
         agentsState.getAgentConfigSchema,
@@ -116,6 +122,8 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       setAgents(newAgents);
     } catch (e) {
       console.error("Failed to refresh agents", e);
+    } finally {
+      setRefreshAgentsLoading(false);
     }
   }
 
@@ -123,6 +131,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     agents,
     loading,
     refreshAgents,
+    refreshAgentsLoading,
   };
 
   return (

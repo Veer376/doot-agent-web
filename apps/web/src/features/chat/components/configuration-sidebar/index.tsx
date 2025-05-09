@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, forwardRef, ForwardedRef } from "react";
+import { useEffect, forwardRef, ForwardedRef, useState } from "react";
 import { Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,84 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { useAgentsContext } from "@/providers/Agents";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { isDefaultAssistant } from "@/lib/agent-utils";
+
+function NameAndDescriptionAlertDialog({
+  name,
+  setName,
+  description,
+  setDescription,
+  open,
+  setOpen,
+  handleSave,
+}: {
+  name: string;
+  setName: (name: string) => void;
+  description: string;
+  setDescription: (description: string) => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  handleSave: () => void;
+}) {
+  const handleSaveAgent = () => {
+    setOpen(false);
+    handleSave();
+  };
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={setOpen}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Agent Name and Description</AlertDialogTitle>
+          <AlertDialogDescription>
+            Please give your new agent a name and optional description.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              placeholder="Agent Name"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Input
+              placeholder="Agent Description"
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleSaveAgent}>
+            Submit
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export interface AIConfigPanelProps {
   className?: string;
@@ -45,8 +123,8 @@ export const ConfigurationSidebar = forwardRef<
   const { tools, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
-
-  const { agents } = useAgentsContext();
+  const [threadId] = useQueryState("threadId");
+  const { agents, refreshAgentsLoading } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
     configurations,
@@ -56,7 +134,14 @@ export const ConfigurationSidebar = forwardRef<
     loading,
     supportedConfigs,
   } = useAgentConfig();
-  const { updateAgent } = useAgents();
+  const { updateAgent, createAgent } = useAgents();
+
+  const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [
+    openNameAndDescriptionAlertDialog,
+    setOpenNameAndDescriptionAlertDialog,
+  ] = useState(false);
 
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
     useSearchTools(tools, {
@@ -72,21 +157,57 @@ export const ConfigurationSidebar = forwardRef<
   });
 
   useEffect(() => {
-    if (!agentId || !deploymentId || loading || !agents.length) return;
+    if (
+      !agentId ||
+      !deploymentId ||
+      loading ||
+      !agents?.length ||
+      refreshAgentsLoading
+    )
+      return;
 
     const selectedAgent = agents.find(
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
     );
     if (!selectedAgent) {
-      toast.error("Failed to get agent");
+      toast.error("Failed to get agent", { richColors: true });
       return;
     }
 
     getSchemaAndUpdateConfig(selectedAgent);
-  }, [agentId, deploymentId, agents]);
+  }, [agentId, deploymentId, agents, refreshAgentsLoading]);
 
   const handleSave = async () => {
-    if (!agentId || !deploymentId) return;
+    if (!agentId || !deploymentId || !agents?.length) return;
+    const selectedAgent = agents.find(
+      (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
+    );
+    if (!selectedAgent) {
+      toast.error("Failed to get agent", { richColors: true });
+      return;
+    }
+    if (isDefaultAssistant(selectedAgent) && !newName) {
+      setOpenNameAndDescriptionAlertDialog(true);
+      return;
+    } else if (isDefaultAssistant(selectedAgent) && newName) {
+      const newAgent = await createAgent(deploymentId, selectedAgent.graph_id, {
+        name: newName,
+        description: newDescription,
+        config: configsByAgentId[agentId],
+      });
+      if (!newAgent) {
+        toast.error("Failed to create agent", { richColors: true });
+        return;
+      }
+      // Reload the page, using the new assistant ID and deployment ID
+      const newQueryParams = new URLSearchParams({
+        agentId: newAgent.assistant_id,
+        deploymentId,
+        ...(threadId ? { threadId } : {}),
+      });
+      window.location.href = `/?${newQueryParams.toString()}`;
+      return;
+    }
 
     const updatedAgent = await updateAgent(agentId, deploymentId, {
       config: configsByAgentId[agentId],
@@ -312,6 +433,15 @@ export const ConfigurationSidebar = forwardRef<
           </Tabs>
         </div>
       )}
+      <NameAndDescriptionAlertDialog
+        name={newName}
+        setName={setNewName}
+        description={newDescription}
+        setDescription={setNewDescription}
+        open={openNameAndDescriptionAlertDialog}
+        setOpen={setOpenNameAndDescriptionAlertDialog}
+        handleSave={handleSave}
+      />
     </div>
   );
 });

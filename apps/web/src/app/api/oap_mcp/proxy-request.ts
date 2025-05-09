@@ -28,7 +28,7 @@ async function getSupabaseToken(req: NextRequest) {
 
     // Get the session which contains the access token
     const {
-      data: { session },
+      data: { session },  
     } = await supabase.auth.getSession();
     if (!session) {
       return null;
@@ -174,14 +174,12 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   }
 
   try {
-    console.log("Target URL:", targetUrl);
     // Make the proxied request
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body,
     });
-    console.log("Response status:", response.status);
     // Clone the response to create a new one we can modify
     const responseClone = response.clone();
 

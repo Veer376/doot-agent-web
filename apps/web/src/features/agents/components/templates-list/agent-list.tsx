@@ -27,7 +27,6 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
 
   const filteredAgents = agents.filter(
     (agent) =>
-      !isDefaultAssistant(agent) &&
       agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 

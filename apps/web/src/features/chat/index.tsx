@@ -21,24 +21,27 @@ export default function ChatInterface(): React.ReactNode {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      
+
       // Check if the click is on a portal element (dialog, select menu, etc.)
       // Common portal containers have these class names or data attributes
-      const isPortalElement = (
+      const isPortalElement =
         document.querySelector('[role="dialog"]')?.contains(target) ||
         document.querySelector('[role="listbox"]')?.contains(target) ||
-        document.querySelector('.cm-tooltip')?.contains(target) ||
-        document.querySelector('.popover')?.contains(target) ||
-        document.querySelector('.dropdown')?.contains(target) ||
-        document.querySelector('[data-radix-popper-content-wrapper]')?.contains(target) ||
+        document.querySelector(".cm-tooltip")?.contains(target) ||
+        document.querySelector(".popover")?.contains(target) ||
+        document.querySelector(".dropdown")?.contains(target) ||
+        document
+          .querySelector("[data-radix-popper-content-wrapper]")
+          ?.contains(target) ||
         // Alert components
         document.querySelector('[role="alertdialog"]')?.contains(target) ||
-        document.querySelector('.alert')?.contains(target) ||
-        document.querySelector('.alert-dialog')?.contains(target) ||
-        document.querySelector('.alert-dialog-content')?.contains(target) ||
-        Array.from(document.querySelectorAll('[class*="alert"]')).some(el => el.contains(target))
-      );
-      
+        document.querySelector(".alert")?.contains(target) ||
+        document.querySelector(".alert-dialog")?.contains(target) ||
+        document.querySelector(".alert-dialog-content")?.contains(target) ||
+        Array.from(document.querySelectorAll('[class*="alert"]')).some((el) =>
+          el.contains(target),
+        );
+
       // If the click is on a portal element, don't close the sidebar
       if (isPortalElement) {
         return;

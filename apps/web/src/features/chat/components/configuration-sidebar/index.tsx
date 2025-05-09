@@ -39,7 +39,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isDefaultAssistant } from "@/lib/agent-utils";
@@ -61,13 +61,15 @@ function NameAndDescriptionAlertDialog({
   setOpen: (open: boolean) => void;
   handleSave: () => void;
 }) {
-
   const handleSaveAgent = () => {
     setOpen(false);
     handleSave();
-  }
+  };
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={setOpen}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Agent Name and Description</AlertDialogTitle>
@@ -97,11 +99,13 @@ function NameAndDescriptionAlertDialog({
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSaveAgent}>Submit</AlertDialogAction>
+          <AlertDialogAction onClick={handleSaveAgent}>
+            Submit
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
 
 export interface AIConfigPanelProps {
@@ -134,7 +138,10 @@ export const ConfigurationSidebar = forwardRef<
 
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [openNameAndDescriptionAlertDialog, setOpenNameAndDescriptionAlertDialog] = useState(false);
+  const [
+    openNameAndDescriptionAlertDialog,
+    setOpenNameAndDescriptionAlertDialog,
+  ] = useState(false);
 
   useEffect(() => {
     if (!agentId || !deploymentId || loading || !agents?.length) return;
@@ -174,10 +181,12 @@ export const ConfigurationSidebar = forwardRef<
       }
       await setAgentId(newAgent.assistant_id);
       await resetToDefaultConfig(selectedAgent);
-      setNewName("")
-      setNewDescription("")
+      setNewName("");
+      setNewDescription("");
       setOpenNameAndDescriptionAlertDialog(false);
-      toast.success("Agent configuration saved successfully", { richColors: true });
+      toast.success("Agent configuration saved successfully", {
+        richColors: true,
+      });
       return;
     }
 

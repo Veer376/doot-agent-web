@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
 import {
@@ -83,7 +89,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     if (defaultAgent) {
       setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
     }
-  }, [agents])
+  }, [agents]);
 
   const handleValueChange = (v: string) => {
     setValue(v);

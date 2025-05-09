@@ -42,10 +42,6 @@ async function main() {
       }
     }
 
-    console.log(
-      `Found ${allAgents.length} agents for deployment ${deployment.id}`,
-    );
-
     const agentsUpdatePromise = allAgents.map(async (agent) => {
       // First get the agent schema. We need this to verify this agent has support
       // for MCP servers

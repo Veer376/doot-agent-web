@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useState } from "react";
+import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
 import {
@@ -14,6 +14,7 @@ import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -73,6 +74,16 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (value || !agents.length) {
+      return;
+    }
+    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    if (defaultAgent) {
+      setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
+    }
+  }, [agents])
 
   const handleValueChange = (v: string) => {
     setValue(v);

@@ -7,6 +7,10 @@ import {
 import { useState } from "react";
 import { useAgents } from "./use-agents";
 import {
+  configSchemaToAgentsConfig,
+  configSchemaToConfigurableFields,
+  configSchemaToConfigurableTools,
+  configSchemaToRagConfig,
   extractConfigurationsFromAgent,
   getConfigurableDefaults,
 } from "@/lib/ui-config";
@@ -112,7 +116,49 @@ export function useAgentConfig() {
     }
   };
 
+  const resetToDefaultConfig = async (agent: Agent) => {
+    const schema = await getAgentConfigSchema(
+      agent.assistant_id,
+      agent.deploymentId,
+    );
+    if (!schema) return;
+
+    const agentId = agent.assistant_id;
+
+    const configFields = configSchemaToConfigurableFields(schema);
+    const toolConfig = configSchemaToConfigurableTools(schema);
+    const ragConfig = configSchemaToRagConfig(schema);
+    const agentsConfig = configSchemaToAgentsConfig(schema);
+    const { setDefaultConfig } = useConfigStore.getState();
+    setDefaultConfig(agentId, configFields);
+
+    const supportedConfigs: string[] = [];
+
+    if (toolConfig.length) {
+      setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
+      setToolConfigurations(toolConfig);
+      supportedConfigs.push("tools");
+    }
+    if (ragConfig) {
+      setDefaultConfig(`${agentId}:rag`, [ragConfig]);
+      setRagConfigurations([ragConfig]);
+      supportedConfigs.push("rag");
+    }
+    if (agentsConfig) {
+      setDefaultConfig(`${agentId}:agents`, [agentsConfig]);
+      setAgentsConfigurations([agentsConfig]);
+    }
+    const configurableDefaults = getConfigurableDefaults(
+      configFields,
+      toolConfig,
+      ragConfig ? [ragConfig] : [],
+      agentsConfig ? [agentsConfig] : [],
+    );
+    setConfig(configurableDefaults);
+  };
+
   return {
+    resetToDefaultConfig,
     getSchemaAndUpdateConfig,
     configurations,
     setConfigurations,

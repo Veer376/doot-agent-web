@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { Agent } from "@/types/agent";
 import {
   groupAgentsByGraphs,
   isDefaultAssistant,
+  isUserSpecifiedDefaultAgent,
   sortAgentGroup,
 } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -72,7 +73,15 @@ const getSelectedAgentValue = (
   );
 
   if (selectedAgent) {
-    return selectedAgent.name;
+    return (<span className="flex items-center justify-between w-full">
+      {selectedAgent.name}
+      {isDefaultAssistant(selectedAgent) && (
+                              <span className="flex text-muted-foreground gap-2 text-xs items-center ml-auto">
+                                <Star />
+                                <p>Default</p>
+                              </span>
+                            )}
+      </span>);
   }
   return "";
 };
@@ -120,7 +129,7 @@ export function AgentsCombobox({
 }: AgentsComboboxProps) {
   // Filter out default agents
   const filteredAgents = React.useMemo(() => {
-    return agents.filter((agent) => !isDefaultAssistant(agent));
+    return agents.filter((agent) => !isDefaultAssistant(agent) || isUserSpecifiedDefaultAgent(agent));
   }, [agents]);
   const deployments = getDeployments();
 
@@ -231,12 +240,19 @@ export function AgentsCombobox({
                           onSelect={handleSelect}
                           className="flex w-full items-center justify-between"
                         >
+                          
                           {/* Prepend Graph ID to the name for visual grouping */}
                           <p className="line-clamp-1 flex-1 truncate pr-2">
                             <span className="text-muted-foreground mr-2 text-xs">{`[${item.graph_id}]`}</span>
                             {item.name}
                           </p>
                           <div className="flex flex-shrink-0 items-center justify-end gap-2">
+                            {isDefaultAssistant(item) && (
+                              <span className="flex text-muted-foreground gap-2 text-xs items-center">
+                                <Star />
+                                <p>Default</p>
+                              </span>
+                            )}
                             <Check
                               className={cn(
                                 isSelected ? "opacity-100" : "opacity-0",

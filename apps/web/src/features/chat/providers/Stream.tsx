@@ -75,7 +75,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { agents } = useAgentsContext();
+  const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [value, setValue] = useState("");
@@ -126,6 +126,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           <div className="mt-4 mb-24 flex items-center justify-center gap-4">
             <AgentsCombobox
               agents={agents}
+              agentsLoading={loading}
               value={value}
               setValue={(v) =>
                 Array.isArray(v)

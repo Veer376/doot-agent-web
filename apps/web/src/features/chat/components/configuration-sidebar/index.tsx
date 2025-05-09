@@ -85,6 +85,7 @@ function NameAndDescriptionAlertDialog({
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              autoFocus
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -119,9 +120,10 @@ export const ConfigurationSidebar = forwardRef<
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
   const { tools } = useMCPContext();
-  const [agentId, setAgentId] = useQueryState("agentId");
+  const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
-  const { agents } = useAgentsContext();
+  const [threadId] = useQueryState("threadId");
+  const { agents, refreshAgentsLoading } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
     configurations,
@@ -130,7 +132,6 @@ export const ConfigurationSidebar = forwardRef<
     agentsConfigurations,
     loading,
     supportedConfigs,
-    resetToDefaultConfig,
   } = useAgentConfig();
   const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
     useSearchTools(tools);
@@ -144,7 +145,14 @@ export const ConfigurationSidebar = forwardRef<
   ] = useState(false);
 
   useEffect(() => {
-    if (!agentId || !deploymentId || loading || !agents?.length) return;
+    if (
+      !agentId ||
+      !deploymentId ||
+      loading ||
+      !agents?.length ||
+      refreshAgentsLoading
+    )
+      return;
 
     const selectedAgent = agents.find(
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
@@ -179,14 +187,13 @@ export const ConfigurationSidebar = forwardRef<
         toast.error("Failed to create agent", { richColors: true });
         return;
       }
-      await setAgentId(newAgent.assistant_id);
-      await resetToDefaultConfig(selectedAgent);
-      setNewName("");
-      setNewDescription("");
-      setOpenNameAndDescriptionAlertDialog(false);
-      toast.success("Agent configuration saved successfully", {
-        richColors: true,
+      // Reload the page, using the new assistant ID and deployment ID
+      const newQueryParams = new URLSearchParams({
+        agentId: newAgent.assistant_id,
+        deploymentId,
+        ...(threadId ? { threadId } : {}),
       });
+      window.location.href = `/?${newQueryParams.toString()}`;
       return;
     }
 

@@ -107,10 +107,10 @@ export function AgentDashboard() {
             onValueChange={setGraphFilter}
           >
             <SelectTrigger className="h-9 w-[180px]">
-              <SelectValue placeholder="All Graphs" />
+              <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Graphs</SelectItem>
+              <SelectItem value="all">All Templates</SelectItem>
               {allGraphGroups.map((graph) => (
                 <SelectItem
                   key={`${graph.deployment.id}:${graph.graphId}`}

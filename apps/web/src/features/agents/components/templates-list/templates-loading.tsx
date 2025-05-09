@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function GraphsLoading() {
+export function TemplatesLoading() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-9 w-full" />

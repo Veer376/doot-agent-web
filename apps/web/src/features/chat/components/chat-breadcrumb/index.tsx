@@ -34,7 +34,7 @@ const getNewAgentLabel = (
 };
 
 function SelectedAgentSelect() {
-  const { agents } = useAgentsContext();
+  const { agents, loading } = useAgentsContext();
 
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
@@ -83,6 +83,7 @@ function SelectedAgentSelect() {
         <BreadcrumbPage className="flex items-center justify-center gap-2">
           <AgentsCombobox
             agents={agents}
+            agentsLoading={loading}
             value={value}
             setValue={(v) =>
               Array.isArray(v) ? handleValueChange(v[0]) : handleValueChange(v)

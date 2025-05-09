@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Star, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { Agent } from "@/types/agent";
 import {
   groupAgentsByGraphs,
   isDefaultAssistant,
+  isUserSpecifiedDefaultAgent,
   sortAgentGroup,
 } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -73,7 +74,17 @@ const getSelectedAgentValue = (
   );
 
   if (selectedAgent) {
-    return selectedAgent.name;
+    return (
+      <span className="flex w-full items-center justify-between">
+        {selectedAgent.name}
+        {isDefaultAssistant(selectedAgent) && (
+          <span className="text-muted-foreground ml-auto flex items-center gap-2 text-xs">
+            <Star />
+            <p>Default</p>
+          </span>
+        )}
+      </span>
+    );
   }
   return "";
 };
@@ -122,7 +133,10 @@ export function AgentsCombobox({
 }: AgentsComboboxProps) {
   // Filter out default agents
   const filteredAgents = React.useMemo(() => {
-    return agents.filter((agent) => !isDefaultAssistant(agent));
+    return agents.filter(
+      (agent) =>
+        !isDefaultAssistant(agent) || isUserSpecifiedDefaultAgent(agent),
+    );
   }, [agents]);
   const deployments = getDeployments();
 
@@ -248,6 +262,12 @@ export function AgentsCombobox({
                             {item.name}
                           </p>
                           <div className="flex flex-shrink-0 items-center justify-end gap-2">
+                            {isDefaultAssistant(item) && (
+                              <span className="text-muted-foreground flex items-center gap-2 text-xs">
+                                <Star />
+                                <p>Default</p>
+                              </span>
+                            )}
                             <Check
                               className={cn(
                                 isSelected ? "opacity-100" : "opacity-0",

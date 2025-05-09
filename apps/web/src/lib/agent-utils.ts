@@ -9,6 +9,15 @@ export function isDefaultAssistant(agent: Agent): boolean {
   return agent.metadata?.created_by === "system";
 }
 
+export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
+  const defaultGraphId = process.env.NEXT_PUBLIC_DEFAULT_GRAPH_ID;
+  if (!defaultGraphId) {
+    return false;
+  }
+  // The default agent is the default assistant on the graph specified by the user via env var
+  return isDefaultAssistant(agent) && agent.assistant_id === defaultGraphId;
+}
+
 /**
  * Sorts an array of agents within a group.
  * The default agent comes first, followed by others sorted by `updated_at` descending.

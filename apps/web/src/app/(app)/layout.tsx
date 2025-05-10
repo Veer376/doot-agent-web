@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="fixed top-0 right-0 left-0 z-50 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
+        <div className="fixed top-0 right-0 left-0 z-10 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
           You're currently using the demo application. To use your own agents,
           and run in production, check out the{" "}
           <a

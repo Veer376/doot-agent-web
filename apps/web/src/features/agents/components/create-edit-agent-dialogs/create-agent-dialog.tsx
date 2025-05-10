@@ -152,7 +152,6 @@ export function CreateAgentDialog({
       onOpenChange={(c) => {
         onOpenChange(c);
         if (!c) {
-          console.log("clearing state");
           clearState();
         }
       }}

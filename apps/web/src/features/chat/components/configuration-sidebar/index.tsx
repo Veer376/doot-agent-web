@@ -170,7 +170,7 @@ export const ConfigurationSidebar = forwardRef<
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
     );
     if (!selectedAgent) {
-      toast.error("Failed to get agent", { richColors: true });
+      toast.error("Failed to get agent config.", { richColors: true });
       return;
     }
 
@@ -183,7 +183,10 @@ export const ConfigurationSidebar = forwardRef<
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
     );
     if (!selectedAgent) {
-      toast.error("Failed to get agent", { richColors: true });
+      toast.error("Failed to save config.", {
+        richColors: true,
+        description: "Unable to find selected agent.",
+      });
       return;
     }
     if (isDefaultAssistant(selectedAgent) && !newName) {

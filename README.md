@@ -124,7 +124,417 @@ OAP is built on top of LangGraph Platform, which means all agents which you buil
 
 ## Configuration
 
-To allow your agent to be configurable in OAP, you must set custom configuration metadata on your agent's configurable fields.
+To allow your agent to be configurable in OAP, you must set custom configuration metadata on your agent's configurable fields. There are currently three types of configurable fields:
+
+1. **General Agent Config:** This consists of general configration settings like the model name, system prompt, temperature, etc. These are where essentially all of your custom configurable fields should go.
+2. **MCP Tools Config:** This is the config which defines the MCP server and tools to give your agent access to.
+3. **RAG Config:** This is the config which defines the RAG server, and collection name to give your agent access to.
+
+> [!TIP]
+> This section assumes you have a basic understanding of configirable fields in LangGraph. If you do not, read the LangGraph documentation ([Python](https://langchain-ai.github.io/langgraph/how-tos/graph-api/#add-runtime-configuration), [TypeScript](https://langchain-ai.github.io/langgraphjs/how-tos/configuration/)) for more information.
+
+### General Agent Config
+
+By default, Open Agent Platform will show *all* fields listed in your configurable object as configurable in the UI. Each field will be configurable via a simple text input. To add more complex configurable field types (e.g boolean, dropdown, slider, etc), you should add a `x_lg_ui_config` object to `metadata` on the field. Inside this object is where you define the custom UI config for that specific field. The available options are:
+
+```typescript
+export type ConfigurableFieldUIType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "boolean"
+  | "slider"
+  | "select"
+  | "json";
+
+/**
+ * The type interface for options in a select field.
+ */
+export interface ConfigurableFieldOption {
+  label: string;
+  value: string;
+}
+
+/**
+ * The UI configuration for a field in the configurable object.
+ */
+export type ConfigurableFieldUIMetadata = {
+  /**
+   * The label of the field. This will be what is rendered in the UI.
+   */
+  label: string;
+  /**
+   * The default value to render in the UI component.
+   *
+   * @default undefined
+   */
+  default?: unknown;
+  /**
+   * The type of the field.
+   * @default "text"
+   */
+  type?: ConfigurableFieldUIType;
+  /**
+   * The description of the field. This will be rendered below the UI component.
+   */
+  description?: string;
+  /**
+   * The placeholder of the field. This will be rendered inside the UI component.
+   * This is only applicable for text, textarea, number, json, and select fields.
+   */
+  placeholder?: string;
+  /**
+   * The options of the field. These will be the options rendered in the select UI component.
+   * This is only applicable for select fields.
+   */
+  options?: ConfigurableFieldOption[];
+  /**
+   * The minimum value of the field.
+   * This is only applicable for number fields.
+   */
+  min?: number;
+  /**
+   * The maximum value of the field.
+   * This is only applicable for number fields.
+   */
+  max?: number;
+  /**
+   * The step value of the field. E.g if using a slider, where you want
+   * people to be able to increment by 0.1, you would set this field to 0.1
+   * This is only applicable for number fields.
+   */
+  step?: number;
+};
+```
+
+In the examples below, we'll look at how to add configurable fields for `model_name`, `system_prompt`, `max_tokens`, and `temperature`, in both Python and TypeScript graphs. The same principals apply to any configurable field (which is not for MCP tools, or RAG).
+
+#### Python
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class GraphConfigPydantic(BaseModel):
+    model_name: Optional[str] = Field(
+        default="anthropic:claude-3-7-sonnet-latest",
+        metadata={
+            "x_lg_ui_config": {
+                "type": "select",
+                "default": "anthropic:claude-3-7-sonnet-latest",
+                "description": "The model to use in all generations",
+                "options": [
+                    {
+                        "label": "Claude 3.7 Sonnet",
+                        "value": "anthropic:claude-3-7-sonnet-latest",
+                    },
+                    {
+                        "label": "Claude 3.5 Sonnet",
+                        "value": "anthropic:claude-3-5-sonnet-latest",
+                    },
+                    {"label": "GPT 4o", "value": "openai:gpt-4o"},
+                    {"label": "GPT 4o mini", "value": "openai:gpt-4o-mini"},
+                    {"label": "GPT 4.1", "value": "openai:gpt-4.1"},
+                ],
+            }
+        }
+    )
+    temperature: Optional[float] = Field(
+        default=0.7,
+        metadata={
+            "x_lg_ui_config": {
+                "type": "slider",
+                "default": 0.7,
+                "min": 0,
+                "max": 2,
+                "step": 0.1,
+                "description": "Controls randomness (0 = deterministic, 2 = creative)",
+            }
+        }
+    )
+    max_tokens: Optional[int] = Field(
+        default=4000,
+        metadata={
+            "x_lg_ui_config": {
+                "type": "number",
+                "default": 4000,
+                "min": 1,
+                "description": "The maximum number of tokens to generate",
+            }
+        }
+    )
+    system_prompt: Optional[str] = Field(
+        default=None,
+        metadata={
+            "x_lg_ui_config": {
+                "type": "textarea",
+                "placeholder": "Enter a system prompt...",
+                "description": "The system prompt to use in all generations",
+            }
+        }
+    )
+
+# ENSURE YOU PASS THE GRAPH CONFIGURABLE SCHEMA TO THE StateGraph:
+workflow = StateGraph(State, config_schema=GraphConfigPydantic)
+```
+
+#### TypeScript
+
+> [!TIP]
+> In order for the Open Agent Platform to recognize & render your UI fields, your configuration object must be defined using the LangGraph Zod schema.
+
+```typescript
+import "@langchain/langgraph/zod";
+import { z } from "zod";
+
+export const GraphConfiguration = z.object({
+  /**
+   * The model ID to use for the reflection generation.
+   * Should be in the format `provider/model_name`.
+   * Defaults to `anthropic/claude-3-7-sonnet-latest`.
+   */
+  modelName: z
+    .string()
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        type: "select",
+        default: "anthropic/claude-3-7-sonnet-latest",
+        description: "The model to use in all generations",
+        options: [
+          {
+            label: "Claude 3.7 Sonnet",
+            value: "anthropic/claude-3-7-sonnet-latest",
+          },
+          {
+            label: "Claude 3.5 Sonnet",
+            value: "anthropic/claude-3-5-sonnet-latest",
+          },
+          {
+            label: "GPT 4o",
+            value: "openai/gpt-4o",
+          },
+          {
+            label: "GPT 4.1",
+            value: "openai/gpt-4.1",
+          },
+          {
+            label: "o3",
+            value: "openai/o3",
+          },
+          {
+            label: "o3 mini",
+            value: "openai/o3-mini",
+          },
+          {
+            label: "o4",
+            value: "openai/o4",
+          },
+        ],
+      },
+    }),
+  /**
+   * The temperature to use for the reflection generation.
+   * Defaults to `0.7`.
+   */
+  temperature: z
+    .number()
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        type: "slider",
+        default: 0.7,
+        min: 0,
+        max: 2,
+        step: 0.1,
+        description: "Controls randomness (0 = deterministic, 2 = creative)",
+      },
+    }),
+  /**
+   * The maximum number of tokens to generate.
+   * Defaults to `1000`.
+   */
+  maxTokens: z
+    .number()
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        type: "number",
+        default: 4000,
+        min: 1,
+        description: "The maximum number of tokens to generate",
+      },
+    }),
+  systemPrompt: z
+    .string()
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        type: "textarea",
+        placeholder: "Enter a system prompt...",
+        description: "The system prompt to use in all generations",
+      },
+    }),
+});
+
+// ENSURE YOU PASS THE GRAPH CONFIGURABLE SCHEMA TO THE StateGraph:
+const workflow = new StateGraph(MyStateSchema, GraphConfiguration)
+```
+
+### MCP Tools Config
+
+To enable support for MCP tools in your agents with Open Agent Platform, you must add a field in your configurable fields with the type `mcp`. This field can have *any* key you want, but the value must be an object with these two keys:
+
+- `url`: The URL of the MCP server.
+- `tools`: An array of tool names to give your agent access to.
+
+#### Python
+
+In Python, this looks like:
+
+```python
+class MCPConfig(BaseModel):
+    url: Optional[str] = Field(
+        default=None,
+        optional=True,
+    )
+    """The URL of the MCP server"""
+    tools: Optional[List[str]] = Field(
+        default=None,
+        optional=True,
+    )
+    """The tools to make available to the LLM"""
+
+
+class GraphConfigPydantic(BaseModel):
+    # The key (in this case it's `mcp_config`)
+    # can be any value you want.
+    mcp_config: Optional[MCPConfig] = Field(
+        default=None,
+        metadata={
+            "x_lg_ui_config": {
+                # Ensure the type is `mcp`
+                "type": "mcp",
+                # Here is where you would set the default tools.
+                # "default": {
+                #     "tools": ["Math_Divide", "Math_Mod"]
+                # }
+            }
+        }
+    )
+```
+
+#### TypeScript
+
+And in TypeScript, this looks like:
+
+```typescript
+export const MCPConfig = z.object({
+  /**
+   * The MCP server URL.
+   */
+  url: z.string(),
+  /**
+   * The list of tools to provide to the LLM.
+   */
+  tools: z.array(z.string()),
+});
+
+export const GraphConfiguration = z.object({
+  /**
+   * MCP configuration for tool selection. The key (in this case it's `mcpConfig`)
+   * can be any value you want.
+   */
+  mcpConfig: z
+    .lazy(() => MCPConfig)
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        // Ensure the type is `mcp`
+        type: "mcp",
+        // Add custom tools to default to here:
+        // default: {
+        //   tools: ["Math_Divide", "Math_Mod"]
+        // }
+      },
+    }),
+});
+```
+
+### RAG Config
+
+To enable support for using a LangConnect RAG server in your LangGraph agent, you must define a configurable field similar to the MCP config, but with its own unique type of `rag`, and the following fields in the object:
+
+- `rag_url`: The URL of the LangConnect RAG server.
+- `collection`: A string, containing the name of the collection to give your agent access to.
+
+#### Python
+
+In Python, this looks like:
+
+```python
+class RagConfig(BaseModel):
+    rag_url: Optional[str] = None
+    """The URL of the rag server"""
+    collection: Optional[str] = None
+    """The collection to use for rag"""
+
+
+class GraphConfigPydantic(BaseModel):
+    # Once again, the key (in this case it's `rag`)
+    # can be any value you want.
+    rag: Optional[RagConfig] = Field(
+        default=None,
+        optional=True,
+        metadata={
+            "x_lg_ui_config": {
+                # Ensure the type is `rag`
+                "type": "rag",
+                # Here is where you would set the default collection.
+                # "default": {
+                #     "collections": ["python", "langgraph docs"]
+                # }
+            }
+        }
+    )
+```
+
+#### TypeScript
+
+And in TypeScript, this looks like:
+
+```typescript
+export const RAGConfig = z.object({
+  /**
+   * The LangConnect RAG server URL.
+   */
+  rag_url: z.string(),
+  /**
+   * The collection to use for RAG.
+   */
+  collection: z.string(),
+});
+
+export const GraphConfiguration = z.object({
+  /**
+   * LangConnect RAG configuration. The key (in this case it's `rag`)
+   * can be any value you want.
+   */
+  rag: z
+    .lazy(() => RAGConfig)
+    .optional()
+    .langgraph.metadata({
+      x_lg_ui_config: {
+        // Ensure the type is `rag`
+        type: "rag",
+        // Add custom tools to default to here:
+        // default: {
+        //   tools: ["langgraph_python_docs", "langgraph_typescript_docs"]
+        // }
+      },
+    }),
+});
+```
 
 # Concepts/FAQ
 

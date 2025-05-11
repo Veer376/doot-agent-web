@@ -22,6 +22,7 @@ import { useState } from "react";
 import { CollectionsList } from "../collections-list";
 import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CollectionsCardProps {
   collections: Collection[];
@@ -51,10 +52,11 @@ export function CollectionsCard({
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
-  
+
   // Character limit for description
   const DESCRIPTION_MAX_LENGTH = 850;
-  const isDescriptionTooLong = newCollectionDescription.length > DESCRIPTION_MAX_LENGTH;
+  const isDescriptionTooLong =
+    newCollectionDescription.length > DESCRIPTION_MAX_LENGTH;
 
   // State for pagination
   const [collectionsCurrentPage, setCollectionsCurrentPage] = useState(1);
@@ -164,7 +166,7 @@ export function CollectionsCard({
                   className="col-span-3"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-4 items-start gap-4">
                 <Label
                   htmlFor="collection-description"
                   className="text-right"
@@ -172,24 +174,30 @@ export function CollectionsCard({
                   Description
                 </Label>
                 <div className="col-span-3 space-y-2">
-                  <Input
+                  <Textarea
                     id="collection-description"
                     value={newCollectionDescription}
-                    onChange={(e) => setNewCollectionDescription(e.target.value)}
+                    onChange={(e) =>
+                      setNewCollectionDescription(e.target.value)
+                    }
                   />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {newCollectionDescription.length}/{DESCRIPTION_MAX_LENGTH} characters
+                  <div className="text-muted-foreground text-right text-xs">
+                    {newCollectionDescription.length}/{DESCRIPTION_MAX_LENGTH}{" "}
+                    characters
                   </div>
-                  {isDescriptionTooLong && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Description exceeds the maximum length of {DESCRIPTION_MAX_LENGTH} characters.
-                      </AlertDescription>
-                    </Alert>
-                  )}
                 </div>
               </div>
+              {isDescriptionTooLong && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Description exceeds the maximum length of{" "}
+                      {DESCRIPTION_MAX_LENGTH} characters.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button

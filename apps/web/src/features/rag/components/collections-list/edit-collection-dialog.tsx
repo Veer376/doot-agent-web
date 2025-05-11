@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collection } from "@/types/collection";
 import { Edit, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 export function EditCollectionDialog({
   collection,
@@ -29,7 +30,7 @@ export function EditCollectionDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(
-    collection.metadata.description || ""
+    collection.metadata.description || "",
   );
 
   const DESCRIPTION_MAX_LENGTH = 850;
@@ -88,7 +89,7 @@ export function EditCollectionDialog({
               className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-4 items-start gap-4">
             <Label
               htmlFor="collection-description"
               className="text-right"
@@ -96,24 +97,27 @@ export function EditCollectionDialog({
               Description
             </Label>
             <div className="col-span-3 space-y-2">
-              <Input
+              <Textarea
                 id="collection-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
-              <div className="text-xs text-muted-foreground text-right">
+              <div className="text-muted-foreground text-right text-xs">
                 {description.length}/{DESCRIPTION_MAX_LENGTH} characters
               </div>
-              {isDescriptionTooLong && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Description exceeds the maximum length of {DESCRIPTION_MAX_LENGTH} characters.
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
           </div>
+          {isDescriptionTooLong && (
+            <div className="mt-2">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Description exceeds the maximum length of{" "}
+                  {DESCRIPTION_MAX_LENGTH} characters.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button

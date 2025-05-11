@@ -538,11 +538,28 @@ export const GraphConfiguration = z.object({
 
 # Concepts/FAQ
 
-Add concepts here.
+## Concepts
 
-What is an agent?
-Do I need a backend
-Can I build my own agents?
-Can I use non-supabase auth?
-Can I use non-langgraph agents?
-Can I use
+### Agents
+
+An agent is a custom configuration on-top of an existing LangGraph graph. This is the same concept as an `assistant`, in the LangGraph API.
+
+## FAQ
+
+### Do I need a backend server?
+
+OAP does not require a standalone backend server to be running in order for the web app to work. As long as you've added deployments from LangGraph Platform to your instance, it should work as expected!
+
+However, if you want to use the RAG features, you will need to have the LangConnect server running on its own. This is because the LangConnect RAG server is intended to be hosted independently from your LangGraph deployments. See the [LangConnect docs](https://github.com/langchain-ai/langconnect/blob/main/README.md) for more information.
+
+### How can I build my own agents?
+
+Yes! See the [Building Your Own Agents](#building-your-own-agents) section for more information.
+
+### How can I use non-supabase auth?
+
+Yes! It requires some modifications to be made to the code, but we've implemented authentication in a way which makes it easy to swap out with any other authentication provider. 
+
+### How can I use non-langgraph agents?
+
+No. All agents you intend to use with OAP must be LangGraph agents, deployed on LangGraph Platform.

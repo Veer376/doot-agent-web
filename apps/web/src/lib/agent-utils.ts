@@ -1,4 +1,5 @@
 import { Agent } from "@/types/agent";
+import { getDeployments } from "./environment/deployments";
 
 /**
  * Checks if an agent is the system-defined default assistant.
@@ -6,16 +7,20 @@ import { Agent } from "@/types/agent";
  * @returns True if the agent is the default, false otherwise.
  */
 export function isDefaultAssistant(agent: Agent): boolean {
-  return agent.metadata?.created_by === "system";
+  return agent.metadata?._x_oap_is_default === true;
 }
 
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
-  const defaultGraphId = process.env.NEXT_PUBLIC_DEFAULT_GRAPH_ID;
-  if (!defaultGraphId) {
+  const deployments = getDeployments();
+  const defaultDeployment = deployments.find((d) => d.isDefault);
+  if (!defaultDeployment) {
     return false;
   }
-  // The default agent is the default assistant on the graph specified by the user via env var
-  return isDefaultAssistant(agent) && agent.assistant_id === defaultGraphId;
+  return (
+    isDefaultAssistant(agent) &&
+    agent.graph_id === defaultDeployment.defaultGraphId &&
+    agent.deploymentId === defaultDeployment.id
+  );
 }
 
 /**

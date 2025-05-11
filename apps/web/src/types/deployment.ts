@@ -17,4 +17,12 @@ export interface Deployment {
    * A custom name for the deployment. This is a custom field the user sets.
    */
   name: string;
+  /**
+   * Whether this deployment is the default deployment.
+   */
+  isDefault?: boolean;
+  /**
+   * The ID of the default graph for this deployment.
+   */
+  defaultGraphId?: string;
 }

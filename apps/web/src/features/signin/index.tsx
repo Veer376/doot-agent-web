@@ -90,31 +90,19 @@ export default function SigninInterface() {
     }
   };
 
-  // TODO: Drop underscore prefix once Google support is added.
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const { error } = await signInWithGoogle();
-
-      if (error) {
-        setError(error.message);
-      } else {
-        // Show success message for Google sign-in too
-        setIsSuccess(true);
-
-        // Set a timer to show manual redirect button after 5 seconds
-        setTimeout(() => {
-          setShowManualRedirect(true);
-        }, 5000);
-      }
-    } catch (err) {
-      console.error("Google sign in error:", err);
-      setError("An error occurred while signing in with Google.");
-    } finally {
+    const { error } = await signInWithGoogle();
+    if (error) {
       setIsLoading(false);
+      setError(error.message);
+
+      return;
     }
+
+    // keep isLoading: true, as we're doing a redirect
   };
 
   return (

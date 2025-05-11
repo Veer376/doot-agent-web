@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const NEXT_PUBLIC_MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
-const NEXT_PUBLIC_MCP_OAUTH_URL = process.env.NEXT_PUBLIC_MCP_OAUTH_URL;
+const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 
 async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,9 +42,11 @@ async function getSupabaseToken(req: NextRequest) {
 
 async function getMcpAccessToken(
   supabaseToken: string,
-  mcpServerUrl: string,
-  oauthUrl: string,
+  mcpServerUrl: URL,
 ) {
+  const mcpUrl = `${mcpServerUrl.href}/mcp`;
+  const mcpOauthUrl = `${mcpServerUrl.href}/oauth/token`;
+
   try {
     // Exchange Supabase token for MCP access token
     const formData = new URLSearchParams();
@@ -55,13 +56,13 @@ async function getMcpAccessToken(
       "grant_type",
       "urn:ietf:params:oauth:grant-type:token-exchange",
     );
-    formData.append("resource", mcpServerUrl);
+    formData.append("resource", mcpUrl);
     formData.append(
       "subject_token_type",
       "urn:ietf:params:oauth:token-type:access_token",
     );
 
-    const tokenResponse = await fetch(oauthUrl, {
+    const tokenResponse = await fetch(mcpOauthUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -90,10 +91,10 @@ async function getMcpAccessToken(
  * @returns The response from the MCP server.
  */
 export async function proxyRequest(req: NextRequest): Promise<Response> {
-  if (!NEXT_PUBLIC_MCP_SERVER_URL) {
+  if (!MCP_SERVER_URL) {
     return new Response(
       JSON.stringify({
-        message: "NEXT_PUBLIC_MCP_SERVER_URL environment variable is not set.",
+        message: "MCP_SERVER_URL environment variable is not set. Please set it to the URL of your MCP server, or NEXT_PUBLIC_MCP_SERVER_URL if you do not want to use the proxy route.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
@@ -105,7 +106,9 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
 
   // Construct the target URL
-  const targetUrl = `${NEXT_PUBLIC_MCP_SERVER_URL}${path}${url.search}`;
+  const targetUrlObj = new URL(MCP_SERVER_URL);
+  targetUrlObj.pathname = `${targetUrlObj.pathname}/mcp${path}${url.search}`;
+  const targetUrl = targetUrlObj.toString();
 
   const supabaseToken = await getSupabaseToken(req);
 
@@ -144,11 +147,10 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   }
 
   // If no token yet, try Supabase-JWT token exchange
-  if (!accessToken && supabaseToken && NEXT_PUBLIC_MCP_OAUTH_URL) {
+  if (!accessToken && supabaseToken && MCP_SERVER_URL) {
     accessToken = await getMcpAccessToken(
       supabaseToken,
-      NEXT_PUBLIC_MCP_SERVER_URL,
-      NEXT_PUBLIC_MCP_OAUTH_URL,
+      new URL(MCP_SERVER_URL),
     );
   }
 

@@ -22,7 +22,7 @@ export interface Deployment {
    */
   isDefault?: boolean;
   /**
-   * The ID of the default graph for this deployment.
+   * The ID of the primary graph for this deployment.
    */
-  defaultGraphId?: string;
+  primaryGraphId: string;
 }

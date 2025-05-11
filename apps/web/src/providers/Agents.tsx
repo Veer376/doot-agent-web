@@ -19,14 +19,14 @@ import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
 import { Client } from "@langchain/langgraph-sdk";
 
-async function createDefaultAssistant(client: Client, graphId: string) {
+async function createDefaultAssistant(client: Client, graphId: string, isDefault?: boolean) {
   try {
     const assistant = await client.assistants.create({
       graphId,
-      name: "Default Assistant",
+      name: `${isDefault ? "Default" : "Primary"} Assistant`,
       metadata: {
-        description: "Default Assistant",
-        _x_oap_is_default: true,
+        description: `${isDefault ? "Default" : "Primary"}  Assistant`,
+        ...(isDefault && { _x_oap_is_default: true })
       },
     });
     return assistant;
@@ -53,22 +53,19 @@ async function getAgents(
         limit: 100,
       });
       if (
-        !assistants.length &&
-        deployment.isDefault &&
-        deployment.defaultGraphId
+        !assistants.length
       ) {
         const defaultAssistant = await createDefaultAssistant(
           client,
-          deployment.defaultGraphId,
+          deployment.primaryGraphId,
+          deployment.isDefault,
         );
         if (!defaultAssistant) {
           return [];
         }
         assistants.push(defaultAssistant);
-      } else if (!assistants.length) {
-        // No assistants, and this deployment is not the default deployment.
-        return [];
       }
+
       const defaultAssistant =
         assistants.find((a) => isDefaultAssistant(a as Agent)) ?? assistants[0];
       const schema = await getAgentConfigSchema(

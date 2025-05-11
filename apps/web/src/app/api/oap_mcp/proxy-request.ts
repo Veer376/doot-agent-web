@@ -40,10 +40,7 @@ async function getSupabaseToken(req: NextRequest) {
   }
 }
 
-async function getMcpAccessToken(
-  supabaseToken: string,
-  mcpServerUrl: URL,
-) {
+async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: URL) {
   const mcpUrl = `${mcpServerUrl.href}/mcp`;
   const mcpOauthUrl = `${mcpServerUrl.href}/oauth/token`;
 
@@ -94,7 +91,8 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   if (!MCP_SERVER_URL) {
     return new Response(
       JSON.stringify({
-        message: "MCP_SERVER_URL environment variable is not set. Please set it to the URL of your MCP server, or NEXT_PUBLIC_MCP_SERVER_URL if you do not want to use the proxy route.",
+        message:
+          "MCP_SERVER_URL environment variable is not set. Please set it to the URL of your MCP server, or NEXT_PUBLIC_MCP_SERVER_URL if you do not want to use the proxy route.",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );

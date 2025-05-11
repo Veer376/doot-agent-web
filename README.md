@@ -29,6 +29,8 @@ Once deployed, you can connect them to your instance of Open Agent Platform by s
   "tenantId": "The tenant ID of your LangSmith account. For locally running LangGraph servers, this can be any UUID.",
   "deploymentUrl": "The API URL to your deployment",
   "name": "A custom name for your deployment",
+  "isDefault": "Set to true if this is the default deployment. Only one deployment can be set as the default. Optional field",
+  "defaultGraphId": "The ID of the default graph to use for this deployment. Optional field"
 }
 ```
 
@@ -41,10 +43,6 @@ The following is an example of what this variable would look like for a single, 
 ```bash
 NEXT_PUBLIC_DEPLOYMENTS=[{"id":"bf63dc89-1de7-4a65-8336-af9ecda479d6","deploymentUrl":"http://localhost:2024","tenantId":"42d732b3-1324-4226-9fe9-513044dceb58","name":"Local deployment"}]
 ```
-
-After setting your deployments, you must set a default graph ID. We recommend this is set to the graph ID of the tools agent, since it will be used as the default agent when calling tools, and your RAG server (both of which are supported by our Tools Agent).
-
-This should be set under the `NEXT_PUBLIC_DEFAULT_GRAPH_ID` environment variable.
 
 ## Authentication
 

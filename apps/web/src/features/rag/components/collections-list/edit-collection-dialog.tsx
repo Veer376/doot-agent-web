@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collection } from "@/types/collection";
-import { Edit } from "lucide-react";
+import { Edit, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export function EditCollectionDialog({
@@ -28,8 +29,11 @@ export function EditCollectionDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(
-    collection.metadata.description,
+    collection.metadata.description || ""
   );
+
+  const DESCRIPTION_MAX_LENGTH = 850;
+  const isDescriptionTooLong = description.length > DESCRIPTION_MAX_LENGTH;
 
   const hasChanges =
     name !== collection.name || description !== collection.metadata.description;
@@ -91,18 +95,30 @@ export function EditCollectionDialog({
             >
               Description
             </Label>
-            <Input
-              id="collection-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
-            />
+            <div className="col-span-3 space-y-2">
+              <Input
+                id="collection-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <div className="text-xs text-muted-foreground text-right">
+                {description.length}/{DESCRIPTION_MAX_LENGTH} characters
+              </div>
+              {isDescriptionTooLong && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Description exceeds the maximum length of {DESCRIPTION_MAX_LENGTH} characters.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>
           <Button
             onClick={handleSubmit}
-            disabled={!hasChanges}
+            disabled={!hasChanges || isDescriptionTooLong}
           >
             Save Changes
           </Button>

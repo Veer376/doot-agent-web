@@ -4,6 +4,7 @@ import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderPlus } from "lucide-react";
+import { FolderPlus, AlertCircle } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import type { Collection } from "@/types/collection";
 import { useState } from "react";
@@ -50,6 +51,10 @@ export function CollectionsCard({
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
+  
+  // Character limit for description
+  const DESCRIPTION_MAX_LENGTH = 850;
+  const isDescriptionTooLong = newCollectionDescription.length > DESCRIPTION_MAX_LENGTH;
 
   // State for pagination
   const [collectionsCurrentPage, setCollectionsCurrentPage] = useState(1);
@@ -166,18 +171,30 @@ export function CollectionsCard({
                 >
                   Description
                 </Label>
-                <Input
-                  id="collection-description"
-                  value={newCollectionDescription}
-                  onChange={(e) => setNewCollectionDescription(e.target.value)}
-                  className="col-span-3"
-                />
+                <div className="col-span-3 space-y-2">
+                  <Input
+                    id="collection-description"
+                    value={newCollectionDescription}
+                    onChange={(e) => setNewCollectionDescription(e.target.value)}
+                  />
+                  <div className="text-xs text-muted-foreground text-right">
+                    {newCollectionDescription.length}/{DESCRIPTION_MAX_LENGTH} characters
+                  </div>
+                  {isDescriptionTooLong && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Description exceeds the maximum length of {DESCRIPTION_MAX_LENGTH} characters.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
               </div>
             </div>
             <DialogFooter>
               <Button
                 onClick={handleCreateCollection}
-                disabled={!newCollectionName.trim()}
+                disabled={!newCollectionName.trim() || isDescriptionTooLong}
               >
                 Create
               </Button>

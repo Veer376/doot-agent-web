@@ -177,7 +177,7 @@ export function AgentsCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-[200px] justify-between"
+            className="min-w-[200px] justify-between"
           >
             {selectedValues.length > 0
               ? multiple

@@ -5,6 +5,7 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
+import { toast } from "sonner";
 
 function getUiConfig(
   value: unknown,
@@ -99,11 +100,21 @@ export function configSchemaToConfigurableTools(
       continue;
     }
 
+    if (!process.env.NEXT_PUBLIC_MCP_SERVER_URL) {
+      toast.error("Can not configure MCP tool without MCP server URL", {
+        richColors: true,
+      });
+      continue;
+    }
+
+    const mcpServerUrlObj = new URL(process.env.NEXT_PUBLIC_MCP_SERVER_URL);
+    mcpServerUrlObj.pathname = `${mcpServerUrlObj.pathname}/mcp`;
+
     fields.push({
       label: key,
       type: uiConfig.type,
       default: {
-        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        url: mcpServerUrlObj.href,
         tools: [],
         ...(uiConfig.default ?? {}),
       },

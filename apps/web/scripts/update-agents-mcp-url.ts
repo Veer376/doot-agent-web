@@ -9,10 +9,13 @@ import {
 async function main() {
   const deployments = getDeployments();
 
-  const newMCPUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-  if (!newMCPUrl) {
+  const newMCPUrlStr = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
+  if (!newMCPUrlStr) {
     throw new Error("MCP URL env variable is not set");
   }
+
+  const newMCPUrl = new URL(newMCPUrlStr);
+  newMCPUrl.pathname = `${newMCPUrl.pathname}/mcp`;
 
   for await (const deployment of deployments) {
     const client = new Client({
@@ -58,7 +61,7 @@ async function main() {
         return;
       }
       const mcpConfigDefaultUrl = agentConfigs.toolConfig[0].default?.url;
-      if (newMCPUrl === mcpConfigDefaultUrl) {
+      if (newMCPUrl.href === mcpConfigDefaultUrl) {
         // Agent already has latest MCP URL, skip
         return;
       }
@@ -76,7 +79,7 @@ async function main() {
             // Ensure we only update the MCP config field.
             [agentConfigs.toolConfig[0].label]: {
               ...agentConfigs.toolConfig[0].default,
-              url: newMCPUrl,
+              url: newMCPUrl.href,
             },
           },
         },

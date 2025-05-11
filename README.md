@@ -78,7 +78,7 @@ This will cause all requests made to your web client to first pass through a pro
 
 ### RAG Authentication
 
-Authencating to your LangConnect RAG server from the web client is handled in a similar way to LangGraph authentication. We pass the Supabase JWT in the `Authorization` header of the request. Then, inside the LangConnect RAG server, we extract this token and verify it's valid with Supabase. If it is, we receive back a user ID, which is used to verify each user is *only* able to access their own collections. We do not currently support sharing collections between users. If this is something you are interested in, please reach out to me, either on [X (Twitter)](https://x.com/bracesproul), or email: `brace@langchain.dev`
+Authenticating to your LangConnect RAG server from the web client is handled in a similar way to LangGraph authentication. We pass the Supabase JWT in the `Authorization` header of the request. Then, inside the LangConnect RAG server, we extract this token and verify it's valid with Supabase. If it is, we receive back a user ID, which is used to verify each user is *only* able to access their own collections. We do not currently support sharing collections between users. If this is something you are interested in, please reach out to me, either on [X (Twitter)](https://x.com/bracesproul), or email: `brace@langchain.dev`
 
 ## RAG Server
 
@@ -116,7 +116,7 @@ The web client makes a request to the proxy route (`/api/oap_mcp`). Inside this 
 
 # Building Your Own Agents
 
-We built Open Agent Platform with custom agents in mind. Although we offer a few pre-built agents, we encourage you to build your own agents, and use OAP as a platform to prototype, test and use them! The following is a guide to help you build agents which are compatiable with all of Open Agent Platform's features.
+We built Open Agent Platform with custom agents in mind. Although we offer a few pre-built agents, we encourage you to build your own agents, and use OAP as a platform to prototype, test and use them! The following is a guide to help you build agents which are compatible with all of Open Agent Platform's features.
 
 ## Platform
 
@@ -126,12 +126,12 @@ OAP is built on top of LangGraph Platform, which means all agents which you buil
 
 To allow your agent to be configurable in OAP, you must set custom configuration metadata on your agent's configurable fields. There are currently three types of configurable fields:
 
-1. **General Agent Config:** This consists of general configration settings like the model name, system prompt, temperature, etc. These are where essentially all of your custom configurable fields should go.
+1. **General Agent Config:** This consists of general configuration settings like the model name, system prompt, temperature, etc. These are where essentially all of your custom configurable fields should go.
 2. **MCP Tools Config:** This is the config which defines the MCP server and tools to give your agent access to.
 3. **RAG Config:** This is the config which defines the RAG server, and collection name to give your agent access to.
 
 > [!TIP]
-> This section assumes you have a basic understanding of configirable fields in LangGraph. If you do not, read the LangGraph documentation ([Python](https://langchain-ai.github.io/langgraph/how-tos/graph-api/#add-runtime-configuration), [TypeScript](https://langchain-ai.github.io/langgraphjs/how-tos/configuration/)) for more information.
+> This section assumes you have a basic understanding of configurable fields in LangGraph. If you do not, read the LangGraph documentation ([Python](https://langchain-ai.github.io/langgraph/how-tos/graph-api/#add-runtime-configuration), [TypeScript](https://langchain-ai.github.io/langgraphjs/how-tos/configuration/)) for more information.
 
 ### General Agent Config
 

@@ -65,6 +65,9 @@ async function getAgents(
           return [];
         }
         assistants.push(defaultAssistant);
+      } else if (!assistants.length) {
+        // No assistants, and this deployment is not the default deployment.
+        return [];
       }
       const defaultAssistant =
         assistants.find((a) => isDefaultAssistant(a as Agent)) ?? assistants[0];

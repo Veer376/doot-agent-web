@@ -19,15 +19,10 @@ import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
 import { Client } from "@langchain/langgraph-sdk";
 
-async function createDefaultAssistant(client: Client) {
-  if (!process.env.NEXT_PUBLIC_DEFAULT_GRAPH_NAME) {
-    throw new Error(
-      "Default graph name not found. Please ensure the environment variable NEXT_PUBLIC_DEFAULT_GRAPH_NAME is set.",
-    );
-  }
+async function createDefaultAssistant(client: Client, graphId: string) {
   try {
     const assistant = await client.assistants.create({
-      graphId: process.env.NEXT_PUBLIC_DEFAULT_GRAPH_NAME,
+      graphId,
       name: "Default Assistant",
       metadata: {
         description: "Default Assistant",
@@ -57,12 +52,22 @@ async function getAgents(
       const assistants = await client.assistants.search({
         limit: 100,
       });
-      if (!assistants.length) {
-        const defaultAssistant = await createDefaultAssistant(client);
+      if (
+        !assistants.length &&
+        deployment.isDefault &&
+        deployment.defaultGraphId
+      ) {
+        const defaultAssistant = await createDefaultAssistant(
+          client,
+          deployment.defaultGraphId,
+        );
         if (!defaultAssistant) {
           return [];
         }
         assistants.push(defaultAssistant);
+      } else if (!assistants.length) {
+        // No assistants, and this deployment is not the default deployment.
+        return [];
       }
       const defaultAssistant =
         assistants.find((a) => isDefaultAssistant(a as Agent)) ?? assistants[0];

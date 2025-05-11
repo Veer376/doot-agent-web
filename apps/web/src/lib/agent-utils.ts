@@ -18,7 +18,7 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
   }
   return (
     isDefaultAssistant(agent) &&
-    agent.graph_id === defaultDeployment.defaultGraphId &&
+    agent.graph_id === defaultDeployment.primaryGraphId &&
     agent.deploymentId === defaultDeployment.id
   );
 }

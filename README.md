@@ -29,8 +29,8 @@ Once deployed, you can connect them to your instance of Open Agent Platform by s
   "tenantId": "The tenant ID of your LangSmith account. For locally running LangGraph servers, this can be any UUID.",
   "deploymentUrl": "The API URL to your deployment",
   "name": "A custom name for your deployment",
+  "primaryGraphId": "The ID of the primary graph to use for this deployment. Required",
   "isDefault": "Set to true if this is the default deployment. Only one deployment can be set as the default. Optional field",
-  "defaultGraphId": "The ID of the default graph to use for this deployment. Optional field"
 }
 ```
 

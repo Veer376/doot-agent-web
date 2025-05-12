@@ -18,11 +18,12 @@ export interface Deployment {
    */
   name: string;
   /**
-   * Whether this deployment is the default deployment.
+   * Whether this deployment is the default deployment. Should only be set to true for one deployment.
    */
   isDefault?: boolean;
   /**
-   * The ID of the primary graph for this deployment.
+   * The ID of the default graph for this deployment. This should only be set for one deployment,
+   * and it should be the same deployment that isDefault is set to true on.
    */
-  primaryGraphId: string;
+  defaultGraphId?: string;
 }

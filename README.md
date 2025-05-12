@@ -29,8 +29,8 @@ Once deployed, you can connect them to your instance of Open Agent Platform by s
   "tenantId": "The tenant ID of your LangSmith account. For locally running LangGraph servers, this can be any UUID.",
   "deploymentUrl": "The API URL to your deployment",
   "name": "A custom name for your deployment",
-  "primaryGraphId": "The ID of the primary graph to use for this deployment. Required",
-  "isDefault": "Set to true if this is the default deployment. Only one deployment can be set as the default. Optional field",
+  "isDefault": "Whether this deployment is the default deployment. Should only be set to true for one deployment.",
+  "defaultGraphId": "The graph ID of the default graph for the entire OAP instance. We recommend this is set to the graph ID of a graph which supports RAG & MCP tools. This must be set in the same deployment which isDefault is set to true on. Optional, but required in at least one deployment.",
 }
 ```
 
@@ -41,7 +41,7 @@ After constructing the JSON objects with these values for each of the deployment
 The following is an example of what this variable would look like for a single, local deployment:
 
 ```bash
-NEXT_PUBLIC_DEPLOYMENTS=[{"id":"bf63dc89-1de7-4a65-8336-af9ecda479d6","deploymentUrl":"http://localhost:2024","tenantId":"42d732b3-1324-4226-9fe9-513044dceb58","name":"Local deployment"}]
+NEXT_PUBLIC_DEPLOYMENTS=[{"id":"bf63dc89-1de7-4a65-8336-af9ecda479d6","deploymentUrl":"http://localhost:2024","tenantId":"42d732b3-1324-4226-9fe9-513044dceb58","name":"Local deployment","isDefault":true,"defaultGraphId":"agent"}]
 ```
 
 ## Authentication

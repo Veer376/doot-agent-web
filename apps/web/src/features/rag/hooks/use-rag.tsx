@@ -188,9 +188,13 @@ export function useRag(): UseRagReturn {
       initCollections.find((c) => c.uuid === defaultCollectionId),
     );
 
-    const documents = await listDocuments(DEFAULT_COLLECTION_NAME, {
-      limit: 100,
-    }, accessToken);
+    const documents = await listDocuments(
+      DEFAULT_COLLECTION_NAME,
+      {
+        limit: 100,
+      },
+      accessToken,
+    );
     setDocuments(documents);
     setDocumentsLoading(false);
   }, []);

@@ -6,7 +6,9 @@ import { Deployment } from "@/types/deployment";
  */
 export function getDeployments(): Deployment[] {
   let defaultExists = false;
-  const deployments: Deployment[] = JSON.parse(process.env.NEXT_PUBLIC_DEPLOYMENTS || "[]");
+  const deployments: Deployment[] = JSON.parse(
+    process.env.NEXT_PUBLIC_DEPLOYMENTS || "[]",
+  );
   for (const deployment of deployments) {
     if (deployment.isDefault && !defaultExists) {
       if (!deployment.defaultGraphId) {

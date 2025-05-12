@@ -11,63 +11,18 @@ import React, {
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
 import { Deployment } from "@/types/deployment";
-import {
-  groupAgentsByGraphs,
-  isDefaultAssistant,
-  isPrimaryAssistant,
-} from "@/lib/agent-utils";
+import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
 import { useAgents } from "@/hooks/use-agents";
 import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
-import { Assistant, Client } from "@langchain/langgraph-sdk";
-
-// async function createDefaultAssistant(
-//   client: Client,
-//   graphId: string,
-//   args: {
-//     isDefault: boolean;
-//     isPrimary: boolean
-//   }
-// ) {
-//   try {
-//     const assistant = await client.assistants.create({
-//       graphId,
-//       name: `${isDefault ? "Default" : "Primary"} Assistant`,
-//       metadata: {
-//         description: `${isDefault ? "Default" : "Primary"}  Assistant`,
-//         ...(isDefault && { _x_oap_is_default: true }),
-//       },
-//     });
-//     return assistant;
-//   } catch (e) {
-//     console.error("Failed to create default assistant", e);
-//     toast.error("Failed to create default assistant");
-//     return undefined;
-//   }
-// }
+import { Assistant } from "@langchain/langgraph-sdk";
 
 async function getOrCreateDefaultAssistants(
   deployment: Deployment,
   accessToken?: string,
 ): Promise<Assistant[]> {
-  /**
-   * For each deployment, fetch all assistants twice.
-   * First, fetch all assistants created by the system.
-   * Second, fetch all assistants with the metadata `_x_oap_is_default: true`.
-   * This metadata flag indicates it's the default assistant (but still user scoped).
-   *
-   * If the array lengths match, we've already created all the default assistants.
-   *
-   * If the array lengths don't match, we need to create the missing default assistants.
-   * For these new assistants, ensure we create one for each graph in the deployment
-   * (we can get this by iterating over the default created_by: "system" assistants since
-   * there will only be one of those per graph). Then, for each new graph, create an assistant
-   * with the metadata `_x_oap_is_default: true`. When creating this assistant, we should also check
-   * if that graph is the primary graph id. If true, we should add the metadata `_x_oap_is_primary: true`.
-   */
-
   // Do NOT pass in an access token here. We want to use LangSmith auth.
   const client = createClient(deployment.id);
   const [systemDefaultAssistants, userDefaultAssistants] = await Promise.all([

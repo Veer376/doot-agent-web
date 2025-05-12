@@ -41,7 +41,6 @@ async function getOrCreateDefaultAssistants(
       },
     }),
   ]);
-  console.log(systemDefaultAssistants.length, userDefaultAssistants.length);
   if (!systemDefaultAssistants.length) {
     throw new Error("Failed to find default system assistants.");
   }
@@ -108,7 +107,6 @@ async function getAgents(
           limit: 100,
         }),
       ]);
-      console.log("MADE IT HERE!", defaultAssistants);
       const assistantMap = new Map<string, Assistant>();
 
       // Add default assistants to the map

@@ -99,7 +99,7 @@ async function uploadDocuments(
 // Return type for the combined hook
 interface UseRagReturn {
   // Initial load
-  initialFetch: () => Promise<void>;
+  initialFetch: (accessToken: string) => Promise<void>;
 
   // Collection state and operations
   collections: Collection[];
@@ -159,14 +159,19 @@ export function useRag(): UseRagReturn {
   >(undefined);
 
   // --- Initial Fetch ---
-  const initialFetch = useCallback(async () => {
+  const initialFetch = useCallback(async (accessToken: string) => {
+    console.log("session", session);
     setCollectionsLoading(true);
     setDocumentsLoading(true);
     let defaultCollectionId = "";
-    const initCollections = await getCollections();
+    const initCollections = await getCollections(accessToken);
     if (!initCollections.length) {
       // No collections exist, create the default collection.
-      const defaultCollection = await createCollection(DEFAULT_COLLECTION_NAME);
+      const defaultCollection = await createCollection(
+        DEFAULT_COLLECTION_NAME,
+        {},
+        accessToken,
+      );
       if (!defaultCollection) {
         throw new Error("Failed to create default collection");
       }
@@ -197,7 +202,10 @@ export function useRag(): UseRagReturn {
       args?: { limit?: number; offset?: number },
     ): Promise<Document[]> => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to list documents. Please try again.",
+        });
         return [];
       }
 
@@ -227,7 +235,10 @@ export function useRag(): UseRagReturn {
   const deleteDocument = useCallback(
     async (id: string) => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to delete document. Please try again.",
+        });
         return;
       }
 
@@ -258,7 +269,10 @@ export function useRag(): UseRagReturn {
   const handleFileUpload = useCallback(
     async (files: FileList | null, collectionName: string) => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to upload file document(s). Please try again.",
+        });
         return;
       }
 
@@ -294,7 +308,10 @@ export function useRag(): UseRagReturn {
   const handleTextUpload = useCallback(
     async (textInput: string, collectionName: string) => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to upload text document. Please try again.",
+        });
         return;
       }
 
@@ -330,34 +347,44 @@ export function useRag(): UseRagReturn {
 
   // --- Collection Operations ---
 
-  const getCollections = useCallback(async (): Promise<Collection[]> => {
-    if (!session?.accessToken) {
-      toast.error("No session found", { richColors: true });
-      return [];
-    }
+  const getCollections = useCallback(
+    async (accessToken?: string): Promise<Collection[]> => {
+      if (!session?.accessToken && !accessToken) {
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to fetch collections. Please try again.",
+        });
+        return [];
+      }
 
-    const url = getApiUrlOrThrow();
-    url.pathname = "/collections";
+      const url = getApiUrlOrThrow();
+      url.pathname = "/collections";
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch collections: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data;
-  }, []);
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${accessToken || session?.accessToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch collections: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data;
+    },
+    [],
+  );
 
   const createCollection = useCallback(
     async (
       name: string,
       metadata: Record<string, any> = {},
+      accessToken?: string,
     ): Promise<Collection | undefined> => {
-      if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+      if (!session?.accessToken && !accessToken) {
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to create collection. Please try again.",
+        });
         return;
       }
 
@@ -385,7 +412,7 @@ export function useRag(): UseRagReturn {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${accessToken || session?.accessToken}`,
         },
         body: JSON.stringify(newCollection),
       });
@@ -407,7 +434,10 @@ export function useRag(): UseRagReturn {
       metadata: Record<string, any>,
     ): Promise<Collection | undefined> => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to update collection. Please try again.",
+        });
         return;
       }
 
@@ -491,7 +521,10 @@ export function useRag(): UseRagReturn {
   const deleteCollection = useCallback(
     async (name: string): Promise<string | undefined> => {
       if (!session?.accessToken) {
-        toast.error("No session found", { richColors: true });
+        toast.error("No session found", {
+          richColors: true,
+          description: "Failed to delete collection. Please try again.",
+        });
         return;
       }
 

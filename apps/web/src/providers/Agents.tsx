@@ -24,24 +24,28 @@ async function getOrCreateDefaultAssistants(
   accessToken?: string,
 ): Promise<Assistant[]> {
   // Do NOT pass in an access token here. We want to use LangSmith auth.
-  const client = createClient(deployment.id);
+  const lsAuthClient = createClient(deployment.id);
+  const userAuthClient = createClient(deployment.id, accessToken);
+
   const [systemDefaultAssistants, userDefaultAssistants] = await Promise.all([
-    client.assistants.search({
+    lsAuthClient.assistants.search({
       limit: 100,
       metadata: {
         created_by: "system",
       },
     }),
-    client.assistants.search({
+    userAuthClient.assistants.search({
       limit: 100,
       metadata: {
         _x_oap_is_default: true,
       },
     }),
   ]);
+  console.log(systemDefaultAssistants.length, userDefaultAssistants.length);
   if (!systemDefaultAssistants.length) {
     throw new Error("Failed to find default system assistants.");
   }
+
   if (systemDefaultAssistants.length === userDefaultAssistants.length) {
     // User has already created all default assistants.
     return userDefaultAssistants;
@@ -54,13 +58,12 @@ async function getOrCreateDefaultAssistants(
   );
 
   // Create a new client, passing in the access token to use user scoped auth.
-  const newClient = createClient(deployment.id, accessToken);
   const newUserDefaultAssistantsPromise = missingDefaultAssistants.map(
     async (assistant) => {
       const isDefaultDeploymentAndGraph =
         deployment.isDefault &&
         deployment.defaultGraphId === assistant.graph_id;
-      return await newClient.assistants.create({
+      return await userAuthClient.assistants.create({
         graphId: assistant.graph_id,
         name: `${isDefaultDeploymentAndGraph ? "Default" : "Primary"} Assistant`,
         metadata: {
@@ -105,7 +108,7 @@ async function getAgents(
           limit: 100,
         }),
       ]);
-
+      console.log("MADE IT HERE!", defaultAssistants);
       const assistantMap = new Map<string, Assistant>();
 
       // Add default assistants to the map

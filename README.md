@@ -30,7 +30,7 @@ Once deployed, you can connect them to your instance of Open Agent Platform by s
   "deploymentUrl": "The API URL to your deployment",
   "name": "A custom name for your deployment",
   "isDefault": "Whether this deployment is the default deployment. Should only be set to true for one deployment.",
-  "defaultGraphId": "The graph ID of the default graph for the entire OAP instance. We reccomend this is set to the graph ID of a graph which supports RAG & MCP tools. This must be set in the same deployment which isDefault is set to true on. Optional, but required in at least one deployment.",
+  "defaultGraphId": "The graph ID of the default graph for the entire OAP instance. We recommend this is set to the graph ID of a graph which supports RAG & MCP tools. This must be set in the same deployment which isDefault is set to true on. Optional, but required in at least one deployment.",
 }
 ```
 

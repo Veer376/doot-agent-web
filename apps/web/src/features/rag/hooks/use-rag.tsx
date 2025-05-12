@@ -3,6 +3,7 @@ import { Document } from "@langchain/core/documents";
 import { v4 as uuidv4 } from "uuid";
 import { Collection, CollectionCreate } from "@/types/collection";
 import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
 
 export const DEFAULT_COLLECTION_NAME = "default_collection";
 
@@ -40,6 +41,7 @@ export function getCollectionName(name: string | undefined) {
 async function uploadDocuments(
   collectionName: string,
   files: File[],
+  authorization: string,
   metadatas?: Record<string, any>[],
 ): Promise<any> {
   const url = `${getApiUrlOrThrow().href}collections/${encodeURIComponent(collectionName)}/documents`;
@@ -67,6 +69,9 @@ async function uploadDocuments(
     const response = await fetch(url, {
       method: "POST",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${authorization}`,
+      },
     });
 
     if (!response.ok) {
@@ -142,6 +147,8 @@ interface UseRagReturn {
  * Combines the logic of useCollections and useDocuments.
  */
 export function useRag(): UseRagReturn {
+  const { session } = useAuthContext();
+
   // --- State ---
   const [collections, setCollections] = useState<Collection[]>([]);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
@@ -189,6 +196,11 @@ export function useRag(): UseRagReturn {
       collectionName: string,
       args?: { limit?: number; offset?: number },
     ): Promise<Document[]> => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return [];
+      }
+
       const url = getApiUrlOrThrow();
       url.pathname = `/collections/${collectionName}/documents`;
       if (args?.limit) {
@@ -198,7 +210,11 @@ export function useRag(): UseRagReturn {
         url.searchParams.set("offset", args.offset.toString());
       }
 
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch documents: ${response.statusText}`);
       }
@@ -210,6 +226,11 @@ export function useRag(): UseRagReturn {
 
   const deleteDocument = useCallback(
     async (id: string) => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       if (!selectedCollection) {
         throw new Error("No collection selected");
       }
@@ -217,7 +238,12 @@ export function useRag(): UseRagReturn {
       const url = getApiUrlOrThrow();
       url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
 
-      const response = await fetch(url.toString(), { method: "DELETE" });
+      const response = await fetch(url.toString(), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      });
       if (!response.ok) {
         throw new Error(`Failed to delete document: ${response.statusText}`);
       }
@@ -231,6 +257,11 @@ export function useRag(): UseRagReturn {
 
   const handleFileUpload = useCallback(
     async (files: FileList | null, collectionName: string) => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       if (!files || files.length === 0) {
         console.warn("File upload skipped: No files selected.");
         return;
@@ -252,6 +283,7 @@ export function useRag(): UseRagReturn {
       await uploadDocuments(
         collectionName,
         Array.from(files),
+        session.accessToken,
         newDocs.map((d) => d.metadata),
       );
       setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
@@ -261,6 +293,11 @@ export function useRag(): UseRagReturn {
 
   const handleTextUpload = useCallback(
     async (textInput: string, collectionName: string) => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       if (!textInput.trim() || collectionName === "all") {
         console.warn(
           "Text upload skipped: Text is empty or collection is 'all'.",
@@ -276,7 +313,9 @@ export function useRag(): UseRagReturn {
         size: `${(textInput.length / 1024).toFixed(1)} KB`,
         created_at: new Date().toISOString(),
       };
-      await uploadDocuments(collectionName, [textFile], [metadata]);
+      await uploadDocuments(collectionName, [textFile], session.accessToken, [
+        metadata,
+      ]);
       setDocuments((prevDocs) => [
         ...prevDocs,
         new Document({
@@ -292,10 +331,19 @@ export function useRag(): UseRagReturn {
   // --- Collection Operations ---
 
   const getCollections = useCallback(async (): Promise<Collection[]> => {
+    if (!session?.accessToken) {
+      toast.error("No session found", { richColors: true });
+      return [];
+    }
+
     const url = getApiUrlOrThrow();
     url.pathname = "/collections";
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch collections: ${response.statusText}`);
     }
@@ -308,6 +356,11 @@ export function useRag(): UseRagReturn {
       name: string,
       metadata: Record<string, any> = {},
     ): Promise<Collection | undefined> => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       const url = getApiUrlOrThrow();
       url.pathname = "/collections";
 
@@ -332,6 +385,7 @@ export function useRag(): UseRagReturn {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify(newCollection),
       });
@@ -352,6 +406,11 @@ export function useRag(): UseRagReturn {
       newName: string,
       metadata: Record<string, any>,
     ): Promise<Collection | undefined> => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       // Find the collection to update
       const collectionToUpdate = collections.find(
         (c) => c.name === currentName,
@@ -398,6 +457,7 @@ export function useRag(): UseRagReturn {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify(updateData),
       });
@@ -430,6 +490,11 @@ export function useRag(): UseRagReturn {
 
   const deleteCollection = useCallback(
     async (name: string): Promise<string | undefined> => {
+      if (!session?.accessToken) {
+        toast.error("No session found", { richColors: true });
+        return;
+      }
+
       const collectionToDelete = collections.find((c) => c.name === name);
       const deletedCollectionName = collectionToDelete?.name;
 
@@ -442,6 +507,9 @@ export function useRag(): UseRagReturn {
 
       const response = await fetch(url.toString(), {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
       });
 
       if (!response.ok) {

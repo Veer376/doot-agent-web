@@ -106,10 +106,11 @@ interface UseRagReturn {
   setCollections: Dispatch<SetStateAction<Collection[]>>;
   collectionsLoading: boolean;
   setCollectionsLoading: Dispatch<SetStateAction<boolean>>;
-  getCollections: () => Promise<Collection[]>;
+  getCollections: (accessToken?: string) => Promise<Collection[]>;
   createCollection: (
     name: string,
     metadata?: Record<string, any>,
+    accessToken?: string,
   ) => Promise<Collection | undefined>;
   updateCollection: (
     currentName: string,
@@ -130,6 +131,7 @@ interface UseRagReturn {
   listDocuments: (
     collectionId: string,
     args?: { limit?: number; offset?: number },
+    accessToken?: string,
   ) => Promise<Document[]>;
   deleteDocument: (id: string) => Promise<void>;
   handleFileUpload: (
@@ -160,7 +162,6 @@ export function useRag(): UseRagReturn {
 
   // --- Initial Fetch ---
   const initialFetch = useCallback(async (accessToken: string) => {
-    console.log("session", session);
     setCollectionsLoading(true);
     setDocumentsLoading(true);
     let defaultCollectionId = "";
@@ -187,9 +188,13 @@ export function useRag(): UseRagReturn {
       initCollections.find((c) => c.uuid === defaultCollectionId),
     );
 
-    const documents = await listDocuments(DEFAULT_COLLECTION_NAME, {
-      limit: 100,
-    });
+    const documents = await listDocuments(
+      DEFAULT_COLLECTION_NAME,
+      {
+        limit: 100,
+      },
+      accessToken,
+    );
     setDocuments(documents);
     setDocumentsLoading(false);
   }, []);
@@ -200,8 +205,9 @@ export function useRag(): UseRagReturn {
     async (
       collectionName: string,
       args?: { limit?: number; offset?: number },
+      accessToken?: string,
     ): Promise<Document[]> => {
-      if (!session?.accessToken) {
+      if (!session?.accessToken && !accessToken) {
         toast.error("No session found", {
           richColors: true,
           description: "Failed to list documents. Please try again.",
@@ -220,7 +226,7 @@ export function useRag(): UseRagReturn {
 
       const response = await fetch(url.toString(), {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${accessToken || session?.accessToken}`,
         },
       });
       if (!response.ok) {

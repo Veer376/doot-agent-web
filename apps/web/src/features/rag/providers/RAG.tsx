@@ -25,12 +25,14 @@ export const RagProvider: React.FC<PropsWithChildren> = ({ children }) => {
     )
       return;
 
-    console.log("Calling init fetch!", session);
     ragState
       .initialFetch(session?.accessToken)
       .catch((e) => {
-        toast.error("Failed to fetch collections");
-        console.error("Failed to fetch collections", e);
+        toast.error("Failed to execute initial fetch", {
+          richColors: true,
+          description: "Failed to execute initial fetch. Please try again.",
+        });
+        console.error("Failed to execute initial fetch", e);
       })
       .finally(() => ragState.setCollectionsLoading(false));
   }, [session?.accessToken]);

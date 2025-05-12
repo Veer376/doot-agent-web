@@ -1,13 +1,18 @@
 import { Agent } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
+import { Assistant } from "@langchain/langgraph-sdk";
 
 /**
  * Checks if an agent is the system-defined default assistant.
  * @param agent The agent to check.
  * @returns True if the agent is the default, false otherwise.
  */
-export function isDefaultAssistant(agent: Agent): boolean {
+export function isDefaultAssistant(agent: Agent | Assistant): boolean {
   return agent.metadata?._x_oap_is_default === true;
+}
+
+export function isPrimaryAssistant(agent: Agent | Assistant): boolean {
+  return agent.metadata?._x_oap_is_primary === true;
 }
 
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
@@ -17,9 +22,7 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
     return false;
   }
   return (
-    isDefaultAssistant(agent) &&
-    agent.graph_id === defaultDeployment.primaryGraphId &&
-    agent.deploymentId === defaultDeployment.id
+    isDefaultAssistant(agent) && agent.deploymentId === defaultDeployment.id
   );
 }
 
@@ -57,9 +60,11 @@ export function sortAgentGroup(agentGroup: Agent[]): Agent[] {
  * @param agents An array of agents.
  * @returns An array of arrays, where each inner array contains agents belonging to the same graph.
  */
-export function groupAgentsByGraphs(agents: Agent[]): Agent[][] {
+export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
+  agents: AgentOrAssistant[],
+): AgentOrAssistant[][] {
   return Object.values(
-    agents.reduce<Record<string, Agent[]>>((acc, agent) => {
+    agents.reduce<Record<string, AgentOrAssistant[]>>((acc, agent) => {
       const groupId = agent.graph_id;
       if (!acc[groupId]) {
         acc[groupId] = [];

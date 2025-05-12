@@ -5255,12 +5255,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langgraph-nextjs-api-passthrough@npm:^0.0.5":
-  version: 0.0.5
-  resolution: "langgraph-nextjs-api-passthrough@npm:0.0.5"
+"langgraph-nextjs-api-passthrough@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "langgraph-nextjs-api-passthrough@npm:0.1.0"
   peerDependencies:
     next: "*"
-  checksum: 3598da6960992afa20f40183d71ae2dbaeaa3a2d611ebe0a7ab3a7b26f08cfe8ff7acf85d25e47480f375470efc14344e73e1bdad66d3c0977cecd4b144022fd
+  checksum: 9deae806ae4ca21ae50fe25b5352487110637e0fd6bf17abb5f2bbcfde69f05c4e41308f41b1efd22837d4a0db1d1fad6c4bdfe458076af907a2f3853cb1cf08
   languageName: node
   linkType: hard
 
@@ -8358,7 +8358,7 @@ __metadata:
     globals: ^15.14.0
     js-cookie: 3.0.5
     katex: latest
-    langgraph-nextjs-api-passthrough: ^0.0.5
+    langgraph-nextjs-api-passthrough: ^0.1.0
     lodash: ^4.17.21
     lucide-react: ^0.488.0
     next: ^15.3.1

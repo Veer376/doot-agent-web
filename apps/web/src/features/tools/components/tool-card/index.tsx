@@ -9,9 +9,12 @@ import {
 } from "@/components/ui/card";
 import { Tool } from "@/types/tool";
 import { ToolDetailsDialog } from "../tool-details-dialog";
-import { Eye } from "lucide-react";
+import { Eye, FlaskConical } from "lucide-react";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import NextLink from "next/link";
+import _ from "lodash";
 
 interface ToolCardProps {
   tool: Tool;
@@ -19,23 +22,30 @@ interface ToolCardProps {
 
 export function ToolCard({ tool }: ToolCardProps) {
   return (
-    <Card className="w-[350px]">
+    <Card className="border border-gray-200 shadow-xs">
       <CardHeader>
-        <CardTitle className="w-fit max-w-[95%] truncate rounded bg-gray-100 px-2 py-1 font-mono font-semibold tracking-tight text-orange-600">
-          {tool.name}
+        <CardTitle className="truncate pb-2 text-lg font-medium">
+          {_.startCase(tool.name)}
         </CardTitle>
+
         <CardDescription className="line-clamp-3">
           {tool.description}
         </CardDescription>
       </CardHeader>
-      <CardFooter className="mt-auto">
+      <CardFooter className="mt-auto flex items-center justify-between">
+        <NextLink href={`/tools/playground?tool=${tool.name}`}>
+          <Button variant="outline">
+            <FlaskConical className="size-4" />
+            <p>Playground</p>
+          </Button>
+        </NextLink>
         <ToolDetailsDialog tool={tool}>
           <TooltipIconButton
             tooltip="View tool details"
-            variant="default"
-            className="size-7"
+            variant="ghost"
+            className="size-10 hover:bg-teal-50"
           >
-            <Eye className="size-4" />
+            <Eye className="size-5 text-[#2F6868]" />
           </TooltipIconButton>
         </ToolDetailsDialog>
       </CardFooter>
@@ -45,7 +55,7 @@ export function ToolCard({ tool }: ToolCardProps) {
 
 export function ToolCardLoading() {
   return (
-    <Card className="w-[350px]">
+    <Card className="border border-gray-200 shadow-xs">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <Skeleton className="h-8 w-full" />

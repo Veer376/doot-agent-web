@@ -75,6 +75,13 @@ export function ToolResult({ message }: { message: ToolMessage }) {
     if (typeof message.content === "string") {
       parsedContent = JSON.parse(message.content);
       isJsonContent = true;
+    } else if (typeof message.content === "object") {
+      if (Array.isArray(message.content) && message.content.length === 1) {
+        parsedContent = message.content[0];
+      } else {
+        parsedContent = message.content;
+      }
+      isJsonContent = true;
     }
   } catch {
     // Content is not JSON, use as is
@@ -85,7 +92,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
     ? JSON.stringify(parsedContent, null, 2)
     : String(message.content);
   const contentLines = contentStr.split("\n");
-  const shouldTruncate = contentLines.length > 4 || contentStr.length > 500;
+  const shouldTruncate = contentLines.length > 4;
   const displayedContent =
     shouldTruncate && !isExpanded
       ? contentStr.length > 500
@@ -94,7 +101,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
       : contentStr;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="w-full max-w-4xl overflow-hidden rounded-lg border border-gray-200">
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           {message.name ? (
@@ -133,7 +140,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
               transition={{ duration: 0.2 }}
             >
               {isJsonContent ? (
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 overflow-x-auto">
                   <tbody className="divide-y divide-gray-200">
                     {(Array.isArray(parsedContent)
                       ? isExpanded
@@ -164,7 +171,9 @@ export function ToolResult({ message }: { message: ToolMessage }) {
                   </tbody>
                 </table>
               ) : (
-                <code className="block text-sm">{displayedContent}</code>
+                <code className="block overflow-x-auto text-sm">
+                  {displayedContent}
+                </code>
               )}
             </motion.div>
           </AnimatePresence>

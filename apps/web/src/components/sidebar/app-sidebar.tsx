@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Wrench, Bot, Inbox, MessageCircle, Brain } from "lucide-react";
+import { Wrench, Bot, MessageCircle, Brain } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -15,11 +15,6 @@ import { SiteHeader } from "./sidebar-header";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "John Doe",
-    email: "johndoe@langchain.dev",
-    avatar: "",
-  },
   navMain: [
     {
       title: "Chat",
@@ -36,11 +31,11 @@ const data = {
       url: "/tools",
       icon: Wrench,
     },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
-    },
+    // {
+    //   title: "Inbox",
+    //   url: "/inbox",
+    //   icon: Inbox,
+    // },
     {
       title: "RAG",
       url: "/rag",
@@ -60,7 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -5,6 +5,8 @@ import { persist } from "zustand/middleware";
 import {
   ConfigurableFieldUIMetadata,
   ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
+  ConfigurableFieldAgentsMetadata,
 } from "@/types/configurable";
 
 interface ConfigState {
@@ -16,8 +18,11 @@ interface ConfigState {
     agentId: string,
     configurations:
       | ConfigurableFieldMCPMetadata[]
-      | ConfigurableFieldUIMetadata[],
+      | ConfigurableFieldUIMetadata[]
+      | ConfigurableFieldRAGMetadata[]
+      | ConfigurableFieldAgentsMetadata[],
   ) => void;
+  resetStore: () => void;
 }
 
 export const useConfigStore = create<ConfigState>()(
@@ -27,7 +32,16 @@ export const useConfigStore = create<ConfigState>()(
 
       getAgentConfig: (agentId: string) => {
         const state = get();
-        return state.configsByAgentId[agentId] || {};
+        const baseConfig = state.configsByAgentId[agentId];
+        const toolsConfig = state.configsByAgentId[`${agentId}:selected-tools`];
+        const ragConfig = state.configsByAgentId[`${agentId}:rag`];
+        const agentsConfig = state.configsByAgentId[`${agentId}:agents`];
+        return {
+          ...baseConfig,
+          ...toolsConfig,
+          ...ragConfig,
+          ...agentsConfig,
+        };
       },
 
       updateConfig: (agentId, key, value) =>
@@ -59,13 +73,6 @@ export const useConfigStore = create<ConfigState>()(
       },
 
       setDefaultConfig: (agentId, configurations) => {
-        const state = get();
-        // Only set default config if it hasn't been set for this agentId yet
-        if (state.configsByAgentId[agentId]?.__defaultValues) {
-          return; // Defaults already set, potentially overwritten by user, don't reset
-        }
-
-        // Create default config object from configurations
         const defaultConfig: Record<string, any> = {};
         configurations.forEach((config) => {
           if (config.default !== undefined) {
@@ -73,19 +80,18 @@ export const useConfigStore = create<ConfigState>()(
           }
         });
 
-        // Store the default values for reset
         defaultConfig.__defaultValues = { ...defaultConfig };
 
         set((currentState) => ({
           configsByAgentId: {
             ...currentState.configsByAgentId,
-            // Initialize with defaults if no config exists yet for this agent
-            [agentId]: currentState.configsByAgentId[agentId]
-              ? currentState.configsByAgentId[agentId] // Keep existing if user already interacted
-              : defaultConfig,
+            [agentId]: defaultConfig,
           },
         }));
       },
+
+      // Clear everything from the store
+      resetStore: () => set({ configsByAgentId: {} }),
     }),
     {
       name: "ai-config-storage", // Keep the same storage key, but manage agents inside

@@ -13,7 +13,10 @@ type MCPContextType = ReturnType<typeof useMCP> & { loading: boolean };
 const MCPContext = createContext<MCPContextType | null>(null);
 
 export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const mcpState = useMCP();
+  const mcpState = useMCP({
+    name: "Tools Interface",
+    version: "1.0.0",
+  });
   const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
 
@@ -23,10 +26,7 @@ export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
     firstRequestMade.current = true;
     setLoading(true);
     mcpState
-      .getTools({
-        name: "Tools Interface",
-        version: "1.0.0",
-      })
+      .getTools()
       .then((tools) => mcpState.setTools(tools))
       .finally(() => setLoading(false));
   }, []);

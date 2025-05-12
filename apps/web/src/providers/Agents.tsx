@@ -10,25 +10,93 @@ import React, {
 } from "react";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
-import { Client } from "@langchain/langgraph-sdk";
 import { Deployment } from "@/types/deployment";
+import { isDefaultAssistant } from "@/lib/agent-utils";
+import { useAgents } from "@/hooks/use-agents";
+import { extractConfigurationsFromAgent } from "@/lib/ui-config";
+import { createClient } from "@/lib/client";
+import { useAuthContext } from "./Auth";
+import { toast } from "sonner";
+import { Client } from "@langchain/langgraph-sdk";
 
-async function getAgents(deployments: Deployment[]): Promise<Agent[]> {
-  const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+async function createDefaultAssistant(
+  client: Client,
+  graphId: string,
+  isDefault?: boolean,
+) {
+  try {
+    const assistant = await client.assistants.create({
+      graphId,
+      name: `${isDefault ? "Default" : "Primary"} Assistant`,
+      metadata: {
+        description: `${isDefault ? "Default" : "Primary"}  Assistant`,
+        ...(isDefault && { _x_oap_is_default: true }),
+      },
+    });
+    return assistant;
+  } catch (e) {
+    console.error("Failed to create default assistant", e);
+    toast.error("Failed to create default assistant");
+    return undefined;
+  }
+}
 
+async function getAgents(
+  deployments: Deployment[],
+  accessToken: string,
+  getAgentConfigSchema: (
+    agentId: string,
+    deploymentId: string,
+  ) => Promise<Record<string, any> | undefined>,
+): Promise<Agent[]> {
   const agentsPromise: Promise<Agent[]>[] = deployments.map(
     async (deployment) => {
-      const client = new Client({
-        apiUrl: `${baseApiUrl}/langgraph/${deployment.id}`,
-      });
+      const client = createClient(deployment.id, accessToken);
 
       const assistants = await client.assistants.search({
         limit: 100,
       });
+      if (!assistants.length) {
+        const defaultAssistant = await createDefaultAssistant(
+          client,
+          deployment.primaryGraphId,
+          deployment.isDefault,
+        );
+        if (!defaultAssistant) {
+          return [];
+        }
+        assistants.push(defaultAssistant);
+      }
+
+      const defaultAssistant =
+        assistants.find((a) => isDefaultAssistant(a as Agent)) ?? assistants[0];
+      const schema = await getAgentConfigSchema(
+        defaultAssistant.assistant_id,
+        deployment.id,
+      );
+
+      const supportedConfigs: string[] = [];
+      if (schema) {
+        const { toolConfig, ragConfig, agentsConfig } =
+          extractConfigurationsFromAgent({
+            agent: defaultAssistant,
+            schema,
+          });
+        if (toolConfig.length) {
+          supportedConfigs.push("tools");
+        }
+        if (ragConfig.length) {
+          supportedConfigs.push("rag");
+        }
+        if (agentsConfig.length) {
+          supportedConfigs.push("supervisor");
+        }
+      }
 
       return assistants.map((assistant) => ({
         ...assistant,
         deploymentId: deployment.id,
+        supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
       }));
     },
   );
@@ -51,33 +119,58 @@ type AgentsContextType = {
    * Whether the agents list is currently loading.
    */
   loading: boolean;
+  /**
+   * Whether the agents list is currently loading.
+   */
+  refreshAgentsLoading: boolean;
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
 export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const { session } = useAuthContext();
+  const agentsState = useAgents();
   const deployments = getDeployments();
   const [agents, setAgents] = useState<Agent[]>([]);
   const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
+  const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
 
   useEffect(() => {
-    if (agents.length > 0 || firstRequestMade.current) return;
+    if (agents.length > 0 || firstRequestMade.current || !session?.accessToken)
+      return;
 
     firstRequestMade.current = true;
     setLoading(true);
-    getAgents(deployments)
+    getAgents(
+      deployments,
+      session.accessToken,
+      agentsState.getAgentConfigSchema,
+    )
       .then(setAgents)
       .finally(() => setLoading(false));
-  }, []);
+  }, [session?.accessToken]);
 
   async function refreshAgents() {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     try {
-      const newAgents = await getAgents(deployments);
+      setRefreshAgentsLoading(true);
+      const newAgents = await getAgents(
+        deployments,
+        session.accessToken,
+        agentsState.getAgentConfigSchema,
+      );
       setAgents(newAgents);
     } catch (e) {
       console.error("Failed to refresh agents", e);
+    } finally {
+      setRefreshAgentsLoading(false);
     }
   }
 
@@ -85,6 +178,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     agents,
     loading,
     refreshAgents,
+    refreshAgentsLoading,
   };
 
   return (

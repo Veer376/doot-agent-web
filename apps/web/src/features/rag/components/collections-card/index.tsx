@@ -4,6 +4,7 @@ import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FolderPlus } from "lucide-react";
+import { FolderPlus, AlertCircle } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import type { Collection } from "@/types/collection";
 import { useState } from "react";
 import { CollectionsList } from "../collections-list";
 import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CollectionsCardProps {
   collections: Collection[];
@@ -37,13 +39,24 @@ export function CollectionsCard({
   setSelectedCollection,
   setCurrentPage,
 }: CollectionsCardProps) {
-  const { createCollection, deleteCollection, listDocuments, setDocuments } =
-    useRagContext();
+  const {
+    createCollection,
+    deleteCollection,
+    listDocuments,
+    setDocuments,
+    updateCollection,
+  } = useRagContext();
 
   const [open, setOpen] = useState(false);
 
   // State for new collection name and description (used for the input fields)
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
+
+  // Character limit for description
+  const DESCRIPTION_MAX_LENGTH = 850;
+  const isDescriptionTooLong =
+    newCollectionDescription.length > DESCRIPTION_MAX_LENGTH;
 
   // State for pagination
   const [collectionsCurrentPage, setCollectionsCurrentPage] = useState(1);
@@ -62,7 +75,9 @@ export function CollectionsCard({
     const loadingToast = toast.loading("Creating collection", {
       richColors: true,
     });
-    const success = await createCollection(newCollectionName);
+    const success = await createCollection(newCollectionName, {
+      description: newCollectionDescription,
+    });
     toast.dismiss(loadingToast);
     if (success) {
       setNewCollectionName(""); // Clear input fields on success
@@ -98,6 +113,19 @@ export function CollectionsCard({
       const docs = await listDocuments(newSelectedCollection.name);
       setDocuments(docs);
     }
+  };
+
+  const handleUpdateCollection = async (
+    currentName: string,
+    name: string,
+    metadata: Record<string, any>,
+  ) => {
+    const loadingToast = toast.loading("Updating collection", {
+      richColors: true,
+    });
+    await updateCollection(currentName, name, metadata);
+    toast.dismiss(loadingToast);
+    toast.success("Collection updated successfully", { richColors: true });
   };
 
   return (
@@ -138,11 +166,43 @@ export function CollectionsCard({
                   className="col-span-3"
                 />
               </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label
+                  htmlFor="collection-description"
+                  className="text-right"
+                >
+                  Description
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  <Textarea
+                    id="collection-description"
+                    value={newCollectionDescription}
+                    onChange={(e) =>
+                      setNewCollectionDescription(e.target.value)
+                    }
+                  />
+                  <div className="text-muted-foreground text-right text-xs">
+                    {newCollectionDescription.length}/{DESCRIPTION_MAX_LENGTH}{" "}
+                    characters
+                  </div>
+                </div>
+              </div>
+              {isDescriptionTooLong && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Description exceeds the maximum length of{" "}
+                      {DESCRIPTION_MAX_LENGTH} characters.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button
                 onClick={handleCreateCollection}
-                disabled={!newCollectionName.trim()}
+                disabled={!newCollectionName.trim() || isDescriptionTooLong}
               >
                 Create
               </Button>
@@ -165,6 +225,7 @@ export function CollectionsCard({
             setDocuments(documents);
           }}
           onDelete={(name) => handleDeleteCollection(name)}
+          onEdit={handleUpdateCollection}
           currentPage={collectionsCurrentPage}
           itemsPerPage={collectionsItemsPerPage}
           totalCollections={collections.length}

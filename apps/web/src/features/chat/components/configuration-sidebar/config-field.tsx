@@ -14,11 +14,34 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { cn } from "@/lib/utils";
-import { AlertCircle } from "lucide-react";
+import { useRagContext } from "@/features/rag/providers/RAG";
+import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
+import { cn } from "@/lib/utils";
+import {
+  ConfigurableFieldAgentsMetadata,
+  ConfigurableFieldMCPMetadata,
+  ConfigurableFieldRAGMetadata,
+} from "@/types/configurable";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { useAgentsContext } from "@/providers/Agents";
+import { getDeployments } from "@/lib/environment/deployments";
+import { toast } from "sonner";
 
 interface Option {
   label: string;
@@ -96,7 +119,7 @@ export function ConfigField({
       // If parsing succeeds, call handleChange with the raw string and clear error
       handleChange(jsonString); // Use the unified handleChange
       setJsonError(null);
-    } catch (_error) {
+    } catch (_) {
       // If parsing fails, update state with invalid string but set error
       // This allows the user to see their invalid input and the error message
       if (isExternallyManaged) {
@@ -115,7 +138,7 @@ export function ConfigField({
       // Directly use handleChange to update with the formatted string
       handleChange(formatted);
       setJsonError(null); // Clear error on successful format
-    } catch (_error) {
+    } catch (_) {
       // If formatting fails (because input is not valid JSON), set the error state
       // Do not change the underlying value that failed to parse/format
       setJsonError("Invalid JSON format");
@@ -308,31 +331,55 @@ export function ConfigFieldTool({
   agentId,
   className,
   toolId,
+  value: externalValue, // Rename to avoid conflict
+  setValue: externalSetValue, // Rename to avoid conflict
 }: Pick<
   ConfigFieldProps,
-  "id" | "label" | "description" | "agentId" | "className"
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
 > & { toolId: string }) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
-  const checked = (
-    store.configsByAgentId[actualAgentId][toolId] as string[]
-  ).some((t) => t === label);
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[toolId]
+  ) as ConfigurableFieldMCPMetadata["default"] | undefined;
+
+  if (!defaults) {
+    return null;
+  }
+
+  const checked = defaults.tools?.some((t) => t === label);
 
   const handleCheckedChange = (checked: boolean) => {
-    if (checked) {
-      store.updateConfig(actualAgentId, toolId, [
-        ...(store.configsByAgentId[actualAgentId][toolId] as string[]),
-        label,
-      ]);
-    } else {
-      store.updateConfig(
-        actualAgentId,
-        toolId,
-        (store.configsByAgentId[actualAgentId][toolId] as string[]).filter(
-          (t) => t !== label,
-        ),
-      );
+    const newValue = checked
+      ? {
+          ...defaults,
+          // Remove duplicates
+          tools: Array.from(
+            new Set<string>([...(defaults.tools || []), label]),
+          ),
+        }
+      : {
+          ...defaults,
+          tools: defaults.tools?.filter((t) => t !== label),
+        };
+
+    if (isExternallyManaged) {
+      externalSetValue(newValue);
+      return;
     }
+
+    store.updateConfig(actualAgentId, toolId, newValue);
   };
 
   return (
@@ -352,6 +399,190 @@ export function ConfigFieldTool({
       </div>
 
       {description && <p className="text-xs text-gray-500">{description}</p>}
+    </div>
+  );
+}
+
+export function ConfigFieldRAG({
+  id,
+  label,
+  agentId,
+  className,
+}: Pick<ConfigFieldProps, "id" | "label" | "agentId" | "className">) {
+  const { collections } = useRagContext();
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:rag`;
+  const [open, setOpen] = useState(false);
+
+  const defaults = store.configsByAgentId[actualAgentId]?.[
+    label
+  ] as ConfigurableFieldRAGMetadata["default"];
+
+  if (!defaults) {
+    return null;
+  }
+
+  const selectedCollections = defaults.collections?.length
+    ? defaults.collections
+    : [];
+
+  const handleSelect = (collectionName: string) => {
+    const newValue = selectedCollections.some((s) => s === collectionName)
+      ? selectedCollections.filter((s) => s !== collectionName)
+      : [...selectedCollections, collectionName];
+    store.updateConfig(actualAgentId, label, {
+      ...defaults,
+      collections: Array.from(new Set(newValue)),
+    });
+  };
+
+  return (
+    <div className={cn("flex w-full flex-col items-start gap-2", className)}>
+      <Label
+        htmlFor={id}
+        className="text-sm font-medium"
+      >
+        Selected Collections
+      </Label>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedCollections.length > 0
+              ? selectedCollections.length > 1
+                ? `${selectedCollections.length} collections selected`
+                : selectedCollections[0]
+              : "Select collections"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command className="w-full">
+            <CommandInput placeholder="Search collections..." />
+            <CommandList>
+              <CommandEmpty>No collections found.</CommandEmpty>
+              <CommandGroup>
+                {collections.map((collection) => (
+                  <CommandItem
+                    key={collection.uuid}
+                    value={collection.name}
+                    onSelect={() => handleSelect(collection.name)}
+                    className="flex items-center justify-between"
+                  >
+                    <span>{collection.name}</span>
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        selectedCollections.includes(collection.name)
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+export function ConfigFieldAgents({
+  label,
+  agentId,
+  className,
+  value: externalValue, // Rename to avoid conflict
+  setValue: externalSetValue, // Rename to avoid conflict
+}: Pick<
+  ConfigFieldProps,
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
+>) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:agents`;
+
+  const { agents, loading } = useAgentsContext();
+  const deployments = getDeployments();
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldAgentsMetadata["default"] | undefined;
+
+  if (!defaults) {
+    return null;
+  }
+
+  const handleSelectChange = (ids: string[]) => {
+    if (!ids.length || ids.every((id) => !id)) {
+      if (isExternallyManaged) {
+        externalSetValue([]);
+        return;
+      }
+
+      store.updateConfig(actualAgentId, label, []);
+      return;
+    }
+
+    const newDefaults = ids.map((id) => {
+      const [agent_id, deploymentId] = id.split(":");
+      const deployment_url = deployments.find(
+        (d) => d.id === deploymentId,
+      )?.deploymentUrl;
+      if (!deployment_url) {
+        toast.error("Deployment not found");
+      }
+
+      return {
+        agent_id,
+        deployment_url,
+        name: agents.find((a) => a.assistant_id === agent_id)?.name,
+      };
+    });
+
+    if (isExternallyManaged) {
+      externalSetValue(newDefaults);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, label, newDefaults);
+  };
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={defaults.map(
+          (defaultValue) =>
+            `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`,
+        )}
+        setValue={(v) =>
+          Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])
+        }
+        multiple
+      />
+
+      <p className="text-xs text-gray-500">
+        The agents to make available to this supervisor.
+      </p>
     </div>
   );
 }

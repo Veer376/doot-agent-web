@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
 import {
@@ -14,6 +20,9 @@ import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { useAuthContext } from "@/providers/Auth";
+import { getDeployments } from "@/lib/environment/deployments";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -40,11 +49,15 @@ const StreamSession = ({
   agentId: string;
   deploymentId: string;
 }) => {
-  const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+  const { session } = useAuthContext();
 
+  const deployment = getDeployments().find((d) => d.id === deploymentId);
+  if (!deployment) {
+    throw new Error(`Deployment ${deploymentId} not found`);
+  }
   const [threadId, setThreadId] = useQueryState("threadId");
   const streamValue = useTypedStream({
-    apiUrl: `${baseApiUrl}/langgraph/${deploymentId}`,
+    apiUrl: deployment.deploymentUrl,
     assistantId: agentId,
     threadId: threadId ?? null,
     onCustomEvent: (event, options) => {
@@ -55,6 +68,10 @@ const StreamSession = ({
     },
     onThreadId: (id) => {
       setThreadId(id);
+    },
+    defaultHeaders: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      "x-supabase-access-token": session?.accessToken,
     },
   });
 
@@ -68,11 +85,21 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { agents } = useAgentsContext();
+  const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (value || !agents.length) {
+      return;
+    }
+    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    if (defaultAgent) {
+      setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
+    }
+  }, [agents]);
 
   const handleValueChange = (v: string) => {
     setValue(v);
@@ -109,8 +136,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           <div className="mt-4 mb-24 flex items-center justify-center gap-4">
             <AgentsCombobox
               agents={agents}
+              agentsLoading={loading}
               value={value}
-              setValue={(v) => handleValueChange(v)}
+              setValue={(v) =>
+                Array.isArray(v)
+                  ? handleValueChange(v[0])
+                  : handleValueChange(v)
+              }
               open={open}
               setOpen={setOpen}
             />

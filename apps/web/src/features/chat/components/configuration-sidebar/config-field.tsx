@@ -408,15 +408,24 @@ export function ConfigFieldRAG({
   label,
   agentId,
   className,
-}: Pick<ConfigFieldProps, "id" | "label" | "agentId" | "className">) {
+  value: externalValue, // Rename to avoid conflict
+  setValue: externalSetValue, // Rename to avoid conflict
+}: Pick<
+  ConfigFieldProps,
+  "id" | "label" | "agentId" | "className" | "value" | "setValue"
+>) {
   const { collections } = useRagContext();
   const store = useConfigStore();
   const actualAgentId = `${agentId}:rag`;
   const [open, setOpen] = useState(false);
 
-  const defaults = store.configsByAgentId[actualAgentId]?.[
-    label
-  ] as ConfigurableFieldRAGMetadata["default"];
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldRAGMetadata["default"];
 
   if (!defaults) {
     return null;
@@ -430,6 +439,15 @@ export function ConfigFieldRAG({
     const newValue = selectedCollections.some((s) => s === collectionName)
       ? selectedCollections.filter((s) => s !== collectionName)
       : [...selectedCollections, collectionName];
+
+    if (isExternallyManaged) {
+      externalSetValue({
+        ...defaults,
+        collections: Array.from(new Set(newValue)),
+      });
+      return;
+    }
+
     store.updateConfig(actualAgentId, label, {
       ...defaults,
       collections: Array.from(new Set(newValue)),
@@ -518,6 +536,9 @@ export function ConfigFieldAgents({
   const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
 
+  // Do not allow adding itself as a sub-agent
+  const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);
+
   const isExternallyManaged = externalSetValue !== undefined;
 
   const defaults = (
@@ -568,7 +589,7 @@ export function ConfigFieldAgents({
   return (
     <div className={cn("w-full space-y-2", className)}>
       <AgentsCombobox
-        agents={agents}
+        agents={filteredAgents}
         agentsLoading={loading}
         value={defaults.map(
           (defaultValue) =>

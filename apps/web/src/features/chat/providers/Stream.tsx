@@ -158,6 +158,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           </div>
           <div className="mt-4 mb-24 flex items-center justify-center gap-4">
             <AgentsCombobox
+              disableDeselect
               agents={agents}
               agentsLoading={loading}
               value={value}

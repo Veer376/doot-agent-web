@@ -420,9 +420,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:^0.0.70":
-  version: 0.0.70
-  resolution: "@langchain/langgraph-sdk@npm:0.0.70"
+"@langchain/langgraph-sdk@npm:^0.0.74":
+  version: 0.0.74
+  resolution: "@langchain/langgraph-sdk@npm:0.0.74"
   dependencies:
     "@types/json-schema": ^7.0.15
     p-queue: ^6.6.2
@@ -436,7 +436,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: 3b5b9a76ee22e30d7b20c33957be7cee5750586e8a885aaa667a47e1bcf157a11633a5676304771ffea662cdb108927fe308771cbfe753cf59c571abc9b11463
+  checksum: 816a680333c96ddeda1aca722f11fc4e9e21687b9faa908b4a340cb0107310ea71996681fc8379842e1a990dbc7d9cda1d8dc35ed2ff9ba2f6ba8323c1c57058
   languageName: node
   linkType: hard
 
@@ -8312,7 +8312,7 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.0.70
+    "@langchain/langgraph-sdk": ^0.0.74
     "@modelcontextprotocol/sdk": ^1.11.0
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4

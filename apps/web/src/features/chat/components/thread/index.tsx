@@ -114,12 +114,11 @@ function NewThreadButton() {
 
 export function Thread() {
   const [agentId] = useQueryState("agentId");
-  const { getAgentConfig } = useConfigStore();
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
   );
-  const [input, setInput] = useState("");
+  const [hasInput, setHasInput] = useState(false);
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
 
   const { session } = useAuthContext();
@@ -174,17 +173,26 @@ export function Thread() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+
+    const form = e.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const content = (formData.get("input") as string | undefined)?.trim() ?? "";
+
+    setHasInput(false);
+
+    if (!content || isLoading) return;
     if (!agentId) return;
     setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
-      content: input,
+      content,
     };
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
+    const { getAgentConfig } = useConfigStore.getState();
+
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
@@ -206,13 +214,14 @@ export function Thread() {
       },
     );
 
-    setInput("");
+    form.reset();
   };
 
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
   ) => {
     if (!agentId) return;
+    const { getAgentConfig } = useConfigStore.getState();
 
     // Do this so the loading state is correct
     prevMessageLength.current = prevMessageLength.current - 1;
@@ -296,8 +305,8 @@ export function Thread() {
                   className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                 >
                   <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    name="input"
+                    onChange={(e) => setHasInput(!!e.target.value.trim())}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Enter" &&
@@ -345,7 +354,7 @@ export function Thread() {
                       <Button
                         type="submit"
                         className="shadow-md transition-all"
-                        disabled={isLoading || !input.trim()}
+                        disabled={isLoading || !hasInput}
                       >
                         Send
                       </Button>

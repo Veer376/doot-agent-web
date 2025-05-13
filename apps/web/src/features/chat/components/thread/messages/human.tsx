@@ -43,9 +43,7 @@ export function HumanMessage({
   isLoading: boolean;
 }) {
   const { session } = useAuthContext();
-
   const [agentId] = useQueryState("agentId");
-  const { getAgentConfig } = useConfigStore();
 
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
@@ -61,6 +59,8 @@ export function HumanMessage({
     setIsEditing(false);
 
     const newMessage: Message = { type: "human", content: value };
+    const { getAgentConfig } = useConfigStore.getState();
+
     thread.submit(
       { messages: [newMessage] },
       {

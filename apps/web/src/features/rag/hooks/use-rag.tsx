@@ -161,43 +161,46 @@ export function useRag(): UseRagReturn {
   >(undefined);
 
   // --- Initial Fetch ---
-  const initialFetch = useCallback(async (accessToken: string) => {
-    setCollectionsLoading(true);
-    setDocumentsLoading(true);
-    let defaultCollectionId = "";
-    const initCollections = await getCollections(accessToken);
-    if (!initCollections.length) {
-      // No collections exist, create the default collection.
-      const defaultCollection = await createCollection(
+  const initialFetch = useCallback(
+    async (accessToken: string) => {
+      setCollectionsLoading(true);
+      setDocumentsLoading(true);
+      let defaultCollectionId = "";
+      const initCollections = await getCollections(accessToken);
+      if (!initCollections.length) {
+        // No collections exist, create the default collection.
+        const defaultCollection = await createCollection(
+          DEFAULT_COLLECTION_NAME,
+          {},
+          accessToken,
+        );
+        if (!defaultCollection) {
+          throw new Error("Failed to create default collection");
+        }
+        defaultCollectionId = defaultCollection.uuid;
+      } else {
+        setCollections(initCollections);
+        defaultCollectionId =
+          initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)
+            ?.uuid || "";
+      }
+      setCollectionsLoading(false);
+      setSelectedCollection(
+        initCollections.find((c) => c.uuid === defaultCollectionId),
+      );
+
+      const documents = await listDocuments(
         DEFAULT_COLLECTION_NAME,
-        {},
+        {
+          limit: 100,
+        },
         accessToken,
       );
-      if (!defaultCollection) {
-        throw new Error("Failed to create default collection");
-      }
-      defaultCollectionId = defaultCollection.uuid;
-    } else {
-      setCollections(initCollections);
-      defaultCollectionId =
-        initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)?.uuid ||
-        "";
-    }
-    setCollectionsLoading(false);
-    setSelectedCollection(
-      initCollections.find((c) => c.uuid === defaultCollectionId),
-    );
-
-    const documents = await listDocuments(
-      DEFAULT_COLLECTION_NAME,
-      {
-        limit: 100,
-      },
-      accessToken,
-    );
-    setDocuments(documents);
-    setDocumentsLoading(false);
-  }, [session]);
+      setDocuments(documents);
+      setDocumentsLoading(false);
+    },
+    [session],
+  );
 
   // --- Document Operations ---
 

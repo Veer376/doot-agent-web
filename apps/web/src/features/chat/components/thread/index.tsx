@@ -167,9 +167,9 @@ function NewThreadButton(props: { hasMessages: boolean }) {
           borderRight: 0,
         }}
         footer={
-          <div className="text-secondary-foreground bg-secondary flex gap-2 p-3 pb-3 pr-10 text-xs">
+          <div className="text-secondary-foreground bg-secondary flex gap-2 p-3 pr-10 pb-3 text-xs">
             <SquarePen className="size-4 shrink-0" />
-            <span className="text-secondary-foreground text-xs mb-[1px]">
+            <span className="text-secondary-foreground mb-[1px] text-xs">
               Selecting a different agent will create a new thread.
             </span>
           </div>

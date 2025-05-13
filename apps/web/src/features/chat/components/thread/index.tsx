@@ -1,5 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
@@ -64,8 +71,48 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
+function NewThreadButton() {
+  const [_, setThreadId] = useQueryState("threadId");
+
+  const handleNewThread = useCallback(() => {
+    setThreadId(null);
+  }, [setThreadId]);
+
+  const isMac = useMemo(
+    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent),
+    [],
+  );
+
+  useLayoutEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLocaleLowerCase() === "o"
+      ) {
+        e.preventDefault();
+        handleNewThread();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNewThread]);
+
+  return (
+    <TooltipIconButton
+      size="lg"
+      className="p-4"
+      tooltip={isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"}
+      variant="outline"
+      onClick={handleNewThread}
+    >
+      <SquarePen className="size-4" />
+    </TooltipIconButton>
+  );
+}
+
 export function Thread() {
-  const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId] = useQueryState("agentId");
   const { getAgentConfig } = useConfigStore();
   const [hideToolCalls, setHideToolCalls] = useQueryState(
@@ -182,7 +229,7 @@ export function Thread() {
     });
   };
 
-  const chatStarted = !!threadId;
+  const hasMessages = messages.length > 0;
   const hasNoAIOrToolMessages = !messages.find(
     (m) => m.type === "ai" || m.type === "tool",
   );
@@ -193,10 +240,10 @@ export function Thread() {
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
-            !chatStarted && "mt-[25vh] flex flex-col items-stretch",
-            chatStarted && "grid grid-rows-[1fr_auto]",
+            !hasMessages && "mt-[25vh] flex flex-col items-stretch",
+            hasMessages && "grid grid-rows-[1fr_auto]",
           )}
-          contentClassName="pt-8 pb-16  max-w-3xl mx-auto flex flex-col gap-4 w-full"
+          contentClassName="pt-8 pb-16 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
               {messages
@@ -232,7 +279,7 @@ export function Thread() {
           }
           footer={
             <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
-              {!chatStarted && (
+              {!hasMessages && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                   <h1 className="text-2xl font-semibold tracking-tight">
@@ -271,17 +318,7 @@ export function Thread() {
                   <div className="flex items-center justify-between p-2 pt-4">
                     <div>
                       <div className="flex items-center space-x-2">
-                        {chatStarted && (
-                          <TooltipIconButton
-                            size="lg"
-                            className="p-4"
-                            tooltip="New thread"
-                            variant="ghost"
-                            onClick={() => setThreadId(null)}
-                          >
-                            <SquarePen className="size-5" />
-                          </TooltipIconButton>
-                        )}
+                        {hasMessages && <NewThreadButton />}
 
                         <Switch
                           id="render-tool-calls"

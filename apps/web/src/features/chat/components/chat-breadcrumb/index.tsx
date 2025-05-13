@@ -84,6 +84,7 @@ function SelectedAgentSelect() {
           <AgentsCombobox
             agents={agents}
             agentsLoading={loading}
+            disableDeselect
             value={value}
             setValue={(v) =>
               Array.isArray(v) ? handleValueChange(v[0]) : handleValueChange(v)

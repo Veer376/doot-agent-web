@@ -50,6 +50,11 @@ export interface AgentsComboboxProps {
    * @default false
    */
   multiple?: boolean;
+  /**
+   * Prevent deselection of selected values
+   * @default false
+   */
+  disableDeselect?: boolean;
   className?: string;
   trigger?: React.ReactNode;
   triggerAsChild?: boolean;
@@ -125,6 +130,7 @@ export function AgentsCombobox({
   value,
   setValue,
   multiple = false,
+  disableDeselect = false,
   className,
   trigger,
   triggerAsChild,
@@ -150,15 +156,16 @@ export function AgentsCombobox({
       if (index === -1) {
         // Add the value if not already selected
         newValues.push(currentValue);
-      } else {
-        // Remove the value if already selected
+      } else if (!disableDeselect) {
+        // Remove the value if already selected (only if deselection is allowed)
         newValues.splice(index, 1);
       }
 
       setValue(newValues);
     } else {
       // For single selection mode (backward compatibility)
-      setValue(currentValue === selectedValues[0] ? "" : currentValue);
+      const shouldDeselect = currentValue === selectedValues[0] && !disableDeselect;
+      setValue(shouldDeselect ? "" : currentValue);
       setOpen?.(false);
     }
   };

@@ -20,21 +20,16 @@ function TotalToolsBadge({
   loading: boolean;
   hasMore: boolean;
 }) {
-  if (loading) {
-    return (
-      <span className="flex items-center gap-2">
-        {" "}
-        - <Badge variant="outline">loading...</Badge>
-      </span>
-    );
-  }
   return (
     <span className="flex items-center gap-2">
-      {" "}
-      -{" "}
-      <Badge variant="outline">
-        {toolsCount} {hasMore && "+"}
-      </Badge>
+      {loading ? (
+        <Badge variant="outline">Loading...</Badge>
+      ) : (
+        <Badge variant="outline">
+          {toolsCount}
+          {hasMore && "+"}
+        </Badge>
+      )}
     </span>
   );
 }

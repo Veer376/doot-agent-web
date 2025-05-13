@@ -115,9 +115,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              setShowEditDialog(true);
-            }}
+            onClick={() => setShowEditDialog(true)}
           >
             <Edit className="mr-2 h-3.5 w-3.5" />
             Edit
@@ -135,9 +133,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
       <EditAgentDialog
         agent={agent}
         open={showEditDialog}
-        onOpenChange={(c) => {
-          setShowEditDialog(c);
-        }}
+        onOpenChange={(c) => setShowEditDialog(c)}
       />
     </>
   );

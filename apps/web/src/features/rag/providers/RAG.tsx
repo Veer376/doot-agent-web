@@ -1,8 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  PropsWithChildren,
-} from "react";
+import React, { createContext, useContext, PropsWithChildren } from "react";
 import { useRag } from "../hooks/use-rag";
 
 type RagContextType = ReturnType<typeof useRag>;

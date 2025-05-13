@@ -55,9 +55,26 @@ const StreamSession = ({
   if (!deployment) {
     throw new Error(`Deployment ${deploymentId} not found`);
   }
+
+  let deploymentUrl = deployment.deploymentUrl;
+  let usingProxyRoute = false;
+  if (
+    !session?.accessToken ||
+    process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true"
+  ) {
+    const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+    if (!baseApiUrl) {
+      throw new Error(
+        "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
+      );
+    }
+    deploymentUrl = `${baseApiUrl}/langgraph/${deploymentId}`;
+    usingProxyRoute = true;
+  }
+
   const [threadId, setThreadId] = useQueryState("threadId");
   const streamValue = useTypedStream({
-    apiUrl: deployment.deploymentUrl,
+    apiUrl: deploymentUrl,
     assistantId: agentId,
     threadId: threadId ?? null,
     onCustomEvent: (event, options) => {
@@ -70,8 +87,14 @@ const StreamSession = ({
       setThreadId(id);
     },
     defaultHeaders: {
-      Authorization: `Bearer ${session?.accessToken}`,
-      "x-supabase-access-token": session?.accessToken,
+      ...(!usingProxyRoute
+        ? {
+            Authorization: `Bearer ${session?.accessToken}`,
+            "x-supabase-access-token": session?.accessToken,
+          }
+        : {
+            "x-auth-scheme": "langsmith",
+          }),
     },
   });
 
@@ -133,8 +156,9 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               an agent to chat with.
             </p>
           </div>
-          <div className="mt-4 mb-24 flex items-center justify-center gap-4">
+          <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
             <AgentsCombobox
+              disableDeselect
               agents={agents}
               agentsLoading={loading}
               value={value}

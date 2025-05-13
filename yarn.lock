@@ -420,9 +420,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:^0.0.70":
-  version: 0.0.70
-  resolution: "@langchain/langgraph-sdk@npm:0.0.70"
+"@langchain/langgraph-sdk@npm:^0.0.74":
+  version: 0.0.74
+  resolution: "@langchain/langgraph-sdk@npm:0.0.74"
   dependencies:
     "@types/json-schema": ^7.0.15
     p-queue: ^6.6.2
@@ -436,7 +436,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: 3b5b9a76ee22e30d7b20c33957be7cee5750586e8a885aaa667a47e1bcf157a11633a5676304771ffea662cdb108927fe308771cbfe753cf59c571abc9b11463
+  checksum: 816a680333c96ddeda1aca722f11fc4e9e21687b9faa908b4a340cb0107310ea71996681fc8379842e1a990dbc7d9cda1d8dc35ed2ff9ba2f6ba8323c1c57058
   languageName: node
   linkType: hard
 
@@ -5255,12 +5255,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langgraph-nextjs-api-passthrough@npm:^0.0.5":
-  version: 0.0.5
-  resolution: "langgraph-nextjs-api-passthrough@npm:0.0.5"
+"langgraph-nextjs-api-passthrough@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "langgraph-nextjs-api-passthrough@npm:0.1.0"
   peerDependencies:
     next: "*"
-  checksum: 3598da6960992afa20f40183d71ae2dbaeaa3a2d611ebe0a7ab3a7b26f08cfe8ff7acf85d25e47480f375470efc14344e73e1bdad66d3c0977cecd4b144022fd
+  checksum: 9deae806ae4ca21ae50fe25b5352487110637e0fd6bf17abb5f2bbcfde69f05c4e41308f41b1efd22837d4a0db1d1fad6c4bdfe458076af907a2f3853cb1cf08
   languageName: node
   linkType: hard
 
@@ -6419,6 +6419,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "open-agent-platform@workspace:."
   dependencies:
+    react-hook-form: ^7.56.3
     turbo: ^2.5.0
     typescript: ^5
   languageName: unknown
@@ -6831,6 +6832,15 @@ __metadata:
   peerDependencies:
     react: ^19.1.0
   checksum: 1d154b6543467095ac269e61ca59db546f34ef76bcdeb90f2dad41d682cd210aae492e70c85010ed5d0a2caea225e9a55139ebc1a615ee85bf197d7f99678cdf
+  languageName: node
+  linkType: hard
+
+"react-hook-form@npm:^7.56.3":
+  version: 7.56.3
+  resolution: "react-hook-form@npm:7.56.3"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  checksum: 5b5ebf1b61754a5c2e5785a6f3039eac89028d0613e9f7da23c132129e9685c166077b338db05430292d16b9532a21ebd2abd8785de497c54cb70fbccf774572
   languageName: node
   linkType: hard
 
@@ -8312,7 +8322,7 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.0.70
+    "@langchain/langgraph-sdk": ^0.0.74
     "@modelcontextprotocol/sdk": ^1.11.0
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4
@@ -8358,7 +8368,7 @@ __metadata:
     globals: ^15.14.0
     js-cookie: 3.0.5
     katex: latest
-    langgraph-nextjs-api-passthrough: ^0.0.5
+    langgraph-nextjs-api-passthrough: ^0.1.0
     lodash: ^4.17.21
     lucide-react: ^0.488.0
     next: ^15.3.1

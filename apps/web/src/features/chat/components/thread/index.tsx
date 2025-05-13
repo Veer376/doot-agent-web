@@ -1,5 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
@@ -22,6 +29,9 @@ import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-respons
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { useAgentsContext } from "@/providers/Agents";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -64,15 +74,133 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
+function NewThreadButton(props: { hasMessages: boolean }) {
+  const { agents, loading } = useAgentsContext();
+  const [open, setOpen] = useState(false);
+
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_, setThreadId] = useQueryState("threadId");
+
+  const handleNewThread = useCallback(() => {
+    setThreadId(null);
+  }, [setThreadId]);
+
+  const isMac = useMemo(
+    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent),
+    [],
+  );
+
+  useLayoutEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLocaleLowerCase() === "o"
+      ) {
+        e.preventDefault();
+        handleNewThread();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNewThread]);
+
+  const onAgentChange = useCallback(
+    (v: string | string[] | undefined) => {
+      const nextValue = Array.isArray(v) ? v[0] : v;
+      if (!nextValue) return;
+
+      const [agentId, deploymentId] = nextValue.split(":");
+      setAgentId(agentId);
+      setDeploymentId(deploymentId);
+      setThreadId(null);
+    },
+    [setAgentId, setDeploymentId, setThreadId],
+  );
+
+  const agentValue =
+    agentId && deploymentId ? `${agentId}:${deploymentId}` : undefined;
+
+  useEffect(() => {
+    if (agentValue || !agents.length) {
+      return;
+    }
+    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    if (defaultAgent) {
+      onAgentChange(
+        `${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`,
+      );
+    }
+  }, [agents, agentValue, onAgentChange]);
+
+  if (!props.hasMessages) {
+    return (
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={agentValue}
+        setValue={onAgentChange}
+        open={open}
+        setOpen={setOpen}
+        triggerAsChild
+        className="min-w-auto"
+      />
+    );
+  }
+
+  return (
+    <div className="flex rounded-md shadow-xs">
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={agentValue}
+        setValue={onAgentChange}
+        open={open}
+        setOpen={setOpen}
+        triggerAsChild
+        className="relative min-w-auto shadow-none focus-within:z-10"
+        style={{
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          borderRight: 0,
+        }}
+        footer={
+          <div className="text-secondary-foreground bg-secondary flex gap-2 p-3 pr-10 pb-3 text-xs">
+            <SquarePen className="size-4 shrink-0" />
+            <span className="text-secondary-foreground mb-[1px] text-xs">
+              Selecting a different agent will create a new thread.
+            </span>
+          </div>
+        }
+      />
+
+      {props.hasMessages && (
+        <TooltipIconButton
+          size="lg"
+          className="relative size-9 p-4 shadow-none focus-within:z-10"
+          tooltip={
+            isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"
+          }
+          variant="outline"
+          onClick={handleNewThread}
+          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+        >
+          <SquarePen className="size-4" />
+        </TooltipIconButton>
+      )}
+    </div>
+  );
+}
+
 export function Thread() {
-  const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId] = useQueryState("agentId");
-  const { getAgentConfig } = useConfigStore();
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
   );
-  const [input, setInput] = useState("");
+  const [hasInput, setHasInput] = useState(false);
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
 
   const { session } = useAuthContext();
@@ -127,17 +255,26 @@ export function Thread() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+
+    const form = e.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    const content = (formData.get("input") as string | undefined)?.trim() ?? "";
+
+    setHasInput(false);
+
+    if (!content || isLoading) return;
     if (!agentId) return;
     setFirstTokenReceived(false);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
-      content: input,
+      content,
     };
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
+    const { getAgentConfig } = useConfigStore.getState();
+
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
@@ -159,13 +296,17 @@ export function Thread() {
       },
     );
 
-    setInput("");
+    form.reset();
   };
 
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
+    optimisticValues?: (prev: { messages?: Message[] }) => {
+      messages?: Message[] | undefined;
+    },
   ) => {
     if (!agentId) return;
+    const { getAgentConfig } = useConfigStore.getState();
 
     // Do this so the loading state is correct
     prevMessageLength.current = prevMessageLength.current - 1;
@@ -176,13 +317,14 @@ export function Thread() {
       config: {
         configurable: getAgentConfig(agentId),
       },
+      optimisticValues,
       metadata: {
         supabaseAccessToken: session?.accessToken,
       },
     });
   };
 
-  const chatStarted = !!threadId;
+  const hasMessages = messages.length > 0;
   const hasNoAIOrToolMessages = !messages.find(
     (m) => m.type === "ai" || m.type === "tool",
   );
@@ -193,10 +335,10 @@ export function Thread() {
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
-            !chatStarted && "mt-[25vh] flex flex-col items-stretch",
-            chatStarted && "grid grid-rows-[1fr_auto]",
+            !hasMessages && "mt-[25vh] flex flex-col items-stretch",
+            hasMessages && "grid grid-rows-[1fr_auto]",
           )}
-          contentClassName="pt-8 pb-16  max-w-3xl mx-auto flex flex-col gap-4 w-full"
+          contentClassName="pt-8 pb-16 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
               {messages
@@ -232,7 +374,7 @@ export function Thread() {
           }
           footer={
             <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
-              {!chatStarted && (
+              {!hasMessages && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                   <h1 className="text-2xl font-semibold tracking-tight">
@@ -249,13 +391,12 @@ export function Thread() {
                   className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                 >
                   <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    name="input"
+                    onChange={(e) => setHasInput(!!e.target.value.trim())}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Enter" &&
                         !e.shiftKey &&
-                        !e.metaKey &&
                         !e.nativeEvent.isComposing
                       ) {
                         e.preventDefault();
@@ -271,17 +412,7 @@ export function Thread() {
                   <div className="flex items-center justify-between p-2 pt-4">
                     <div>
                       <div className="flex items-center space-x-2">
-                        {chatStarted && (
-                          <TooltipIconButton
-                            size="lg"
-                            className="p-4"
-                            tooltip="New thread"
-                            variant="ghost"
-                            onClick={() => setThreadId(null)}
-                          >
-                            <SquarePen className="size-5" />
-                          </TooltipIconButton>
-                        )}
+                        <NewThreadButton hasMessages={hasMessages} />
 
                         <Switch
                           id="render-tool-calls"
@@ -308,7 +439,7 @@ export function Thread() {
                       <Button
                         type="submit"
                         className="shadow-md transition-all"
-                        disabled={isLoading || !input.trim()}
+                        disabled={isLoading || !hasInput}
                       >
                         Send
                       </Button>

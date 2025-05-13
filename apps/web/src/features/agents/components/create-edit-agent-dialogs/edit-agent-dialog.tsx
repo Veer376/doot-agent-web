@@ -11,11 +11,12 @@ import {
 import { useAgents } from "@/hooks/use-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
+import { FormProvider, useForm } from "react-hook-form";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -23,63 +24,47 @@ interface EditAgentDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditAgentDialog({
+function EditAgentDialogContent({
   agent,
-  open,
-  onOpenChange,
-}: EditAgentDialogProps) {
+  onClose,
+}: {
+  agent: Agent;
+  onClose: () => void;
+}) {
   const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
+
+    loading,
     configurations,
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
-    config,
-    setConfig,
-    loading,
-    setLoading,
-    name,
-    setName,
-    description,
-    setDescription,
-    clearState: clearAgentConfigState,
   } = useAgentConfig();
-  const [submitting, setSubmitting] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      loading ||
-      configurations.length > 0 ||
-      !open
-    )
-      return;
+  const form = useForm<{
+    name: string;
+    description: string;
+    config: Record<string, any>;
+  }>({ defaultValues: async () => getSchemaAndUpdateConfig(agent) });
 
-    getSchemaAndUpdateConfig(agent);
-  }, [agent, open]);
-
-  const handleSubmit = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => {
-    e.preventDefault();
-    if (!name || !description) {
+  const handleSubmit = async (data: {
+    name: string;
+    description: string;
+    config: Record<string, any>;
+  }) => {
+    if (!data.name || !data.description) {
       toast.warning("Name and description are required");
       return;
     }
 
-    setSubmitting(true);
     const updatedAgent = await updateAgent(
       agent.assistant_id,
       agent.deploymentId,
-      {
-        name,
-        description,
-        config,
-      },
+      data,
     );
-    setSubmitting(false);
 
     if (!updatedAgent) {
       toast.error("Failed to update agent", {
@@ -90,16 +75,14 @@ export function EditAgentDialog({
 
     toast.success("Agent updated successfully!");
 
-    onOpenChange(false);
-    clearState();
-    // Do not await so that the refresh is non-blocking
+    onClose();
     refreshAgents();
   };
 
   const handleDelete = async () => {
-    setSubmitting(true);
+    setDeleteSubmitting(true);
     const deleted = await deleteAgent(agent.deploymentId, agent.assistant_id);
-    setSubmitting(false);
+    setDeleteSubmitting(false);
 
     if (!deleted) {
       toast.error("Failed to delete agent", {
@@ -110,78 +93,100 @@ export function EditAgentDialog({
 
     toast.success("Agent deleted successfully!");
 
-    onOpenChange(false);
-    clearState();
-    // Do not await so that the refresh is non-blocking
+    onClose();
     refreshAgents();
   };
 
-  const clearState = () => {
-    clearAgentConfigState();
-    setLoading(false);
-    setSubmitting(false);
-  };
-
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(c) => {
-        onOpenChange(c);
-        if (!c) {
-          clearState();
-        }
-      }}
-    >
-      <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
+    <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <AlertDialogHeader>
-          <div className="flex items-center justify-between">
-            <AlertDialogTitle>Edit Agent</AlertDialogTitle>
-            <AlertDialogCancel>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <AlertDialogTitle>Edit Agent</AlertDialogTitle>
+              <AlertDialogDescription>
+                Edit the agent for &apos;
+                <span className="font-medium">{agent.graph_id}</span>&apos;
+                graph.
+              </AlertDialogDescription>
+            </div>
+            <AlertDialogCancel size="icon">
               <X className="size-4" />
             </AlertDialogCancel>
           </div>
-          <AlertDialogDescription>
-            Edit the agent for &apos;
-            <span className="font-medium">{agent.graph_id}</span>&apos; graph.
-          </AlertDialogDescription>
         </AlertDialogHeader>
         {loading ? (
           <AgentFieldsFormLoading />
         ) : (
-          <AgentFieldsForm
-            name={name}
-            setName={setName}
-            description={description}
-            setDescription={setDescription}
-            configurations={configurations}
-            toolConfigurations={toolConfigurations}
-            config={config}
-            setConfig={setConfig}
-            agentId={agent.assistant_id}
-            ragConfigurations={ragConfigurations}
-            agentsConfigurations={agentsConfigurations}
-          />
+          <FormProvider {...form}>
+            <AgentFieldsForm
+              configurations={configurations}
+              toolConfigurations={toolConfigurations}
+              agentId={agent.assistant_id}
+              ragConfigurations={ragConfigurations}
+              agentsConfigurations={agentsConfigurations}
+            />
+          </FormProvider>
         )}
         <AlertDialogFooter>
           <Button
             onClick={handleDelete}
             className="flex w-full items-center justify-center gap-1"
-            disabled={loading || submitting}
+            disabled={loading || deleteSubmitting}
             variant="destructive"
           >
-            {submitting ? <LoaderCircle className="animate-spin" /> : <Trash />}
-            <span>{submitting ? "Deleting..." : "Delete Agent"}</span>
+            {deleteSubmitting ? (
+              <LoaderCircle className="animate-spin" />
+            ) : (
+              <Trash />
+            )}
+            <span>{deleteSubmitting ? "Deleting..." : "Delete Agent"}</span>
           </Button>
           <Button
-            onClick={handleSubmit}
+            type="submit"
             className="flex w-full items-center justify-center gap-1"
-            disabled={loading || submitting}
+            disabled={loading || form.formState.isSubmitting}
           >
-            {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
-            <span>{submitting ? "Saving..." : "Save Changes"}</span>
+            {form.formState.isSubmitting ? (
+              <LoaderCircle className="animate-spin" />
+            ) : (
+              <Bot />
+            )}
+            <span>
+              {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+            </span>
           </Button>
         </AlertDialogFooter>
-      </AlertDialogContent>
+      </form>
+    </AlertDialogContent>
+  );
+}
+
+export function EditAgentDialog({
+  agent,
+  open,
+  onOpenChange,
+}: EditAgentDialogProps) {
+  const [openCounter, setOpenCounter] = useState(0);
+
+  const lastOpen = useRef(open);
+  useLayoutEffect(() => {
+    if (lastOpen.current !== open && open) {
+      setOpenCounter((c) => c + 1);
+    }
+    lastOpen.current = open;
+  }, [open, setOpenCounter]);
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <EditAgentDialogContent
+        key={openCounter}
+        agent={agent}
+        onClose={() => onOpenChange(false)}
+      />
     </AlertDialog>
   );
 }

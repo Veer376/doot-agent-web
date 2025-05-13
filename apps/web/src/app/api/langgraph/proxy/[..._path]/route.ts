@@ -15,7 +15,7 @@ import { getDeployments } from "@/lib/environment/deployments";
  * with another dynamic path field (`/[...deploymentId]/[..._path]/route.ts`). The
  * deployment ID will then be used to find the corresponding deployment URL, and
  * pass that to the `initApiPassthrough` function. We must also pass the updated
- * base route to `initApiPassthrough`, which consists of `langgraph/${deploymentId}`.
+ * base route to `initApiPassthrough`, which consists of `langgraph/proxy/${deploymentId}`.
  */
 
 export const runtime = "edge";
@@ -34,6 +34,21 @@ type DynamicRouteParams = {
 type RequestParams = {
   params: Promise<DynamicRouteParams>;
 };
+
+/**
+ * Determines if the LangGraph proxy route is enabled based on environment configuration.
+ *
+ * This function acts as a security gate for all proxy endpoints, preventing unauthorized
+ * access to the LangGraph server via admin authentication (API key). The proxy
+ * functionality is only available when explicitly enabled through the
+ * NEXT_PUBLIC_USE_LANGSMITH_AUTH environment variable.
+ *
+ * @returns {boolean} True if proxy routes should be accessible (NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true"),
+ *                   false otherwise.
+ */
+function isProxyRouteEnabled() {
+  return process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true";
+}
 
 /**
  * Finds the deployment URL based on the path parameters. If the first item in the
@@ -55,7 +70,7 @@ async function getDeploymentUrl({
 
   if (deployment) {
     return {
-      baseRoute: `langgraph/${deploymentId}`,
+      baseRoute: `langgraph/proxy/${deploymentId}`,
       url: deployment.deploymentUrl,
     };
   }
@@ -66,6 +81,10 @@ export async function GET(req: NextRequest, { params }: RequestParams) {
   const urlAndRoute = await getDeploymentUrl({ params });
   if (!urlAndRoute) {
     return new Response("Deployment not found", { status: 404 });
+  }
+
+  if (!isProxyRouteEnabled()) {
+    return new Response("Proxy route not enabled", { status: 403 });
   }
 
   const { GET } = initApiPassthrough({
@@ -84,6 +103,10 @@ export async function POST(req: NextRequest, { params }: RequestParams) {
     return new Response("Deployment not found", { status: 404 });
   }
 
+  if (!isProxyRouteEnabled()) {
+    return new Response("Proxy route not enabled", { status: 403 });
+  }
+
   const { POST } = initApiPassthrough({
     apiKey: process.env.LANGSMITH_API_KEY,
     apiUrl: urlAndRoute.url,
@@ -98,6 +121,10 @@ export async function PUT(req: NextRequest, { params }: RequestParams) {
   const urlAndRoute = await getDeploymentUrl({ params });
   if (!urlAndRoute) {
     return new Response("Deployment not found", { status: 404 });
+  }
+
+  if (!isProxyRouteEnabled()) {
+    return new Response("Proxy route not enabled", { status: 403 });
   }
 
   const { PUT } = initApiPassthrough({
@@ -116,6 +143,10 @@ export async function PATCH(req: NextRequest, { params }: RequestParams) {
     return new Response("Deployment not found", { status: 404 });
   }
 
+  if (!isProxyRouteEnabled()) {
+    return new Response("Proxy route not enabled", { status: 403 });
+  }
+
   const { PATCH } = initApiPassthrough({
     apiKey: process.env.LANGSMITH_API_KEY,
     apiUrl: urlAndRoute.url,
@@ -130,6 +161,10 @@ export async function DELETE(req: NextRequest, { params }: RequestParams) {
   const urlAndRoute = await getDeploymentUrl({ params });
   if (!urlAndRoute) {
     return new Response("Deployment not found", { status: 404 });
+  }
+
+  if (!isProxyRouteEnabled()) {
+    return new Response("Proxy route not enabled", { status: 403 });
   }
 
   const { DELETE } = initApiPassthrough({

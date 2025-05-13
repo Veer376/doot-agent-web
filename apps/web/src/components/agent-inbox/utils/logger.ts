@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Developer-only logger utility
  *

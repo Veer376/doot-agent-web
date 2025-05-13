@@ -23,70 +23,41 @@ async function getOrCreateDefaultAssistants(
   deployment: Deployment,
   accessToken?: string,
 ): Promise<Assistant[]> {
-  // Do NOT pass in an access token here. We want to use LangSmith auth.
-  const lsAuthClient = createClient(deployment.id);
-  const userAuthClient = createClient(deployment.id, accessToken);
-
-  const [systemDefaultAssistants, userDefaultAssistants] = await Promise.all([
-    lsAuthClient.assistants.search({
-      limit: 100,
-      metadata: {
-        created_by: "system",
-      },
-    }),
-    userAuthClient.assistants.search({
-      limit: 100,
-      metadata: {
-        _x_oap_is_default: true,
-      },
-    }),
-  ]);
-  if (!systemDefaultAssistants.length) {
-    throw new Error("Failed to find default system assistants.");
+  const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+  if (!baseApiUrl) {
+    throw new Error(
+      "Failed to get default assistants: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
+    );
   }
 
-  if (systemDefaultAssistants.length === userDefaultAssistants.length) {
-    // User has already created all default assistants.
-    return userDefaultAssistants;
+  try {
+    const url = `${baseApiUrl}/langgraph/defaults?deploymentId=${deployment.id}`;
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Failed to get default assistants: ${response.status} ${response.statusText} ${errorData.error || ""}`,
+      );
+    }
+
+    const defaultAssistants = await response.json();
+    return defaultAssistants;
+  } catch (error) {
+    console.error("Error getting default assistants:", error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
-
-  // Find all assistants which are created by the system, but do not have a corresponding user defined default assistant.
-  const missingDefaultAssistants = systemDefaultAssistants.filter(
-    (assistant) =>
-      !userDefaultAssistants.some((a) => a.graph_id === assistant.graph_id),
-  );
-
-  // Create a new client, passing in the access token to use user scoped auth.
-  const newUserDefaultAssistantsPromise = missingDefaultAssistants.map(
-    async (assistant) => {
-      const isDefaultDeploymentAndGraph =
-        deployment.isDefault &&
-        deployment.defaultGraphId === assistant.graph_id;
-      return await userAuthClient.assistants.create({
-        graphId: assistant.graph_id,
-        name: `${isDefaultDeploymentAndGraph ? "Default" : "Primary"} Assistant`,
-        metadata: {
-          _x_oap_is_default: true,
-          description: `${isDefaultDeploymentAndGraph ? "Default" : "Primary"}  Assistant`,
-          ...(isDefaultDeploymentAndGraph && { _x_oap_is_primary: true }),
-        },
-      });
-    },
-  );
-
-  const newUserDefaultAssistants = [
-    ...userDefaultAssistants,
-    ...(await Promise.all(newUserDefaultAssistantsPromise)),
-  ];
-
-  if (systemDefaultAssistants.length === newUserDefaultAssistants.length) {
-    // We've successfully created all the default assistants, for every graph.
-    return newUserDefaultAssistants;
-  }
-
-  throw new Error(
-    `Failed to create default assistants for deployment ${deployment.id}. Expected ${systemDefaultAssistants.length} default assistants, but found/created ${newUserDefaultAssistants.length}.`,
-  );
 }
 
 async function getAgents(

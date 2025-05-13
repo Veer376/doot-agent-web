@@ -72,7 +72,7 @@ export function HumanMessage({
 
           return {
             ...values,
-            messages: [...(values.messages ?? []), newMessage],
+            messages: [...(values.messages.slice(0, -1) ?? []), newMessage],
           };
         },
         config: {

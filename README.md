@@ -9,10 +9,9 @@ Open Agent Platform is a citizen developer platform, allowing non-technical user
 
 ## Agents
 
-The first step in setting up Open Agent Platform is to deploy and configure your agents. To help with this, we're releasing three, pre-built agents, customized specifically for Open Agent Platform:
+The first step in setting up Open Agent Platform is to deploy and configure your agents. To help with this, we're releasing two, pre-built agents, customized specifically for Open Agent Platform:
 
 - [Tools Agent](https://github.com/langchain-ai/oap-langgraph-tools-agent)
-- [Deep Research Agent](https://github.com/langchain-ai/oap-langgraph-deep-research)
 - [Supervisor Agent](https://github.com/langchain-ai/oap-agent-supervisor)
 
 To use these agents in your instance, you should:

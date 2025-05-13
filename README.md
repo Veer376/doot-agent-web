@@ -142,7 +142,7 @@ To allow your agent to be configurable in OAP, you must set custom configuration
 
 ### General Agent Config
 
-By default, Open Agent Platform will show *all* fields listed in your configurable object as configurable in the UI. Each field will be configurable via a simple text input. To add more complex configurable field types (e.g boolean, dropdown, slider, etc), you should add a `x_lg_ui_config` object to `metadata` on the field. Inside this object is where you define the custom UI config for that specific field. The available options are:
+By default, Open Agent Platform will show *all* fields listed in your configurable object as configurable in the UI. Each field will be configurable via a simple text input. To add more complex configurable field types (e.g boolean, dropdown, slider, etc), you should add a `x_oap_ui_config` object to `metadata` on the field. Inside this object is where you define the custom UI config for that specific field. The available options are:
 
 ```typescript
 export type ConfigurableFieldUIType =
@@ -226,7 +226,7 @@ class GraphConfigPydantic(BaseModel):
     model_name: Optional[str] = Field(
         default="anthropic:claude-3-7-sonnet-latest",
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "select",
                 "default": "anthropic:claude-3-7-sonnet-latest",
                 "description": "The model to use in all generations",
@@ -249,7 +249,7 @@ class GraphConfigPydantic(BaseModel):
     temperature: Optional[float] = Field(
         default=0.7,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "slider",
                 "default": 0.7,
                 "min": 0,
@@ -262,7 +262,7 @@ class GraphConfigPydantic(BaseModel):
     max_tokens: Optional[int] = Field(
         default=4000,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "number",
                 "default": 4000,
                 "min": 1,
@@ -273,7 +273,7 @@ class GraphConfigPydantic(BaseModel):
     system_prompt: Optional[str] = Field(
         default=None,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "textarea",
                 "placeholder": "Enter a system prompt...",
                 "description": "The system prompt to use in all generations",
@@ -304,7 +304,7 @@ export const GraphConfiguration = z.object({
     .string()
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         type: "select",
         default: "anthropic/claude-3-7-sonnet-latest",
         description: "The model to use in all generations",
@@ -348,7 +348,7 @@ export const GraphConfiguration = z.object({
     .number()
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         type: "slider",
         default: 0.7,
         min: 0,
@@ -365,7 +365,7 @@ export const GraphConfiguration = z.object({
     .number()
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         type: "number",
         default: 4000,
         min: 1,
@@ -376,7 +376,7 @@ export const GraphConfiguration = z.object({
     .string()
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         type: "textarea",
         placeholder: "Enter a system prompt...",
         description: "The system prompt to use in all generations",
@@ -419,7 +419,7 @@ class GraphConfigPydantic(BaseModel):
     mcp_config: Optional[MCPConfig] = Field(
         default=None,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 # Ensure the type is `mcp`
                 "type": "mcp",
                 # Here is where you would set the default tools.
@@ -456,7 +456,7 @@ export const GraphConfiguration = z.object({
     .lazy(() => MCPConfig)
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         // Ensure the type is `mcp`
         type: "mcp",
         // Add custom tools to default to here:
@@ -494,7 +494,7 @@ class GraphConfigPydantic(BaseModel):
         default=None,
         optional=True,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 # Ensure the type is `rag`
                 "type": "rag",
                 # Here is where you would set the default collection.
@@ -531,7 +531,7 @@ export const GraphConfiguration = z.object({
     .lazy(() => RAGConfig)
     .optional()
     .langgraph.metadata({
-      x_lg_ui_config: {
+      x_oap_ui_config: {
         // Ensure the type is `rag`
         type: "rag",
         // Add custom tools to default to here:

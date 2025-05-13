@@ -22,7 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp, X, Loader2 } from "lucide-react";
+import { Plus, FileUp, X } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";

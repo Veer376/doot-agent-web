@@ -197,7 +197,7 @@ export function useRag(): UseRagReturn {
     );
     setDocuments(documents);
     setDocumentsLoading(false);
-  }, []);
+  }, [session]);
 
   // --- Document Operations ---
 
@@ -235,7 +235,7 @@ export function useRag(): UseRagReturn {
       const data = await response.json();
       return data;
     },
-    [],
+    [session],
   );
 
   const deleteDocument = useCallback(
@@ -269,7 +269,7 @@ export function useRag(): UseRagReturn {
         prevDocs.filter((doc) => doc.metadata.file_id !== id),
       );
     },
-    [selectedCollection],
+    [selectedCollection, session],
   );
 
   const handleFileUpload = useCallback(
@@ -308,7 +308,7 @@ export function useRag(): UseRagReturn {
       );
       setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
     },
-    [],
+    [session],
   );
 
   const handleTextUpload = useCallback(
@@ -348,7 +348,7 @@ export function useRag(): UseRagReturn {
         }),
       ]);
     },
-    [],
+    [session],
   );
 
   // --- Collection Operations ---
@@ -377,7 +377,7 @@ export function useRag(): UseRagReturn {
       const data = await response.json();
       return data;
     },
-    [],
+    [session],
   );
 
   const createCollection = useCallback(
@@ -430,7 +430,7 @@ export function useRag(): UseRagReturn {
       setCollections((prevCollections) => [...prevCollections, data]);
       return data;
     },
-    [collections],
+    [collections, session],
   );
 
   const updateCollection = useCallback(
@@ -521,7 +521,7 @@ export function useRag(): UseRagReturn {
 
       return updatedCollection;
     },
-    [collections, selectedCollection],
+    [collections, selectedCollection, session],
   );
 
   const deleteCollection = useCallback(
@@ -561,7 +561,7 @@ export function useRag(): UseRagReturn {
         prevCollections.filter((collection) => collection.name !== name),
       );
     },
-    [collections],
+    [collections, session],
   );
 
   // --- Return combined state and functions ---

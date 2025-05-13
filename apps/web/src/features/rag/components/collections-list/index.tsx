@@ -19,10 +19,10 @@ import { CollectionActions } from "./collection-actions";
 interface CollectionsListProps {
   collections: Collection[];
   selectedCollection: Collection | undefined;
-  onSelect: (name: string) => void;
-  onDelete: (name: string) => void;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
   onEdit: (
-    currentName: string,
+    id: string,
     name: string,
     metadata: Record<string, any>,
   ) => Promise<void>;
@@ -54,14 +54,14 @@ export function CollectionsList({
       <div className="space-y-2">
         {paginatedCollections.map((collection) => (
           <div
-            key={collection.name}
+            key={collection.uuid}
             className={cn(
               "flex cursor-pointer items-center justify-between rounded-md p-2",
-              selectedCollection?.name === collection.name
+              selectedCollection?.uuid === collection.uuid
                 ? "bg-muted"
                 : "hover:bg-muted/50",
             )}
-            onClick={() => onSelect(collection.name)}
+            onClick={() => onSelect(collection.uuid)}
           >
             <span>{getCollectionName(collection.name)}</span>
             {collection.name !== DEFAULT_COLLECTION_NAME && (

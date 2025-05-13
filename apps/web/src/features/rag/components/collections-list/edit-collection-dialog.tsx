@@ -22,7 +22,7 @@ export function EditCollectionDialog({
 }: {
   collection: Collection;
   handleEditCollection: (
-    currentName: string,
+    id: string,
     name: string,
     metadata: Record<string, any>,
   ) => Promise<void>;
@@ -45,7 +45,7 @@ export function EditCollectionDialog({
       setOpen(false);
       return;
     }
-    await handleEditCollection(collection.name, name, {
+    await handleEditCollection(collection.uuid, name, {
       description,
     });
     setOpen(false);

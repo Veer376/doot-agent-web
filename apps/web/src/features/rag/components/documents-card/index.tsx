@@ -56,7 +56,7 @@ export function DocumentsCard({
   const filteredDocuments = useMemo(
     () =>
       documents.filter(
-        (doc) => doc.metadata.collection === selectedCollection?.name,
+        (doc) => doc.metadata.collection === selectedCollection?.uuid,
       ),
     [documents, selectedCollection],
   );
@@ -163,7 +163,7 @@ export function DocumentsCard({
     stagedFiles.forEach((file) => dataTransfer.items.add(file));
     const fileList = dataTransfer.files;
 
-    await handleDocumentFileUpload(fileList, selectedCollection.name);
+    await handleDocumentFileUpload(fileList, selectedCollection.uuid);
 
     toast.success("Files uploaded successfully", { richColors: true });
     setIsUploading(false);
@@ -182,7 +182,7 @@ export function DocumentsCard({
       const loadingToast = toast.loading("Uploading text document", {
         richColors: true,
       });
-      await handleDocumentTextUpload(textInput, selectedCollection.name);
+      await handleDocumentTextUpload(textInput, selectedCollection.uuid);
       setTextInput("");
       setIsUploading(false);
       toast.dismiss(loadingToast);

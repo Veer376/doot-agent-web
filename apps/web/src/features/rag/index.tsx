@@ -1,15 +1,38 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DocumentsCard } from "./components/documents-card";
 import { CollectionsCard } from "./components/collections-card";
 import { useRagContext } from "./providers/RAG";
+import EmptyCollectionsState from "./components/empty-collections";
+import { useAuthContext } from "@/providers/Auth";
 
 export default function RAGInterface() {
-  const { selectedCollection, setSelectedCollection, collections } =
-    useRagContext();
+  const {
+    selectedCollection,
+    setSelectedCollection,
+    collections,
+    initialSearchExecuted,
+    initialFetch,
+  } = useRagContext();
   const [currentPage, setCurrentPage] = useState(1);
+  const { session } = useAuthContext();
+
+  useEffect(() => {
+    if (
+      collections.length > 0 ||
+      initialSearchExecuted ||
+      !session?.accessToken
+    ) {
+      return;
+    }
+    initialFetch(session?.accessToken);
+  }, [session?.accessToken]);
+
+  if (initialSearchExecuted && !collections.length) {
+    return <EmptyCollectionsState />;
+  }
 
   return (
     <div className="container mx-auto p-4">

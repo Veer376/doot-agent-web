@@ -218,6 +218,9 @@ In the examples below, we'll look at how to add configurable fields for `model_n
 
 #### Python
 
+<details>
+<summary>In Python, this looks like:</summary>
+
 ```python
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -285,10 +288,15 @@ class GraphConfigPydantic(BaseModel):
 workflow = StateGraph(State, config_schema=GraphConfigPydantic)
 ```
 
+</details>
+
 #### TypeScript
 
 > [!TIP]
 > In order for the Open Agent Platform to recognize & render your UI fields, your configuration object must be defined using the LangGraph Zod schema.
+
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 import "@langchain/langgraph/zod";
@@ -388,6 +396,8 @@ export const GraphConfiguration = z.object({
 const workflow = new StateGraph(MyStateSchema, GraphConfiguration)
 ```
 
+</details>
+
 ### MCP Tools Config
 
 To enable support for MCP tools in your agents with Open Agent Platform, you must add a field in your configurable fields with the type `mcp`. This field can have *any* key you want, but the value must be an object with these two keys:
@@ -397,7 +407,8 @@ To enable support for MCP tools in your agents with Open Agent Platform, you mus
 
 #### Python
 
-In Python, this looks like:
+<details>
+<summary>In Python, this looks like:</summary>
 
 ```python
 class MCPConfig(BaseModel):
@@ -431,9 +442,12 @@ class GraphConfigPydantic(BaseModel):
     )
 ```
 
+</details>
+
 #### TypeScript
 
-And in TypeScript, this looks like:
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 export const MCPConfig = z.object({
@@ -468,23 +482,26 @@ export const GraphConfiguration = z.object({
 });
 ```
 
+</details>
+
 ### RAG Config
 
 To enable support for using a LangConnect RAG server in your LangGraph agent, you must define a configurable field similar to the MCP config, but with its own unique type of `rag`, and the following fields in the object:
 
 - `rag_url`: The URL of the LangConnect RAG server.
-- `collection`: A string, containing the name of the collection to give your agent access to.
+- `collections`: A list of collection IDs, containing the IDs of the collections to give your agent access to.
 
 #### Python
 
-In Python, this looks like:
+<details>
+<summary>In Python, this looks like:</summary>
 
 ```python
 class RagConfig(BaseModel):
     rag_url: Optional[str] = None
     """The URL of the rag server"""
-    collection: Optional[str] = None
-    """The collection to use for rag"""
+    collections: Optional[List[str]] = None
+    """The collections to use for rag. Will be a list of collection IDs"""
 
 
 class GraphConfigPydantic(BaseModel):
@@ -497,18 +514,24 @@ class GraphConfigPydantic(BaseModel):
             "x_oap_ui_config": {
                 # Ensure the type is `rag`
                 "type": "rag",
-                # Here is where you would set the default collection.
+                # Here is where you would set the default collection. Use collection IDs
                 # "default": {
-                #     "collections": ["python", "langgraph docs"]
-                # }
+                #     "collections": [
+                #         "fd4fac19-886c-4ac8-8a59-fff37d2b847f",
+                #         "659abb76-fdeb-428a-ac8f-03b111183e25",
+                #     ]
+                # },
             }
         }
     )
 ```
 
+</details>
+
 #### TypeScript
 
-And in TypeScript, this looks like:
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 export const RAGConfig = z.object({
@@ -517,9 +540,10 @@ export const RAGConfig = z.object({
    */
   rag_url: z.string(),
   /**
-   * The collection to use for RAG.
+   * The collections to use for RAG. Will be an
+   * array of collection IDs
    */
-  collection: z.string(),
+  collections: z.string().array(),
 });
 
 export const GraphConfiguration = z.object({
@@ -534,14 +558,19 @@ export const GraphConfiguration = z.object({
       x_oap_ui_config: {
         // Ensure the type is `rag`
         type: "rag",
-        // Add custom tools to default to here:
+        // Here is where you would set the default collection. Use collection IDs
         // default: {
-        //   tools: ["langgraph_python_docs", "langgraph_typescript_docs"]
+        //   collections: [
+        //     "fd4fac19-886c-4ac8-8a59-fff37d2b847f",
+        //     "659abb76-fdeb-428a-ac8f-03b111183e25",
+        //   ]
         // }
       },
     }),
 });
 ```
+
+</details>
 
 # Concepts/FAQ
 
@@ -570,3 +599,9 @@ Yes! It requires some modifications to be made to the code, but we've implemente
 ### How can I use non-langgraph agents?
 
 No. All agents you intend to use with OAP must be LangGraph agents, deployed on LangGraph Platform.
+
+### Why is my agent's config is only showing string inputs, and not custom fields?
+
+First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
+
+If it's still not working, confirm your `x_oap_ui_config` metadata has the proper fields set.

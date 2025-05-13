@@ -33,13 +33,8 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <NuqsAdapter>
-          <AuthProvider>
-            <SidebarLayout>{children}</SidebarLayout>
-          </AuthProvider>
-        </NuqsAdapter>
         {isDemoApp && (
-          <div className="sticky right-0 bottom-0 left-0 z-10 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
+          <div className="fixed top-0 right-0 left-0 z-10 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
             You're currently using the demo application. To use your own agents,
             and run in production, check out the{" "}
             <a
@@ -52,6 +47,11 @@ export default function RootLayout({
             </a>
           </div>
         )}
+        <NuqsAdapter>
+          <AuthProvider>
+            <SidebarLayout>{children}</SidebarLayout>
+          </AuthProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

@@ -161,43 +161,46 @@ export function useRag(): UseRagReturn {
   >(undefined);
 
   // --- Initial Fetch ---
-  const initialFetch = useCallback(async (accessToken: string) => {
-    setCollectionsLoading(true);
-    setDocumentsLoading(true);
-    let defaultCollectionId = "";
-    const initCollections = await getCollections(accessToken);
-    if (!initCollections.length) {
-      // No collections exist, create the default collection.
-      const defaultCollection = await createCollection(
+  const initialFetch = useCallback(
+    async (accessToken: string) => {
+      setCollectionsLoading(true);
+      setDocumentsLoading(true);
+      let defaultCollectionId = "";
+      const initCollections = await getCollections(accessToken);
+      if (!initCollections.length) {
+        // No collections exist, create the default collection.
+        const defaultCollection = await createCollection(
+          DEFAULT_COLLECTION_NAME,
+          {},
+          accessToken,
+        );
+        if (!defaultCollection) {
+          throw new Error("Failed to create default collection");
+        }
+        defaultCollectionId = defaultCollection.uuid;
+      } else {
+        setCollections(initCollections);
+        defaultCollectionId =
+          initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)
+            ?.uuid || "";
+      }
+      setCollectionsLoading(false);
+      setSelectedCollection(
+        initCollections.find((c) => c.uuid === defaultCollectionId),
+      );
+
+      const documents = await listDocuments(
         DEFAULT_COLLECTION_NAME,
-        {},
+        {
+          limit: 100,
+        },
         accessToken,
       );
-      if (!defaultCollection) {
-        throw new Error("Failed to create default collection");
-      }
-      defaultCollectionId = defaultCollection.uuid;
-    } else {
-      setCollections(initCollections);
-      defaultCollectionId =
-        initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)?.uuid ||
-        "";
-    }
-    setCollectionsLoading(false);
-    setSelectedCollection(
-      initCollections.find((c) => c.uuid === defaultCollectionId),
-    );
-
-    const documents = await listDocuments(
-      DEFAULT_COLLECTION_NAME,
-      {
-        limit: 100,
-      },
-      accessToken,
-    );
-    setDocuments(documents);
-    setDocumentsLoading(false);
-  }, []);
+      setDocuments(documents);
+      setDocumentsLoading(false);
+    },
+    [session],
+  );
 
   // --- Document Operations ---
 
@@ -235,7 +238,7 @@ export function useRag(): UseRagReturn {
       const data = await response.json();
       return data;
     },
-    [],
+    [session],
   );
 
   const deleteDocument = useCallback(
@@ -269,7 +272,7 @@ export function useRag(): UseRagReturn {
         prevDocs.filter((doc) => doc.metadata.file_id !== id),
       );
     },
-    [selectedCollection],
+    [selectedCollection, session],
   );
 
   const handleFileUpload = useCallback(
@@ -308,7 +311,7 @@ export function useRag(): UseRagReturn {
       );
       setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
     },
-    [],
+    [session],
   );
 
   const handleTextUpload = useCallback(
@@ -348,7 +351,7 @@ export function useRag(): UseRagReturn {
         }),
       ]);
     },
-    [],
+    [session],
   );
 
   // --- Collection Operations ---
@@ -377,7 +380,7 @@ export function useRag(): UseRagReturn {
       const data = await response.json();
       return data;
     },
-    [],
+    [session],
   );
 
   const createCollection = useCallback(
@@ -430,7 +433,7 @@ export function useRag(): UseRagReturn {
       setCollections((prevCollections) => [...prevCollections, data]);
       return data;
     },
-    [collections],
+    [collections, session],
   );
 
   const updateCollection = useCallback(
@@ -521,7 +524,7 @@ export function useRag(): UseRagReturn {
 
       return updatedCollection;
     },
-    [collections, selectedCollection],
+    [collections, selectedCollection, session],
   );
 
   const deleteCollection = useCallback(
@@ -561,7 +564,7 @@ export function useRag(): UseRagReturn {
         prevCollections.filter((collection) => collection.name !== name),
       );
     },
-    [collections],
+    [collections, session],
   );
 
   // --- Return combined state and functions ---

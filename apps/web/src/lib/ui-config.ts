@@ -107,14 +107,11 @@ export function configSchemaToConfigurableTools(
       continue;
     }
 
-    const mcpServerUrlObj = new URL(process.env.NEXT_PUBLIC_MCP_SERVER_URL);
-    mcpServerUrlObj.pathname = `${mcpServerUrlObj.pathname}/mcp`;
-
     fields.push({
       label: key,
       type: uiConfig.type,
       default: {
-        url: mcpServerUrlObj.href,
+        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
         tools: [],
         ...(uiConfig.default ?? {}),
       },

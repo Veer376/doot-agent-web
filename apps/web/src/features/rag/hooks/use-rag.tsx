@@ -39,12 +39,12 @@ export function getCollectionName(name: string | undefined) {
  * @returns A promise that resolves with the API response.
  */
 async function uploadDocuments(
-  collectionName: string,
+  collectionId: string,
   files: File[],
   authorization: string,
   metadatas?: Record<string, any>[],
 ): Promise<any> {
-  const url = `${getApiUrlOrThrow().href}collections/${encodeURIComponent(collectionName)}/documents`;
+  const url = `${getApiUrlOrThrow().href}collections/${encodeURIComponent(collectionId)}/documents`;
 
   const formData = new FormData();
 
@@ -116,11 +116,11 @@ interface UseRagReturn {
     accessToken?: string,
   ) => Promise<Collection | undefined>;
   updateCollection: (
-    currentName: string,
+    collectionId: string,
     newName: string,
     metadata: Record<string, any>,
   ) => Promise<Collection | undefined>;
-  deleteCollection: (name: string) => Promise<string | undefined>;
+  deleteCollection: (collectionId: string) => Promise<string | undefined>;
 
   // Selected collection
   selectedCollection: Collection | undefined;
@@ -139,12 +139,9 @@ interface UseRagReturn {
   deleteDocument: (id: string) => Promise<void>;
   handleFileUpload: (
     files: FileList | null,
-    collectionName: string,
+    collectionId: string,
   ) => Promise<void>;
-  handleTextUpload: (
-    textInput: string,
-    collectionName: string,
-  ) => Promise<void>;
+  handleTextUpload: (textInput: string, collectionId: string) => Promise<void>;
 }
 
 /**
@@ -174,6 +171,7 @@ export function useRag(): UseRagReturn {
       initCollections = await getCollections(accessToken);
     } catch (e: any) {
       if (e.message.includes("Failed to fetch collections")) {
+        console.log("Failed to fetch collections, initializing database");
         // Database likely not initialized yet. Let's try this then re-fetch.
         await initializeDatabase(accessToken);
         initCollections = await getCollections(accessToken);
@@ -182,9 +180,9 @@ export function useRag(): UseRagReturn {
 
     if (!initCollections.length) {
       // No collections exist, return early
+      console.log("No collections exist, returning early");
       setCollectionsLoading(false);
       setDocumentsLoading(false);
-      console.log("No collections exist, returning early");
       setInitialSearchExecuted(true);
       return;
     }
@@ -197,7 +195,7 @@ export function useRag(): UseRagReturn {
     setCollectionsLoading(false);
 
     const documents = await listDocuments(
-      defaultCollection.name,
+      defaultCollection.uuid,
       {
         limit: 100,
       },
@@ -240,7 +238,7 @@ export function useRag(): UseRagReturn {
 
   const listDocuments = useCallback(
     async (
-      collectionName: string,
+      collectionId: string,
       args?: { limit?: number; offset?: number },
       accessToken?: string,
     ): Promise<Document[]> => {
@@ -253,7 +251,7 @@ export function useRag(): UseRagReturn {
       }
 
       const url = getApiUrlOrThrow();
-      url.pathname = `/collections/${collectionName}/documents`;
+      url.pathname = `/collections/${collectionId}/documents`;
       if (args?.limit) {
         url.searchParams.set("limit", args.limit.toString());
       }
@@ -290,7 +288,7 @@ export function useRag(): UseRagReturn {
       }
 
       const url = getApiUrlOrThrow();
-      url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
+      url.pathname = `/collections/${selectedCollection.uuid}/documents/${id}`;
 
       const response = await fetch(url.toString(), {
         method: "DELETE",
@@ -310,7 +308,7 @@ export function useRag(): UseRagReturn {
   );
 
   const handleFileUpload = useCallback(
-    async (files: FileList | null, collectionName: string) => {
+    async (files: FileList | null, collectionId: string) => {
       if (!session?.accessToken) {
         toast.error("No session found", {
           richColors: true,
@@ -330,7 +328,7 @@ export function useRag(): UseRagReturn {
           pageContent: `Content of ${file.name}`, // Placeholder: Real implementation needs file reading
           metadata: {
             name: file.name,
-            collection: collectionName,
+            collection: collectionId,
             size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
             created_at: new Date().toISOString(),
           },
@@ -338,7 +336,7 @@ export function useRag(): UseRagReturn {
       });
 
       await uploadDocuments(
-        collectionName,
+        collectionId,
         Array.from(files),
         session.accessToken,
         newDocs.map((d) => d.metadata),
@@ -349,7 +347,7 @@ export function useRag(): UseRagReturn {
   );
 
   const handleTextUpload = useCallback(
-    async (textInput: string, collectionName: string) => {
+    async (textInput: string, collectionId: string) => {
       if (!session?.accessToken) {
         toast.error("No session found", {
           richColors: true,
@@ -358,10 +356,8 @@ export function useRag(): UseRagReturn {
         return;
       }
 
-      if (!textInput.trim() || collectionName === "all") {
-        console.warn(
-          "Text upload skipped: Text is empty or collection is 'all'.",
-        );
+      if (!textInput.trim()) {
+        console.warn("Text upload skipped: Text is empty.");
         return;
       }
       const textBlob = new Blob([textInput], { type: "text/plain" });
@@ -369,11 +365,11 @@ export function useRag(): UseRagReturn {
       const textFile = new File([textBlob], fileName, { type: "text/plain" });
       const metadata = {
         name: fileName,
-        collection: collectionName,
+        collection: collectionId,
         size: `${(textInput.length / 1024).toFixed(1)} KB`,
         created_at: new Date().toISOString(),
       };
-      await uploadDocuments(collectionName, [textFile], session.accessToken, [
+      await uploadDocuments(collectionId, [textFile], session.accessToken, [
         metadata,
       ]);
       setDocuments((prevDocs) => [
@@ -472,7 +468,7 @@ export function useRag(): UseRagReturn {
 
   const updateCollection = useCallback(
     async (
-      currentName: string,
+      collectionId: string,
       newName: string,
       metadata: Record<string, any>,
     ): Promise<Collection | undefined> => {
@@ -486,11 +482,11 @@ export function useRag(): UseRagReturn {
 
       // Find the collection to update
       const collectionToUpdate = collections.find(
-        (c) => c.name === currentName,
+        (c) => c.uuid === collectionId,
       );
 
       if (!collectionToUpdate) {
-        toast.error(`Collection with name "${currentName}" not found.`, {
+        toast.error(`Collection with ID "${collectionId}" not found.`, {
           richColors: true,
         });
         return undefined;
@@ -503,23 +499,21 @@ export function useRag(): UseRagReturn {
       }
 
       // Check if the new name already exists (only if name is changing)
-      if (trimmedNewName !== currentName) {
-        const nameExists = collections.some(
-          (c) =>
-            c.name.toLowerCase() === trimmedNewName.toLowerCase() &&
-            c.name !== currentName,
+      const nameExists = collections.some(
+        (c) =>
+          c.name.toLowerCase() === trimmedNewName.toLowerCase() &&
+          c.name !== collectionToUpdate.name,
+      );
+      if (nameExists) {
+        toast.warning(
+          `Collection with name "${trimmedNewName}" already exists.`,
+          { richColors: true },
         );
-        if (nameExists) {
-          toast.warning(
-            `Collection with name "${trimmedNewName}" already exists.`,
-            { richColors: true },
-          );
-          return undefined;
-        }
+        return undefined;
       }
 
       const url = getApiUrlOrThrow();
-      url.pathname = `/collections/${currentName}`;
+      url.pathname = `/collections/${collectionId}`;
 
       const updateData = {
         name: trimmedNewName,
@@ -547,12 +541,12 @@ export function useRag(): UseRagReturn {
       // Update the collections state
       setCollections((prevCollections) =>
         prevCollections.map((collection) =>
-          collection.name === currentName ? updatedCollection : collection,
+          collection.uuid === collectionId ? updatedCollection : collection,
         ),
       );
 
       // Update selected collection if it was the one that got updated
-      if (selectedCollection && selectedCollection.name === currentName) {
+      if (selectedCollection && selectedCollection.uuid === collectionId) {
         setSelectedCollection(updatedCollection);
       }
 
@@ -562,7 +556,7 @@ export function useRag(): UseRagReturn {
   );
 
   const deleteCollection = useCallback(
-    async (name: string): Promise<string | undefined> => {
+    async (collectionId: string): Promise<string | undefined> => {
       if (!session?.accessToken) {
         toast.error("No session found", {
           richColors: true,
@@ -571,15 +565,16 @@ export function useRag(): UseRagReturn {
         return;
       }
 
-      const collectionToDelete = collections.find((c) => c.name === name);
-      const deletedCollectionName = collectionToDelete?.name;
+      const collectionToDelete = collections.find(
+        (c) => c.uuid === collectionId,
+      );
 
-      if (!deletedCollectionName) {
+      if (!collectionToDelete) {
         return;
       }
 
       const url = getApiUrlOrThrow();
-      url.pathname = `/collections/${name}`;
+      url.pathname = `/collections/${collectionId}`;
 
       const response = await fetch(url.toString(), {
         method: "DELETE",
@@ -595,7 +590,9 @@ export function useRag(): UseRagReturn {
 
       // Delete the collection itself
       setCollections((prevCollections) =>
-        prevCollections.filter((collection) => collection.name !== name),
+        prevCollections.filter(
+          (collection) => collection.uuid !== collectionId,
+        ),
       );
     },
     [collections, session],

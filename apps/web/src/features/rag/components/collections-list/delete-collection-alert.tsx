@@ -20,7 +20,7 @@ export function DeleteCollectionAlert({
   onDelete,
 }: {
   collection: Collection;
-  onDelete: (name: string) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <AlertDialog>
@@ -48,7 +48,7 @@ export function DeleteCollectionAlert({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => onDelete(collection.name)}
+            onClick={() => onDelete(collection.uuid)}
             className="bg-destructive hover:bg-destructive/90 text-white"
           >
             Delete

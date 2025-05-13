@@ -35,11 +35,7 @@ export default function RAGInterface() {
     console.log("No collections, initial search is true!");
     return <EmptyCollectionsState />;
   }
-  console.log(
-    "somehow this is getting rendered",
-    initialSearchExecuted,
-    collections,
-  );
+
   return (
     <div className="container mx-auto p-4">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

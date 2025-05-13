@@ -15,9 +15,9 @@ export function CollectionActions({
   onEdit,
 }: {
   collection: Collection;
-  onDelete: (name: string) => void;
+  onDelete: (id: string) => void;
   onEdit: (
-    currentName: string,
+    id: string,
     name: string,
     metadata: Record<string, any>,
   ) => Promise<void>;

@@ -1,4 +1,4 @@
-import { useState, forwardRef, ForwardedRef } from "react";
+import { forwardRef, ForwardedRef } from "react";
 import { motion } from "framer-motion";
 import {
   Settings,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 interface SidebarButtonsProps {
   historyOpen: boolean;
@@ -22,10 +23,6 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
     { historyOpen, setHistoryOpen, configOpen, setConfigOpen, className },
     ref: ForwardedRef<HTMLDivElement>,
   ) => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    const isOpen = historyOpen || configOpen;
-
     const handleConfigClick = () => {
       setConfigOpen(true);
       setHistoryOpen(false);
@@ -48,19 +45,19 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
         ref={ref}
         className={cn(
           "fixed top-4 z-50 transition-all duration-300 ease-in-out",
-          isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-4",
+          isSidebarOpen
+            ? "right-[theme(spacing.80)] md:right-[37rem]"
+            : "right-4",
           className,
         )}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
       >
-        <div className="relative flex flex-col items-end">
+        <div className="relative flex items-center">
           <Button
             variant="outline"
             size="icon"
             className={cn(
-              "bg-background hover:bg-muted z-10 rounded-full shadow-lg",
-              isSidebarOpen ? "cursor-pointer" : "hover:bg-background",
+              "bg-background hover:bg-muted rounded-full transition-all",
+              isSidebarOpen ? "opacity-100 shadow-lg" : "opacity-0 shadow-none",
             )}
             onClick={() => {
               if (!isSidebarOpen) return;
@@ -75,36 +72,39 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
             )}
           </Button>
 
-          <motion.div
-            className="absolute top-full right-0 mt-2 mb-1 flex flex-col items-end space-y-2"
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{
-              opacity: isHovered ? 1 : 0,
-              y: isHovered ? 0 : -10,
-              height: isHovered ? "auto" : 0,
-            }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            style={{ overflow: "hidden" }}
+          <div
+            className={cn(
+              "absolute top-0 right-0 flex items-center gap-2 transition-all",
+              isSidebarOpen && "right-full mr-2",
+            )}
           >
-            <Button
+            <TooltipIconButton
+              tooltip="Agent Configuration"
               variant="outline"
               size="icon"
-              className="bg-background hover:bg-muted rounded-full shadow-md hover:cursor-pointer"
+              className={cn(
+                "bg-background hover:bg-muted size-9 rounded-full shadow-xs hover:cursor-pointer",
+                isSidebarOpen && "shadow-lg",
+              )}
               onClick={handleConfigClick}
-              aria-label="Open Configuration"
+              aria-label="Agent Configuration"
             >
               <Settings className="size-5" />
-            </Button>
-            <Button
+            </TooltipIconButton>
+            <TooltipIconButton
+              tooltip="History"
               variant="outline"
               size="icon"
-              className="bg-background hover:bg-muted rounded-full shadow-md hover:cursor-pointer"
+              className={cn(
+                "bg-background hover:bg-muted size-9 rounded-full shadow-xs hover:cursor-pointer",
+                isSidebarOpen && "shadow-lg",
+              )}
               onClick={handleHistoryClick}
-              aria-label="Open History"
+              aria-label="History"
             >
               <History className="size-5" />
-            </Button>
-          </motion.div>
+            </TooltipIconButton>
+          </div>
         </div>
       </motion.div>
     );

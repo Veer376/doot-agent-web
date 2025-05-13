@@ -56,8 +56,10 @@ export interface AgentsComboboxProps {
    */
   disableDeselect?: boolean;
   className?: string;
+  style?: React.CSSProperties;
   trigger?: React.ReactNode;
   triggerAsChild?: boolean;
+  footer?: React.ReactNode;
 }
 
 /**
@@ -79,14 +81,11 @@ const getSelectedAgentValue = (
 
   if (selectedAgent) {
     return (
-      <span className="flex w-full items-center justify-between">
+      <span className="flex w-full items-center gap-2">
+        <span className="text-muted-foreground text-xs">
+          [{selectedAgent.graph_id}]
+        </span>{" "}
         {selectedAgent.name}
-        {isDefaultAssistant(selectedAgent) && (
-          <span className="text-muted-foreground ml-auto flex items-center gap-2 text-xs">
-            <Star />
-            <p>Default</p>
-          </span>
-        )}
       </span>
     );
   }
@@ -134,6 +133,8 @@ export function AgentsCombobox({
   className,
   trigger,
   triggerAsChild,
+  footer,
+  style,
   agentsLoading,
 }: AgentsComboboxProps) {
   const deployments = getDeployments();
@@ -176,16 +177,14 @@ export function AgentsCombobox({
       open={open}
       onOpenChange={setOpen}
     >
-      <PopoverTrigger
-        asChild={triggerAsChild || !trigger}
-        className={className}
-      >
+      <PopoverTrigger asChild={triggerAsChild || !trigger}>
         {trigger || (
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="min-w-[200px] justify-between"
+            className={cn("min-w-[200px] justify-between", className)}
+            style={style}
           >
             {selectedValues.length > 0
               ? multiple
@@ -196,7 +195,10 @@ export function AgentsCombobox({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="min-w-[200px] p-0">
+      <PopoverContent
+        align="start"
+        className="min-w-[200px] p-0"
+      >
         <Command
           filter={(value: string, search: string) => {
             const name = getNameFromValue(value, agents);
@@ -256,6 +258,12 @@ export function AgentsCombobox({
                           onSelect={handleSelect}
                           className="flex w-full items-center justify-between"
                         >
+                          <Check
+                            className={cn(
+                              isSelected ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+
                           {/* Prepend Graph ID to the name for visual grouping */}
                           <p className="line-clamp-1 flex-1 truncate pr-2">
                             <span className="text-muted-foreground mr-2 text-xs">{`[${item.graph_id}]`}</span>
@@ -268,11 +276,6 @@ export function AgentsCombobox({
                                 <p>Default</p>
                               </span>
                             )}
-                            <Check
-                              className={cn(
-                                isSelected ? "opacity-100" : "opacity-0",
-                              )}
-                            />
                           </div>
                         </CommandItem>
                       );
@@ -282,6 +285,8 @@ export function AgentsCombobox({
                 </React.Fragment>
               );
             })}
+
+            {footer}
           </CommandList>
         </Command>
       </PopoverContent>

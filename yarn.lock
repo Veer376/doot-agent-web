@@ -6419,6 +6419,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "open-agent-platform@workspace:."
   dependencies:
+    react-hook-form: ^7.56.3
     turbo: ^2.5.0
     typescript: ^5
   languageName: unknown
@@ -6831,6 +6832,15 @@ __metadata:
   peerDependencies:
     react: ^19.1.0
   checksum: 1d154b6543467095ac269e61ca59db546f34ef76bcdeb90f2dad41d682cd210aae492e70c85010ed5d0a2caea225e9a55139ebc1a615ee85bf197d7f99678cdf
+  languageName: node
+  linkType: hard
+
+"react-hook-form@npm:^7.56.3":
+  version: 7.56.3
+  resolution: "react-hook-form@npm:7.56.3"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  checksum: 5b5ebf1b61754a5c2e5785a6f3039eac89028d0613e9f7da23c132129e9685c166077b338db05430292d16b9532a21ebd2abd8785de497c54cb70fbccf774572
   languageName: node
   linkType: hard
 

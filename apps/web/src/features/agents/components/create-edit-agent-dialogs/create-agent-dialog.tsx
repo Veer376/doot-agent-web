@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -8,8 +9,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { Bot, LoaderCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bot, LoaderCircle, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
@@ -18,6 +19,7 @@ import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
+import { FormProvider, useForm } from "react-hook-form";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -27,84 +29,42 @@ interface CreateAgentDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateAgentDialog({
-  agentId,
-  deploymentId,
-  graphId,
-  open,
-  onOpenChange,
-}: CreateAgentDialogProps) {
-  const deployments = getDeployments();
+function CreateAgentFormContent(props: {
+  selectedGraph: Agent;
+  selectedDeployment: Deployment;
+  onClose: () => void;
+}) {
+  const form = useForm<{
+    name: string;
+    description: string;
+    config: Record<string, any>;
+  }>({
+    defaultValues: async () => {
+      const values = await getSchemaAndUpdateConfig(props.selectedGraph);
+      return { name: "", description: "", config: values.config };
+    },
+  });
+
   const { createAgent } = useAgents();
-  const { refreshAgents, agents } = useAgentsContext();
+  const { refreshAgents } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
+    loading,
     configurations,
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
-    config,
-    setConfig,
-    loading,
-    name,
-    setName,
-    description,
-    setDescription,
-    clearState: clearAgentConfigState,
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
-  const [selectedDeployment, setSelectedDeployment] = useState<Deployment>();
-  // Use the default agent as the selected graph.
-  const [selectedGraph, setSelectedGraph] = useState<Agent>();
 
-  useEffect(() => {
-    if (selectedDeployment || selectedGraph) return;
-    if (agentId && deploymentId && graphId) {
-      // Find the deployment & default agent, then set them
-      const deployment = deployments.find((d) => d.id === deploymentId);
-      const defaultAgent = agents.find(
-        (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
-      );
-      if (!deployment || !defaultAgent) {
-        toast.error("Something went wrong. Please try again.", {
-          richColors: true,
-        });
-        return;
-      }
-
-      setSelectedDeployment(deployment);
-      setSelectedGraph(defaultAgent);
-    }
-  }, [agentId, deploymentId, graphId, agents, deployments]);
-
-  useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      loading ||
-      !open ||
-      !selectedGraph ||
-      !selectedDeployment
-    )
-      return;
-
-    getSchemaAndUpdateConfig(selectedGraph, {
-      isCreate: true,
-    });
-  }, [selectedGraph, selectedDeployment, open]);
-
-  const handleSubmit = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => {
-    e.preventDefault();
+  const handleSubmit = async (data: {
+    name: string;
+    description: string;
+    config: Record<string, any>;
+  }) => {
+    const { name, description, config } = data;
     if (!name || !description) {
       toast.warning("Name and description are required", {
-        richColors: true,
-      });
-      return;
-    }
-    if (!selectedGraph || !selectedDeployment) {
-      toast.error("Failed to create agent", {
-        description: "Please try again",
         richColors: true,
       });
       return;
@@ -112,8 +72,8 @@ export function CreateAgentDialog({
 
     setSubmitting(true);
     const newAgent = await createAgent(
-      selectedDeployment.id,
-      selectedGraph.graph_id,
+      props.selectedDeployment.id,
+      props.selectedGraph.graph_id,
       {
         name,
         description,
@@ -134,37 +94,125 @@ export function CreateAgentDialog({
       richColors: true,
     });
 
-    onOpenChange(false);
-    clearState();
+    props.onClose();
     // Do not await so that the refresh is non-blocking
     refreshAgents();
   };
 
-  const clearState = () => {
-    clearAgentConfigState();
-    setSelectedDeployment(undefined);
-    setSelectedGraph(undefined);
-  };
+  return (
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      {loading ? (
+        <AgentFieldsFormLoading />
+      ) : (
+        <FormProvider {...form}>
+          <AgentFieldsForm
+            agentId={props.selectedGraph.assistant_id}
+            configurations={configurations}
+            toolConfigurations={toolConfigurations}
+            ragConfigurations={ragConfigurations}
+            agentsConfigurations={agentsConfigurations}
+          />
+        </FormProvider>
+      )}
+      <AlertDialogFooter>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            props.onClose();
+          }}
+          variant="outline"
+          disabled={loading || submitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="flex w-full items-center justify-center gap-1"
+          disabled={loading || submitting}
+        >
+          {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
+          <span>{submitting ? "Creating..." : "Create Agent"}</span>
+        </Button>
+      </AlertDialogFooter>
+    </form>
+  );
+}
+
+export function CreateAgentDialog({
+  agentId,
+  deploymentId,
+  graphId,
+  open,
+  onOpenChange,
+}: CreateAgentDialogProps) {
+  const deployments = getDeployments();
+  const { agents } = useAgentsContext();
+
+  const [selectedDeployment, setSelectedDeployment] = useState<
+    Deployment | undefined
+  >();
+  const [selectedGraph, setSelectedGraph] = useState<Agent | undefined>();
+
+  useEffect(() => {
+    if (selectedDeployment || selectedGraph) return;
+    if (agentId && deploymentId && graphId) {
+      // Find the deployment & default agent, then set them
+      const deployment = deployments.find((d) => d.id === deploymentId);
+      const defaultAgent = agents.find(
+        (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
+      );
+      if (!deployment || !defaultAgent) {
+        toast.error("Something went wrong. Please try again.", {
+          richColors: true,
+        });
+        return;
+      }
+
+      setSelectedDeployment(deployment);
+      setSelectedGraph(defaultAgent);
+    }
+  }, [
+    agentId,
+    deploymentId,
+    graphId,
+    agents,
+    deployments,
+    selectedDeployment,
+    selectedGraph,
+  ]);
+
+  const [openCounter, setOpenCounter] = useState(0);
+
+  const lastOpen = useRef(open);
+  useLayoutEffect(() => {
+    if (lastOpen.current !== open && open) {
+      setOpenCounter((c) => c + 1);
+    }
+    lastOpen.current = open;
+  }, [open, setOpenCounter]);
 
   return (
     <AlertDialog
       open={open}
-      onOpenChange={(c) => {
-        onOpenChange(c);
-        if (!c) {
-          clearState();
-        }
-      }}
+      onOpenChange={onOpenChange}
     >
       <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>Create Agent</AlertDialogTitle>
-          <AlertDialogDescription>
-            Create a new agent for &apos;
-            <span className="font-medium">{selectedGraph?.graph_id}</span>&apos;
-            graph.
-          </AlertDialogDescription>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1.5">
+              <AlertDialogTitle>Create Agent</AlertDialogTitle>
+              <AlertDialogDescription>
+                Create a new agent for &apos;
+                <span className="font-medium">{selectedGraph?.graph_id}</span>
+                &apos; graph.
+              </AlertDialogDescription>
+            </div>
+            <AlertDialogCancel size="icon">
+              <X className="size-4" />
+            </AlertDialogCancel>
+          </div>
         </AlertDialogHeader>
+
         {!agentId && !graphId && !deploymentId && (
           <div className="flex flex-col items-start justify-start gap-2">
             <p>Please select a graph to create an agent for.</p>
@@ -178,44 +226,15 @@ export function CreateAgentDialog({
             />
           </div>
         )}
-        {loading ? (
-          <AgentFieldsFormLoading />
-        ) : selectedGraph && selectedDeployment ? (
-          <AgentFieldsForm
-            name={name}
-            setName={setName}
-            description={description}
-            setDescription={setDescription}
-            configurations={configurations}
-            toolConfigurations={toolConfigurations}
-            config={config}
-            setConfig={setConfig}
-            agentId={selectedGraph.assistant_id}
-            ragConfigurations={ragConfigurations}
-            agentsConfigurations={agentsConfigurations}
+
+        {selectedGraph && selectedDeployment ? (
+          <CreateAgentFormContent
+            key={openCounter}
+            selectedGraph={selectedGraph}
+            selectedDeployment={selectedDeployment}
+            onClose={() => onOpenChange(false)}
           />
         ) : null}
-        <AlertDialogFooter>
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              clearState();
-              onOpenChange(false);
-            }}
-            variant="outline"
-            disabled={loading || submitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={(e) => handleSubmit(e)}
-            className="flex w-full items-center justify-center gap-1"
-            disabled={loading || submitting}
-          >
-            {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
-            <span>{submitting ? "Creating..." : "Create Agent"}</span>
-          </Button>
-        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );

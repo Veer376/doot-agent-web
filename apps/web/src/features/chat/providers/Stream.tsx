@@ -156,7 +156,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               an agent to chat with.
             </p>
           </div>
-          <div className="mt-4 mb-24 flex items-center justify-center gap-4">
+          <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
             <AgentsCombobox
               disableDeselect
               agents={agents}

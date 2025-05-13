@@ -69,7 +69,12 @@ export function AssistantMessage({
 }: {
   message: Message | undefined;
   isLoading: boolean;
-  handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
+  handleRegenerate: (
+    parentCheckpoint: Checkpoint | null | undefined,
+    optimisticValues?: (prev: { messages?: Message[] }) => {
+      messages?: Message[] | undefined;
+    },
+  ) => void;
 }) {
   const content = message?.content ?? [];
   const contentString = getContentString(content);
@@ -162,7 +167,13 @@ export function AssistantMessage({
               content={contentString}
               isLoading={isLoading}
               isAiMessage={true}
-              handleRegenerate={() => handleRegenerate(parentCheckpoint)}
+              handleRegenerate={() =>
+                handleRegenerate(parentCheckpoint, (prev) => {
+                  const values = meta?.firstSeenState?.values;
+                  if (!values) return prev;
+                  return { ...values, messages: values.messages.slice(0, -1) };
+                })
+              }
             />
           </div>
         </div>

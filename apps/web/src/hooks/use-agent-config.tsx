@@ -55,9 +55,6 @@ export function useAgentConfig() {
       name: string;
       description: string;
       config: Record<string, any>;
-      toolConfig: ConfigurableFieldMCPMetadata[];
-      ragConfig: ConfigurableFieldRAGMetadata[];
-      agentsConfig: ConfigurableFieldAgentsMetadata[];
     }> => {
       clearState();
 
@@ -73,9 +70,6 @@ export function useAgentConfig() {
             description:
               (agent.metadata?.description as string | undefined) ?? "",
             config: {},
-            toolConfig: [],
-            ragConfig: [],
-            agentsConfig: [],
           };
         const { configFields, toolConfig, ragConfig, agentsConfig } =
           extractConfigurationsFromAgent({
@@ -131,9 +125,6 @@ export function useAgentConfig() {
           description:
             (agent.metadata?.description as string | undefined) ?? "",
           config: configurableDefaults,
-          toolConfig,
-          ragConfig,
-          agentsConfig,
         };
       } finally {
         setLoading(false);

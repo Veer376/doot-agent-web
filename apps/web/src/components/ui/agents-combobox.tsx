@@ -164,7 +164,8 @@ export function AgentsCombobox({
       setValue(newValues);
     } else {
       // For single selection mode (backward compatibility)
-      const shouldDeselect = currentValue === selectedValues[0] && !disableDeselect;
+      const shouldDeselect =
+        currentValue === selectedValues[0] && !disableDeselect;
       setValue(shouldDeselect ? "" : currentValue);
       setOpen?.(false);
     }

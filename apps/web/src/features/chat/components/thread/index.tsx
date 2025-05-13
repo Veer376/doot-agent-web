@@ -29,6 +29,9 @@ import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-respons
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { useAgentsContext } from "@/providers/Agents";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -71,7 +74,12 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
-function NewThreadButton() {
+function NewThreadButton(props: { hasMessages: boolean }) {
+  const { agents, loading } = useAgentsContext();
+  const [open, setOpen] = useState(false);
+
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_, setThreadId] = useQueryState("threadId");
 
   const handleNewThread = useCallback(() => {
@@ -99,16 +107,87 @@ function NewThreadButton() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNewThread]);
 
+  const onAgentChange = useCallback(
+    (v: string | string[] | undefined) => {
+      const nextValue = Array.isArray(v) ? v[0] : v;
+      if (!nextValue) return;
+
+      const [agentId, deploymentId] = nextValue.split(":");
+      setAgentId(agentId);
+      setDeploymentId(deploymentId);
+      setThreadId(null);
+    },
+    [setAgentId, setDeploymentId, setThreadId],
+  );
+
+  const agentValue =
+    agentId && deploymentId ? `${agentId}:${deploymentId}` : undefined;
+
+  useEffect(() => {
+    if (agentValue || !agents.length) {
+      return;
+    }
+    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    if (defaultAgent) {
+      onAgentChange(
+        `${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`,
+      );
+    }
+  }, [agents, agentValue, onAgentChange]);
+
+  if (!props.hasMessages) {
+    return (
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={agentValue}
+        setValue={onAgentChange}
+        open={open}
+        setOpen={setOpen}
+        triggerAsChild
+        className="min-w-auto"
+      />
+    );
+  }
+
   return (
-    <TooltipIconButton
-      size="lg"
-      className="p-4"
-      tooltip={isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"}
-      variant="outline"
-      onClick={handleNewThread}
-    >
-      <SquarePen className="size-4" />
-    </TooltipIconButton>
+    <div className="flex rounded-md shadow-xs">
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={agentValue}
+        setValue={onAgentChange}
+        open={open}
+        setOpen={setOpen}
+        triggerAsChild
+        className="relative min-w-auto shadow-none focus-within:z-10"
+        style={{
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          borderRight: 0,
+        }}
+        footer={
+          <div className="text-secondary-foreground bg-secondary px-3 py-2 pr-10 text-xs">
+            Selecting a different agent will create a new thread.
+          </div>
+        }
+      />
+
+      {props.hasMessages && (
+        <TooltipIconButton
+          size="lg"
+          className="relative size-9 p-4 shadow-none focus-within:z-10"
+          tooltip={
+            isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"
+          }
+          variant="outline"
+          onClick={handleNewThread}
+          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+        >
+          <SquarePen className="size-4" />
+        </TooltipIconButton>
+      )}
+    </div>
   );
 }
 
@@ -219,6 +298,9 @@ export function Thread() {
 
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
+    optimisticValues?: (prev: { messages?: Message[] }) => {
+      messages?: Message[] | undefined;
+    },
   ) => {
     if (!agentId) return;
     const { getAgentConfig } = useConfigStore.getState();
@@ -232,6 +314,7 @@ export function Thread() {
       config: {
         configurable: getAgentConfig(agentId),
       },
+      optimisticValues,
       metadata: {
         supabaseAccessToken: session?.accessToken,
       },
@@ -326,7 +409,7 @@ export function Thread() {
                   <div className="flex items-center justify-between p-2 pt-4">
                     <div>
                       <div className="flex items-center space-x-2">
-                        {hasMessages && <NewThreadButton />}
+                        <NewThreadButton hasMessages={hasMessages} />
 
                         <Switch
                           id="render-tool-calls"

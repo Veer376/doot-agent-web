@@ -572,6 +572,50 @@ export const GraphConfiguration = z.object({
 
 </details>
 
+### Hidden Configurable Fields
+
+You can hide configurable fields from the UI by setting the `type` of the `x_oap_ui_config` metadata to `hidden`.
+
+#### Python
+
+<details>
+<summary>In Python, this looks like:</summary>
+
+```python
+class GraphConfigPydantic(BaseModel):
+    hidden_field: Optional[str] = Field(
+        metadata={
+            "x_oap_ui_config": {
+                # Ensure the type is `hidden`
+                "type": "hidden",
+            }
+        }
+    )
+```
+
+</details>
+
+#### TypeScript
+
+<details>
+<summary>And in TypeScript, this looks like:</summary>
+
+```typescript
+export const GraphConfiguration = z.object({
+  hidden_field: z
+    .string()
+    .optional()
+    .langgraph.metadata({
+      x_oap_ui_config: {
+        // Ensure the type is `hidden`
+        type: "hidden",
+      },
+    }),
+});
+```
+
+</details>
+
 # Concepts/FAQ
 
 ## Concepts

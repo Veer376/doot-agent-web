@@ -1,12 +1,17 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
-import { DocumentsCard } from "./components/documents-card";
-import { CollectionsCard } from "./components/collections-card";
+import { useState } from "react";
+import {
+  DocumentsCard,
+  DocumentsCardLoading,
+} from "./components/documents-card";
+import {
+  CollectionsCard,
+  CollectionsCardLoading,
+} from "./components/collections-card";
 import { useRagContext } from "./providers/RAG";
 import EmptyCollectionsState from "./components/empty-collections";
-import { useAuthContext } from "@/providers/Auth";
 
 export default function RAGInterface() {
   const {
@@ -14,21 +19,8 @@ export default function RAGInterface() {
     setSelectedCollection,
     collections,
     initialSearchExecuted,
-    initialFetch,
   } = useRagContext();
   const [currentPage, setCurrentPage] = useState(1);
-  const { session } = useAuthContext();
-
-  useEffect(() => {
-    if (
-      collections.length > 0 ||
-      initialSearchExecuted ||
-      !session?.accessToken
-    ) {
-      return;
-    }
-    initialFetch(session?.accessToken);
-  }, [session?.accessToken]);
 
   if (initialSearchExecuted && !collections.length) {
     return <EmptyCollectionsState />;
@@ -39,21 +31,29 @@ export default function RAGInterface() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Collections Section */}
         <div className="md:col-span-1">
-          <CollectionsCard
-            collections={collections}
-            selectedCollection={selectedCollection}
-            setSelectedCollection={setSelectedCollection}
-            setCurrentPage={setCurrentPage}
-          />
+          {initialSearchExecuted ? (
+            <CollectionsCard
+              collections={collections}
+              selectedCollection={selectedCollection}
+              setSelectedCollection={setSelectedCollection}
+              setCurrentPage={setCurrentPage}
+            />
+          ) : (
+            <CollectionsCardLoading />
+          )}
         </div>
 
         {/* Documents Section */}
         <div className="md:col-span-2">
-          <DocumentsCard
-            selectedCollection={selectedCollection}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
+          {initialSearchExecuted ? (
+            <DocumentsCard
+              selectedCollection={selectedCollection}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+            />
+          ) : (
+            <DocumentsCardLoading />
+          )}
         </div>
       </div>
     </div>

@@ -28,6 +28,7 @@ import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
 import { getCollectionName } from "../../hooks/use-rag";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -352,6 +353,34 @@ export function DocumentsCard({
             </PaginationContent>
           </Pagination>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DocumentsCardLoading() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-6 w-48" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6 flex flex-col gap-6">
+          <div className="flex items-center justify-start gap-2">
+            <Skeleton className="h-6 w-22" />
+            <Skeleton className="h-6 w-22" />
+          </div>
+          <Skeleton className="h-38 w-full" />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-8 w-full"
+              />
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

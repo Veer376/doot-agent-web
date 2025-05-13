@@ -8,6 +8,7 @@ import { useState } from "react";
 import { CollectionsList } from "./collections-list";
 import { toast } from "sonner";
 import { CreateCollectionDialog } from "./create-collection-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CollectionsCardProps {
   collections: Collection[];
@@ -126,6 +127,27 @@ export function CollectionsCard({
           totalCollections={collections.length}
           onPageChange={setCollectionsCurrentPage}
         />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function CollectionsCardLoading() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="size-8" />
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="h-8 w-full"
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

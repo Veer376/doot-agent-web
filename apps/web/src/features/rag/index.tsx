@@ -27,12 +27,10 @@ export default function RAGInterface() {
     ) {
       return;
     }
-    console.log("calling initial fetch");
     initialFetch(session?.accessToken);
   }, [session?.accessToken]);
 
   if (initialSearchExecuted && !collections.length) {
-    console.log("No collections, initial search is true!");
     return <EmptyCollectionsState />;
   }
 

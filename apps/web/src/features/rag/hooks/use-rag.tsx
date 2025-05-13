@@ -171,7 +171,6 @@ export function useRag(): UseRagReturn {
       initCollections = await getCollections(accessToken);
     } catch (e: any) {
       if (e.message.includes("Failed to fetch collections")) {
-        console.log("Failed to fetch collections, initializing database");
         // Database likely not initialized yet. Let's try this then re-fetch.
         await initializeDatabase(accessToken);
         initCollections = await getCollections(accessToken);
@@ -180,7 +179,6 @@ export function useRag(): UseRagReturn {
 
     if (!initCollections.length) {
       // No collections exist, return early
-      console.log("No collections exist, returning early");
       setCollectionsLoading(false);
       setDocumentsLoading(false);
       setInitialSearchExecuted(true);

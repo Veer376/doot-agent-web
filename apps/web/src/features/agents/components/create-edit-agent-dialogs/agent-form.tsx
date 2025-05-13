@@ -211,7 +211,13 @@ export function AgentFieldsForm({
               id={ragConfigurations[0].label}
               label={ragConfigurations[0].label}
               agentId={agentId}
-              // TODO: Start supporting externally managed field.
+              value={config[ragConfigurations[0].label]}
+              setValue={(v) =>
+                setConfig({
+                  ...config,
+                  [ragConfigurations[0].label]: v,
+                })
+              }
             />
           </div>
         </>

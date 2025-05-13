@@ -536,6 +536,9 @@ export function ConfigFieldAgents({
   const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
 
+  // Do not allow adding itself as a sub-agent
+  const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);
+
   const isExternallyManaged = externalSetValue !== undefined;
 
   const defaults = (
@@ -586,7 +589,7 @@ export function ConfigFieldAgents({
   return (
     <div className={cn("w-full space-y-2", className)}>
       <AgentsCombobox
-        agents={agents}
+        agents={filteredAgents}
         agentsLoading={loading}
         value={defaults.map(
           (defaultValue) =>

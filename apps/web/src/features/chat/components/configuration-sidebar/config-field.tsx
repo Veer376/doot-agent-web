@@ -423,7 +423,6 @@ export function ConfigFieldRAG({
   "id" | "label" | "agentId" | "className" | "value" | "setValue"
 >) {
   const { collections } = useRagContext();
-  console.log("collections", collections)
   const store = useConfigStore();
   const actualAgentId = `${agentId}:rag`;
   const [open, setOpen] = useState(false);
@@ -490,7 +489,7 @@ export function ConfigFieldRAG({
             {selectedCollections.length > 0
               ? selectedCollections.length > 1
                 ? `${selectedCollections.length} collections selected`
-                :  getCollectionNameFromId(selectedCollections[0])
+                : getCollectionNameFromId(selectedCollections[0])
               : "Select collections"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

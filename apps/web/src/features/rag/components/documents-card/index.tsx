@@ -361,24 +361,27 @@ export function DocumentsCard({
 export function DocumentsCardLoading() {
   return (
     <Card>
-    <CardHeader>
-      <Skeleton className="w-64 h-8" />
-      <Skeleton className="w-48 h-6" />
-    </CardHeader>
-    <CardContent>
-      <div className="mb-6 flex flex-col gap-6">
-        <div className="flex gap-2 items-center justify-start">
-          <Skeleton className="w-22 h-6" />
-          <Skeleton className="w-22 h-6" />
+      <CardHeader>
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-6 w-48" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6 flex flex-col gap-6">
+          <div className="flex items-center justify-start gap-2">
+            <Skeleton className="h-6 w-22" />
+            <Skeleton className="h-6 w-22" />
+          </div>
+          <Skeleton className="h-38 w-full" />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-8 w-full"
+              />
+            ))}
+          </div>
         </div>
-        <Skeleton className="w-full h-38" />
-        <div className="flex flex-col gap-2">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Skeleton key={index} className="w-full h-8" />
-        ))}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-  )
+      </CardContent>
+    </Card>
+  );
 }

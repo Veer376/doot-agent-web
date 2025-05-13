@@ -136,16 +136,19 @@ export function CollectionsCardLoading() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <Skeleton className="w-24 h-8" />
+        <Skeleton className="h-8 w-24" />
         <Skeleton className="size-8" />
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="w-full h-8" />
+            <Skeleton
+              key={index}
+              className="h-8 w-full"
+            />
           ))}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

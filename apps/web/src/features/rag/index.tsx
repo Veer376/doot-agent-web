@@ -2,8 +2,14 @@
 
 import type React from "react";
 import { useState } from "react";
-import { DocumentsCard, DocumentsCardLoading } from "./components/documents-card";
-import { CollectionsCard, CollectionsCardLoading } from "./components/collections-card";
+import {
+  DocumentsCard,
+  DocumentsCardLoading,
+} from "./components/documents-card";
+import {
+  CollectionsCard,
+  CollectionsCardLoading,
+} from "./components/collections-card";
 import { useRagContext } from "./providers/RAG";
 import EmptyCollectionsState from "./components/empty-collections";
 
@@ -39,15 +45,15 @@ export default function RAGInterface() {
 
         {/* Documents Section */}
         <div className="md:col-span-2">
-        {initialSearchExecuted ? (
-          <DocumentsCard
-            selectedCollection={selectedCollection}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
-        ) : (
-          <DocumentsCardLoading />
-        )}
+          {initialSearchExecuted ? (
+            <DocumentsCard
+              selectedCollection={selectedCollection}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+            />
+          ) : (
+            <DocumentsCardLoading />
+          )}
         </div>
       </div>
     </div>

@@ -22,13 +22,18 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp, X } from "lucide-react";
+import { Plus, FileUp, X, Loader2 } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
 import { getCollectionName } from "../../hooks/use-rag";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAgentsContext } from "@/providers/Agents";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { MessageSquare } from "lucide-react";
+import { Agent } from "@/types/agent";
+import { useRouter } from "next/navigation";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -41,6 +46,7 @@ export function DocumentsCard({
   currentPage,
   setCurrentPage,
 }: DocumentsCardProps) {
+  const router = useRouter();
   const {
     documents,
     handleFileUpload: handleDocumentFileUpload,
@@ -53,6 +59,9 @@ export function DocumentsCard({
   const [stagedFiles, setStagedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  const { agents } = useAgentsContext();
+  const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
 
   const filteredDocuments = useMemo(
     () =>
@@ -193,13 +202,39 @@ export function DocumentsCard({
     }
   };
 
+  const handleChatWithDocuments = async (agent: Agent) => {
+    if (!selectedCollection) {
+      toast.error("No collection selected", {
+        richColors: true,
+        description: "Please select a collection to chat with documents.",
+      });
+      return;
+    }
+
+    const chatQueryParams = new URLSearchParams({
+      agentId: agent.assistant_id,
+      deploymentId: agent.deploymentId,
+      chatWithCollectionId: selectedCollection.uuid,
+    })?.toString();
+    const chatPath = `/?${chatQueryParams}`;
+    router.push(chatPath);
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{`${getCollectionName(selectedCollection?.name)} Documents`}</CardTitle>
-        <CardDescription>
-          {"Manage documents in this collection"}
-        </CardDescription>
+      <CardHeader className="flex w-full items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <CardTitle>
+            {getCollectionName(selectedCollection?.name)} Documents
+          </CardTitle>
+          <CardDescription>Manage documents in this collection</CardDescription>
+        </div>
+        {defaultAgent && (
+          <Button onClick={() => handleChatWithDocuments(defaultAgent)}>
+            <MessageSquare className="mr-2 h-3.5 w-3.5" />
+            Chat with your documents
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="mb-6">

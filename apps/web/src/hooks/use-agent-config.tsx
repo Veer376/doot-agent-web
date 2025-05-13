@@ -12,6 +12,7 @@ import {
 } from "@/lib/ui-config";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
+import { useQueryState } from "nuqs";
 
 /**
  * A custom hook for managing and accessing the configurable
@@ -19,6 +20,9 @@ import { Agent } from "@/types/agent";
  */
 export function useAgentConfig() {
   const { getAgentConfigSchema } = useAgents();
+  const [chatWithCollectionId, setChatWithCollectionId] = useQueryState(
+    "chatWithCollectionId",
+  );
 
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
@@ -51,6 +55,9 @@ export function useAgentConfig() {
       name: string;
       description: string;
       config: Record<string, any>;
+      toolConfig: ConfigurableFieldMCPMetadata[];
+      ragConfig: ConfigurableFieldRAGMetadata[];
+      agentsConfig: ConfigurableFieldAgentsMetadata[];
     }> => {
       clearState();
 
@@ -66,6 +73,9 @@ export function useAgentConfig() {
             description:
               (agent.metadata?.description as string | undefined) ?? "",
             config: {},
+            toolConfig: [],
+            ragConfig: [],
+            agentsConfig: [],
           };
         const { configFields, toolConfig, ragConfig, agentsConfig } =
           extractConfigurationsFromAgent({
@@ -90,6 +100,14 @@ export function useAgentConfig() {
           supportedConfigs.push("tools");
         }
         if (ragConfig.length) {
+          if (chatWithCollectionId) {
+            ragConfig[0].default = {
+              ...ragConfig[0].default,
+              collections: [chatWithCollectionId],
+            };
+            // Clear from query params so it's not set again.
+            setChatWithCollectionId(null);
+          }
           setDefaultConfig(`${agentId}:rag`, ragConfig);
           setRagConfigurations(ragConfig);
           supportedConfigs.push("rag");
@@ -113,6 +131,9 @@ export function useAgentConfig() {
           description:
             (agent.metadata?.description as string | undefined) ?? "",
           config: configurableDefaults,
+          toolConfig,
+          ragConfig,
+          agentsConfig,
         };
       } finally {
         setLoading(false);

@@ -311,7 +311,6 @@ export function Thread() {
                       if (
                         e.key === "Enter" &&
                         !e.shiftKey &&
-                        !e.metaKey &&
                         !e.nativeEvent.isComposing
                       ) {
                         e.preventDefault();

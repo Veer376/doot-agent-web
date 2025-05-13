@@ -574,7 +574,10 @@ export const GraphConfiguration = z.object({
 
 ### Hidden Configurable Fields
 
-You can hide configurable fields from the UI by setting the `type` of the `x_oap_ui_config` metadata to `hidden`.
+You can hide configurable fields from the UI by setting the `type` of the `x_oap_ui_config` metadata to `hidden`. This will only hide the field from the UI, but it can still be set in the runtime configuration.
+
+> [!WARNING]
+> This does _not_ fully hide the field from the user. It can still be found by inspecting network requests, so do not use this for sensitive information.
 
 #### Python
 

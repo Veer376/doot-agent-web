@@ -423,6 +423,7 @@ export function ConfigFieldRAG({
   "id" | "label" | "agentId" | "className" | "value" | "setValue"
 >) {
   const { collections } = useRagContext();
+  console.log("collections", collections)
   const store = useConfigStore();
   const actualAgentId = `${agentId}:rag`;
   const [open, setOpen] = useState(false);
@@ -443,10 +444,10 @@ export function ConfigFieldRAG({
     ? defaults.collections
     : [];
 
-  const handleSelect = (collectionName: string) => {
-    const newValue = selectedCollections.some((s) => s === collectionName)
-      ? selectedCollections.filter((s) => s !== collectionName)
-      : [...selectedCollections, collectionName];
+  const handleSelect = (collectionId: string) => {
+    const newValue = selectedCollections.some((s) => s === collectionId)
+      ? selectedCollections.filter((s) => s !== collectionId)
+      : [...selectedCollections, collectionId];
 
     if (isExternallyManaged) {
       externalSetValue({
@@ -460,6 +461,11 @@ export function ConfigFieldRAG({
       ...defaults,
       collections: Array.from(new Set(newValue)),
     });
+  };
+
+  const getCollectionNameFromId = (collectionId: string) => {
+    const collection = collections.find((c) => c.uuid === collectionId);
+    return collection?.name ?? "Unknown Collection";
   };
 
   return (
@@ -484,7 +490,7 @@ export function ConfigFieldRAG({
             {selectedCollections.length > 0
               ? selectedCollections.length > 1
                 ? `${selectedCollections.length} collections selected`
-                : selectedCollections[0]
+                :  getCollectionNameFromId(selectedCollections[0])
               : "Select collections"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -498,15 +504,15 @@ export function ConfigFieldRAG({
                 {collections.map((collection) => (
                   <CommandItem
                     key={collection.uuid}
-                    value={collection.name}
-                    onSelect={() => handleSelect(collection.name)}
+                    value={collection.uuid}
+                    onSelect={() => handleSelect(collection.uuid)}
                     className="flex items-center justify-between"
                   >
                     <span>{collection.name}</span>
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",
-                        selectedCollections.includes(collection.name)
+                        selectedCollections.includes(collection.uuid)
                           ? "opacity-100"
                           : "opacity-0",
                       )}

@@ -131,17 +131,6 @@ export function AgentDashboard() {
           {filteredAgents.length}{" "}
           {filteredAgents.length === 1 ? "Agent" : "Agents"}
         </h2>
-        {/* <Select defaultValue="newest">
-          <SelectTrigger className="h-8 w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest First</SelectItem>
-            <SelectItem value="oldest">Oldest First</SelectItem>
-            <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-            <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-          </SelectContent>
-        </Select> */}
       </div>
 
       {filteredAgents.length === 0 ? (

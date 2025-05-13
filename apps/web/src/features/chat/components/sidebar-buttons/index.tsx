@@ -84,7 +84,6 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
               height: isHovered ? "auto" : 0,
             }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            style={{ overflow: "hidden" }}
           >
             <Button
               variant="outline"

@@ -42,10 +42,10 @@ export function ToolCard({ tool }: ToolCardProps) {
         <ToolDetailsDialog tool={tool}>
           <TooltipIconButton
             tooltip="View tool details"
-            variant="ghost"
-            className="size-10 hover:bg-teal-50"
+            variant="outline"
+            className="size-9"
           >
-            <Eye className="size-5 text-[#2F6868]" />
+            <Eye className="size-5" />
           </TooltipIconButton>
         </ToolDetailsDialog>
       </CardFooter>

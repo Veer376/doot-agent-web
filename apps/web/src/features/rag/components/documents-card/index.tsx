@@ -210,6 +210,14 @@ export function DocumentsCard({
       });
       return;
     }
+    if (!agent.supportedConfigs?.includes("rag")) {
+      toast.error("Agent does not support rag", {
+        richColors: true,
+        description:
+          "Your default agent does not support RAG. Please contact an administrator to resolve this issue.",
+      });
+      return;
+    }
 
     const chatQueryParams = new URLSearchParams({
       agentId: agent.assistant_id,

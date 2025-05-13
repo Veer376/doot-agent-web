@@ -26,7 +26,7 @@ async function getOrCreateDefaultAssistants(
   const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
   if (!baseApiUrl) {
     throw new Error(
-      "Failed to get default assistants: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL"
+      "Failed to get default assistants: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
     );
   }
 
@@ -48,7 +48,7 @@ async function getOrCreateDefaultAssistants(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Failed to get default assistants: ${response.status} ${response.statusText} ${errorData.error || ""}`
+        `Failed to get default assistants: ${response.status} ${response.statusText} ${errorData.error || ""}`,
       );
     }
 

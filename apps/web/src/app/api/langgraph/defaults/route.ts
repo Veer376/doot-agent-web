@@ -37,7 +37,10 @@ function createServerClient(deploymentId: string, accessToken?: string) {
 /**
  * Gets or creates default assistants for a deployment
  */
-async function getOrCreateDefaultAssistants(deploymentId: string, accessToken?: string) {
+async function getOrCreateDefaultAssistants(
+  deploymentId: string,
+  accessToken?: string,
+) {
   const deployment = getDeployments().find((d) => d.id === deploymentId);
   if (!deployment) {
     throw new Error(`Deployment ${deploymentId} not found`);
@@ -61,7 +64,7 @@ async function getOrCreateDefaultAssistants(deploymentId: string, accessToken?: 
       },
     }),
   ]);
-  
+
   if (!systemDefaultAssistants.length) {
     throw new Error("Failed to find default system assistants.");
   }
@@ -117,16 +120,24 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const deploymentId = url.searchParams.get("deploymentId");
-    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "");
+    const accessToken = req.headers
+      .get("Authorization")
+      ?.replace("Bearer ", "");
 
     if (!deploymentId) {
-      return new Response(JSON.stringify({ error: "Missing deploymentId parameter" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing deploymentId parameter" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const defaultAssistants = await getOrCreateDefaultAssistants(deploymentId, accessToken || undefined);
+    const defaultAssistants = await getOrCreateDefaultAssistants(
+      deploymentId,
+      accessToken || undefined,
+    );
 
     return new Response(JSON.stringify(defaultAssistants), {
       status: 200,
@@ -135,11 +146,13 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error getting default assistants:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

@@ -13,14 +13,14 @@ function getUiConfig(
   if (
     typeof value !== "object" ||
     !value ||
-    (!("metadata" in value) && !("x_lg_ui_config" in value))
+    (!("metadata" in value) && !("x_oap_ui_config" in value))
   ) {
     return undefined;
   }
   const uiConfig: Record<string, any> =
     "metadata" in value
-      ? (value.metadata as Record<string, any>).x_lg_ui_config
-      : (value as Record<string, any>).x_lg_ui_config;
+      ? (value.metadata as Record<string, any>).x_oap_ui_config
+      : (value as Record<string, any>).x_oap_ui_config;
   if (!uiConfig) {
     return undefined;
   }
@@ -45,7 +45,7 @@ function getUiConfig(
  * for configurable fields.
  *
  * This function iterates through the properties of the provided schema,
- * looking for a specific metadata field (`x_lg_ui_config`). If found,
+ * looking for a specific metadata field (`x_oap_ui_config`). If found,
  * it extracts the UI configuration and constructs a ConfigurableFieldUIMetadata
  * object, using the property key as the label.
  *
@@ -77,7 +77,7 @@ export function configSchemaToConfigurableFields(
       continue;
     }
 
-    // If the `x_lg_ui_config` metadata is not found/is missing the `type` field, default to text input
+    // If the `x_oap_ui_config` metadata is not found/is missing the `type` field, default to text input
     fields.push({
       label: key,
       type: "text",

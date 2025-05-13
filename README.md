@@ -218,6 +218,9 @@ In the examples below, we'll look at how to add configurable fields for `model_n
 
 #### Python
 
+<details>
+<summary>In Python, this looks like:</summary>
+
 ```python
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -285,10 +288,15 @@ class GraphConfigPydantic(BaseModel):
 workflow = StateGraph(State, config_schema=GraphConfigPydantic)
 ```
 
+</details>
+
 #### TypeScript
 
 > [!TIP]
 > In order for the Open Agent Platform to recognize & render your UI fields, your configuration object must be defined using the LangGraph Zod schema.
+
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 import "@langchain/langgraph/zod";
@@ -388,6 +396,8 @@ export const GraphConfiguration = z.object({
 const workflow = new StateGraph(MyStateSchema, GraphConfiguration)
 ```
 
+</details>
+
 ### MCP Tools Config
 
 To enable support for MCP tools in your agents with Open Agent Platform, you must add a field in your configurable fields with the type `mcp`. This field can have *any* key you want, but the value must be an object with these two keys:
@@ -397,7 +407,8 @@ To enable support for MCP tools in your agents with Open Agent Platform, you mus
 
 #### Python
 
-In Python, this looks like:
+<details>
+<summary>In Python, this looks like:</summary>
 
 ```python
 class MCPConfig(BaseModel):
@@ -431,9 +442,12 @@ class GraphConfigPydantic(BaseModel):
     )
 ```
 
+</details>
+
 #### TypeScript
 
-And in TypeScript, this looks like:
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 export const MCPConfig = z.object({
@@ -468,6 +482,8 @@ export const GraphConfiguration = z.object({
 });
 ```
 
+</details>
+
 ### RAG Config
 
 To enable support for using a LangConnect RAG server in your LangGraph agent, you must define a configurable field similar to the MCP config, but with its own unique type of `rag`, and the following fields in the object:
@@ -477,7 +493,8 @@ To enable support for using a LangConnect RAG server in your LangGraph agent, yo
 
 #### Python
 
-In Python, this looks like:
+<details>
+<summary>In Python, this looks like:</summary>
 
 ```python
 class RagConfig(BaseModel):
@@ -509,9 +526,12 @@ class GraphConfigPydantic(BaseModel):
     )
 ```
 
+</details>
+
 #### TypeScript
 
-And in TypeScript, this looks like:
+<details>
+<summary>And in TypeScript, this looks like:</summary>
 
 ```typescript
 export const RAGConfig = z.object({
@@ -549,6 +569,8 @@ export const GraphConfiguration = z.object({
     }),
 });
 ```
+
+</details>
 
 # Concepts/FAQ
 

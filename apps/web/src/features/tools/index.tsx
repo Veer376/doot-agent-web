@@ -21,14 +21,12 @@ function TotalToolsBadge({
   hasMore: boolean;
 }) {
   if (loading) {
-    return (
-        <Badge variant="outline">loading...</Badge>
-    );
+    return <Badge variant="outline">loading...</Badge>;
   }
   return (
-      <Badge variant="outline">
-        {toolsCount} {hasMore && "+"}
-      </Badge>
+    <Badge variant="outline">
+      {toolsCount} {hasMore && "+"}
+    </Badge>
   );
 }
 

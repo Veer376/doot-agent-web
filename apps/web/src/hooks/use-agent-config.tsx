@@ -12,6 +12,7 @@ import {
 } from "@/lib/ui-config";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
+import { useQueryState } from "nuqs";
 
 /**
  * A custom hook for managing and accessing the configurable
@@ -19,6 +20,9 @@ import { Agent } from "@/types/agent";
  */
 export function useAgentConfig() {
   const { getAgentConfigSchema } = useAgents();
+  const [chatWithCollectionId, setChatWithCollectionId] = useQueryState(
+    "chatWithCollectionId",
+  );
 
   const [configurations, setConfigurations] = useState<
     ConfigurableFieldUIMetadata[]
@@ -90,6 +94,14 @@ export function useAgentConfig() {
           supportedConfigs.push("tools");
         }
         if (ragConfig.length) {
+          if (chatWithCollectionId) {
+            ragConfig[0].default = {
+              ...ragConfig[0].default,
+              collections: [chatWithCollectionId],
+            };
+            // Clear from query params so it's not set again.
+            setChatWithCollectionId(null);
+          }
           setDefaultConfig(`${agentId}:rag`, ragConfig);
           setRagConfigurations(ragConfig);
           supportedConfigs.push("rag");

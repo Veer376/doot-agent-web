@@ -22,7 +22,9 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
     return false;
   }
   return (
-    isDefaultAssistant(agent) && agent.deploymentId === defaultDeployment.id
+    isDefaultAssistant(agent) &&
+    agent.graph_id === defaultDeployment.defaultGraphId &&
+    agent.deploymentId === defaultDeployment.id
   );
 }
 

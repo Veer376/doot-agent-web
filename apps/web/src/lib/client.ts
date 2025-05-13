@@ -15,7 +15,7 @@ export function createClient(deploymentId: string, accessToken?: string) {
       );
     }
     const client = new Client({
-      apiUrl: `${baseApiUrl}/langgraph/${deploymentId}`,
+      apiUrl: `${baseApiUrl}/langgraph/proxy/${deploymentId}`,
       defaultHeaders: {
         "x-auth-scheme": "langsmith",
       },

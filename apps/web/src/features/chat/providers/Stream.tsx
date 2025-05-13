@@ -44,12 +44,18 @@ const StreamSession = ({
   children,
   agentId,
   deploymentId,
+  accessToken,
+  useProxyRoute,
 }: {
   children: ReactNode;
   agentId: string;
   deploymentId: string;
+  accessToken?: string;
+  useProxyRoute?: boolean;
 }) => {
-  const { session } = useAuthContext();
+  if (!useProxyRoute && !accessToken) {
+    toast.error("Access token must be provided if not using proxy route");
+  }
 
   const deployment = getDeployments().find((d) => d.id === deploymentId);
   if (!deployment) {
@@ -57,19 +63,14 @@ const StreamSession = ({
   }
 
   let deploymentUrl = deployment.deploymentUrl;
-  let usingProxyRoute = false;
-  if (
-    !session?.accessToken ||
-    process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true"
-  ) {
+  if (useProxyRoute) {
     const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
     if (!baseApiUrl) {
       throw new Error(
         "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
       );
     }
-    deploymentUrl = `${baseApiUrl}/langgraph/${deploymentId}`;
-    usingProxyRoute = true;
+    deploymentUrl = `${baseApiUrl}/langgraph/proxy/${deploymentId}`;
   }
 
   const [threadId, setThreadId] = useQueryState("threadId");
@@ -87,10 +88,10 @@ const StreamSession = ({
       setThreadId(id);
     },
     defaultHeaders: {
-      ...(!usingProxyRoute
+      ...(!useProxyRoute
         ? {
-            Authorization: `Bearer ${session?.accessToken}`,
-            "x-supabase-access-token": session?.accessToken,
+            Authorization: `Bearer ${accessToken}`,
+            "x-supabase-access-token": accessToken,
           }
         : {
             "x-auth-scheme": "langsmith",
@@ -113,6 +114,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
+  const { session } = useAuthContext();
 
   useEffect(() => {
     if (value || !agents.length) {
@@ -177,10 +179,18 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     );
   }
 
+  const useProxyRoute = process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true";
+  if (!useProxyRoute && !session?.accessToken) {
+    toast.error("Access token must be provided if not using proxy route");
+    return null;
+  }
+
   return (
     <StreamSession
       agentId={agentId}
       deploymentId={deploymentId}
+      accessToken={session?.accessToken ?? undefined}
+      useProxyRoute={useProxyRoute}
     >
       {children}
     </StreamSession>

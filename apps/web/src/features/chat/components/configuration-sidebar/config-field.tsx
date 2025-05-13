@@ -163,7 +163,7 @@ export function ConfigField({
         )}
       </div>
 
-      {description && <p className="text-xs text-gray-500">{description}</p>}
+      {description && <p className="text-xs text-gray-500 whitespace-pre-line">{description}</p>}
 
       {type === "text" && (
         <Input
@@ -398,7 +398,7 @@ export function ConfigFieldTool({
         />
       </div>
 
-      {description && <p className="text-xs text-gray-500">{description}</p>}
+      {description && <p className="text-xs text-gray-500 whitespace-pre-line">{description}</p>}
     </div>
   );
 }

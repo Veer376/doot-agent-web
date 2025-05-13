@@ -213,10 +213,9 @@ export function extractConfigurationsFromAgent({
         default: {
           collections:
             (
-              configurable[ragConfig.label] as {
-                collections?: string[];
-                rag_url?: string;
-              }
+              configurable[
+                ragConfig.label
+              ] as ConfigurableFieldRAGMetadata["default"]
             )?.collections ??
             ragConfig.default?.collections ??
             [],

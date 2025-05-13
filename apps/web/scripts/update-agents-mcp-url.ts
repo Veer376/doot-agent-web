@@ -21,6 +21,9 @@ async function main() {
     const client = new Client({
       apiUrl: deployment.deploymentUrl,
       apiKey: process.env.LANGSMITH_API_KEY,
+      defaultHeaders: {
+        "x-auth-scheme": "langsmith",
+      },
     });
 
     // Collect all agents using pagination

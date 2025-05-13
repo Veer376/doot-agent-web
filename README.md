@@ -121,6 +121,22 @@ Optionally, you can set the `MCP_TOKENS` environment variable to contain an obje
 
 To connect to an MCP server which does not require authentication, you should set the `NEXT_PUBLIC_MCP_SERVER_URL` environment variable to the URL of your MCP server. If this URL is set, and `NEXT_PUBLIC_MCP_AUTH_REQUIRED` is not set/not set to `true`, we will call your MCP server directly from the client.
 
+### Changing MCP Server URL
+
+If you change the MCP server URL, you'll need to update all of your agents to use the new URL. We've included a script in this repo to do just that. This script can be found in [`apps/web/scripts/update-agents-mcp-url.ts`](apps/web/scripts/update-agents-mcp-url.ts).
+
+To update your agent's MCP server URL, ensure the latest MCP server URL is set under the environment variable `NEXT_PUBLIC_MCP_SERVER_URL`, along with your deployments under `NEXT_PUBLIC_DEPLOYMENTS`, and a LangSmith API key under `LANGSMITH_API_KEY` (this is because the script uses LangSmith auth to authenticate with your LangGraph server, bypassing any user authentication). Then, run the script:
+
+```bash
+# Ensure you're inside the `apps/web` directory
+# cd apps/web
+
+# Run the script via TSX.
+npx tsx scripts/update-agents-mcp-url.ts
+```
+
+This will fetch every agent, from every deployment listed. It then checks to see if a given agent supports MCP servers. If it does it checks the MCP server URL is not already set to the new URL. If it is not, it updates the agent's config to use the new URL.
+
 # Building Your Own Agents
 
 We built Open Agent Platform with custom agents in mind. Although we offer a few pre-built agents, we encourage you to build your own agents, and use OAP as a platform to prototype, test and use them! The following is a guide to help you build agents which are compatible with all of Open Agent Platform's features.

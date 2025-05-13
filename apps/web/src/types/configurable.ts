@@ -84,6 +84,7 @@ export type ConfigurableFieldRAGMetadata = {
   label: string;
   type: "rag";
   default?: {
+    rag_url?: string;
     collections?: string[];
   };
 };

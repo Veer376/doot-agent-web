@@ -1,6 +1,6 @@
 # Open Agent Platform
 
-Open Agent Platform is a citizen developer platform, allowing non-technical users to build, prototype, and use agents. These agents can be connected to a wide range of tools, RAG servers, and event other agents through an Agent Supervisor!
+Open Agent Platform is a no-code agent building platform. These agents can be connected to a wide range of tools, RAG servers, and event other agents through an Agent Supervisor!
 
 
 <video src="https://github.com/user-attachments/assets/bc91304b-e704-41d7-a0cd-9806d37640c0.mp4" controls="controls"></video>

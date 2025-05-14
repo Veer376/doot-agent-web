@@ -42,14 +42,14 @@
     "global": {
       "anchors": [
         {
+          "anchor": "Demo",
+          "href": "https://oap.langchain.com",
+          "icon": "link"
+        },
+        {
           "anchor": "GitHub",
           "href": "https://github.com/langchain-ai/open-agent-platform",
           "icon": "github"
-        },
-        {
-          "anchor": "Open Agent Platform",
-          "href": "https://oap.langchain.com",
-          "icon": "link"
         }
       ]
     }

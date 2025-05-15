@@ -21,8 +21,10 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <main>{children}</main>
+      <body className={`${inter.className} flex h-screen flex-col`}>
+        <main className="flex flex-grow flex-col overflow-y-auto">
+          {children}
+        </main>
       </body>
     </html>
   );

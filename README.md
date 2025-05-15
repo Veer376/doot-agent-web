@@ -50,7 +50,7 @@ However, if you want to use the RAG features, you will need to have the LangConn
 
 ### How can I build my own agents?
 
-Yes! See the [Building Your Own Agents](#building-your-own-agents) section for more information.
+Yes! See the [Building Your Own Agents](https://docs.oap.langchain.com/custom-agents/overview#building-your-own-agents) section for more information.
 
 ### How can I use non-supabase auth?
 

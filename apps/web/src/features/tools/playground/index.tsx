@@ -17,6 +17,7 @@ import _ from "lodash";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { MarkdownText } from "@/components/ui/markdown-text";
 
 export default function ToolsPlaygroundInterface() {
   const { tools, loading, callTool } = useMCPContext();
@@ -130,12 +131,14 @@ export default function ToolsPlaygroundInterface() {
         />
       </div>
       <div className="border-b py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-medium">
               {_.startCase(selectedTool.name)}
             </h2>
-            <p className="text-sm text-gray-500">{selectedTool.description}</p>
+            <p className="text-sm whitespace-pre-line text-gray-500">
+              {selectedTool.description}
+            </p>
           </div>
           <Button
             onClick={handleSubmit}

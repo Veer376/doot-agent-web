@@ -197,7 +197,7 @@ export function AgentsCombobox({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="min-w-[200px] p-0"
+        className="w-full min-w-[200px] p-0"
       >
         <Command
           filter={(value: string, search: string) => {

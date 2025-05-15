@@ -1,6 +1,11 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 import { SchemaForm } from "./components/schema-form";
 import { ResponseViewer } from "./components/response-viewer";
 import { Button } from "@/components/ui/button";
@@ -112,7 +117,7 @@ export default function ToolsPlaygroundInterface() {
   }
 
   return (
-    <div className="container mx-auto mb-8 h-full p-8">
+    <div className="flex h-full w-full flex-col p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tools Playground</h1>
         <ToolListCommand
@@ -125,12 +130,14 @@ export default function ToolsPlaygroundInterface() {
         />
       </div>
       <div className="border-b py-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-medium">
               {_.startCase(selectedTool.name)}
             </h2>
-            <p className="text-sm text-gray-500">{selectedTool.description}</p>
+            <p className="text-sm whitespace-pre-line text-gray-500">
+              {selectedTool.description}
+            </p>
           </div>
           <Button
             onClick={handleSubmit}
@@ -151,28 +158,37 @@ export default function ToolsPlaygroundInterface() {
         </div>
       </div>
 
-      <div className="grid h-[85%] grid-cols-1 gap-4 py-6 md:grid-cols-[1fr_auto_1fr] md:gap-6">
-        <div className="space-y-4">
-          <h3 className="text-md font-medium">Input</h3>
-          <SchemaForm
-            schema={selectedTool.inputSchema}
-            onChange={handleInputChange}
-            values={inputValues}
-          />
-        </div>
-
-        <div className="hidden border-l border-gray-200 md:block dark:border-gray-700" />
-
-        <div className="space-y-4">
-          <h3 className="text-md font-medium">Response</h3>
-          <ResponseViewer
-            response={response}
-            isLoading={isLoading}
-            errorMessage={errorMessage}
-            authRequiredMessage={authRequiredMessage}
-          />
-        </div>
-      </div>
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="flex-grow border-0"
+      >
+        <ResizablePanel defaultSize={50}>
+          <div className="flex h-full items-start p-6">
+            <div className="w-full space-y-4">
+              <h3 className="text-md font-medium">Input</h3>
+              <SchemaForm
+                schema={selectedTool.inputSchema}
+                onChange={handleInputChange}
+                values={inputValues}
+              />
+            </div>
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={50}>
+          <div className="flex h-full items-start p-6">
+            <div className="w-full space-y-4">
+              <h3 className="text-md font-medium">Response</h3>
+              <ResponseViewer
+                response={response}
+                isLoading={isLoading}
+                errorMessage={errorMessage}
+                authRequiredMessage={authRequiredMessage}
+              />
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

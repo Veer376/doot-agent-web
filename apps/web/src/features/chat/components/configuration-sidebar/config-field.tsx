@@ -612,6 +612,7 @@ export function ConfigFieldAgents({
           Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])
         }
         multiple
+        className="w-full"
       />
 
       <p className="text-xs text-gray-500">

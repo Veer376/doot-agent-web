@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, forwardRef, ForwardedRef, useState } from "react";
-import { Save, Trash2 } from "lucide-react";
+import { Lightbulb, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -44,6 +44,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isDefaultAssistant } from "@/lib/agent-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 function NameAndDescriptionAlertDialog({
   name,
@@ -155,6 +157,11 @@ export const ConfigurationSidebar = forwardRef<
     toolConfigurations,
     searchTerm: toolSearchTerm,
   });
+
+  const [showProTipAlert, setShowProTipAlert] = useLocalStorage(
+    "showProTipAlert",
+    true,
+  );
 
   useEffect(() => {
     if (
@@ -274,7 +281,22 @@ export const ConfigurationSidebar = forwardRef<
               </TooltipProvider>
             </div>
           </div>
-
+          {showProTipAlert && (
+            <div className="p-4">
+              <Alert variant="info">
+                <Lightbulb className="size-4" />
+                <AlertTitle>
+                  Pro Tip
+                  <Button size="icon" variant="ghost" className="absolute top-1 right-2 hover:bg-transparent" onClick={() => setShowProTipAlert(false)}>
+                    <X className="size-4" />
+                  </Button>
+                </AlertTitle>
+                <AlertDescription>
+                  Changes made to the configuration will be saved automatically, but will only persist across sessions if you click "Save".
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
           <Tabs
             defaultValue="general"
             className="flex flex-1 flex-col overflow-y-auto"

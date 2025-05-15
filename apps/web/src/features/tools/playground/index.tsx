@@ -17,7 +17,6 @@ import _ from "lodash";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { MarkdownText } from "@/components/ui/markdown-text";
 
 export default function ToolsPlaygroundInterface() {
   const { tools, loading, callTool } = useMCPContext();

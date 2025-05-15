@@ -287,12 +287,18 @@ export const ConfigurationSidebar = forwardRef<
                 <Lightbulb className="size-4" />
                 <AlertTitle>
                   Pro Tip
-                  <Button size="icon" variant="ghost" className="absolute top-1 right-2 hover:bg-transparent" onClick={() => setShowProTipAlert(false)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute top-1 right-2 hover:bg-transparent"
+                    onClick={() => setShowProTipAlert(false)}
+                  >
                     <X className="size-4" />
                   </Button>
                 </AlertTitle>
                 <AlertDescription>
-                  Changes made to the configuration will be saved automatically, but will only persist across sessions if you click "Save".
+                  Changes made to the configuration will be saved automatically,
+                  but will only persist across sessions if you click "Save".
                 </AlertDescription>
               </Alert>
             </div>

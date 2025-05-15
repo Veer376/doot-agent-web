@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 // Define a type for the hook's return value
 type UseLocalStorageReturnType<T> = [T, (value: T | ((val: T) => T)) => void];
@@ -16,7 +16,7 @@ export function useLocalStorage<T>(
 ): UseLocalStorageReturnType<T> {
   // Function to get the stored value from localStorage or return the initial value
   const getStoredValue = useCallback(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return initialValue;
     }
     try {
@@ -41,7 +41,7 @@ export function useLocalStorage<T>(
       // Save state
       setStoredValue(valueToStore);
       // Save to local storage
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
@@ -51,7 +51,7 @@ export function useLocalStorage<T>(
 
   // Listen for changes to the localStorage from other tabs/windows
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -71,18 +71,18 @@ export function useLocalStorage<T>(
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
 
     // Update state if value changes in another tab
     // This is important for initial load in case another tab updated the value
     // after this component mounted but before the event listener was attached.
     const currentValue = getStoredValue();
     if (currentValue !== storedValue) {
-        setStoredValue(currentValue);
+      setStoredValue(currentValue);
     }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, [key, initialValue, getStoredValue, storedValue]); // Added storedValue to dependencies
 

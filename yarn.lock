@@ -7038,6 +7038,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-resizable-panels@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "react-resizable-panels@npm:3.0.2"
+  peerDependencies:
+    react: ^16.14.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    react-dom: ^16.14.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+  checksum: a11b2703993c0dab43d67d66eda6fc4d8df6e28ecf90950bc523dc474911b30f8e1bb9c1a128abdd5ea8ce4310783847395a7ec0c17eed218eba2f423660183e
+  languageName: node
+  linkType: hard
+
 "react-style-singleton@npm:^2.2.2, react-style-singleton@npm:^2.2.3":
   version: 2.2.3
   resolution: "react-style-singleton@npm:2.2.3"
@@ -8510,6 +8520,7 @@ __metadata:
     react: ^19.0.0
     react-dom: ^19.0.0
     react-markdown: ^10.1.0
+    react-resizable-panels: ^3.0.2
     react-syntax-highlighter: ^15.6.1
     rehype-katex: ^7.0.1
     rehype-raw: 7.0.0

@@ -105,7 +105,7 @@ export function AgentDashboard() {
             value={graphFilter}
             onValueChange={setGraphFilter}
           >
-            <SelectTrigger className="h-9 w-[180px]">
+            <SelectTrigger className="h-9 min-w-[180px]">
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>

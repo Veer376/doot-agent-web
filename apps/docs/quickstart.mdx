@@ -35,7 +35,7 @@ The first step in setting up Open Agent Platform is to deploy and configure your
     You can find your project & tenant IDs with a GET request to the `/info` endpoint on your LangGraph Platform deployment.
   </Step>
   <Step title="Set Environment Variables">
-    Combine your agent configurations into a JSON array and set the `NEXT_PUBLIC_DEPLOYMENTS` environment variable:
+    Combine your agent configurations into a JSON array and set the `NEXT_PUBLIC_DEPLOYMENTS` environment variable inside the `apps/web/` directory:
 
     ```bash
     NEXT_PUBLIC_DEPLOYMENTS=[{"id":"bf63dc89-1de7-4a65-8336-af9ecda479d6","deploymentUrl":"http://localhost:2024","tenantId":"42d732b3-1324-4226-9fe9-513044dceb58","name":"Local deployment","isDefault":true,"defaultGraphId":"agent"}]
@@ -52,7 +52,7 @@ Open Agent Platform uses Supabase for authentication by default.
     Create a new project in [Supabase](https://supabase.com/).
   </Step>
   <Step title="Configure Environment Variables">
-    Set the following environment variables:
+    Set the following environment variables inside the `apps/web/` directory:
     ```bash
     NEXT_PUBLIC_SUPABASE_URL="<your supabase url>"
     NEXT_PUBLIC_SUPABASE_ANON_KEY="<your supabase anon key>"
@@ -70,7 +70,7 @@ Open Agent Platform uses Supabase for authentication by default.
     Follow the instructions in the [LangConnect README](https://github.com/langchain-ai/langconnect) to set up and deploy a LangConnect RAG server.
   </Step>
   <Step title="Configure Environment Variables">
-    Set the RAG server URL:
+    Set the RAG server URL inside the `apps/web/` directory:
     ```bash
     NEXT_PUBLIC_RAG_API_URL="http://localhost:8080"
     ```
@@ -85,7 +85,7 @@ Open Agent Platform uses Supabase for authentication by default.
 
 <Steps>
   <Step title="Configure MCP Server URL">
-    Set your MCP server URL (ensure it does not end with `/mcp`. This will be auto-applied by OAP):
+    Set your MCP server URL inside the `apps/web/` directory (ensure it does not end with `/mcp`. This will be auto-applied by OAP):
     ```bash
     NEXT_PUBLIC_MCP_SERVER_URL="<your MCP server URL>"
     ```

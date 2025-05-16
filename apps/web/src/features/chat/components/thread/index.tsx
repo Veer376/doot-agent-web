@@ -19,7 +19,7 @@ import {
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { ArrowDown, LoaderCircle, SquarePen } from "lucide-react";
+import { ArrowDown, LoaderCircle, SquarePen, AlertCircle } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -210,10 +211,12 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const lastError = useRef<string | undefined>(undefined);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!stream.error) {
       lastError.current = undefined;
+      setErrorMessage("");
       return;
     }
     try {
@@ -225,6 +228,7 @@ export function Thread() {
 
       // Message is defined, and it has not been logged yet. Save it, and send the error
       lastError.current = message;
+      setErrorMessage(message);
       toast.error("An error occurred. Please try again.", {
         description: (
           <p>
@@ -370,6 +374,13 @@ export function Thread() {
                 />
               )}
               {isLoading && !firstTokenReceived && <AssistantMessageLoading />}
+              {errorMessage && (
+                <Alert variant="destructive">
+                  <AlertCircle className="size-4" />
+                  <AlertTitle>An error occurred:</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              )}
             </>
           }
           footer={

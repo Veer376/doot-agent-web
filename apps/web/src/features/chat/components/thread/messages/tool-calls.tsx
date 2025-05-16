@@ -73,7 +73,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
 
   try {
     if (typeof message.content === "string") {
-      parsedContent = message.content
+      parsedContent = message.content;
     } else if (typeof message.content === "object") {
       if (Array.isArray(message.content) && message.content.length === 1) {
         parsedContent = message.content[0];

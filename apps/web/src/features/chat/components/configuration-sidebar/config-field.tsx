@@ -494,7 +494,10 @@ export function ConfigFieldRAG({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent
+          className="w-full p-0"
+          align="start"
+        >
           <Command className="w-full">
             <CommandInput placeholder="Search collections..." />
             <CommandList>
@@ -507,7 +510,6 @@ export function ConfigFieldRAG({
                     onSelect={() => handleSelect(collection.uuid)}
                     className="flex items-center justify-between"
                   >
-                    <span>{collection.name}</span>
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",
@@ -516,6 +518,9 @@ export function ConfigFieldRAG({
                           : "opacity-0",
                       )}
                     />
+                    <p className="line-clamp-1 flex-1 truncate pr-2">
+                      {collection.name}
+                    </p>
                   </CommandItem>
                 ))}
               </CommandGroup>

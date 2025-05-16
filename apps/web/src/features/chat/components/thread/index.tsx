@@ -297,6 +297,7 @@ export function Thread() {
         metadata: {
           supabaseAccessToken: session?.accessToken,
         },
+        streamSubgraphs: true,
       },
     );
 
@@ -325,6 +326,7 @@ export function Thread() {
       metadata: {
         supabaseAccessToken: session?.accessToken,
       },
+      streamSubgraphs: true,
     });
   };
 

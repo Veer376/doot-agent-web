@@ -5,15 +5,36 @@ description: 'Follow these steps to get your Open Agent Platform up and running 
 
 <Info>
   **Prerequisites:**
+  - Clone the [Open Agent Platform Repository](https://github.com/langchain-ai/open-agent-platform)
   - [LangSmith](https://smith.langchain.com/) Account (free tier is sufficient)
   - [Supabase](https://supabase.com/) Account
   - MCP Server (e.g. [Arcade](https://arcade-ai.com/))
   - An LLM API Key (e.g. [OpenAI](https://platform.openai.com/), [Anthropic](https://console.anthropic.com/), [Google](https://aistudio.google.com/))
 </Info>
 
-## 1. Deploying Agents
+## 1. Authentication Setup
 
-The first step in setting up Open Agent Platform is to deploy and configure your agents.
+Open Agent Platform uses Supabase for authentication by default.
+
+<Steps>
+  <Step title="Create a Supabase Project">
+    Create a new project in [Supabase](https://supabase.com/).
+  </Step>
+  <Step title="Configure Environment Variables">
+    Set the following environment variables inside the `apps/web/` directory:
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL="<your supabase url>"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="<your supabase anon key>"
+    ```
+  </Step>
+  <Step title="Enable Authentication Providers">
+    Enable Google authentication in your Supabase project, or remove the Google authentication UI code from the app.
+  </Step>
+</Steps>
+
+## 2. Deploying Agents
+
+The next step in setting up Open Agent Platform is to deploy and configure your agents.
 
 <Steps>
   <Step title="Clone Pre-built Agents">
@@ -48,26 +69,6 @@ The first step in setting up Open Agent Platform is to deploy and configure your
     ```bash
     NEXT_PUBLIC_DEPLOYMENTS=[{"id":"bf63dc89-1de7-4a65-8336-af9ecda479d6","deploymentUrl":"http://localhost:2024","tenantId":"42d732b3-1324-4226-9fe9-513044dceb58","name":"Local deployment","isDefault":true,"defaultGraphId":"agent"}]
     ```
-  </Step>
-</Steps>
-
-## 2. Authentication Setup
-
-Open Agent Platform uses Supabase for authentication by default.
-
-<Steps>
-  <Step title="Create a Supabase Project">
-    Create a new project in [Supabase](https://supabase.com/).
-  </Step>
-  <Step title="Configure Environment Variables">
-    Set the following environment variables inside the `apps/web/` directory:
-    ```bash
-    NEXT_PUBLIC_SUPABASE_URL="<your supabase url>"
-    NEXT_PUBLIC_SUPABASE_ANON_KEY="<your supabase anon key>"
-    ```
-  </Step>
-  <Step title="Enable Authentication Providers">
-    Enable Google authentication in your Supabase project, or remove the Google authentication UI code from the app.
   </Step>
 </Steps>
 

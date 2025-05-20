@@ -106,7 +106,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // Construct the target URL
   const targetUrlObj = new URL(MCP_SERVER_URL);
-  targetUrlObj.pathname = `${targetUrlObj.pathname}/mcp${path}${url.search}`;
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path}${url.search}`;
   const targetUrl = targetUrlObj.toString();
 
   // Prepare headers, forwarding original headers except Host
@@ -166,7 +166,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  headers.set("Accept", "application/json");
+  headers.set("Accept", "application/json, text/event-stream")
 
   // Determine body based on method
   let body: BodyInit | null | undefined = undefined;

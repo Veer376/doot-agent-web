@@ -166,7 +166,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  headers.set("Accept", "application/json, text/event-stream")
+  headers.set("Accept", "application/json, text/event-stream");
 
   // Determine body based on method
   let body: BodyInit | null | undefined = undefined;

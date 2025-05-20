@@ -41,7 +41,7 @@ export const useConfigStore = create<ConfigState>()(
           ...toolsConfig,
           ...ragConfig,
           ...agentsConfig,
-        }
+        };
         delete configObj.__defaultValues;
         return configObj;
       },

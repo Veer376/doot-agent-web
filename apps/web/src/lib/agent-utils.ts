@@ -1,5 +1,4 @@
 import { Agent } from "@/types/agent";
-import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import React from "react";
@@ -55,15 +54,9 @@ export function isPrimaryAssistant(agent: Agent | Assistant): boolean {
 }
 
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
-  const deployments = getDeployments();
-  const defaultDeployment = deployments.find((d) => d.isDefault);
-  if (!defaultDeployment) {
-    return false;
-  }
   return (
     isUserCreatedDefaultAssistant(agent) &&
-    agent.graph_id === defaultDeployment.defaultGraphId &&
-    agent.deploymentId === defaultDeployment.id
+      agent.metadata?.is_primary === true
   );
 }
 
@@ -123,25 +116,25 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
  * @returns True if the deployment requires API keys but user doesn't have them
  */
 export function requiresApiKeysButNotSet(
-  deploymentId: string,
+  // agent: Agent | Assistant, # TODO: pass the agent to check its metadata or find out another way.
   hasApiKeys: boolean,
 ): boolean {
-  const deployment = getDeployments().find((d) => d.id === deploymentId);
-  return deployment?.requiresApiKeys === true && !hasApiKeys;
+  // For now, don't require API keys - let the backend handle missing key errors
+  // This can be enabled later when we implement per-agent requiresApiKeys metadata
+  return false;
+  // return agent.metadata?.requiresApiKeys === true && !hasApiKeys;
 }
 
 /**
  * Shows a warning toast if API keys are required but not set.
- * @param deploymentId The deployment ID to check
  * @param hasApiKeys Whether the user has API keys set
  */
-export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
-  if (requiresApiKeysButNotSet(deploymentId, hasApiKeys)) {
-    const deployment = getDeployments().find((d) => d.id === deploymentId);
+export function checkApiKeysWarning(hasApiKeys: boolean) {
+  if (requiresApiKeysButNotSet(hasApiKeys)) {
     const baseMessage =
       "This agent requires all necessary API keys to be set in the Settings page under your Account.";
 
-    const customMessage = deployment?.apiKeysRequiredMessage;
+    const customMessage = "You have not set api keys please do right now or leave."
     const fullMessage = customMessage
       ? `${baseMessage}\n\n${customMessage}`
       : baseMessage;

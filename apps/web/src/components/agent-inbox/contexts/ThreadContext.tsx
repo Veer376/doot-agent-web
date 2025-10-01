@@ -75,7 +75,7 @@ function ThreadsProviderInternal<
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
   const fetchThreads = React.useCallback(
-    async (agentId: string, deploymentId: string) => {
+    async (agentId: string) => {
       if (!session?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
@@ -91,7 +91,7 @@ function ThreadsProviderInternal<
 
       setLoading(true);
 
-      const client = createClient(deploymentId, session.accessToken);
+      const client = createClient(session.accessToken);
 
       try {
         // Use the values from queryParams
@@ -247,7 +247,7 @@ function ThreadsProviderInternal<
 
     try {
       // Fetch threads
-      fetchThreads(assistantId, deploymentId);
+      fetchThreads(assistantId);
     } catch (e) {
       logger.error("Error occurred while fetching threads", e);
       toast.error("Failed to load threads. Please try again.");
@@ -272,7 +272,7 @@ function ThreadsProviderInternal<
       }
 
       const [_, deploymentId] = agentInboxId.split(":");
-      const client = createClient(deploymentId, session.accessToken);
+      const client = createClient(session.accessToken);
 
       try {
         const thread = await client.threads.get(threadId);
@@ -353,7 +353,7 @@ function ThreadsProviderInternal<
     }
 
     const [_, deploymentId] = agentInboxId.split(":");
-    const client = createClient(deploymentId, session.accessToken);
+    const client = createClient(session.accessToken);
 
     try {
       setLoading(true);
@@ -407,7 +407,7 @@ function ThreadsProviderInternal<
     }
 
     const [assistantId, deploymentId] = agentInboxId.split(":");
-    const client = createClient(deploymentId, session.accessToken);
+    const client = createClient(session.accessToken);
 
     try {
       if (options?.stream) {

@@ -6,9 +6,16 @@ import { Deployment } from "@/types/deployment";
  */
 export function getDeployments(): Deployment[] {
   let defaultExists = false;
-  const deployments: Deployment[] = JSON.parse(
-    process.env.NEXT_PUBLIC_DEPLOYMENTS || "[]",
-  );
+  // Ensure the env var contains valid JSON. Provide a helpful error otherwise.
+  const raw = process.env.NEXT_PUBLIC_DEPLOYMENTS || "[]";
+  let deployments: Deployment[] = [];
+  try {
+    deployments = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(
+      "Invalid NEXT_PUBLIC_DEPLOYMENTS. Ensure it is valid JSON with double quotes and no trailing commas. Example: '[{\"id\":\"...\",\"deploymentUrl\":\"http://localhost:5000\",\"tenantId\":\"...\",\"name\":\"Local\",\"isDefault\":true,\"defaultGraphId\":\"agent\"}]'"
+    );
+  }
   for (const deployment of deployments) {
     if (deployment.isDefault && !defaultExists) {
       if (!deployment.defaultGraphId) {

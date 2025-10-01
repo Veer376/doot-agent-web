@@ -47,3 +47,7 @@ credentials.json
 .langgraph_api
 
 **/.claude/settings.local.json
+.npmrc
+package-lock.json
+yarn.lock
+problem1.png

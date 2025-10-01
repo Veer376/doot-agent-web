@@ -124,7 +124,6 @@ export const ConfigurationSidebar = forwardRef<
   const { configsByAgentId, resetConfig } = useConfigStore();
   const { tools, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
   const [threadId] = useQueryState("threadId");
   const { agents, refreshAgentsLoading } = useAgentsContext();
   const {
@@ -164,31 +163,20 @@ export const ConfigurationSidebar = forwardRef<
   );
 
   useEffect(() => {
-    if (
-      !agentId ||
-      !deploymentId ||
-      loading ||
-      !agents?.length ||
-      refreshAgentsLoading
-    )
-      return;
+    if (!agentId || loading || !agents?.length || refreshAgentsLoading) return;
 
-    const selectedAgent = agents.find(
-      (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
-    );
+    const selectedAgent = agents.find((a) => a.assistant_id === agentId);
     if (!selectedAgent) {
       toast.error("Failed to get agent config.", { richColors: true });
       return;
     }
 
     getSchemaAndUpdateConfig(selectedAgent);
-  }, [agentId, deploymentId, agents, refreshAgentsLoading]);
+  }, [agentId, agents, refreshAgentsLoading]);
 
   const handleSave = async () => {
-    if (!agentId || !deploymentId || !agents?.length) return;
-    const selectedAgent = agents.find(
-      (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
-    );
+    if (!agentId || !agents?.length) return;
+    const selectedAgent = agents.find((a) => a.assistant_id === agentId);
     if (!selectedAgent) {
       toast.error("Failed to save config.", {
         richColors: true,
@@ -200,7 +188,7 @@ export const ConfigurationSidebar = forwardRef<
       setOpenNameAndDescriptionAlertDialog(true);
       return;
     } else if (isUserCreatedDefaultAssistant(selectedAgent) && newName) {
-      const newAgent = await createAgent(deploymentId, selectedAgent.graph_id, {
+      const newAgent = await createAgent(selectedAgent.graph_id, {
         name: newName,
         description: newDescription,
         config: configsByAgentId[agentId],
@@ -209,17 +197,16 @@ export const ConfigurationSidebar = forwardRef<
         toast.error("Failed to create agent", { richColors: true });
         return;
       }
-      // Reload the page, using the new assistant ID and deployment ID
+      // Reload the page, using the new assistant ID
       const newQueryParams = new URLSearchParams({
         agentId: newAgent.assistant_id,
-        deploymentId,
         ...(threadId ? { threadId } : {}),
       });
       window.location.href = `/?${newQueryParams.toString()}`;
       return;
     }
 
-    const updatedAgent = await updateAgent(agentId, deploymentId, {
+    const updatedAgent = await updateAgent(agentId, {
       config: configsByAgentId[agentId],
     });
     if (!updatedAgent) {

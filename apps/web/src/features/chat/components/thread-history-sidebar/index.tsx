@@ -74,21 +74,16 @@ export const ThreadHistorySidebar = forwardRef<
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!agentId || !deploymentId || !session?.accessToken) return;
+    if (!agentId || !session?.accessToken) return;
 
-    const getAgentThreads = async (
-      _agentId: string,
-      _deploymentId: string,
-      accessToken: string,
-    ) => {
+    const getAgentThreads = async (_agentId: string, accessToken: string) => {
       setLoading(true);
 
       try {
-        const client = createClient(_deploymentId, accessToken);
+        const client = createClient(accessToken);
 
         const threads = await client.threads.search({
           limit: 100,
@@ -105,8 +100,8 @@ export const ThreadHistorySidebar = forwardRef<
       }
     };
 
-    getAgentThreads(agentId, deploymentId, session.accessToken);
-  }, [agentId, deploymentId, session?.accessToken]);
+    getAgentThreads(agentId, session.accessToken);
+  }, [agentId, session?.accessToken]);
 
   const handleChangeThread = (id: string) => {
     if (threadId === id) return;

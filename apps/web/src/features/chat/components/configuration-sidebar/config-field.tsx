@@ -40,7 +40,6 @@ import {
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
-import { getDeployments } from "@/lib/environment/deployments";
 import { toast } from "sonner";
 
 interface Option {
@@ -546,7 +545,6 @@ export function ConfigFieldAgents({
   const actualAgentId = `${agentId}:agents`;
 
   const { agents, loading } = useAgentsContext();
-  const deployments = getDeployments();
 
   // Do not allow adding itself as a sub-agent
   const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);
@@ -575,18 +573,10 @@ export function ConfigFieldAgents({
     }
 
     const newDefaults = ids.map((id) => {
-      const [agent_id, deploymentId] = id.split(":");
-      const deployment_url = deployments.find(
-        (d) => d.id === deploymentId,
-      )?.deploymentUrl;
-      if (!deployment_url) {
-        toast.error("Deployment not found");
-      }
-
+      // id is just the assistant_id now (no deploymentId)
       return {
-        agent_id,
-        deployment_url,
-        name: agents.find((a) => a.assistant_id === agent_id)?.name,
+        agent_id: id,
+        name: agents.find((a) => a.assistant_id === id)?.name,
       };
     });
 
@@ -603,10 +593,7 @@ export function ConfigFieldAgents({
       <AgentsCombobox
         agents={filteredAgents}
         agentsLoading={loading}
-        value={defaults.map(
-          (defaultValue) =>
-            `${defaultValue.agent_id}:${deployments.find((d) => d.deploymentUrl === defaultValue.deployment_url)?.id}`,
-        )}
+        value={defaults.map((defaultValue) => `${defaultValue.agent_id}`)}
         setValue={(v) =>
           Array.isArray(v) ? handleSelectChange(v) : handleSelectChange([v])
         }

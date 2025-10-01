@@ -14,39 +14,38 @@ import {
 import { AgentCard } from "../agent-card";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { useAgentsContext } from "@/providers/Agents";
-import { getDeployments } from "@/lib/environment/deployments";
 import { GraphGroup } from "../../types";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import _ from "lodash";
 
 export function AgentDashboard() {
   const { agents, loading: agentsLoading } = useAgentsContext();
-  const deployments = getDeployments();
   const [searchQuery, setSearchQuery] = useState("");
   const [graphFilter, setGraphFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const allGraphGroups: GraphGroup[] = useMemo(() => {
     if (agentsLoading) return [];
-    const groups: GraphGroup[] = [];
-    deployments.forEach((deployment) => {
-      const agentsInDeployment = agents.filter(
-        (agent) => agent.deploymentId === deployment.id,
-      );
-      const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
-      agentsGroupedByGraphs.forEach((agentGroup) => {
-        if (agentGroup.length > 0) {
-          const graphId = agentGroup[0].graph_id;
-          groups.push({
-            agents: agentGroup,
-            deployment,
-            graphId,
-          });
-        }
-      });
-    });
-    return groups;
-  }, [agents, deployments, agentsLoading]);
+  //   const groups: GraphGroup[] = [];
+  //   deployments.forEach((deployment) => {
+  //     const agentsInDeployment = agents.filter(
+  //       (agent) => agent.deploymentId === deployment.id,
+  //     );
+  //     const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
+  //     agentsGroupedByGraphs.forEach((agentGroup) => {
+  //       if (agentGroup.length > 0) {
+  //         const graphId = agentGroup[0].graph_id;
+  //         groups.push({
+  //           agents: agentGroup,
+  //           deployment,
+  //           graphId,
+  //         });
+  //       }
+  //     });
+  //   });
+    // return groups;
+    return []
+  }, [agents, agentsLoading]);
 
   const filteredAgents = useMemo(() => {
     // 1. Filter groups based on the graphFilter dropdown

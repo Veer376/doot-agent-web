@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { TemplateCard } from "./templates-card";
 import { useAgentsContext } from "@/providers/Agents";
-import { getDeployments } from "@/lib/environment/deployments";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import { TemplatesLoading } from "./templates-loading";
 import { GraphGroup } from "../../types";

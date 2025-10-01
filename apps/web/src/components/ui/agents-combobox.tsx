@@ -25,7 +25,6 @@ import {
   isUserCreatedDefaultAssistant,
   sortAgentGroup,
 } from "@/lib/agent-utils";
-import { getDeployments } from "@/lib/environment/deployments";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
@@ -69,14 +68,11 @@ export interface AgentsComboboxProps {
  * @returns The name of the selected agent.
  */
 const getSelectedAgentValue = (
-  value: string,
+  selectedAssistantId: string,
   agents: Agent[],
 ): React.ReactNode => {
-  const [selectedAssistantId, selectedDeploymentId] = value.split(":");
   const selectedAgent = agents.find(
-    (item) =>
-      item.assistant_id === selectedAssistantId &&
-      item.deploymentId === selectedDeploymentId,
+    (item) => item.assistant_id === selectedAssistantId,
   );
 
   if (selectedAgent) {
@@ -108,17 +104,8 @@ const getMultipleSelectedAgentValues = (
 };
 
 const getNameFromValue = (value: string, agents: Agent[]) => {
-  const [selectedAssistantId, selectedDeploymentId] = value.split(":");
-  const selectedAgent = agents.find(
-    (item) =>
-      item.assistant_id === selectedAssistantId &&
-      item.deploymentId === selectedDeploymentId,
-  );
-
-  if (selectedAgent) {
-    return selectedAgent.name;
-  }
-  return "";
+  const selectedAgent = agents.find((item) => item.assistant_id === value);
+  return selectedAgent?.name || "";
 };
 
 export function AgentsCombobox({
@@ -137,8 +124,6 @@ export function AgentsCombobox({
   style,
   agentsLoading,
 }: AgentsComboboxProps) {
-  const deployments = getDeployments();
-
   // Convert value to array for internal handling
   const selectedValues = React.useMemo(() => {
     if (!value) return [];
@@ -221,70 +206,57 @@ export function AgentsCombobox({
                 "No agents found."
               )}
             </CommandEmpty>
-            {deployments.map((deployment) => {
-              // Filter agents for the current deployment (excluding default agents)
-              const deploymentAgents = agents.filter(
-                (agent) => agent.deploymentId === deployment.id,
-              );
-              // Group filtered agents by graph (still needed for sorting/grouping logic)
-              const agentsGroupedByGraphs =
-                groupAgentsByGraphs(deploymentAgents);
+            {(() => {
+              // Group all agents by graph
+              const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
 
-              // Flatten the groups for rendering directly under deployment group
-              const allDeploymentAgents = agentsGroupedByGraphs.flatMap(
-                (group) => sortAgentGroup(group),
-              ); // Flatten and sort
+              return agentsGroupedByGraphs.map((group) => {
+                const sortedGroup = sortAgentGroup(group);
+                const graphId = group[0]?.graph_id || "unknown";
 
-              // Only render the deployment group if it has agents
-              if (allDeploymentAgents.length === 0) {
-                return null;
-              }
+                return (
+                  <React.Fragment key={graphId}>
+                    <CommandGroup
+                      heading={graphId}
+                      className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium"
+                    >
+                      {sortedGroup.map((item) => {
+                        const itemValue = item.assistant_id;
+                        const isSelected = selectedValues.includes(itemValue);
 
-              return (
-                <React.Fragment key={deployment.id}>
-                  <CommandGroup
-                    heading={deployment.name} // Use deployment name as heading
-                    className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium"
-                  >
-                    {/* Map over ALL agents for this deployment directly */}
-                    {allDeploymentAgents.map((item) => {
-                      const itemValue = `${item.assistant_id}:${item.deploymentId}`;
-                      const isSelected = selectedValues.includes(itemValue);
+                        return (
+                          <CommandItem
+                            key={itemValue}
+                            value={itemValue}
+                            onSelect={handleSelect}
+                            className="flex w-full items-center justify-between"
+                          >
+                            <Check
+                              className={cn(
+                                isSelected ? "opacity-100" : "opacity-0",
+                              )}
+                            />
 
-                      return (
-                        <CommandItem
-                          key={itemValue}
-                          value={itemValue}
-                          onSelect={handleSelect}
-                          className="flex w-full items-center justify-between"
-                        >
-                          <Check
-                            className={cn(
-                              isSelected ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-
-                          {/* Prepend Graph ID to the name for visual grouping */}
-                          <p className="line-clamp-1 flex-1 truncate pr-2">
-                            <span className="text-muted-foreground mr-2 text-xs">{`[${item.graph_id}]`}</span>
-                            {item.name}
-                          </p>
-                          <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                            {isUserCreatedDefaultAssistant(item) && (
-                              <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                                <Star />
-                                <p>Default</p>
-                              </span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                  <CommandSeparator />
-                </React.Fragment>
-              );
-            })}
+                            <p className="line-clamp-1 flex-1 truncate pr-2">
+                              {item.name}
+                            </p>
+                            <div className="flex flex-shrink-0 items-center justify-end gap-2">
+                              {isUserCreatedDefaultAssistant(item) && (
+                                <span className="text-muted-foreground flex items-center gap-2 text-xs">
+                                  <Star />
+                                  <p>Default</p>
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                    <CommandSeparator />
+                  </React.Fragment>
+                );
+              });
+            })()}
 
             {footer}
           </CommandList>

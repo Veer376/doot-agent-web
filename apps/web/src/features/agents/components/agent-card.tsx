@@ -17,7 +17,6 @@ import { EditAgentDialog } from "./create-edit-agent-dialogs/edit-agent-dialog";
 import _ from "lodash";
 import NextLink from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getDeployments } from "@/lib/environment/deployments";
 import {
   Tooltip,
   TooltipContent,
@@ -67,11 +66,6 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const deployments = getDeployments();
-  const selectedDeployment = deployments.find(
-    (d) => d.id === agent.deploymentId,
-  );
-
   const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
 
   return (
@@ -84,21 +78,9 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           <div className="flex items-start justify-between">
             <CardTitle className="flex w-full flex-wrap items-center gap-2">
               <p>{agent.name}</p>
-              {showDeployment && selectedDeployment && (
+              {showDeployment && (
                 <div className="flex flex-wrap items-center gap-1">
                   <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Badge variant="outline">
-                          <Cloud />
-                          {selectedDeployment.name}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        The deployment the graph & agent belongs to.
-                      </TooltipContent>
-                    </Tooltip>
-
                     <Tooltip>
                       <TooltipTrigger>
                         <Badge variant="outline">
@@ -142,7 +124,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             </Button>
           )}
           <NextLink
-            href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+            href={`/?agentId=${agent.assistant_id}`}
             className="ml-auto"
           >
             <Button size="sm">

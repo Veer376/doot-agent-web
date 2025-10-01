@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
-import { getDeployments } from "@/lib/environment/deployments";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
 
@@ -46,39 +45,19 @@ const StreamContext = createContext<StreamContextType | undefined>(undefined);
 const StreamSession = ({
   children,
   agentId,
-  deploymentId,
   accessToken,
-  useProxyRoute,
 }: {
   children: ReactNode;
   agentId: string;
-  deploymentId: string;
   accessToken?: string;
-  useProxyRoute?: boolean;
 }) => {
-  if (!useProxyRoute && !accessToken) {
-    toast.error("Access token must be provided if not using proxy route");
-  }
-
-  const deployment = getDeployments().find((d) => d.id === deploymentId);
-  if (!deployment) {
-    throw new Error(`Deployment ${deploymentId} not found`);
-  }
-
-  let deploymentUrl = deployment.deploymentUrl;
-  if (useProxyRoute) {
-    const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
-    if (!baseApiUrl) {
-      throw new Error(
-        "Failed to create client: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
-      );
-    }
-    deploymentUrl = `${baseApiUrl}/langgraph/proxy/${deploymentId}`;
+  if (!accessToken) {
+    toast.error("Access token must be provided");
   }
 
   const [threadId, setThreadId] = useQueryState("threadId");
   const streamValue = useTypedStream({
-    apiUrl: deploymentUrl,
+    apiUrl: process.env.NEXT_PUBLIC_API_URL,
     assistantId: agentId,
     threadId: threadId ?? null,
     onCustomEvent: (event, options) => {
@@ -91,14 +70,8 @@ const StreamSession = ({
       setThreadId(id);
     },
     defaultHeaders: {
-      ...(!useProxyRoute
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-            "x-supabase-access-token": accessToken,
-          }
-        : {
-            "x-auth-scheme": "langsmith",
-          }),
+      Authorization: `Bearer ${accessToken}`,
+      "x-supabase-access-token": accessToken,
     },
   });
 
@@ -114,50 +87,46 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [value, setValue] = useState("");
+  const [selectedAgentId, setSelectedAgentId] = useState("");
   const [open, setOpen] = useState(false);
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");
 
   useEffect(() => {
-    if (value || !agents.length) {
+    if (selectedAgentId || !agents.length) {
       return;
     }
     const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
     if (defaultAgent) {
-      setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
+      setSelectedAgentId(`${defaultAgent.assistant_id}`);
     }
-  }, [agents]);
+  }, [agents, selectedAgentId]);
 
   useEffect(() => {
-    if (agentId && deploymentId) {
-      const currentKey = `${agentId}:${deploymentId}`;
-      if (warningShownRef.current !== currentKey) {
-        checkApiKeysWarning(deploymentId, hasApiKeys);
-        warningShownRef.current = currentKey;
+    if (agentId) {
+      if (warningShownRef.current !== agentId) {
+        checkApiKeysWarning(hasApiKeys);
+        warningShownRef.current = agentId;
       }
     }
-  }, [agentId, deploymentId, hasApiKeys]);
+  }, [agentId, hasApiKeys]);
 
   const handleValueChange = (v: string) => {
-    setValue(v);
+    setSelectedAgentId(v);
     setOpen(false);
   };
 
   const handleStartChat = () => {
-    if (!value) {
+    if (!selectedAgentId) {
       toast.info("Please select an agent");
       return;
     }
-    const [agentId_, deploymentId_] = value.split(":");
-    setAgentId(agentId_);
-    setDeploymentId(deploymentId_);
+    setAgentId(selectedAgentId);
   };
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
+  // Show the form if we don't have an assistant ID
+  if (!agentId) {
     return (
       <div className="flex w-full items-center justify-center p-4">
         <div className="animate-in fade-in-0 zoom-in-95 bg-background flex min-h-64 max-w-3xl flex-col rounded-lg border shadow-lg">
@@ -178,7 +147,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               disableDeselect
               agents={agents}
               agentsLoading={loading}
-              value={value}
+              value={selectedAgentId}
               setValue={(v) =>
                 Array.isArray(v)
                   ? handleValueChange(v[0])
@@ -194,18 +163,15 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     );
   }
 
-  const useProxyRoute = process.env.NEXT_PUBLIC_USE_LANGSMITH_AUTH === "true";
-  if (!useProxyRoute && !session?.accessToken) {
-    toast.error("Access token must be provided if not using proxy route");
+  if (!session?.accessToken) {
+    toast.error("Access token must be provided");
     return null;
   }
 
   return (
     <StreamSession
       agentId={agentId}
-      deploymentId={deploymentId}
       accessToken={session?.accessToken ?? undefined}
-      useProxyRoute={useProxyRoute}
     >
       {children}
     </StreamSession>

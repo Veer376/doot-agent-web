@@ -98,7 +98,6 @@ function NewThreadButton(props: { hasMessages: boolean }) {
   const [open, setOpen] = useState(false);
 
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_, setThreadId] = useQueryState("threadId");
 
   const handleNewThread = useCallback(() => {
@@ -131,16 +130,14 @@ function NewThreadButton(props: { hasMessages: boolean }) {
       const nextValue = Array.isArray(v) ? v[0] : v;
       if (!nextValue) return;
 
-      const [agentId, deploymentId] = nextValue.split(":");
-      setAgentId(agentId);
-      setDeploymentId(deploymentId);
+      // Value is just the assistant_id now (no deploymentId)
+      setAgentId(nextValue);
       setThreadId(null);
     },
-    [setAgentId, setDeploymentId, setThreadId],
+    [setAgentId, setThreadId],
   );
 
-  const agentValue =
-    agentId && deploymentId ? `${agentId}:${deploymentId}` : undefined;
+  const agentValue = agentId || undefined;
 
   useEffect(() => {
     if (agentValue || !agents.length) {
@@ -148,9 +145,7 @@ function NewThreadButton(props: { hasMessages: boolean }) {
     }
     const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
     if (defaultAgent) {
-      onAgentChange(
-        `${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`,
-      );
+      onAgentChange(defaultAgent.assistant_id);
     }
   }, [agents, agentValue, onAgentChange]);
 
@@ -215,7 +210,6 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 
 export function Thread() {
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
   const [threadId] = useQueryState("threadId");
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
@@ -521,10 +515,7 @@ export function Thread() {
                       </Button>
                     ) : (
                       <div className="ml-auto">
-                        {requiresApiKeysButNotSet(
-                          deploymentId || "",
-                          hasApiKeys,
-                        ) ? (
+                        {requiresApiKeysButNotSet(hasApiKeys) ? (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -536,10 +527,7 @@ export function Thread() {
                                       isLoading ||
                                       (!hasInput &&
                                         contentBlocks.length === 0) ||
-                                      requiresApiKeysButNotSet(
-                                        deploymentId || "",
-                                        hasApiKeys,
-                                      )
+                                      requiresApiKeysButNotSet(hasApiKeys)
                                     }
                                   >
                                     Send

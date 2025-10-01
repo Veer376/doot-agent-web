@@ -16,7 +16,6 @@ import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Deployment } from "@/types/deployment";
 import { Agent } from "@/types/agent";
-import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { FormProvider, useForm } from "react-hook-form";
@@ -31,7 +30,6 @@ interface CreateAgentDialogProps {
 
 function CreateAgentFormContent(props: {
   selectedGraph: Agent;
-  selectedDeployment: Deployment;
   onClose: () => void;
 }) {
   const form = useForm<{
@@ -72,7 +70,6 @@ function CreateAgentFormContent(props: {
 
     setSubmitting(true);
     const newAgent = await createAgent(
-      props.selectedDeployment.id,
       props.selectedGraph.graph_id,
       {
         name,
@@ -145,30 +142,23 @@ export function CreateAgentDialog({
   open,
   onOpenChange,
 }: CreateAgentDialogProps) {
-  const deployments = getDeployments();
   const { agents } = useAgentsContext();
-
-  const [selectedDeployment, setSelectedDeployment] = useState<
-    Deployment | undefined
-  >();
   const [selectedGraph, setSelectedGraph] = useState<Agent | undefined>();
 
   useEffect(() => {
-    if (selectedDeployment || selectedGraph) return;
+    if (selectedGraph) return;
     if (agentId && deploymentId && graphId) {
       // Find the deployment & default agent, then set them
-      const deployment = deployments.find((d) => d.id === deploymentId);
       const defaultAgent = agents.find(
-        (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
+        (a) => a.assistant_id === agentId
       );
-      if (!deployment || !defaultAgent) {
+      if (!defaultAgent) {
         toast.error("Something went wrong. Please try again.", {
           richColors: true,
         });
         return;
       }
 
-      setSelectedDeployment(deployment);
       setSelectedGraph(defaultAgent);
     }
   }, [
@@ -176,8 +166,6 @@ export function CreateAgentDialog({
     deploymentId,
     graphId,
     agents,
-    deployments,
-    selectedDeployment,
     selectedGraph,
   ]);
 
@@ -221,17 +209,14 @@ export function CreateAgentDialog({
               agents={agents}
               selectedGraph={selectedGraph}
               setSelectedGraph={setSelectedGraph}
-              selectedDeployment={selectedDeployment}
-              setSelectedDeployment={setSelectedDeployment}
             />
           </div>
         )}
 
-        {selectedGraph && selectedDeployment ? (
+        {selectedGraph  ? (
           <CreateAgentFormContent
             key={`${openCounter}-${selectedGraph.assistant_id}`}
             selectedGraph={selectedGraph}
-            selectedDeployment={selectedDeployment}
             onClose={() => onOpenChange(false)}
           />
         ) : null}

@@ -1,4 +1,5 @@
 "use client";
+// components/inbox-sidebar/index.tsx
 
 import {
   Sidebar,
@@ -9,11 +10,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { UploadCloud, House } from "lucide-react";
+import { House } from "lucide-react";
 import React from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { prettifyText, isDeployedUrl } from "../agent-inbox/utils";
+import { prettifyText } from "../agent-inbox/utils";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -25,8 +26,6 @@ import {
   groupAgentsByGraphs,
   isUserCreatedDefaultAssistant,
 } from "@/lib/agent-utils";
-import { getDeployments } from "@/lib/environment/deployments";
-import { Deployment } from "@/types/deployment";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
@@ -37,7 +36,6 @@ function InboxSidebarInternal() {
   const { setThreadData, fetchThreads } = useThreadsContext();
   const { agents, loading } = useAgentsContext();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
-  const deployments = getDeployments();
 
   const [_offset, setOffset] = useQueryState(
     "offset",
@@ -56,7 +54,7 @@ function InboxSidebarInternal() {
 
   // Function to handle agent selection
   const handleAgentSelect = async (agent: Agent) => {
-    const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
+    const agentId = agent.assistant_id;
 
     // Skip if already selected to prevent loops
     if (agentId === agentInboxId) return;
@@ -72,12 +70,12 @@ function InboxSidebarInternal() {
     await setLimit(10);
     await setInbox("interrupted");
 
-    await fetchThreads(agent.assistant_id, agent.deploymentId);
+    await fetchThreads(agentId);
   };
 
   return (
     <Sidebar
-      className="border-r-[0px] border-l-[1px] bg-[#F9FAFB]"
+      className="border-r-[0px] border-l-[1px] bg-neutral-50 dark:bg-neutral-900"
       side="right"
     >
       <SidebarContent className="flex h-screen flex-col pt-6 pb-9">
@@ -95,101 +93,63 @@ function InboxSidebarInternal() {
                   <div className="px-2 py-4 text-sm text-gray-500">
                     Loading agents...
                   </div>
+                ) : agents.length === 0 ? (
+                  <div className="px-2 py-4 text-sm text-gray-500">
+                    No agents available
+                  </div>
                 ) : (
                   <>
-                    {deployments.map((deployment: Deployment) => {
-                      // Filter agents for the current deployment
-                      const deploymentAgents = agents.filter(
-                        (agent) => agent.deploymentId === deployment.id,
-                      );
+                    {/* Group agents by graph */}
+                    {groupAgentsByGraphs(agents).map((graphAgents, groupIdx) => {
+                      if (graphAgents.length === 0) return null;
 
-                      // Skip deployments with no agents
-                      if (deploymentAgents.length === 0) {
-                        return null;
-                      }
-
-                      // Group agents by graph
-                      const agentsByGraph =
-                        groupAgentsByGraphs(deploymentAgents);
+                      const graphId = graphAgents[0].graph_id;
 
                       return (
-                        <React.Fragment key={deployment.id}>
-                          <div className="text-muted-foreground mb-2 px-2 text-xs font-medium">
-                            {deployment.name}
-                          </div>
-
-                          {agentsByGraph.map((graphAgents) => {
-                            if (graphAgents.length === 0) return null;
-
-                            // Use the first agent's graph_id as the group identifier
-                            const graphId = graphAgents[0].graph_id;
+                        <React.Fragment key={`graph-${graphId}-${groupIdx}`}>
+                          {graphAgents.map((agent) => {
+                            const label = agent.name || prettifyText(agent.graph_id);
+                            const isDefault = isUserCreatedDefaultAssistant(agent);
+                            const isSelected = agentInboxId === agent.assistant_id;
 
                             return (
-                              <React.Fragment
-                                key={`${deployment.id}-${graphId}`}
+                              <SidebarMenuItem
+                                key={`agent-${agent.assistant_id}`}
+                                className={cn(
+                                  "flex w-full items-center justify-between",
+                                  isSelected ? "rounded-md bg-gray-100 dark:bg-gray-800" : "",
+                                )}
                               >
-                                {graphAgents.map((agent) => {
-                                  const isDeployed = isDeployedUrl(
-                                    deployment.deploymentUrl || "",
-                                  );
-                                  const label =
-                                    agent.name || prettifyText(agent.graph_id);
-                                  const isDefault =
-                                    isUserCreatedDefaultAssistant(agent);
-                                  // Check if this agent is selected
-                                  const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
-                                  const isSelected = agentInboxId === agentId;
-
-                                  return (
-                                    <SidebarMenuItem
-                                      key={`agent-${agent.assistant_id}`}
-                                      className={cn(
-                                        "flex w-full items-center justify-between",
-                                        isSelected
-                                          ? "rounded-md bg-gray-100"
-                                          : "",
-                                      )}
-                                    >
-                                      <TooltipProvider>
-                                        <Tooltip delayDuration={200}>
-                                          <TooltipTrigger asChild>
-                                            <SidebarMenuButton
-                                              onClick={() =>
-                                                handleAgentSelect(agent)
-                                              }
-                                            >
-                                              {isDeployed ? (
-                                                <UploadCloud className="h-5 w-5 text-blue-500" />
-                                              ) : (
-                                                <House className="h-5 w-5 text-green-500" />
-                                              )}
-                                              <span
-                                                className={cn(
-                                                  "min-w-0 truncate font-medium",
-                                                  isSelected
-                                                    ? "text-black"
-                                                    : "text-gray-600",
-                                                )}
-                                              >
-                                                {isDefault
-                                                  ? "Default agent"
-                                                  : label}
-                                              </span>
-                                            </SidebarMenuButton>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            {label} -{" "}
-                                            {isDeployed ? "Deployed" : "Local"}
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </SidebarMenuItem>
-                                  );
-                                })}
-                              </React.Fragment>
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                      <SidebarMenuButton
+                                        onClick={() => handleAgentSelect(agent)}
+                                      >
+                                        <House className="h-5 w-5 text-green-500" />
+                                        <span
+                                          className={cn(
+                                            "min-w-0 truncate font-medium",
+                                            isSelected
+                                              ? "text-black dark:text-white"
+                                              : "text-gray-600 dark:text-gray-400",
+                                          )}
+                                        >
+                                          {isDefault ? "Default agent" : label}
+                                        </span>
+                                      </SidebarMenuButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {label}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </SidebarMenuItem>
                             );
                           })}
-                          <div className="my-2 h-px bg-gray-200" />
+                          {groupIdx < groupAgentsByGraphs(agents).length - 1 && (
+                            <div className="my-2 h-px bg-gray-200 dark:bg-gray-700" />
+                          )}
                         </React.Fragment>
                       );
                     })}

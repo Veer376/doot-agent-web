@@ -8,7 +8,11 @@ import {
   Loader2,
   TriangleAlert,
   Settings,
+  Moon,
+  Sun,
+  Monitor,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -33,6 +37,7 @@ import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user: authUser, signOut, isAuthenticated } = useAuthContext();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { resetStore } = useConfigStore();
@@ -148,6 +153,37 @@ export function NavUser() {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {/* Theme Selection */}
+            <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">
+              Theme
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => setTheme("light")}
+              className="cursor-pointer"
+            >
+              <Sun className="mr-2 h-4 w-4" />
+              <span>Light</span>
+              {theme === "light" && <span className="ml-auto text-xs">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTheme("dark")}
+              className="cursor-pointer"
+            >
+              <Moon className="mr-2 h-4 w-4" />
+              <span>Dark</span>
+              {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setTheme("system")}
+              className="cursor-pointer"
+            >
+              <Monitor className="mr-2 h-4 w-4" />
+              <span>System</span>
+              {theme === "system" && <span className="ml-auto text-xs">✓</span>}
+            </DropdownMenuItem>
+            
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onClick={() => router.push("/settings")}>

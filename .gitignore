@@ -1,60 +1,30 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-**/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-.yarn/cache
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-/dist
-**/dist
-.turbo/
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# local env files
-.env*.local
-.env
+node_modules
+dist
+dist-ssr
+*.local
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-credentials.json
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # LangGraph API
 .langgraph_api
-
-**/.claude/settings.local.json
-.npmrc
-package-lock.json
-yarn.lock
-problem1.png
-apps/docs/react_devtools_component_tree.md
-apps/docs/component_tree.md
-apps/docs/setup/agents.md
-apps/web/src/components/sidebar/new-thread-button.tsx
-apps/web/src/components/sidebar/thread-history-section.tsx
-apps/web/src/lib/thread-utils.ts
-apps/web/component_tree.md
+.env
+.next/
+next-env.d.ts

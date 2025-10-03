@@ -18,20 +18,17 @@ import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import _ from "lodash";
 
 interface TemplateCardProps {
-  deployment: Deployment;
   agents: Agent[];
   toggleGraph: (id: string) => void;
   isOpen: boolean;
 }
 
 export function TemplateCard({
-  deployment,
   agents,
   toggleGraph,
   isOpen,
 }: TemplateCardProps) {
   const graphId = agents[0].graph_id;
-  const graphDeploymentId = `${deployment.id}:${graphId}`;
   const agentsCount = agents.length;
   return (
     <Card
@@ -42,12 +39,12 @@ export function TemplateCard({
       onClick={() => {
         // Don't allow toggling via clicking the card if it's already open
         if (isOpen) return;
-        toggleGraph(graphDeploymentId);
+        toggleGraph(graphId);
       }}
     >
       <Collapsible
         open={isOpen}
-        onOpenChange={() => toggleGraph(graphDeploymentId)}
+        onOpenChange={() => toggleGraph(graphId)}
       >
         <CardHeader className="flex flex-row items-center bg-inherit">
           <div className="flex-1">
@@ -60,7 +57,7 @@ export function TemplateCard({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    toggleGraph(graphDeploymentId);
+                    toggleGraph(graphId);
                   }}
                 >
                   {isOpen ? (
@@ -75,9 +72,9 @@ export function TemplateCard({
                 <p className="text-2xl">{_.startCase(graphId)}</p>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    {/* <TooltipTrigger>
                       <Badge variant="outline">{deployment.name}</Badge>
-                    </TooltipTrigger>
+                    </TooltipTrigger> */}
                     <TooltipContent className="max-w-[350px]">
                       The deployment the graph belongs to. Deployments typically
                       contain a collection of similar, or related graphs.
@@ -97,7 +94,6 @@ export function TemplateCard({
           <CardContent className="pt-6">
             <AgentList
               agents={agents}
-              deploymentId={deployment.id}
             />
           </CardContent>
         </CollapsibleContent>

@@ -172,9 +172,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
     getAgents(session.accessToken, agentsState.getAgentConfigSchema)
       .then((a) => {
-        // EDIT: We are showing system assistants for now
-        setAgents(a);
-        // Original filter: a.filter((a) => !isSystemCreatedDefaultAssistant(a))
+        setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a)));
       })
       .finally(() => setLoading(false));
   }, [session?.accessToken]);

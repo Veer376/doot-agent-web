@@ -12,7 +12,6 @@ import { GraphGroup } from "../../types";
 
 export function TemplatesList() {
   const { agents, loading: agentsLoading } = useAgentsContext();
-  const deployments = getDeployments();
 
   const [searchQueryState, setSearchQueryState] = useState("");
   const [openTemplatesState, setOpenTemplatesState] = useState<string[]>([]);
@@ -25,24 +24,20 @@ export function TemplatesList() {
   const allGraphGroups: GraphGroup[] = useMemo(() => {
     if (agentsLoading) return [];
     const groups: GraphGroup[] = [];
-    deployments.forEach((deployment) => {
-      const agentsInDeployment = agents.filter(
-        (agent) => agent.deploymentId === deployment.id,
-      );
-      const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
+
+      const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
       agentsGroupedByGraphs.forEach((agentGroup) => {
         if (agentGroup.length > 0) {
           const graphId = agentGroup[0].graph_id;
           groups.push({
             agents: agentGroup,
-            deployment,
             graphId,
           });
         }
       });
-    });
+
     return groups;
-  }, [agents, deployments, agentsLoading]);
+  }, [agents, agentsLoading]);
 
   const filteredGraphGroupsState = useMemo(() => {
     const lowerCaseQuery = searchQueryState.toLowerCase();
@@ -55,8 +50,8 @@ export function TemplatesList() {
     );
   }, [allGraphGroups, searchQueryState]);
 
-  const toggleGraphState = (deploymentId: string, graphId: string) => {
-    const uniqueGraphKey = `${deploymentId}:${graphId}`;
+  const toggleGraphState = (graphId: string) => {
+    const uniqueGraphKey = graphId;
     setOpenTemplatesState((prev) =>
       prev.includes(uniqueGraphKey)
         ? prev.filter((key) => key !== uniqueGraphKey)
@@ -97,14 +92,13 @@ export function TemplatesList() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {filteredGraphGroupsState.map(
-            ({ agents: agentGroup, deployment, graphId }) => {
-              const uniqueGraphKey = `${deployment.id}:${graphId}`;
+            ({ agents: agentGroup, graphId }) => {
+              const uniqueGraphKey = graphId;
               return (
                 <TemplateCard
                   key={uniqueGraphKey}
                   agents={agentGroup}
-                  deployment={deployment}
-                  toggleGraph={() => toggleGraphState(deployment.id, graphId)}
+                  toggleGraph={() => toggleGraphState(graphId)}
                   isOpen={openTemplatesState.includes(uniqueGraphKey)}
                 />
               );

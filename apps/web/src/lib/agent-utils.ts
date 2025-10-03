@@ -17,7 +17,7 @@ import React from "react";
 export function isUserCreatedDefaultAssistant(
   agent: Agent | Assistant,
 ): boolean {
-  return agent.metadata?._x_oap_is_default === true;
+  return agent.metadata?.is_default === true;
 }
 
 /**
@@ -50,7 +50,7 @@ export function isSystemCreatedDefaultAssistant(
  * @returns True if the agent is the primary assistant for a graph
  */
 export function isPrimaryAssistant(agent: Agent | Assistant): boolean {
-  return agent.metadata?._x_oap_is_primary === true;
+  return agent.metadata?.is_primary === true;
 }
 
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
@@ -116,13 +116,9 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
  * @returns True if the deployment requires API keys but user doesn't have them
  */
 export function requiresApiKeysButNotSet(
-  // agent: Agent | Assistant, # TODO: pass the agent to check its metadata or find out another way.
   hasApiKeys: boolean,
 ): boolean {
-  // For now, don't require API keys - let the backend handle missing key errors
-  // This can be enabled later when we implement per-agent requiresApiKeys metadata
-  return false;
-  // return agent.metadata?.requiresApiKeys === true && !hasApiKeys;
+  return process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === "true" && !hasApiKeys;
 }
 
 /**

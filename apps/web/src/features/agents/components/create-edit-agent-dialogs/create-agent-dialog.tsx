@@ -137,7 +137,6 @@ function CreateAgentFormContent(props: {
 
 export function CreateAgentDialog({
   agentId,
-  deploymentId,
   graphId,
   open,
   onOpenChange,
@@ -147,7 +146,7 @@ export function CreateAgentDialog({
 
   useEffect(() => {
     if (selectedGraph) return;
-    if (agentId && deploymentId && graphId) {
+    if (agentId && graphId) {
       // Find the deployment & default agent, then set them
       const defaultAgent = agents.find(
         (a) => a.assistant_id === agentId
@@ -163,7 +162,6 @@ export function CreateAgentDialog({
     }
   }, [
     agentId,
-    deploymentId,
     graphId,
     agents,
     selectedGraph,
@@ -201,7 +199,7 @@ export function CreateAgentDialog({
           </div>
         </AlertDialogHeader>
 
-        {!agentId && !graphId && !deploymentId && (
+        {!agentId && !graphId && (
           <div className="flex flex-col items-start justify-start gap-2">
             <p>Please select a graph to create an agent for.</p>
             <GraphSelect

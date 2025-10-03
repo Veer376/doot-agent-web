@@ -362,7 +362,7 @@ export function Thread() {
       <StickToBottom className="relative flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
-            "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
+            "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-track]:bg-transparent",
             !hasMessages &&
               !threadId &&
               "mt-[25vh] flex flex-col items-stretch",
@@ -421,7 +421,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
+            <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-background">
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
@@ -436,7 +436,7 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                  "bg-background relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
                   dragOver
                     ? "border-primary border-2 border-dotted"
                     : "border border-solid",

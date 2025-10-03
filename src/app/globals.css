@@ -4,43 +4,131 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/**
+ * CSS VARIABLES - DESIGN SYSTEM
+ * 
+ * This file defines CSS variables for both the existing shadcn/ui system
+ * and our new design system tokens.
+ * 
+ * STRUCTURE:
+ * 1. Existing shadcn/ui variables (background, foreground, primary, etc.)
+ * 2. New design system variables (brand colors, semantic colors, neutral scale)
+ * 3. Theme inline mappings (for Tailwind CSS v4)
+ * 4. Base styles
+ * 5. Utility classes
+ */
+
+/* ============================================
+   EXISTING SHADCN/UI VARIABLES (Light Mode)
+   ============================================ */
 :root {
+  /* Background & Foreground */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  
+  /* Card */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
+  
+  /* Popover */
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
+  
+  /* Primary */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
+  
+  /* Secondary */
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
+  
+  /* Muted */
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
+  
+  /* Accent */
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
+  
+  /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
+  
+  /* Border & Input */
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.87 0 0);
+  
+  /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Border Radius */
   --radius: 0.625rem;
+  
+  /* Sidebar (HSL format for compatibility) */
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+  
+  /* Sidebar (OKLCH for consistency) */
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.87 0 0);
+  --sidebar-foreground-oklch: oklch(0.145 0 0);
+  --sidebar-primary-oklch: oklch(0.205 0 0);
+  --sidebar-primary-foreground-oklch: oklch(0.985 0 0);
+  --sidebar-accent-oklch: oklch(0.97 0 0);
+  --sidebar-accent-foreground-oklch: oklch(0.205 0 0);
+  --sidebar-border-oklch: oklch(0.922 0 0);
+  --sidebar-ring-oklch: oklch(0.87 0 0);
+
+  /* ============================================
+     NEW DESIGN SYSTEM VARIABLES (Light Mode)
+     ============================================ */
+  
+  /* Brand Colors */
+  --color-brand-primary: oklch(0.35 0.08 180);
+  --color-brand-primary-hover: oklch(0.30 0.08 180);
+  --color-brand-primary-light: oklch(0.95 0.02 180);
+  --color-brand-accent: oklch(0.60 0.20 280);
+  --color-brand-accent-light: oklch(0.92 0.08 280);
+  
+  /* Semantic Colors */
+  --color-semantic-success: oklch(0.55 0.15 145);
+  --color-semantic-success-light: oklch(0.93 0.06 145);
+  --color-semantic-warning: oklch(0.65 0.18 65);
+  --color-semantic-warning-light: oklch(0.95 0.08 65);
+  --color-semantic-error: oklch(0.55 0.22 25);
+  --color-semantic-error-light: oklch(0.95 0.10 25);
+  --color-semantic-info: oklch(0.55 0.18 250);
+  --color-semantic-info-light: oklch(0.93 0.08 250);
+  
+  /* Neutral Scale */
+  --color-neutral-50: oklch(0.99 0 0);
+  --color-neutral-100: oklch(0.97 0 0);
+  --color-neutral-200: oklch(0.92 0 0);
+  --color-neutral-300: oklch(0.85 0 0);
+  --color-neutral-400: oklch(0.68 0 0);
+  --color-neutral-500: oklch(0.55 0 0);
+  --color-neutral-600: oklch(0.45 0 0);
+  --color-neutral-700: oklch(0.35 0 0);
+  --color-neutral-800: oklch(0.25 0 0);
+  --color-neutral-900: oklch(0.18 0 0);
+  --color-neutral-950: oklch(0.12 0 0);
 }
 
+/* ============================================
+   DARK MODE VARIABLES
+   ============================================ */
 .dark {
+  /* Existing shadcn/ui variables */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
@@ -65,16 +153,61 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+  
+  /* Sidebar (OKLCH) */
   --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-foreground-oklch: oklch(0.985 0 0);
+  --sidebar-primary-oklch: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground-oklch: oklch(0.985 0 0);
+  --sidebar-accent-oklch: oklch(0.269 0 0);
+  --sidebar-accent-foreground-oklch: oklch(0.985 0 0);
+  --sidebar-border-oklch: oklch(0.269 0 0);
+  --sidebar-ring-oklch: oklch(0.439 0 0);
+  
+  /* Sidebar (HSL for compatibility) */
+  --sidebar-background: 240 5.9% 10%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 240 4.8% 95.9%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+
+  /* New design system variables (Dark Mode) */
+  --color-brand-primary: oklch(0.65 0.12 180);
+  --color-brand-primary-hover: oklch(0.70 0.12 180);
+  --color-brand-primary-light: oklch(0.25 0.04 180);
+  --color-brand-accent: oklch(0.70 0.22 280);
+  --color-brand-accent-light: oklch(0.30 0.10 280);
+  
+  --color-semantic-success: oklch(0.65 0.18 145);
+  --color-semantic-success-light: oklch(0.28 0.08 145);
+  --color-semantic-warning: oklch(0.70 0.20 65);
+  --color-semantic-warning-light: oklch(0.30 0.10 65);
+  --color-semantic-error: oklch(0.65 0.24 25);
+  --color-semantic-error-light: oklch(0.30 0.12 25);
+  --color-semantic-info: oklch(0.65 0.20 250);
+  --color-semantic-info-light: oklch(0.28 0.10 250);
+  
+  /* Neutral Scale (Inverted for dark mode) */
+  --color-neutral-50: oklch(0.15 0 0);
+  --color-neutral-100: oklch(0.18 0 0);
+  --color-neutral-200: oklch(0.22 0 0);
+  --color-neutral-300: oklch(0.30 0 0);
+  --color-neutral-400: oklch(0.45 0 0);
+  --color-neutral-500: oklch(0.55 0 0);
+  --color-neutral-600: oklch(0.68 0 0);
+  --color-neutral-700: oklch(0.75 0 0);
+  --color-neutral-800: oklch(0.85 0 0);
+  --color-neutral-900: oklch(0.92 0 0);
+  --color-neutral-950: oklch(0.97 0 0);
 }
 
+/* ============================================
+   TAILWIND THEME INLINE (v4 Syntax)
+   Maps CSS variables to Tailwind color utilities
+   ============================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -105,15 +238,18 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-foreground: var(--sidebar-foreground-oklch);
+  --color-sidebar-primary: var(--sidebar-primary-oklch);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground-oklch);
+  --color-sidebar-accent: var(--sidebar-accent-oklch);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground-oklch);
+  --color-sidebar-border: var(--sidebar-border-oklch);
+  --color-sidebar-ring: var(--sidebar-ring-oklch);
 }
 
+/* ============================================
+   BASE STYLES
+   ============================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -121,47 +257,48 @@
 
   body {
     @apply bg-background text-foreground;
-  }
-
-  :root {
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
+/* ============================================
+   UTILITY CLASSES
+   Custom utilities specific to this project
+   ============================================ */
 @layer utilities {
+  /* Custom shadow utilities for inner shadows */
   .shadow-inner-right {
     box-shadow: inset -9px 0 6px -1px rgb(0 0 0 / 0.02);
   }
 
   .shadow-inner-left {
     box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
+  }
+  
+  /* Dark mode shadow overrides for better visibility */
+  .dark .shadow-xs {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  }
+  
+  .dark .shadow-sm {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  }
+  
+  .dark .shadow-md {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  }
+  
+  .dark .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  }
+  
+  .dark .shadow-xl {
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+  }
+  
+  .dark .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
   }
 }

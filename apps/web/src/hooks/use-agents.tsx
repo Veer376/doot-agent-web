@@ -58,9 +58,6 @@ export function useAgents() {
                 Agent ID:{" "}
                 <span className="font-mono font-semibold">{agentId}</span>
               </p>
-              <p>
-                Deployment ID is not available Now. It has been removed by the developer Aryaveer.
-              </p>
             </div>
           ),
           richColors: true,

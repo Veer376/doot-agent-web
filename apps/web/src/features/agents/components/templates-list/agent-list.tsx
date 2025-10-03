@@ -12,10 +12,9 @@ import { AgentCard } from "../agent-card";
 
 interface AgentListProps {
   agents: Agent[];
-  deploymentId: string;
 }
 
-export function AgentList({ agents, deploymentId }: AgentListProps) {
+export function AgentList({ agents }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -82,7 +81,6 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
         onOpenChange={setShowCreateDialog}
         graphId={graphId}
         agentId={agentId}
-        deploymentId={deploymentId}
       />
     </div>
   );

@@ -9,7 +9,6 @@ import React, {
   useRef,
 } from "react";
 import { Agent } from "@/types/agent";
-import { Deployment } from "@/types/deployment";
 import {
   groupAgentsByGraphs,
   isSystemCreatedDefaultAssistant,
@@ -25,7 +24,6 @@ import { Client } from "@langchain/langgraph-sdk";
 import { List } from "lucide-react";
 
 async function getOrCreateDefaultAssistants(
-  deployment: Deployment,
   accessToken?: string,
 ): Promise<Assistant[]> {
   const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
@@ -36,7 +34,7 @@ async function getOrCreateDefaultAssistants(
   }
 
   try {
-    const url = `${baseApiUrl}/langgraph/defaults?deploymentId=${deployment.id}`;
+    const url = `${baseApiUrl}/defaults`;
     const headers: HeadersInit = {
       "Content-Type": "application/json",
     };

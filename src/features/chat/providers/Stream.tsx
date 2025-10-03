@@ -25,6 +25,8 @@ import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { threadKeys } from "@/hooks/use-threads";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -56,6 +58,8 @@ const StreamSession = ({
   }
 
   const [threadId, setThreadId] = useQueryState("threadId");
+  const queryClient = useQueryClient();
+  
   const streamValue = useTypedStream({
     apiUrl: process.env.NEXT_PUBLIC_API_URL,
     assistantId: agentId,
@@ -68,6 +72,8 @@ const StreamSession = ({
     },
     onThreadId: (id) => {
       setThreadId(id);
+      // Invalidate thread list cache to show new thread immediately
+      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
     },
     defaultHeaders: {
       Authorization: `Bearer ${accessToken}`,

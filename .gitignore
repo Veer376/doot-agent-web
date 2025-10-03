@@ -51,3 +51,10 @@ credentials.json
 package-lock.json
 yarn.lock
 problem1.png
+apps/docs/react_devtools_component_tree.md
+apps/docs/component_tree.md
+apps/docs/setup/agents.md
+apps/web/src/components/sidebar/new-thread-button.tsx
+apps/web/src/components/sidebar/thread-history-section.tsx
+apps/web/src/lib/thread-utils.ts
+apps/web/component_tree.md

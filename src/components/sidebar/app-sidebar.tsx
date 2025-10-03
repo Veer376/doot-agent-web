@@ -5,22 +5,19 @@ import { Wrench, Bot, MessageCircle, Brain } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { ThreadList } from "./thread-list";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarRail,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
 
 // This is sample data.
 const data = {
   navMain: [
-    {
-      title: "Chat",
-      url: "/",
-      icon: MessageCircle,
-    },
     {
       title: "Agents",
       url: "/agents",
@@ -53,6 +50,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SiteHeader />
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <SidebarSeparator />
+        <ThreadList />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

@@ -90,7 +90,6 @@
 │                                                                                         │
 │    <ChatInterface />  ← Main chat component - features/chat/index.tsx                 │
 │  </React.Suspense>                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
                                             ││                                                                                         │
 │  <StreamProvider>  ← Manages LangGraph streaming & agent selection                     │
 │    AGENT SELECTION SCREEN (when no agentId)                                    │  │

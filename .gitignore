@@ -40,3 +40,9 @@ SIDEBAR_ARCHITECTURE_ANALYSIS.md
 THREAD_MANAGEMENT_DEEP_DIVE.md
 THREAD_SIDEBAR_IMPLEMENTATION_PLAN.md
 CONCEPTS.md
+IMPLEMENTATION_COMPLETE.md
+yarn.lock
+.gitignore
+package-lock.json
+pnpm-lock.yaml
+apps/docs/component_tree.md

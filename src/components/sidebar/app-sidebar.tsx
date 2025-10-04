@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Wrench, Brain } from "lucide-react";
-import { AgentIcon } from "@/components/icons";
+import { AgentIcon, ToolsIcon, RAGIcon } from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 import { NavMain } from "./nav-main";
@@ -28,12 +27,12 @@ const data = {
     {
       title: "Tools",
       url: "/tools",
-      icon: Wrench,
+      icon: ToolsIcon,
     },
     {
       title: "RAG",
       url: "/rag",
-      icon: Brain,
+      icon: RAGIcon,
     },
   ],
 };

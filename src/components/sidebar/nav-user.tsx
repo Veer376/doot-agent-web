@@ -10,6 +10,7 @@ import {
   LightThemeIcon,
   SystemThemeIcon,
   LogOutIcon,
+  type IconSize,
 } from "@/components/icons";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,12 +33,16 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 
+// Default icon size for this file
+const DEFAULT_ICON_SIZE: IconSize = "sm";
+
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user: authUser, signOut, isAuthenticated } = useAuthContext();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { resetStore } = useConfigStore();
 
   // Use auth user if available, otherwise use default user
@@ -95,15 +100,15 @@ export function NavUser() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 group-data-[collapsible=icon]:p-0!">
-              <Avatar className="h-9 w-9 rounded-lg">
+              <Avatar className="h-8 w-8">
                 <AvatarImage
                   src={displayUser.avatar}
                   alt={displayUser.name}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback>
                   {displayUser.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -118,7 +123,10 @@ export function NavUser() {
                   </span>
                 )}
               </div>
-              <ToggleIcon className="ml-auto size-4" />
+              <ToggleIcon
+                size={DEFAULT_ICON_SIZE}
+                isExpanded={isDropdownOpen}
+              />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           {/*nav-user-dropdown*/}
@@ -131,12 +139,12 @@ export function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="h-8 w-8">
                   <AvatarImage
                     src={displayUser.avatar}
                     alt={displayUser.name}
                   />
-                  <AvatarFallback className="rounded-lg">
+                  <AvatarFallback>
                     {displayUser.name.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -163,7 +171,7 @@ export function NavUser() {
               onClick={() => setTheme("light")}
               className="cursor-pointer"
             >
-              <LightThemeIcon className="mr-2 h-4 w-4" />
+              <LightThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>Light</span>
               {theme === "light" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
@@ -171,7 +179,7 @@ export function NavUser() {
               onClick={() => setTheme("dark")}
               className="cursor-pointer"
             >
-              <DarkThemeIcon className="mr-2 h-4 w-4" />
+              <DarkThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>Dark</span>
               {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
@@ -179,7 +187,7 @@ export function NavUser() {
               onClick={() => setTheme("system")}
               className="cursor-pointer"
             >
-              <SystemThemeIcon className="mr-2 h-4 w-4" />
+              <SystemThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>System</span>
               {theme === "system" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
@@ -187,7 +195,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <SettingsIcon className="mr-2 h-4 w-4" />
+              <SettingsIcon size={DEFAULT_ICON_SIZE} />
               Settings
             </DropdownMenuItem>
 
@@ -203,7 +211,7 @@ export function NavUser() {
                   </>
                 ) : (
                   <>
-                    <LogOutIcon className="mr-2 h-4 w-4" />
+                    <LogOutIcon size={DEFAULT_ICON_SIZE} />
                     Log out
                   </>
                 )}

@@ -23,6 +23,7 @@ import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ArrowDown, LoaderCircle, AlertCircle } from "lucide-react";
+import { ArrowDownIcon } from "@/components/icons";
 import { AttachIcon, CancelIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -74,11 +75,11 @@ function ScrollToBottom(props: { className?: string }) {
   return (
     <Button
       variant="outline"
-      className={props.className}
+      size="icon"
+      className={cn("rounded-full", props.className)}
       onClick={() => scrollToBottom()}
     >
-      <ArrowDown className="h-4 w-4" />
-      <span>Scroll to bottom</span>
+      <ArrowDownIcon />
     </Button>
   );
 }

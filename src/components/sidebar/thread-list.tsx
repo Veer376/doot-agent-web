@@ -3,6 +3,7 @@
 import { useThreads } from "@/hooks/use-threads";
 import { FileClock, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
 import {
   SidebarGroup,
@@ -61,6 +62,7 @@ function getFirstHumanMessageContent(thread: Thread) {
 }
 export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
+  const router = useRouter();
   const { data: threads = [], isLoading } = useThreads();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,7 +78,8 @@ export function ThreadList() {
   });
 
   const handleSelectThread = (id: string) => {
-    setThreadId(id);
+    // Navigate to base path with threadId query param
+    router.push(`/?threadId=${id}`);
   };
 
   return (

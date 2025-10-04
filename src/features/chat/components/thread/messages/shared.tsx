@@ -1,17 +1,22 @@
+import { XIcon } from "lucide-react";
 import {
-  XIcon,
-  SendHorizontal,
-  RefreshCcw,
-  Pencil,
-  CopyCheck,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { CopyIcon } from "@/components/icons";
+  CancelIcon,
+  CopyIcon,
+  RepeatResponseIcon,
+  SendIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckmarkCircleIcon,
+  GitBranchIcon,
+  type IconSize,
+} from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+
+// Default icon size for this file
+const DEFAULT_ICON_SIZE: IconSize = "xs";
 
 function ContentCopyable({
   content,
@@ -48,7 +53,7 @@ function ContentCopyable({
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <CopyCheck className="text-green-500" />
+            <CheckmarkCircleIcon size={DEFAULT_ICON_SIZE} />
           </motion.div>
         ) : (
           <motion.div
@@ -58,7 +63,7 @@ function ContentCopyable({
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <CopyIcon />
+            <CopyIcon size={DEFAULT_ICON_SIZE} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -93,7 +98,7 @@ export function BranchSwitcher({
         }}
         disabled={isLoading}
       >
-        <ChevronLeft />
+        <ArrowLeftIcon size={DEFAULT_ICON_SIZE} />
       </Button>
       <span className="text-sm">
         {index + 1} / {branchOptions.length}
@@ -109,7 +114,7 @@ export function BranchSwitcher({
         }}
         disabled={isLoading}
       >
-        <ChevronRight />
+        <ArrowRightIcon size={DEFAULT_ICON_SIZE} />
       </Button>
     </div>
   );
@@ -174,7 +179,7 @@ export function CommandBar({
             setIsEditing(false);
           }}
         >
-          <XIcon />
+          <CancelIcon size={DEFAULT_ICON_SIZE} />
         </TooltipIconButton>
         <TooltipIconButton
           disabled={isLoading}
@@ -182,7 +187,7 @@ export function CommandBar({
           variant="secondary"
           onClick={handleSubmitEdit}
         >
-          <SendHorizontal />
+          <SendIcon size={DEFAULT_ICON_SIZE} />
         </TooltipIconButton>
       </div>
     );
@@ -197,23 +202,23 @@ export function CommandBar({
       {isAiMessage && !!handleRegenerate && (
         <TooltipIconButton
           disabled={isLoading}
-          tooltip="Refresh"
+          tooltip="Repeat"
           variant="ghost"
           onClick={handleRegenerate}
         >
-          <RefreshCcw />
+          <RepeatResponseIcon size={DEFAULT_ICON_SIZE} />
         </TooltipIconButton>
       )}
       {showEdit && (
         <TooltipIconButton
           disabled={isLoading}
-          tooltip="Edit"
+          tooltip="Branch"
           variant="ghost"
           onClick={() => {
             setIsEditing?.(true);
           }}
         >
-          <Pencil />
+          <GitBranchIcon size={DEFAULT_ICON_SIZE} />
         </TooltipIconButton>
       )}
     </div>

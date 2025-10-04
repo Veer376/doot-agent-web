@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Wrench, Brain } from "lucide-react";
 import { AgentIcon } from "@/components/icons";
+import { useRouter } from "next/navigation";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -15,7 +16,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
-import { useQueryState } from "nuqs";
 
 // This is sample data.
 const data = {
@@ -39,10 +39,11 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [, setThreadId] = useQueryState("threadId");
+  const router = useRouter();
 
   const handleNewChat = () => {
-    setThreadId(null); // Setting to null creates new thread
+    // Navigate to base path without threadId (creates new thread)
+    router.push("/");
   };
 
   return (

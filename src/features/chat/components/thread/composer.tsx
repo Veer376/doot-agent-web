@@ -77,9 +77,9 @@ export function Composer({
 
   return (
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
-      <div
+      <div //container-textfield-radius
         className={cn(
-          "focus-within:border-aui-ring/20 flex min-h-[64px] w-full flex-col rounded-2xl border bg-white px-2.5 shadow-sm transition-colors ease-in",
+          "focus-within:border-aui-ring/20 flex min-h-[64px] w-full flex-col rounded-3xl border bg-white px-2.5 shadow-sm transition-colors ease-in",
           className,
         )}
       >

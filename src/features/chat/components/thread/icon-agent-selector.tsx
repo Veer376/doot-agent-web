@@ -87,11 +87,12 @@ export function IconAgentSelector({
           }
           variant="ghost"
           className={cn(
-            "flex-shrink-0 bg-blue-100 transition-colors ease-in-out hover:bg-blue-100",
+            "flex-shrink-0 bg-blue-100 rounded-3xl transition-colors ease-in-out hover:bg-blue-100",
             className,
           )}
         >
           <AgentIcon />
+          <span className="sr-only">Select Agent</span>
         </TooltipIconButton>
       }
     />

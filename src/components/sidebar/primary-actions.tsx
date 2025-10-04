@@ -18,7 +18,10 @@ export function PrimaryActions({ onNewChat }: PrimaryActionsProps) {
       <SidebarMenu>
         {/* New Chat Button */}
         <SidebarMenuItem>
-          <SidebarMenuButton onClick={onNewChat} className="w-full">
+          <SidebarMenuButton
+            onClick={onNewChat}
+            className="w-full"
+          >
             <NewThreadIcon />
             <span>New chat</span>
           </SidebarMenuButton>

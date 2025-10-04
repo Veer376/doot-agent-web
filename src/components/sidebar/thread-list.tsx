@@ -22,9 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/icons";
-import { MessageContent } from "@langchain/core/messages"
-
-
+import { MessageContent } from "@langchain/core/messages";
 
 // Utility: Extract text content from MessageContent
 const getMessageStringContent = (
@@ -70,7 +68,10 @@ export function ThreadList() {
   // Filter threads by search query
   const filteredThreads = threads.filter((thread) => {
     if (!searchQuery.trim()) return true;
-    const title = getFirstHumanMessageContent(thread) || (thread.metadata?.name as string) || `New thread-${thread.thread_id}`;
+    const title =
+      getFirstHumanMessageContent(thread) ||
+      (thread.metadata?.name as string) ||
+      `New thread-${thread.thread_id}`;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -83,69 +84,76 @@ export function ThreadList() {
       <SidebarGroup>
         <SidebarGroupLabel>
           Threads
-          <SidebarGroupAction onClick={() => setSearchOpen(true)} title="Search chats">
+          <SidebarGroupAction
+            onClick={() => setSearchOpen(true)}
+            title="Search chats"
+          >
             <Search className="h-4 w-4" />
           </SidebarGroupAction>
         </SidebarGroupLabel>
         <SidebarMenu>
-        {isLoading && (
-          <>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <SidebarMenuItem key={`skeleton-${index}`}>
-                <Skeleton className="h-12 w-full" />
-              </SidebarMenuItem>
-            ))}
-          </>
-        )}
+          {isLoading && (
+            <>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <SidebarMenuItem key={`skeleton-${index}`}>
+                  <Skeleton className="h-12 w-full" />
+                </SidebarMenuItem>
+              ))}
+            </>
+          )}
 
-        {!isLoading && filteredThreads.length === 0 && (
-          <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
-            <FileClock className="h-8 w-8" />
-            <p className="text-sm">
-              {searchQuery ? "No threads found" : "No threads yet"}
-            </p>
+          {!isLoading && filteredThreads.length === 0 && (
+            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
+              <FileClock className="h-8 w-8" />
+              <p className="text-sm">
+                {searchQuery ? "No threads found" : "No threads yet"}
+              </p>
+            </div>
+          )}
+
+          {!isLoading &&
+            filteredThreads.map((thread) => {
+              const title =
+                getFirstHumanMessageContent(thread) ||
+                (thread.metadata?.name as string) ||
+                `New thread ${thread.thread_id.slice(0, 5)}`;
+              const isActive = thread.thread_id === threadId;
+
+              return (
+                <SidebarMenuItem key={thread.thread_id}>
+                  <SidebarMenuButton
+                    onClick={() => handleSelectThread(thread.thread_id)}
+                    isActive={isActive}
+                  >
+                    <span className="truncate text-sm">{title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+        </SidebarMenu>
+      </SidebarGroup>
+
+      {/* Search Dialog */}
+      <Dialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Search chats</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <SearchIcon className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+            <Input
+              placeholder="Search chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              autoFocus
+            />
           </div>
-        )}
-
-        {!isLoading &&
-          filteredThreads.map((thread) => {
-            const title = getFirstHumanMessageContent(thread) || (thread.metadata?.name as string) || `New thread ${thread.thread_id.slice(0, 5)}`;
-            const isActive = thread.thread_id === threadId;
-
-            return (
-              <SidebarMenuItem key={thread.thread_id}>
-                <SidebarMenuButton
-                  onClick={() => handleSelectThread(thread.thread_id)}
-                  isActive={isActive}
-                >
-                  <span className="truncate text-sm">
-                    {title}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-      </SidebarMenu>
-    </SidebarGroup>
-
-    {/* Search Dialog */}
-    <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Search chats</DialogTitle>
-        </DialogHeader>
-        <div className="relative">
-          <SearchIcon className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
-          <Input
-            placeholder="Search chats..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-            autoFocus
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

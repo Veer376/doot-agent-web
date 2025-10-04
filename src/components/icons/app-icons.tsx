@@ -73,7 +73,7 @@ import { cn } from "@/lib/utils";
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | number;
 
 // Global default size - change this to adjust all icons at once
-const DEFAULT_ICON_SIZE: IconSize = "md";
+const DEFAULT_ICON_SIZE: IconSize = "sm";
 
 const SIZE_MAP: Record<string, number> = {
   xs: 16, // size-4

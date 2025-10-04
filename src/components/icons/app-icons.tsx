@@ -52,6 +52,12 @@ import {
   SentIcon,
   Copy01Icon,
   Add01Icon,
+  RepeatIcon,
+  ArrowDown01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  CheckmarkCircle04Icon,
+  GitBranchIcon as GitBranchHugeIcon,
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +139,13 @@ const IconWrapper: React.FC<{
 export const SidebarIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={SidebarLeftIcon}
+    {...props}
+  />
+);
+
+export const RepeatResponseIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={RepeatIcon}
     {...props}
   />
 );
@@ -262,6 +275,49 @@ export const DeleteIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
   <IconWrapper
     icon={Delete03Icon}
     className={cn("text-destructive", className)}
+    {...props}
+  />
+);
+
+// ============================================
+// NAVIGATION & INTERACTION ICONS
+// ============================================
+
+export const ArrowDownIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowDown01Icon}
+    {...props}
+  />
+);
+
+export const ArrowLeftIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowLeft01Icon}
+    {...props}
+  />
+);
+
+export const ArrowRightIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowRight01Icon}
+    {...props}
+  />
+);
+
+export const CheckmarkCircleIcon: React.FC<AppIconProps> = ({
+  className,
+  ...props
+}) => (
+  <IconWrapper
+    icon={CheckmarkCircle04Icon}
+    className={cn("text-green-500", className)}
+    {...props}
+  />
+);
+
+export const GitBranchIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={GitBranchHugeIcon}
     {...props}
   />
 );

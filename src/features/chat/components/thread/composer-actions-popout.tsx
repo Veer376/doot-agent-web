@@ -44,9 +44,9 @@ export function ComposerActionsPopOut({
   };
 
   return (
-    <motion.div
+    <motion.div //container-action_popout-radius
       className={cn(
-        "bg-background border-border flex h-10 items-center justify-start overflow-hidden rounded-xl border",
+        "bg-background border-border flex h-10 items-center justify-start overflow-hidden rounded-3xl border",
         className,
       )}
       variants={containerVariants}
@@ -94,7 +94,7 @@ export function ComposerActionsPopOut({
                 onClick={handleFileClick}
                 className=""
               >
-                <AttachIcon/>
+                <AttachIcon />
               </TooltipIconButton>
             </motion.div>
           )}

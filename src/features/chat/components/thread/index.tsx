@@ -94,41 +94,16 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
-function NewThreadButton(props: { hasMessages: boolean }) {
+function AgentSelector() {
   const { agents, loading } = useAgentsContext();
   const [open, setOpen] = useState(false);
 
   // PHASE 3: Get agentId from context instead of URL
   const { agentId, setAgentId } = useAgentContext();
-  const [threadId, setThreadId] = useQueryState("threadId");
+  const [threadId] = useQueryState("threadId");
   
   // Phase 2: Thread-Agent Persistence
   const { saveThreadAgent } = useThreadAgent();
-
-  const handleNewThread = useCallback(() => {
-    setThreadId(null);
-  }, [setThreadId]);
-
-  const isMac = useMemo(
-    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent),
-    [],
-  );
-
-  useLayoutEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        e.key.toLocaleLowerCase() === "o"
-      ) {
-        e.preventDefault();
-        handleNewThread();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewThread]);
 
   const onAgentChange = useCallback(
     (v: string | string[] | undefined) => {
@@ -137,7 +112,7 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 
       // Value is just the assistant_id now (no deploymentId)
       setAgentId(nextValue);
-      // setThreadId(null); # NOTE: New thread won't be created on agent change.
+      // NOTE: Agent change does NOT create new thread - agent is a property of the thread
       
       // Phase 2: Save thread-agent mapping when agent changes
       // Only save if we have an active thread (not on initial selection)
@@ -160,62 +135,17 @@ function NewThreadButton(props: { hasMessages: boolean }) {
     }
   }, [agents, agentValue, onAgentChange]);
 
-  if (!props.hasMessages) {
-    return (
-      <AgentsCombobox
-        agents={agents}
-        agentsLoading={loading}
-        value={agentValue}
-        setValue={onAgentChange}
-        open={open}
-        setOpen={setOpen}
-        triggerAsChild
-        className="min-w-auto"
-      />
-    );
-  }
-
   return (
-    <div className="flex rounded-md shadow-xs">
-      <AgentsCombobox
-        agents={agents}
-        agentsLoading={loading}
-        value={agentValue}
-        setValue={onAgentChange}
-        open={open}
-        setOpen={setOpen}
-        triggerAsChild
-        className="relative min-w-auto shadow-none focus-within:z-10"
-        style={{
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-          borderRight: 0,
-        }}
-        footer={
-          <div className="text-secondary-foreground bg-secondary flex gap-2 p-3 pr-10 pb-3 text-xs">
-            <SquarePen className="size-4 shrink-0" />
-            <span className="text-secondary-foreground mb-[1px] text-xs">
-              Selecting a different agent will create a new thread.
-            </span>
-          </div>
-        }
-      />
-
-      {props.hasMessages && (
-        <TooltipIconButton
-          size="lg"
-          className="relative size-9 p-4 shadow-none focus-within:z-10"
-          tooltip={
-            isMac ? "New thread (Cmd+Shift+O)" : "New thread (Ctrl+Shift+O)"
-          }
-          variant="outline"
-          onClick={handleNewThread}
-          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-        >
-          <SquarePen className="size-4" />
-        </TooltipIconButton>
-      )}
-    </div>
+    <AgentsCombobox
+      agents={agents}
+      agentsLoading={loading}
+      value={agentValue}
+      setValue={onAgentChange}
+      open={open}
+      setOpen={setOpen}
+      triggerAsChild
+      className="min-w-auto"
+    />
   );
 }
 
@@ -485,7 +415,7 @@ export function Thread() {
                   <div className="flex items-center gap-6 p-2 pt-4">
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-2 space-x-2">
-                        <NewThreadButton hasMessages={hasMessages} />
+                        <AgentSelector />
                         <Switch
                           id="render-tool-calls"
                           checked={hideToolCalls ?? false}

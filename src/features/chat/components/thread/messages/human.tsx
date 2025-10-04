@@ -1,4 +1,4 @@
-import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useStreamContext, useAgentContext } from "@/features/chat/providers/Stream";
 import { Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { getContentString } from "@/features/chat/utils/content-string";
@@ -45,7 +45,8 @@ export function HumanMessage({
   isLoading: boolean;
 }) {
   const { session } = useAuthContext();
-  const [agentId] = useQueryState("agentId");
+  // PHASE 3: Get agentId from context instead of URL
+  const { agentId } = useAgentContext();
 
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);

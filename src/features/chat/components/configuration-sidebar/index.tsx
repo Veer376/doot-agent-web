@@ -15,6 +15,7 @@ import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
+import { useAgentContext } from "@/features/chat/providers/Stream";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgents } from "@/hooks/use-agents";
 import {
@@ -123,7 +124,8 @@ export const ConfigurationSidebar = forwardRef<
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
   const { tools, setTools, getTools, cursor } = useMCPContext();
-  const [agentId] = useQueryState("agentId");
+  // PHASE 3: Get agentId from context instead of URL
+  const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const { agents, refreshAgentsLoading } = useAgentsContext();
   const {

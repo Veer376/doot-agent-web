@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 import { cn } from "@/lib/utils";
-import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useStreamContext, useAgentContext } from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
@@ -51,6 +51,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useThreadAgent } from "@/hooks/use-thread-agent";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -97,8 +98,12 @@ function NewThreadButton(props: { hasMessages: boolean }) {
   const { agents, loading } = useAgentsContext();
   const [open, setOpen] = useState(false);
 
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [_, setThreadId] = useQueryState("threadId");
+  // PHASE 3: Get agentId from context instead of URL
+  const { agentId, setAgentId } = useAgentContext();
+  const [threadId, setThreadId] = useQueryState("threadId");
+  
+  // Phase 2: Thread-Agent Persistence
+  const { saveThreadAgent } = useThreadAgent();
 
   const handleNewThread = useCallback(() => {
     setThreadId(null);
@@ -132,9 +137,15 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 
       // Value is just the assistant_id now (no deploymentId)
       setAgentId(nextValue);
-      setThreadId(null);
+      // setThreadId(null); # NOTE: New thread won't be created on agent change.
+      
+      // Phase 2: Save thread-agent mapping when agent changes
+      // Only save if we have an active thread (not on initial selection)
+      if (threadId) {
+        saveThreadAgent(threadId, nextValue);
+      }
     },
-    [setAgentId, setThreadId],
+    [setAgentId, threadId, saveThreadAgent],
   );
 
   const agentValue = agentId || undefined;
@@ -209,7 +220,8 @@ function NewThreadButton(props: { hasMessages: boolean }) {
 }
 
 export function Thread() {
-  const [agentId] = useQueryState("agentId");
+  // PHASE 3: Get agentId from context instead of URL
+  const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",

@@ -2,7 +2,6 @@ import { forwardRef, ForwardedRef } from "react";
 import { motion } from "framer-motion";
 import {
   Settings,
-  History,
   EllipsisVertical,
   ChevronRight,
 } from "lucide-react";
@@ -11,8 +10,6 @@ import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 interface SidebarButtonsProps {
-  historyOpen: boolean;
-  setHistoryOpen: (open: boolean) => void;
   configOpen: boolean;
   setConfigOpen: (open: boolean) => void;
   className?: string;
@@ -20,25 +17,18 @@ interface SidebarButtonsProps {
 
 export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
   (
-    { historyOpen, setHistoryOpen, configOpen, setConfigOpen, className },
+    { configOpen, setConfigOpen, className },
     ref: ForwardedRef<HTMLDivElement>,
   ) => {
     const handleConfigClick = () => {
       setConfigOpen(true);
-      setHistoryOpen(false);
-    };
-
-    const handleHistoryClick = () => {
-      setHistoryOpen(true);
-      setConfigOpen(false);
     };
 
     const closeAll = () => {
       setConfigOpen(false);
-      setHistoryOpen(false);
     };
 
-    const isSidebarOpen = historyOpen || configOpen;
+    const isSidebarOpen = configOpen;
 
     return (
       <motion.div
@@ -90,19 +80,6 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
               aria-label="Agent Configuration"
             >
               <Settings className="size-5" />
-            </TooltipIconButton>
-            <TooltipIconButton
-              tooltip="History"
-              variant="outline"
-              size="icon"
-              className={cn(
-                "bg-background hover:bg-muted size-9 rounded-full shadow-xs hover:cursor-pointer",
-                isSidebarOpen && "shadow-lg",
-              )}
-              onClick={handleHistoryClick}
-              aria-label="History"
-            >
-              <History className="size-5" />
             </TooltipIconButton>
           </div>
         </div>

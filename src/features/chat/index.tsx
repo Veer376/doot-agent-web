@@ -4,17 +4,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { StreamProvider } from "@/features/chat/providers/Stream";
 import { Thread } from "./components/thread";
 import { ConfigurationSidebar } from "./components/configuration-sidebar";
-import { ThreadHistorySidebar } from "./components/thread-history-sidebar";
 import { SidebarButtons } from "./components/sidebar-buttons";
 
 /**
  * The parent component containing the chat interface.
  */
 export default function ChatInterface(): React.ReactNode {
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
 
-  const historyRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
@@ -47,17 +44,6 @@ export default function ChatInterface(): React.ReactNode {
         return;
       }
 
-      // Check if history sidebar is open and the click is outside of it and the buttons
-      if (
-        historyOpen &&
-        historyRef.current &&
-        !historyRef.current.contains(target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(target)
-      ) {
-        setHistoryOpen(false);
-      }
-
       // Check if config sidebar is open and the click is outside of it and the buttons
       if (
         configOpen &&
@@ -77,7 +63,7 @@ export default function ChatInterface(): React.ReactNode {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [historyOpen, configOpen]);
+  }, [configOpen]);
 
   return (
     <StreamProvider>
@@ -87,15 +73,8 @@ export default function ChatInterface(): React.ReactNode {
         </div>
         <SidebarButtons
           ref={buttonRef}
-          historyOpen={historyOpen}
-          setHistoryOpen={setHistoryOpen}
           configOpen={configOpen}
           setConfigOpen={setConfigOpen}
-        />
-        <ThreadHistorySidebar
-          ref={historyRef}
-          open={historyOpen}
-          setOpen={setHistoryOpen}
         />
         <ConfigurationSidebar
           ref={configRef}

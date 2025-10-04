@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Message, Thread } from "@langchain/langgraph-sdk";
 import { useEffect, useState, forwardRef, ForwardedRef } from "react";
 import { useQueryState } from "nuqs";
+import { useAgentContext } from "@/features/chat/providers/Stream";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -73,7 +74,8 @@ export const ThreadHistorySidebar = forwardRef<
   const { session } = useAuthContext();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadId, setThreadId] = useQueryState("threadId");
-  const [agentId] = useQueryState("agentId");
+  // PHASE 3: Get agentId from context instead of URL
+  const { agentId } = useAgentContext();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

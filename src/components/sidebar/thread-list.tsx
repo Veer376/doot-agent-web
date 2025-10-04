@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 // Utility: Extract text content from MessageContent
 const getMessageStringContent = (
-  content: MessageContent | undefined
+  content: MessageContent | undefined,
 ): string => {
   if (!content) return "";
   if (typeof content === "string") return content;
@@ -92,7 +92,7 @@ export function ThreadList() {
       {/* Search Input */}
       <div className="px-2 pb-2">
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input
             placeholder="Search threads..."
             value={searchQuery}
@@ -128,7 +128,7 @@ export function ThreadList() {
         )}
 
         {!isLoading && filteredThreads.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-muted-foreground">
+          <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
             <FileClock className="h-8 w-8" />
             <p className="text-sm">
               {searchQuery ? "No threads found" : "No threads yet"}
@@ -155,7 +155,7 @@ export function ThreadList() {
                       {title}
                     </span>
                   </div>
-                  <span className="ml-6 truncate text-xs text-muted-foreground">
+                  <span className="text-muted-foreground ml-6 truncate text-xs">
                     {formatDate(thread.created_at)}
                   </span>
                 </SidebarMenuButton>

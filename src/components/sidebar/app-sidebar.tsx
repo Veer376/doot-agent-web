@@ -1,20 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { Wrench, MessageCircle, Brain } from "lucide-react";
+import { Wrench, Brain } from "lucide-react";
 import { AgentIcon } from "@/components/icons";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { ThreadList } from "./thread-list";
+import { PrimaryActions } from "./primary-actions";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarRail,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
+import { useQueryState } from "nuqs";
 
 // This is sample data.
 const data = {
@@ -29,11 +30,6 @@ const data = {
       url: "/tools",
       icon: Wrench,
     },
-    // {
-    //   title: "Inbox",
-    //   url: "/inbox",
-    //   icon: Inbox,
-    // },
     {
       title: "RAG",
       url: "/rag",
@@ -43,6 +39,12 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [, setThreadId] = useQueryState("threadId");
+
+  const handleNewChat = () => {
+    setThreadId(null); // Setting to null creates new thread
+  };
+
   return (
     <Sidebar
       collapsible="icon"
@@ -50,8 +52,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
+        <PrimaryActions onNewChat={handleNewChat} />
         <NavMain items={data.navMain} />
-        <SidebarSeparator />
         <ThreadList />
       </SidebarContent>
       <SidebarFooter>

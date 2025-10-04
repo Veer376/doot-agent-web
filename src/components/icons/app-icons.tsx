@@ -8,8 +8,28 @@
  * - Custom variants (e.g., red delete icon)
  * - Easy maintenance and updates
  *
+ * GLOBAL DEFAULT SIZE: md (24px)
+ * - All icons use this size unless explicitly overridden
+ * - Change DEFAULT_ICON_SIZE constant to adjust globally
+ *
+ * AVAILABLE SIZES:
+ * - xs: 16px (4) - Small indicators, badges
+ * - sm: 20px (5) - Text inline icons, compact UI
+ * - md: 24px (6) - DEFAULT - Most common use
+ * - lg: 28px (7) - Buttons, prominent actions
+ * - xl: 32px (8) - Large buttons, headers
+ *
  * Usage:
  * import { DeleteIcon, SendIcon } from '@/components/icons';
+ *
+ * // Uses global default (md = 24px):
+ * <SendIcon />
+ * <AgentIcon />
+ *
+ * // Override for specific needs:
+ * <SendIcon size="lg" />    // 28px for buttons
+ * <SendIcon size="xl" />    // 32px for headers
+ * <SendIcon size={40} />    // Custom pixel size
  */
 
 import React from "react";
@@ -35,26 +55,100 @@ import {
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 
-// Base icon props type
-export interface AppIconProps extends React.SVGProps<SVGSVGElement> {
-  size?: number;
+// ============================================
+// SIZE SYSTEM
+// ============================================
+
+export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | number;
+
+// Global default size - change this to adjust all icons at once
+const DEFAULT_ICON_SIZE: IconSize = "md";
+
+const SIZE_MAP: Record<string, number> = {
+  xs: 16, // size-4
+  sm: 20, // size-5
+  md: 24, // size-6  ← DEFAULT
+  lg: 28, // size-7
+  xl: 32, // size-8
+};
+
+const getSizeValue = (size?: IconSize): number => {
+  if (size === undefined) return getSizeValue(DEFAULT_ICON_SIZE);
+  if (typeof size === "number") return size;
+  return SIZE_MAP[size] || SIZE_MAP.md;
+};
+
+const getSizeClass = (size?: IconSize): string => {
+  if (size === undefined) return getSizeClass(DEFAULT_ICON_SIZE);
+  if (typeof size === "number") return "";
+  const sizeClasses = {
+    xs: "size-4",
+    sm: "size-5",
+    md: "size-6",
+    lg: "size-7",
+    xl: "size-8",
+  };
+  return sizeClasses[size] || sizeClasses.md;
+};
+
+// Base icon props type with standardized sizing
+export interface AppIconProps
+  extends Omit<React.SVGProps<SVGSVGElement>, "width" | "height"> {
+  size?: IconSize;
   strokeWidth?: number;
 }
+
+// ============================================
+// ICON WRAPPER COMPONENT
+// ============================================
+
+const IconWrapper: React.FC<{
+  icon: React.ComponentType<any>;
+  size?: IconSize;
+  className?: string;
+  [key: string]: any;
+}> = ({
+  icon: IconComponent,
+  size, // No default here - handled in getSizeValue
+  className,
+  ...props
+}) => {
+  const sizeValue = getSizeValue(size);
+  const sizeClass = getSizeClass(size);
+
+  return (
+    <IconComponent
+      width={sizeValue}
+      height={sizeValue}
+      className={cn(sizeClass, className)}
+      {...props}
+    />
+  );
+};
 
 // ============================================
 // SIDEBAR & NAVIGATION ICONS
 // ============================================
 
 export const SidebarIcon: React.FC<AppIconProps> = (props) => (
-  <SidebarLeftIcon {...props} />
+  <IconWrapper
+    icon={SidebarLeftIcon}
+    {...props}
+  />
 );
 
 export const UnfoldIcon: React.FC<AppIconProps> = (props) => (
-  <UnfoldMoreIcon {...props} />
+  <IconWrapper
+    icon={UnfoldMoreIcon}
+    {...props}
+  />
 );
 
 export const FoldIcon: React.FC<AppIconProps> = (props) => (
-  <UnfoldLessIcon {...props} />
+  <IconWrapper
+    icon={UnfoldLessIcon}
+    {...props}
+  />
 );
 
 // ============================================
@@ -62,23 +156,38 @@ export const FoldIcon: React.FC<AppIconProps> = (props) => (
 // ============================================
 
 export const AgentIcon: React.FC<AppIconProps> = (props) => (
-  <ChatBotIcon {...props} />
+  <IconWrapper
+    icon={ChatBotIcon}
+    {...props}
+  />
 );
 
 export const SearchIcon: React.FC<AppIconProps> = (props) => (
-  <Search01Icon {...props} />
+  <IconWrapper
+    icon={Search01Icon}
+    {...props}
+  />
 );
 
 export const AttachIcon: React.FC<AppIconProps> = (props) => (
-  <AttachmentIcon {...props} />
+  <IconWrapper
+    icon={AttachmentIcon}
+    {...props}
+  />
 );
 
 export const SettingsIcon: React.FC<AppIconProps> = (props) => (
-  <Settings03Icon {...props} />
+  <IconWrapper
+    icon={Settings03Icon}
+    {...props}
+  />
 );
 
 export const NewThreadIcon: React.FC<AppIconProps> = (props) => (
-  <PencilEdit02Icon {...props} />
+  <IconWrapper
+    icon={PencilEdit02Icon}
+    {...props}
+  />
 );
 
 // ============================================
@@ -86,15 +195,24 @@ export const NewThreadIcon: React.FC<AppIconProps> = (props) => (
 // ============================================
 
 export const LightThemeIcon: React.FC<AppIconProps> = (props) => (
-  <Sun01Icon {...props} />
+  <IconWrapper
+    icon={Sun01Icon}
+    {...props}
+  />
 );
 
 export const DarkThemeIcon: React.FC<AppIconProps> = (props) => (
-  <Moon02Icon {...props} />
+  <IconWrapper
+    icon={Moon02Icon}
+    {...props}
+  />
 );
 
 export const SystemThemeIcon: React.FC<AppIconProps> = (props) => (
-  <ComputerIcon {...props} />
+  <IconWrapper
+    icon={ComputerIcon}
+    {...props}
+  />
 );
 
 // ============================================
@@ -102,23 +220,38 @@ export const SystemThemeIcon: React.FC<AppIconProps> = (props) => (
 // ============================================
 
 export const LogOutIcon: React.FC<AppIconProps> = (props) => (
-  <Logout05Icon {...props} />
+  <IconWrapper
+    icon={Logout05Icon}
+    {...props}
+  />
 );
 
 export const SendIcon: React.FC<AppIconProps> = (props) => (
-  <SentIcon {...props} />
+  <IconWrapper
+    icon={SentIcon}
+    {...props}
+  />
 );
 
 export const CopyIcon: React.FC<AppIconProps> = (props) => (
-  <Copy01Icon {...props} />
+  <IconWrapper
+    icon={Copy01Icon}
+    {...props}
+  />
 );
 
 export const EditIcon: React.FC<AppIconProps> = (props) => (
-  <Edit01Icon {...props} />
+  <IconWrapper
+    icon={Edit01Icon}
+    {...props}
+  />
 );
 
 export const CancelIcon: React.FC<AppIconProps> = (props) => (
-  <Cancel01Icon {...props} />
+  <IconWrapper
+    icon={Cancel01Icon}
+    {...props}
+  />
 );
 
 // ============================================
@@ -126,7 +259,8 @@ export const CancelIcon: React.FC<AppIconProps> = (props) => (
 // ============================================
 
 export const DeleteIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
-  <Delete03Icon
+  <IconWrapper
+    icon={Delete03Icon}
     className={cn("text-destructive", className)}
     {...props}
   />

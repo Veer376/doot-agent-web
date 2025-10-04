@@ -8,7 +8,10 @@ import {
   useRef,
 } from "react";
 import { cn } from "@/lib/utils";
-import { useStreamContext, useAgentContext } from "@/features/chat/providers/Stream";
+import {
+  useStreamContext,
+  useAgentContext,
+} from "@/features/chat/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
@@ -19,23 +22,15 @@ import {
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import {
-  ArrowDown,
-  LoaderCircle,
-  SquarePen,
-  AlertCircle,
-  Plus,
-} from "lucide-react";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { ArrowDown, LoaderCircle, AlertCircle } from "lucide-react";
+import { AttachIcon, CancelIcon } from "@/components/icons";
+import { useQueryState } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
-import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import {
   isUserSpecifiedDefaultAgent,
@@ -43,14 +38,8 @@ import {
 } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Composer } from "./composer";
 import { useThreadAgent } from "@/hooks/use-thread-agent";
 
 function StickyToBottomContent(props: {
@@ -94,70 +83,12 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
-function AgentSelector() {
-  const { agents, loading } = useAgentsContext();
-  const [open, setOpen] = useState(false);
-
-  // PHASE 3: Get agentId from context instead of URL
-  const { agentId, setAgentId } = useAgentContext();
-  const [threadId] = useQueryState("threadId");
-  
-  // Phase 2: Thread-Agent Persistence
-  const { saveThreadAgent } = useThreadAgent();
-
-  const onAgentChange = useCallback(
-    (v: string | string[] | undefined) => {
-      const nextValue = Array.isArray(v) ? v[0] : v;
-      if (!nextValue) return;
-
-      // Value is just the assistant_id now (no deploymentId)
-      setAgentId(nextValue);
-      // NOTE: Agent change does NOT create new thread - agent is a property of the thread
-      
-      // Phase 2: Save thread-agent mapping when agent changes
-      // Only save if we have an active thread (not on initial selection)
-      if (threadId) {
-        saveThreadAgent(threadId, nextValue);
-      }
-    },
-    [setAgentId, threadId, saveThreadAgent],
-  );
-
-  const agentValue = agentId || undefined;
-
-  useEffect(() => {
-    if (agentValue || !agents.length) {
-      return;
-    }
-    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
-    if (defaultAgent) {
-      onAgentChange(defaultAgent.assistant_id);
-    }
-  }, [agents, agentValue, onAgentChange]);
-
-  return (
-    <AgentsCombobox
-      agents={agents}
-      agentsLoading={loading}
-      value={agentValue}
-      setValue={onAgentChange}
-      open={open}
-      setOpen={setOpen}
-      triggerAsChild
-      className="min-w-auto"
-    />
-  );
-}
-
 export function Thread() {
   // PHASE 3: Get agentId from context instead of URL
   const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
-  const [hideToolCalls, setHideToolCalls] = useQueryState(
-    "hideToolCalls",
-    parseAsBoolean.withDefault(false),
-  );
   const [hasInput, setHasInput] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   const {
     contentBlocks,
     setContentBlocks,
@@ -213,16 +144,12 @@ export function Thread() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    const form = e.currentTarget as HTMLFormElement;
-    const formData = new FormData(form);
-    const content = (formData.get("input") as string | undefined)?.trim() ?? "";
+    const content = inputValue.trim();
 
     setHasInput(false);
+    setInputValue(""); // Clear the input after submission
     if (!agentId) return;
-    if (
-      (content.trim().length === 0 && contentBlocks.length === 0) ||
-      isLoading
-    )
+    if ((content.length === 0 && contentBlocks.length === 0) || isLoading)
       return;
 
     const newHumanMessage: Message = {
@@ -263,7 +190,6 @@ export function Thread() {
       },
     );
 
-    form.reset();
     setContentBlocks([]);
   };
 
@@ -304,7 +230,7 @@ export function Thread() {
       <StickToBottom className="relative flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
-            "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar-track]:bg-transparent",
+            "absolute inset-0 overflow-y-auto px-4",
             !hasMessages &&
               !threadId &&
               "mt-[25vh] flex flex-col items-stretch",
@@ -363,7 +289,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-background">
+            <div className="bg-background sticky bottom-0 flex flex-col items-center gap-8">
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
@@ -378,128 +304,36 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "bg-background relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
-                  dragOver
-                    ? "border-primary border-2 border-dotted"
-                    : "border border-solid",
+                  "relative z-10 mx-auto mb-8 w-full max-w-3xl transition-all",
+                  dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >
-                <form
+                <Composer
+                  value={inputValue}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    setHasInput(!!e.target.value.trim());
+                  }}
                   onSubmit={handleSubmit}
-                  className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
-                >
-                  <ContentBlocksPreview
-                    blocks={contentBlocks}
-                    onRemove={removeBlock}
-                  />
-                  <textarea
-                    name="input"
-                    onChange={(e) => setHasInput(!!e.target.value.trim())}
-                    onPaste={handlePaste}
-                    onKeyDown={(e) => {
-                      if (
-                        e.key === "Enter" &&
-                        !e.shiftKey &&
-                        !e.nativeEvent.isComposing
-                      ) {
-                        e.preventDefault();
-                        const el = e.target as HTMLElement | undefined;
-                        const form = el?.closest("form");
-                        form?.requestSubmit();
-                      }
-                    }}
-                    placeholder="Type your message..."
-                    className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
-                  />
-
-                  <div className="flex items-center gap-6 p-2 pt-4">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 space-x-2">
-                        <AgentSelector />
-                        <Switch
-                          id="render-tool-calls"
-                          checked={hideToolCalls ?? false}
-                          onCheckedChange={setHideToolCalls}
-                        />
-                        <Label
-                          htmlFor="render-tool-calls"
-                          className="text-sm text-gray-600"
-                        >
-                          Hide Tool Calls
-                        </Label>
-                      </div>
-                    </div>
-                    <Label
-                      htmlFor="file-input"
-                      className="flex cursor-pointer"
-                    >
-                      <Plus className="size-5 text-gray-600" />
-                      <span className="text-sm text-gray-600">
-                        Upload PDF or Image
-                      </span>
-                    </Label>
-                    <input
-                      id="file-input"
-                      type="file"
-                      onChange={handleFileUpload}
-                      multiple
-                      accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
-                      className="hidden"
-                    />
-                    {stream.isLoading ? (
-                      <Button
-                        key="stop"
-                        onClick={() => stream.stop()}
-                        className="ml-auto"
-                      >
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                        Cancel
-                      </Button>
-                    ) : (
-                      <div className="ml-auto">
-                        {requiresApiKeysButNotSet(hasApiKeys) ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="inline-block">
-                                  <Button
-                                    type="submit"
-                                    className="shadow-md transition-all"
-                                    disabled={
-                                      isLoading ||
-                                      (!hasInput &&
-                                        contentBlocks.length === 0) ||
-                                      requiresApiKeysButNotSet(hasApiKeys)
-                                    }
-                                  >
-                                    Send
-                                  </Button>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  API keys are required but not set. Please
-                                  provide them in the settings.
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <Button
-                            type="submit"
-                            className="shadow-md transition-all"
-                            disabled={
-                              isLoading ||
-                              (!hasInput && contentBlocks.length === 0)
-                            }
-                          >
-                            Send
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </form>
+                  onPaste={handlePaste}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !e.nativeEvent.isComposing
+                    ) {
+                      e.preventDefault();
+                      const form = e.currentTarget.closest("form");
+                      form?.requestSubmit();
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  disabled={isLoading || requiresApiKeysButNotSet(hasApiKeys)}
+                  isLoading={stream.isLoading}
+                  contentBlocks={contentBlocks}
+                  onRemoveBlock={removeBlock}
+                  onFileUpload={handleFileUpload}
+                />
               </div>
             </div>
           }

@@ -61,6 +61,8 @@ import {
   MoreVerticalCircle01Icon,
   Wrench02Icon,
   AiBrain03Icon,
+  AiBrain04Icon,
+  Wrench01Icon
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 
@@ -201,14 +203,14 @@ export const SettingsIcon: React.FC<AppIconProps> = (props) => (
 
 export const ToolsIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
-    icon={Wrench02Icon}
+    icon={Wrench01Icon}
     {...props}
   />
 );
 
 export const RAGIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
-    icon={AiBrain03Icon}
+    icon={AiBrain04Icon}
     {...props}
   />
 );

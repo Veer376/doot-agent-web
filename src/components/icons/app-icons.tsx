@@ -59,6 +59,8 @@ import {
   CheckmarkCircle04Icon,
   GitBranchIcon as GitBranchHugeIcon,
   MoreVerticalCircle01Icon,
+  Wrench02Icon,
+  AiBrain03Icon,
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 
@@ -193,6 +195,20 @@ export const AttachIcon: React.FC<AppIconProps> = (props) => (
 export const SettingsIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={Settings03Icon}
+    {...props}
+  />
+);
+
+export const ToolsIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Wrench02Icon}
+    {...props}
+  />
+);
+
+export const RAGIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain03Icon}
     {...props}
   />
 );
@@ -360,6 +376,8 @@ export default {
   Search: SearchIcon,
   Attach: AttachIcon,
   Settings: SettingsIcon,
+  Tools: ToolsIcon,
+  RAG: RAGIcon,
   NewThread: NewThreadIcon,
   LightTheme: LightThemeIcon,
   DarkTheme: DarkThemeIcon,

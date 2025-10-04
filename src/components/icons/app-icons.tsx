@@ -58,6 +58,7 @@ import {
   ArrowRight01Icon,
   CheckmarkCircle04Icon,
   GitBranchIcon as GitBranchHugeIcon,
+  MoreVerticalCircle01Icon,
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 
@@ -322,6 +323,13 @@ export const GitBranchIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
+export const MoreVerticalMenuIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MoreVerticalCircle01Icon}
+    {...props}
+  />
+);
+
 // ============================================
 // ICON VARIANTS
 // ============================================
@@ -362,4 +370,5 @@ export default {
   Edit: EditIcon,
   Cancel: CancelIcon,
   Delete: DeleteIcon,
+  MoreVerticalMenu: MoreVerticalMenuIcon,
 };

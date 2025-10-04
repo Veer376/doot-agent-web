@@ -12,7 +12,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import {
@@ -22,7 +30,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { SearchIcon } from "@/components/icons";
+import {
+  SearchIcon,
+  MoreVerticalMenuIcon,
+  EditIcon,
+  DeleteIcon,
+} from "@/components/icons";
 import { MessageContent } from "@langchain/core/messages";
 
 // Utility: Extract text content from MessageContent
@@ -66,6 +79,12 @@ export function ThreadList() {
   const { data: threads = [], isLoading } = useThreads();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { state } = useSidebar();
+
+  // Don't render thread list when sidebar is collapsed
+  if (state === "collapsed") {
+    return null;
+  }
 
   // Filter threads by search query
   const filteredThreads = threads.filter((thread) => {
@@ -80,6 +99,16 @@ export function ThreadList() {
   const handleSelectThread = (id: string) => {
     // Navigate to base path with threadId query param
     router.push(`/?threadId=${id}`);
+  };
+
+  const handleRenameThread = (threadId: string) => {
+    // TODO: Implement rename functionality
+    console.log("Rename thread:", threadId);
+  };
+
+  const handleDeleteThread = (threadId: string) => {
+    // TODO: Implement delete functionality
+    console.log("Delete thread:", threadId);
   };
 
   return (
@@ -130,6 +159,43 @@ export function ThreadList() {
                   >
                     <span className="truncate text-sm">{title}</span>
                   </SidebarMenuButton>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuAction
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        showOnHover
+                      >
+                        <MoreVerticalMenuIcon />
+                        <span className="sr-only">More options</span>
+                      </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="right"
+                      align="start"
+                    >
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRenameThread(thread.thread_id);
+                        }}
+                      >
+                        <EditIcon size="sm" />
+                        <span>Rename</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteThread(thread.thread_id);
+                        }}
+                      >
+                        <DeleteIcon size="sm" />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </SidebarMenuItem>
               );
             })}

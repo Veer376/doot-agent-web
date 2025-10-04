@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef } from "react";
+import { motion } from "framer-motion";
 import { ComposerActionsPopOut } from "./composer-actions-popout";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
-import { SendIcon, CancelIcon } from "@/components/icons";
+import { CancelIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { cn } from "@/lib/utils";
@@ -119,27 +120,62 @@ export function Composer({
               <ComposerActionsPopOut onFileUpload={onFileUpload} />
             </div>
 
-            {/* Right: Send/Cancel Button */}
-            <div className="flex-shrink-0">
+            {/* Right: Send/Cancel Button button got replaced with acertinity animated design. */}
+            <div className="relative h-8 w-12 flex-shrink-0">
               {isLoading ? (
-                <TooltipIconButton
-                  tooltip="Cancel"
-                  variant="default"
-                  className="p-2 transition-opacity ease-in"
+                <button
                   type="button"
+                  onClick={onCancel}
+                  aria-label="Cancel"
+                  className="absolute top-1/2 right-2 z-50 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black text-white transition duration-200 hover:bg-black/90 dark:bg-zinc-900"
                 >
-                  <CancelIcon size="lg" />
-                </TooltipIconButton>
+                  <CancelIcon size="sm" />
+                </button>
               ) : (
-                <TooltipIconButton
-                  tooltip="Send"
-                  variant="default"
-                  className="p-2 transition-opacity ease-in"
+                <button
+                  disabled={disabled || !value}
                   type="submit"
-                  disabled={disabled}
+                  className="absolute top-1/2 right-2 z-50 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black transition duration-300 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
                 >
-                  <SendIcon size="lg" />
-                </TooltipIconButton>
+                  <motion.svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5 text-white"
+                  >
+                    <path
+                      stroke="none"
+                      d="M0 0h24v24H0z"
+                      fill="none"
+                    />
+
+                    {/* Animated line: reveals when there's input */}
+                    <motion.path
+                      d="M5 12l14 0"
+                      initial={{
+                        strokeDasharray: "50%",
+                        strokeDashoffset: "50%",
+                      }}
+                      animate={{
+                        strokeDashoffset: value ? 0 : "70%",
+                      }}
+                      transition={{
+                        duration: 0.5,
+                        ease: "linear",
+                      }}
+                    />
+
+                    {/* Arrowhead */}
+                    <path d="M13 18l6 -6" />
+                    <path d="M13 6l6 6" />
+                  </motion.svg>
+                </button>
               )}
             </div>
           </div>

@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
-import { useQueryState, parseAsBoolean } from "nuqs";
 
 function CustomComponent({
   message,
@@ -78,10 +77,6 @@ export function AssistantMessage({
 }) {
   const content = message?.content ?? [];
   const contentString = getContentString(content);
-  const [hideToolCalls] = useQueryState(
-    "hideToolCalls",
-    parseAsBoolean.withDefault(false),
-  );
 
   const thread = useStreamContext();
   const meta = message ? thread.getMessagesMetadata(message) : undefined;
@@ -104,10 +99,6 @@ export function AssistantMessage({
   const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message?.type === "tool";
 
-  if (isToolResult && hideToolCalls) {
-    return null;
-  }
-
   return (
     <div className="group mr-auto flex items-start gap-2">
       {isToolResult ? (
@@ -120,17 +111,13 @@ export function AssistantMessage({
             </div>
           )}
 
-          {!hideToolCalls && (
-            <>
-              {(hasToolCalls && toolCallsHaveContents && (
-                <ToolCalls toolCalls={message.tool_calls} />
-              )) ||
-                (hasAnthropicToolCalls && (
-                  <ToolCalls toolCalls={anthropicStreamedToolCalls} />
-                )) ||
-                (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
-            </>
-          )}
+          {(hasToolCalls && toolCallsHaveContents && (
+            <ToolCalls toolCalls={message.tool_calls} />
+          )) ||
+            (hasAnthropicToolCalls && (
+              <ToolCalls toolCalls={anthropicStreamedToolCalls} />
+            )) ||
+            (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
 
           {message && (
             <CustomComponent

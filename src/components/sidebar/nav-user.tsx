@@ -1,18 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronsUpDown,
-  LogOut,
-  User,
-  Loader2,
-  TriangleAlert,
-  Settings,
-  Moon,
-  Sun,
-  Monitor,
-} from "lucide-react";
+import { LogOut, User, Loader2, TriangleAlert } from "lucide-react";
 import { useTheme } from "next-themes";
+import {
+  ToggleIcon,
+  SettingsIcon,
+  DarkThemeIcon,
+  LightThemeIcon,
+  SystemThemeIcon,
+  LogOutIcon,
+} from "@/components/icons";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -120,14 +118,16 @@ export function NavUser() {
                   </span>
                 )}
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ToggleIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
+          {/*nav-user-dropdown*/}
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}
+            sideOffset={1}
+            alignOffset={80}
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -156,14 +156,14 @@ export function NavUser() {
             <DropdownMenuSeparator />
 
             {/* Theme Selection */}
-            <DropdownMenuLabel className="text-xs text-muted-foreground px-2 py-1.5">
+            <DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs">
               Theme
             </DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => setTheme("light")}
               className="cursor-pointer"
             >
-              <Sun className="mr-2 h-4 w-4" />
+              <LightThemeIcon className="mr-2 h-4 w-4" />
               <span>Light</span>
               {theme === "light" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
@@ -171,7 +171,7 @@ export function NavUser() {
               onClick={() => setTheme("dark")}
               className="cursor-pointer"
             >
-              <Moon className="mr-2 h-4 w-4" />
+              <DarkThemeIcon className="mr-2 h-4 w-4" />
               <span>Dark</span>
               {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
@@ -179,15 +179,15 @@ export function NavUser() {
               onClick={() => setTheme("system")}
               className="cursor-pointer"
             >
-              <Monitor className="mr-2 h-4 w-4" />
+              <SystemThemeIcon className="mr-2 h-4 w-4" />
               <span>System</span>
               {theme === "system" && <span className="ml-auto text-xs">✓</span>}
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
+              <SettingsIcon className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
 
@@ -199,12 +199,12 @@ export function NavUser() {
                 {isSigningOut ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing out...
+                    Logging out...
                   </>
                 ) : (
                   <>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    <LogOutIcon className="mr-2 h-4 w-4" />
+                    Log out
                   </>
                 )}
               </DropdownMenuItem>

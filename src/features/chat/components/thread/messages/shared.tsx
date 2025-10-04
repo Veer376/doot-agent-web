@@ -3,11 +3,11 @@ import {
   SendHorizontal,
   RefreshCcw,
   Pencil,
-  Copy,
   CopyCheck,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { CopyIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
@@ -58,7 +58,7 @@ function ContentCopyable({
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <Copy />
+            <CopyIcon />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, forwardRef, ForwardedRef, useState } from "react";
-import { Lightbulb, Save, Trash2, X } from "lucide-react";
+import { Lightbulb, Save, X } from "lucide-react";
+import { DeleteIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -244,7 +245,7 @@ export const ConfigurationSidebar = forwardRef<
                         resetConfig(agentId);
                       }}
                     >
-                      <Trash2 className="mr-1 h-4 w-4" />
+                      <DeleteIcon className="mr-1 h-4 w-4" />
                       Reset
                     </Button>
                   </TooltipTrigger>

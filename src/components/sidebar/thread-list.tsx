@@ -3,7 +3,8 @@
 import { useThreads } from "@/hooks/use-threads";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { FileClock, MessageCircle, Plus, Search } from "lucide-react";
+import { FileClock, MessageCircle } from "lucide-react";
+import { SearchIcon, NewThreadIcon } from "@/components/icons";
 import { useState } from "react";
 import { useQueryState } from "nuqs";
 import { MessageContent } from "@langchain/core/messages";
@@ -92,7 +93,7 @@ export function ThreadList() {
       {/* Search Input */}
       <div className="px-2 pb-2">
         <div className="relative">
-          <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
           <Input
             placeholder="Search threads..."
             value={searchQuery}
@@ -110,7 +111,7 @@ export function ThreadList() {
           variant="outline"
           size="sm"
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <NewThreadIcon className="mr-2 h-4 w-4" />
           New Thread
         </Button>
       </div>

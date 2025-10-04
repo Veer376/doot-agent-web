@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collection } from "@/types/collection";
-import { Edit, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { EditIcon } from "@/components/icons";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -63,7 +64,7 @@ export function EditCollectionDialog({
           className="w-full justify-start px-2 py-1.5 text-sm"
           onClick={(e) => e.stopPropagation()}
         >
-          <Edit className="mr-2 h-4 w-4" />
+          <EditIcon className="mr-2 h-4 w-4" />
           <span>Edit</span>
         </Button>
       </DialogTrigger>

@@ -142,7 +142,7 @@ export function AssistantMessage({
             className={cn(
               "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
               // Show instantly on hover/focus, delay hiding when leaving hover
-              "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 delay-[600ms] group-hover:delay-0 group-focus-within:delay-0",
+              "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0",
             )}
           >
             <BranchSwitcher

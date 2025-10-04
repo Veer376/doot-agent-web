@@ -140,9 +140,10 @@ export function HumanMessage({
 
         <div
           className={cn(
-            "ml-auto flex items-center gap-2 transition-opacity",
-            "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-            isEditing && "opacity-100",
+            "ml-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
+            // Show instantly on hover/focus, delay hiding when leaving hover
+            "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0",
+            isEditing && "opacity-100 delay-0",
           )}
         >
           <BranchSwitcher

@@ -1,24 +1,30 @@
 "use client";
 
 import { useThreads } from "@/hooks/use-threads";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { FileClock, MessageCircle } from "lucide-react";
-import { SearchIcon, NewThreadIcon } from "@/components/icons";
-import { useState } from "react";
+import { FileClock, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { MessageContent } from "@langchain/core/messages";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
 import {
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarGroupAction,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { SearchIcon } from "@/components/icons";
+import { MessageContent } from "@langchain/core/messages"
+
+
 
 // Utility: Extract text content from MessageContent
 const getMessageStringContent = (
@@ -55,69 +61,33 @@ function getFirstHumanMessageContent(thread: Thread) {
     return "";
   }
 }
-
-// Utility: Format date string
-const formatDate = (date: string) => {
-  try {
-    return format(new Date(date), "MM/dd/yyyy - h:mm a");
-  } catch (e) {
-    console.error("Failed to format date", { date, error: e });
-    return "";
-  }
-};
-
 export function ThreadList() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [threadId, setThreadId] = useQueryState("threadId");
-  const { data: threads = [], isLoading } = useThreads(); // Fetch ALL threads (global)
+  const { data: threads = [], isLoading } = useThreads();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter threads by search query
   const filteredThreads = threads.filter((thread) => {
     if (!searchQuery.trim()) return true;
-    const title = getFirstHumanMessageContent(thread) || thread.thread_id;
+    const title = getFirstHumanMessageContent(thread) || (thread.metadata?.name as string) || `New thread-${thread.thread_id}`;
     return title.toLowerCase().includes(searchQuery.toLowerCase());
   });
-
-  const handleCreateNewThread = () => {
-    setThreadId(null); // Setting to null creates new thread
-  };
 
   const handleSelectThread = (id: string) => {
     setThreadId(id);
   };
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Threads</SidebarGroupLabel>
-
-      {/* Search Input */}
-      <div className="px-2 pb-2">
-        <div className="relative">
-          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
-          <Input
-            placeholder="Search threads..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8"
-          />
-        </div>
-      </div>
-
-      {/* New Thread Button */}
-      <div className="px-2 pb-2">
-        <Button
-          onClick={handleCreateNewThread}
-          className="w-full"
-          variant="outline"
-          size="sm"
-        >
-          <NewThreadIcon className="mr-2 h-4 w-4" />
-          New Thread
-        </Button>
-      </div>
-
-      {/* Thread List */}
-      <SidebarMenu>
+    <>
+      <SidebarGroup>
+        <SidebarGroupLabel>
+          Threads
+          <SidebarGroupAction onClick={() => setSearchOpen(true)} title="Search chats">
+            <Search className="h-4 w-4" />
+          </SidebarGroupAction>
+        </SidebarGroupLabel>
+        <SidebarMenu>
         {isLoading && (
           <>
             {Array.from({ length: 5 }).map((_, index) => (
@@ -139,8 +109,7 @@ export function ThreadList() {
 
         {!isLoading &&
           filteredThreads.map((thread) => {
-            const title =
-              getFirstHumanMessageContent(thread) || thread.thread_id;
+            const title = getFirstHumanMessageContent(thread) || (thread.metadata?.name as string) || `New thread ${thread.thread_id.slice(0, 5)}`;
             const isActive = thread.thread_id === threadId;
 
             return (
@@ -148,16 +117,9 @@ export function ThreadList() {
                 <SidebarMenuButton
                   onClick={() => handleSelectThread(thread.thread_id)}
                   isActive={isActive}
-                  className="h-auto flex-col items-start gap-0.5 py-2"
                 >
-                  <div className="flex w-full items-center gap-2 overflow-hidden">
-                    <MessageCircle className="h-4 w-4 shrink-0" />
-                    <span className="truncate text-sm font-medium">
-                      {title}
-                    </span>
-                  </div>
-                  <span className="text-muted-foreground ml-6 truncate text-xs">
-                    {formatDate(thread.created_at)}
+                  <span className="truncate text-sm">
+                    {title}
                   </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -165,5 +127,25 @@ export function ThreadList() {
           })}
       </SidebarMenu>
     </SidebarGroup>
+
+    {/* Search Dialog */}
+    <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Search chats</DialogTitle>
+        </DialogHeader>
+        <div className="relative">
+          <SearchIcon className="text-muted-foreground absolute top-3 left-3 h-4 w-4" />
+          <Input
+            placeholder="Search chats..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            autoFocus
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

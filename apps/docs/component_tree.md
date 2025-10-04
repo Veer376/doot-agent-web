@@ -19,58 +19,55 @@
            └───────────────────┘                            └───────────────────┘
                                                                      │
                                                                      │
-                          ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-                          │                              <RootLayout> - (app)/layout.tsx                                │
-                          │                                                                                             │
-                          │  <html>                                                                                     │
-                          │    <body>                                                                                   │
-                          │      [DEMO_APP Banner] ← Conditional top banner                                             │
-                          │      <NuqsAdapter>  ← URL state management                                                  │
-                          │        <AuthProvider>  ← Authentication & session management                                │
-                          │        │  State: { session, user, isLoading, isAuthenticated }                              │
-                          │        │  Methods: { signIn, signUp, signOut, resetPassword, etc. }                         │
-                          │        └──> <SidebarLayout>  ← Main layout wrapper (components/sidebar/index.tsx)           │
-                          │                 <SidebarProvider>  ← Shadcn/ui sidebar state management                     │
-                          │                   <MCPProvider>  ← Model Context Protocol tools provider                    │
-                          │                   │  State: { tools, loading, servers }                                     │
-                          │                   │  Methods: { getTools, setTools, connectServer, etc. }                   │
-                          │                   └──> <BlueprintsProvider>  ← Graph blueprint/template provider            │
-                          │                         │  State: { blueprints, loading, error }                            │
-                          │                         │  Methods: { refreshTemplates }                                    │
-                          │                         └──> <AgentsProvider>  ← Agent management (CRITICAL PROVIDER)       │
-                          │                               │  State: {                                                   │
-                          │                               │    agents, loading, selectedAgent, deployments,             │
-                          │                               │    defaultAgents, currentDeployment                         │
-                          │                               │  }                                                          │
-                          │                               │  Methods: {                                                 │
-                          │                               │    createAgent, updateAgent, deleteAgent,                   │
-                          │                               │    refreshAgents, setSelectedAgent                          │
-                          │                               │  }                                                          │
-                          │                               └──> <RagProvider>  ← RAG/Knowledge base provider             │
-                          │                                     │  State: { collections, documents, loading }           │
-                          │                                     │  Methods: { fetchCollections, uploadDocuments, etc. } │
-                          │                                     ├──> <AppSidebar />  ← Left sidebar (PERSISTENT)        │
-                          │                                     │     ├──> <SiteHeader />                               │
-                          │                                     │     │     └──> LangGraph Logo + "Open Agent Platform" │
-                          │                                     │     ├──> <SidebarContent>                             │
-                          │                                     │     │     └──> <NavMain />  ← Navigation menu         │
-                          │                                     │     │           ├── Chat (/)                          │
-                          │                                     │     │           ├── Agents (/agents)                  │
-                          │                                     │     │           ├── Tools (/tools)                    │
-                          │                                     │     │           └── RAG (/rag)                        │
-                          │                                     │     ├──> <SidebarFooter>                              │
-                          │                                     │     │     └──> <NavUser />  ← User profile dropdown   │
-                          │                                     │     │           ├── Avatar & Email                    │
-                          │                                     │     │           ├── Settings                          │
-                          │                                     │     │           └── Sign Out                          │
-                          │                                     │     └──> <SidebarRail />  ← Resize handle             │
-                          │                                     └──> <SidebarInset>  ← Main content area                │
-                          │                                           └──> {children}  ← PAGE CONTENT RENDERS HERE      │
-                          │      </AuthProvider>                                                                        │
-                          │    </NuqsAdapter>                                                                           │
-                          │    </body>                                                                                  │
-                          │  </html>                                                                                    │
-                          └──────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                        <RootLayout> - (app)/layout.tsx                               
+                                                                                                                     
+                            <html>                                                                                    
+                              <body>                                                                                  
+                                [DEMO_APP Banner] ← Conditional top banner                                            
+                                <NuqsAdapter>  ← URL state management                                                 
+                                  <AuthProvider>  ← Authentication & session management                               
+                                  │  State: { session, user, isLoading, isAuthenticated }                             
+                                  │  Methods: { signIn, signUp, signOut, resetPassword, etc. }                        
+                                  └──> <SidebarLayout>  ← Main layout wrapper (components/sidebar/index.tsx)          
+                                           <SidebarProvider>  ← Shadcn/ui sidebar state management                    
+                                             <MCPProvider>  ← Model Context Protocol tools provider                   
+                                              State: { tools, loading, servers }                                    
+                                              Methods: { getTools, setTools, connectServer, etc. }                  
+                                                   │  State: { blueprints, loading, error }                           
+                                                   │  Methods: { refreshTemplates }                                   
+                                                   └──> <AgentsProvider>  ← Agent management (CRITICAL PROVIDER)      
+                                                         │  State: {                                                  
+                                                         │    agents, loading, selectedAgent, deployments,            
+                                                         │    defaultAgents, currentDeployment                        
+                                                         │  }                                                         
+                                                         │  Methods: {                                                
+                                                         │    createAgent, updateAgent, deleteAgent,                  
+                                                         │    refreshAgents, setSelectedAgent                         
+                                                         │  }                                                         
+                                                         └──> <RagProvider>  ← RAG/Knowledge base provider            
+                                                               │  State: { collections, documents, loading }          
+                                                               │  Methods: { fetchCollections, uploadDocuments, etc. }
+                                                               ├──> <AppSidebar />  ← Left sidebar (PERSISTENT)       
+                                                               │     ├──> <SiteHeader />                              
+                                                               │     │     └──> LangGraph Logo + "Open Agent Platform"
+                                                               │     ├──> <SidebarContent>                            
+                                                               │     │     └──> <NavMain />  ← Navigation menu        
+                                                               │     │           ├── Chat (/)                         
+                                                               │     │           ├── Agents (/agents)                 
+                                                               │     │           ├── Tools (/tools)                   
+                                                               │     │           └── RAG (/rag)                       
+                                                               │     ├──> <SidebarFooter>                             
+                                                               │     │     └──> <NavUser />  ← User profile dropdown  
+                                                               │     │           ├── Avatar & Email                   
+                                                               │     │           ├── Settings                         
+                                                               │     │           └── Sign Out                         
+                                                               │     └──> <SidebarRail />  ← Resize handle            
+                                                               └──> <SidebarInset>  ← Main content area               
+                                                                     └──> {children}  ← PAGE CONTENT RENDERS HERE     
+                                </AuthProvider>                                                                       
+                              </NuqsAdapter>                                                                          
+                              </body>                                                                                 
+                            </html>                                                                                   
                                                                                            
 
 ═════════════════════════════════════════════════════════════════════════════════════════

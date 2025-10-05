@@ -14,9 +14,9 @@ export default function ChatPage(): React.ReactNode {
   return (
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
-      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
+      <header className="flex shrink-0 items-center gap-2 transition-[width,height] ease-linear">
+        <div className="flex items-center gap-2 py-2 px-4">
+          <SidebarTrigger />
           <ChatBreadcrumb />
         </div>
       </header>

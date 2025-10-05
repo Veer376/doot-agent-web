@@ -16,10 +16,8 @@ import {
   type RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "nuqs";
-import { LangGraphLogoSVG } from "@/components/icons/langgraph";
-import { AgentsCombobox } from "@/components/ui/agents-combobox";
+// Removed agent selection UI; auto-select a default agent instead
 import { useAgentsContext } from "@/providers/Agents";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
@@ -109,7 +107,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { agents, loading } = useAgentsContext();
+  const { agents } = useAgentsContext();
 
   // PHASE 3: Remove agentId from URL, use localStorage instead
   const [threadId] = useQueryState("threadId");
@@ -117,8 +115,6 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const { getThreadAgent, getLastUsedAgent, saveThreadAgent } =
     useThreadAgent();
 
-  const [selectedAgentId, setSelectedAgentId] = useState("");
-  const [open, setOpen] = useState(false);
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");
@@ -157,15 +153,14 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [threadId]); // Only depend on threadId to avoid loops
 
+  // Auto-select a default agent when none is chosen yet
   useEffect(() => {
-    if (selectedAgentId || !agents.length) {
-      return;
-    }
-    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    if (agentId || !agents.length) return;
+    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent) ?? agents[0];
     if (defaultAgent) {
-      setSelectedAgentId(`${defaultAgent.assistant_id}`);
+      setAgentId(defaultAgent.assistant_id);
     }
-  }, [agents, selectedAgentId]);
+  }, [agents, agentId]);
 
   useEffect(() => {
     if (agentId) {
@@ -176,64 +171,17 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [agentId, hasApiKeys]);
 
-  const handleValueChange = (v: string) => {
-    setSelectedAgentId(v);
-    setOpen(false);
-  };
-
-  const handleStartChat = () => {
-    if (!selectedAgentId) {
-      toast.info("Please select an agent");
-      return;
-    }
-    setAgentId(selectedAgentId);
-  };
-
   // REFACTOR: Wrap everything in AgentContext.Provider
   // This makes agentId available to both agent selector AND children
   return (
     <AgentContext.Provider value={{ agentId, setAgentId }}>
-      {/* Show the form if we don't have an assistant ID */}
-      {!agentId ? (
-        <div className="flex w-full items-center justify-center p-4">
-          <div className="animate-in fade-in-0 zoom-in-95 bg-background flex min-h-64 max-w-3xl flex-col rounded-lg border shadow-lg">
-            <div className="mt-14 flex flex-col gap-2 p-6">
-              <div className="flex flex-col items-start gap-2">
-                <LangGraphLogoSVG className="h-7" />
-                <h1 className="text-xl font-semibold tracking-tight">
-                  Open Agent Platform
-                </h1>
-              </div>
-              <p className="text-muted-foreground">
-                Welcome to Open Agent Platform's chat! To continue, please
-                select an agent to chat with.
-              </p>
-            </div>
-            <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
-              <AgentsCombobox
-                disableDeselect
-                agents={agents}
-                agentsLoading={loading}
-                value={selectedAgentId}
-                setValue={(v) =>
-                  Array.isArray(v)
-                    ? handleValueChange(v[0])
-                    : handleValueChange(v)
-                }
-                open={open}
-                setOpen={setOpen}
-              />
-              <Button onClick={handleStartChat}>Start Chat</Button>
-            </div>
-          </div>
-        </div>
-      ) : !session?.accessToken ? (
+      {!session?.accessToken ? (
         // No access token - show error
         <>
           {toast.error("Access token must be provided")}
           {null}
         </>
-      ) : (
+      ) : agentId ? (
         // Has agentId and access token - show stream session
         <StreamSession
           agentId={agentId}
@@ -241,6 +189,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         >
           {children}
         </StreamSession>
+      ) : (
+        // Auto-selection in progress
+        <div className="text-muted-foreground flex w-full items-center justify-center p-6 text-sm">
+          Loading agent…
+        </div>
       )}
     </AgentContext.Provider>
   );

@@ -68,9 +68,7 @@ export default function ChatInterface(): React.ReactNode {
   return (
     <StreamProvider>
       <div className="flex h-full overflow-x-hidden">
-        <div className="flex h-full flex-1 flex-col p-4">
-          <Thread />
-        </div>
+        <Thread />
         <SidebarButtons
           ref={buttonRef}
           configOpen={configOpen}

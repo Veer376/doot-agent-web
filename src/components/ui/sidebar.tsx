@@ -593,8 +593,7 @@ const sidebarMenuButtonVariants = cva(
         // Do NOT apply to lg (NavUser) to preserve its alignment.
         default:
           "h-8 text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span:last-child]:hidden",
-        sm:
-          "h-7 text-xs group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span:last-child]:hidden",
+        sm: "h-7 text-xs group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span:last-child]:hidden",
         lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
       },
     },

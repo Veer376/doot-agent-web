@@ -228,7 +228,7 @@ export function Thread() {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <StickToBottom className="relative flex-1 overflow-hidden">
+      <StickToBottom className="relative flex-1 min-w-0 overflow-hidden">
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-auto px-4",
@@ -305,7 +305,7 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "relative z-10 mx-auto mb-8 w-full max-w-3xl transition-all",
+                  "relative z-10 mx-auto pb-5 w-full min-w-0 max-w-2xl transition-all",
                   dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >

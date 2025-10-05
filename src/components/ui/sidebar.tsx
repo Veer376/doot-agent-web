@@ -24,6 +24,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+/**
+ * Sidebar tokens and defaults
+ * - COOKIE_NAME/MAX_AGE: Persist expanded/collapsed state across reloads
+ * - WIDTH/WIDTH_ICON: Desktop widths for expanded vs icon (collapsed) modes
+ * - WIDTH_MOBILE: Drawer width on small screens
+ * - KEYBOARD_SHORTCUT: Cmd/Ctrl + b to toggle sidebar
+ */
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = "16rem";
@@ -31,6 +38,12 @@ const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+/**
+ * Context shared by all Sidebar primitives. This is the single source of truth for:
+ * - state: expanded | collapsed
+ * - open/openMobile: current visibility for desktop/mobile
+ * - toggleSidebar: helper that toggles based on current device
+ */
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
@@ -43,6 +56,10 @@ type SidebarContextProps = {
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
+/**
+ * useSidebar
+ * Hook to access sidebar context. Throws if used outside of SidebarProvider.
+ */
 function useSidebar() {
   const context = React.useContext(SidebarContext);
   if (!context) {
@@ -52,8 +69,15 @@ function useSidebar() {
   return context;
 }
 
+/**
+ * SidebarProvider
+ * - Hosts the sidebar layout wrapper and TooltipProvider
+ * - Tracks expanded/collapsed state and persists it in a cookie
+ * - Handles mobile sheet open state and a keyboard shortcut (Cmd/Ctrl + b)
+ * - Exposes `state` (expanded/collapsed) to drive data attributes used by CSS
+ */
 function SidebarProvider({
-  defaultOpen = true,
+  defaultOpen = false,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -109,7 +133,7 @@ function SidebarProvider({
   }, [toggleSidebar]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
-  // This makes it easier to style the sidebar with Tailwind classes.
+  // This makes styling with Tailwind data-attributes simple and robust.
   const state = open ? "expanded" : "collapsed";
 
   const contextValue = React.useMemo<SidebarContextProps>(
@@ -150,6 +174,17 @@ function SidebarProvider({
   );
 }
 
+/**
+ * Sidebar
+ * Shell that renders:
+ * - Desktop: fixed container + width transitions, supports variants and collapsible modes
+ * - Mobile: Radix Sheet drawer
+ * Data attributes:
+ * - data-state: expanded|collapsed
+ * - data-collapsible: "icon" or "offcanvas" when collapsed
+ * - data-variant: sidebar|floating|inset (affects padding/borders/radius)
+ * - data-side: left|right (mirrors layout for right-aligned sidebars)
+ */
 function Sidebar({
   side = "left",
   variant = "sidebar",
@@ -217,7 +252,7 @@ function Sidebar({
       data-side={side}
       data-slot="sidebar"
     >
-      {/* This is what handles the sidebar gap on desktop */}
+      {/* Desktop gap spacer: keeps main content from shifting when collapsed */}
       <div
         data-slot="sidebar-gap"
         className={cn(
@@ -232,7 +267,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right] duration-200 ease-in-out md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -256,6 +291,10 @@ function Sidebar({
   );
 }
 
+/**
+ * SidebarTrigger
+ * Small icon-only button to toggle the sidebar. Uses the shared toggleSidebar helper.
+ */
 function SidebarTrigger({
   className,
   onClick,
@@ -283,6 +322,11 @@ function SidebarTrigger({
   );
 }
 
+/**
+ * SidebarRail
+ * Invisible/low-chrome rail on the edge of the sidebar for quick drag-like toggles.
+ * It overlays the edge and toggles the sidebar on click.
+ */
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   const { toggleSidebar } = useSidebar();
 
@@ -308,6 +352,11 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
+/**
+ * SidebarInset
+ * Main content area when using the `inset` variant. Adds rounded corners and shadows
+ * and adjusts margins depending on sidebar state.
+ */
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   return (
     <main
@@ -322,6 +371,10 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
   );
 }
 
+/**
+ * SidebarInput
+ * Convenience wrapper for inputs styled for the sidebar (search, filters, etc.).
+ */
 function SidebarInput({
   className,
   ...props
@@ -336,6 +389,10 @@ function SidebarInput({
   );
 }
 
+/**
+ * SidebarHeader
+ * Top region of the sidebar, typically for branding, app title, or global actions.
+ */
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -347,6 +404,10 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * SidebarFooter
+ * Bottom region of the sidebar, typically for user profile or settings.
+ */
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -358,6 +419,10 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * SidebarSeparator
+ * Horizontal visual separator used inside header/content/footer sections.
+ */
 function SidebarSeparator({
   className,
   ...props
@@ -372,6 +437,10 @@ function SidebarSeparator({
   );
 }
 
+/**
+ * SidebarContent
+ * Scrollable middle region of the sidebar where most groups/menus live.
+ */
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -386,6 +455,10 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * SidebarGroup
+ * Wrapper for a logical section inside the content (e.g., Navigation, Threads).
+ */
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -397,6 +470,10 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/**
+ * SidebarGroupLabel
+ * Optional label for a group; fades out and shifts when in icon (collapsed) mode.
+ */
 function SidebarGroupLabel({
   className,
   asChild = false,
@@ -418,6 +495,10 @@ function SidebarGroupLabel({
   );
 }
 
+/**
+ * SidebarGroupAction
+ * Small action button in a group header (e.g., add, more). Hidden in icon mode.
+ */
 function SidebarGroupAction({
   className,
   asChild = false,
@@ -441,6 +522,10 @@ function SidebarGroupAction({
   );
 }
 
+/**
+ * SidebarGroupContent
+ * Container for a group's items (menus, lists, etc.).
+ */
 function SidebarGroupContent({
   className,
   ...props
@@ -455,6 +540,10 @@ function SidebarGroupContent({
   );
 }
 
+/**
+ * SidebarMenu
+ * Unordered list used for nav or grouped items inside a group.
+ */
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -466,6 +555,10 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+/**
+ * SidebarMenuItem
+ * List item wrapper used with SidebarMenuButton and related submenu parts.
+ */
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
@@ -477,8 +570,17 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
   );
 }
 
+/**
+ * sidebarMenuButtonVariants
+ * Class recipe for SidebarMenuButton with variants:
+ * - size: sm | default | lg (lg used for tall rows like user profile)
+ * - variant: default | outline
+ * Notes:
+ * - In collapsed icon mode, default/sm center the icon and hide the label span
+ * - Transitions control width/height; padding is fixed by the component className
+ */
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -503,6 +605,14 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
+/**
+ * SidebarMenuButton
+ * Primary interactive row in the sidebar. Works as a button or asChild (e.g., NextLink).
+ * Props:
+ * - isActive: highlights the button
+ * - size/variant: align with cva variants
+ * - tooltip: when collapsed (icon mode) and not on mobile, shows a tooltip on hover
+ */
 function SidebarMenuButton({
   asChild = false,
   isActive = false,
@@ -553,6 +663,12 @@ function SidebarMenuButton({
   );
 }
 
+/**
+ * SidebarMenuAction
+ * Right-aligned small action that attaches to a SidebarMenuItem (e.g., more, close).
+ * - `showOnHover`: when true, fades in on hover/focus; otherwise always visible.
+ * - Hidden in icon (collapsed) mode to keep the UI clean.
+ */
 function SidebarMenuAction({
   className,
   asChild = false,
@@ -585,6 +701,11 @@ function SidebarMenuAction({
   );
 }
 
+/**
+ * SidebarMenuBadge
+ * Non-interactive badge aligned to the right of a menu button (e.g., counts).
+ * Hidden in icon mode.
+ */
 function SidebarMenuBadge({
   className,
   ...props
@@ -607,6 +728,10 @@ function SidebarMenuBadge({
   );
 }
 
+/**
+ * SidebarMenuSkeleton
+ * Placeholder row for loading states. Optional icon placeholder via `showIcon`.
+ */
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
@@ -645,6 +770,10 @@ function SidebarMenuSkeleton({
   );
 }
 
+/**
+ * SidebarMenuSub
+ * Indented submenu list. Hidden in icon mode.
+ */
 function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -660,6 +789,10 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
   );
 }
 
+/**
+ * SidebarMenuSubItem
+ * Wrapper for a single submenu row.
+ */
 function SidebarMenuSubItem({
   className,
   ...props
@@ -674,6 +807,10 @@ function SidebarMenuSubItem({
   );
 }
 
+/**
+ * SidebarMenuSubButton
+ * Anchor-like row inside submenus. Accepts size (sm|md) and active state.
+ */
 function SidebarMenuSubButton({
   asChild = false,
   size = "md",

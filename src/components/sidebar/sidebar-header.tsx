@@ -15,13 +15,13 @@ export function SiteHeader() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            size="lg"
+            size="default"
             asChild
-            className="flex items-center justify-center gap-0"
+            className="flex h-8 items-center justify-center gap-0 p-0"
           >
             <NextLink href="/">
               <LangGraphLogoSVG className="!h-4 !w-auto flex-shrink-0" />
-              <div className="grid flex-1 pl-2 text-left text-sm leading-tight transition-all group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:opacity-0">
+              <div className="grid flex-1 pl-0 text-left text-sm leading-none transition-all group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:opacity-0">
                 <span className="truncate font-semibold">
                   Open Agent Platform
                 </span>

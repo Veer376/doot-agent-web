@@ -78,9 +78,9 @@ export function Composer({
 
   return (
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
-      <div //container-textfield-radius
+      <div //container-textfield-radius, padding except at the top.
         className={cn(
-          "focus-within:border-aui-ring/20 flex min-h-[64px] w-full flex-col rounded-3xl border bg-white px-2.5 shadow-sm transition-colors ease-in",
+          "focus-within:border-aui-ring/20 flex min-h-[64px] w-full flex-col rounded-3xl border bg-white px-3 pb-3 shadow-sm transition-colors ease-in overflow-clip",
           className,
         )}
       >
@@ -99,7 +99,7 @@ export function Composer({
           className="flex w-full flex-col"
         >
           {/* Text Field Section - Middle (grows/shrinks independently) */}
-          <div className="w-full flex-1 px-2">
+          <div className="flex flex-1 min-h-0">
             <textarea
               name="input"
               value={value}
@@ -109,25 +109,25 @@ export function Composer({
               placeholder={placeholder}
               disabled={disabled}
               rows={1}
-              className="placeholder:text-muted-foreground field-sizing-content max-h-40 w-full resize-none border-none bg-transparent py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
+              className="flex-1 placeholder:text-muted-foreground px-2 field-sizing-content max-h-52 w-full resize-none border-none bg-transparent py-4 text-sm outline-none focus:ring-0 disabled:cursor-not-allowed"
             />
           </div>
 
           {/* Actions Bar Section - Bottom (fixed height) */}
-          <div className="flex w-full flex-row items-center justify-between py-2">
+          <div className="flex w-full flex-row items-center justify-between p-0.5">
             {/* Left: ComposerActionsPopOut */}
             <div className="flex-shrink-0">
               <ComposerActionsPopOut onFileUpload={onFileUpload} />
             </div>
 
             {/* Right: Send/Cancel Button button got replaced with acertinity animated design. */}
-            <div className="relative h-8 w-12 flex-shrink-0">
+            <div className="relative h-8 flex-shrink-0">
               {isLoading ? (
                 <button
                   type="button"
                   onClick={onCancel}
                   aria-label="Cancel"
-                  className="absolute top-1/2 right-2 z-50 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black text-white transition duration-200 hover:bg-black/90 dark:bg-zinc-900"
+                  className="relative top-1/2 z-50 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black text-white transition duration-200 hover:bg-black/90 dark:bg-zinc-900"
                 >
                   <CancelIcon size="sm" />
                 </button>
@@ -135,7 +135,7 @@ export function Composer({
                 <button
                   disabled={disabled || !value}
                   type="submit"
-                  className="absolute top-1/2 right-2 z-50 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black transition duration-300 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
+                  className="relative top-1/2 z-50 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black transition duration-300 disabled:bg-gray-200 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
                 >
                   <motion.svg
                     xmlns="http://www.w3.org/2000/svg"

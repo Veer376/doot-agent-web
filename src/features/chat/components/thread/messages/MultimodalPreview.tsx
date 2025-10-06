@@ -8,7 +8,7 @@ export interface MultimodalPreviewProps {
   removable?: boolean;
   onRemove?: () => void;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
@@ -29,14 +29,19 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     let imgClass: string = "rounded-md object-cover h-16 w-16 text-lg";
     if (size === "sm") imgClass = "rounded-md object-cover h-10 w-10 text-base";
     if (size === "lg") imgClass = "rounded-md object-cover h-24 w-24 text-xl";
+    if (size === "xl") imgClass = "rounded-md object-cover h-32 w-32 text-2xl";
     return (
       <div className={cn("relative inline-block", className)}>
         <Image
           src={url}
           alt={String(block.metadata?.name || "uploaded image")}
           className={imgClass}
-          width={size === "sm" ? 16 : size === "md" ? 32 : 48}
-          height={size === "sm" ? 16 : size === "md" ? 32 : 48}
+          width={
+            size === "sm" ? 16 : size === "md" ? 32 : size === "lg" ? 48 : 64
+          }
+          height={
+            size === "sm" ? 16 : size === "md" ? 32 : size === "lg" ? 48 : 64
+          }
         />
         {removable && (
           <button

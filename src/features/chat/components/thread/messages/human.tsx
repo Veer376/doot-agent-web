@@ -115,11 +115,12 @@ export function HumanMessage({
                 {message.content.reduce<React.ReactNode[]>(
                   (acc, block, idx) => {
                     if (isBase64ContentBlock(block)) {
+                      // Increase beyond lg: use new xl size for images in sent human messages
                       acc.push(
                         <MultimodalPreview
                           key={idx}
                           block={block}
-                          size="md"
+                          size="xl"
                         />,
                       );
                     }

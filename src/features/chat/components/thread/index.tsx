@@ -6,6 +6,8 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useImperativeHandle,
+  forwardRef,
 } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -111,6 +113,9 @@ export function Thread() {
 
   const lastError = useRef<string | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState("");
+  // Bridge to access StickToBottom API from within this component
+  type StickApiHandle = { isAtBottom: boolean; scrollToBottom: () => void };
+  const stickApiRef = useRef<StickApiHandle | null>(null);
 
   useEffect(() => {
     if (!stream.error) {
@@ -192,6 +197,12 @@ export function Thread() {
     );
 
     setContentBlocks([]);
+
+    // If user submits while scrolled up, politely re-pin so they see the response
+    const api = stickApiRef.current;
+    if (api && !api.isAtBottom) {
+      api.scrollToBottom();
+    }
   };
 
   const handleRegenerate = (
@@ -226,9 +237,18 @@ export function Thread() {
     (m) => m.type === "ai" || m.type === "tool",
   );
 
+  const StickApi = forwardRef<StickApiHandle>(function StickApi(_props, ref) {
+    const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+    useImperativeHandle(ref, () => ({ isAtBottom, scrollToBottom }), [
+      isAtBottom,
+      scrollToBottom,
+    ]);
+    return null;
+  });
+
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <StickToBottom className="relative flex-1 min-w-0 overflow-hidden">
+      <StickToBottom className="relative min-w-0 flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-auto px-4",
@@ -291,6 +311,8 @@ export function Thread() {
           }
           footer={
             <div className="bg-background sticky bottom-0 flex flex-col items-center gap-8">
+              {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
+              <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
                   <LangGraphLogoSVG className="h-8 flex-shrink-0" />
@@ -305,7 +327,7 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "relative z-10 mx-auto pb-5 w-full min-w-0 max-w-2xl transition-all",
+                  "relative z-10 mx-auto w-full max-w-2xl min-w-0 pb-5 transition-all",
                   dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >

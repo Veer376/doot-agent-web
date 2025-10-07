@@ -62,9 +62,12 @@ import {
   Wrench02Icon,
   AiBrain03Icon,
   AiBrain04Icon,
-  Wrench01Icon
+  Wrench01Icon,
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
+// Additional icons
+// Note: NoSignal icon isn't available in current hugeicons version; using SignalIcon as a fallback
+import { SignalIcon as NoSignalHugeIcon } from "hugeicons-react";
 
 // ============================================
 // SIZE SYSTEM
@@ -349,6 +352,17 @@ export const MoreVerticalMenuIcon: React.FC<AppIconProps> = (props) => (
 );
 
 // ============================================
+// STATUS / EMPTY STATE ICONS
+// ============================================
+
+export const NoSignalIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={NoSignalHugeIcon}
+    {...props}
+  />
+);
+
+// ============================================
 // ICON VARIANTS
 // ============================================
 
@@ -391,4 +405,5 @@ export default {
   Cancel: CancelIcon,
   Delete: DeleteIcon,
   MoreVerticalMenu: MoreVerticalMenuIcon,
+  NoSignal: NoSignalIcon,
 };

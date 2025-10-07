@@ -1,7 +1,8 @@
 "use client";
 
 import { useThreads } from "@/hooks/use-threads";
-import { FileClock, Search } from "lucide-react";
+// Use shared app icons for consistency
+import { NoSignalIcon, SearchIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -30,12 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  SearchIcon,
-  MoreVerticalMenuIcon,
-  EditIcon,
-  DeleteIcon,
-} from "@/components/icons";
+import { MoreVerticalMenuIcon, EditIcon, DeleteIcon } from "@/components/icons";
 import { MessageContent } from "@langchain/core/messages";
 
 // Utility: Extract text content from MessageContent
@@ -120,7 +116,7 @@ export function ThreadList() {
             onClick={() => setSearchOpen(true)}
             title="Search chats"
           >
-            <Search className="h-4 w-4" />
+            <SearchIcon size="xs" />
           </SidebarGroupAction>
         </SidebarGroupLabel>
         <SidebarMenu>
@@ -136,7 +132,7 @@ export function ThreadList() {
 
           {!isLoading && filteredThreads.length === 0 && (
             <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
-              <FileClock className="h-8 w-8" />
+              <NoSignalIcon size="xl" />
               <p className="text-sm">
                 {searchQuery ? "No threads found" : "No threads yet"}
               </p>

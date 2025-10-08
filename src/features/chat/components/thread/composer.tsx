@@ -2,7 +2,6 @@
 
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
-// import { ComposerActionsPopOut } from "./composer-actions-popout";
 import { ComposerSegmentedControl } from "./composer-segmented-control";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
 import { CancelIcon } from "@/components/icons";

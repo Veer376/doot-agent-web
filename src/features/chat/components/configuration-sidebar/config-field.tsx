@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { useRagContext } from "@/features/rag/providers/RAG";
 import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
 import {
   Command,
@@ -36,7 +35,6 @@ import { cn } from "@/lib/utils";
 import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
-  ConfigurableFieldRAGMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
@@ -400,127 +398,6 @@ export function ConfigFieldTool({
           {description}
         </p>
       )}
-    </div>
-  );
-}
-
-export function ConfigFieldRAG({
-  id,
-  label,
-  agentId,
-  className,
-  value: externalValue, // Rename to avoid conflict
-  setValue: externalSetValue, // Rename to avoid conflict
-}: Pick<
-  ConfigFieldProps,
-  "id" | "label" | "agentId" | "className" | "value" | "setValue"
->) {
-  const { collections } = useRagContext();
-  const store = useConfigStore();
-  const actualAgentId = `${agentId}:rag`;
-  const [open, setOpen] = useState(false);
-
-  const isExternallyManaged = externalSetValue !== undefined;
-
-  const defaults = (
-    isExternallyManaged
-      ? externalValue
-      : store.configsByAgentId[actualAgentId]?.[label]
-  ) as ConfigurableFieldRAGMetadata["default"];
-
-  if (!defaults) {
-    return null;
-  }
-
-  const selectedCollections = defaults.collections?.length
-    ? defaults.collections
-    : [];
-
-  const handleSelect = (collectionId: string) => {
-    const newValue = selectedCollections.some((s) => s === collectionId)
-      ? selectedCollections.filter((s) => s !== collectionId)
-      : [...selectedCollections, collectionId];
-
-    if (isExternallyManaged) {
-      externalSetValue({
-        ...defaults,
-        collections: Array.from(new Set(newValue)),
-      });
-      return;
-    }
-
-    store.updateConfig(actualAgentId, label, {
-      ...defaults,
-      collections: Array.from(new Set(newValue)),
-    });
-  };
-
-  const getCollectionNameFromId = (collectionId: string) => {
-    const collection = collections.find((c) => c.uuid === collectionId);
-    return collection?.name ?? "Unknown Collection";
-  };
-
-  return (
-    <div className={cn("flex w-full flex-col items-start gap-2", className)}>
-      <Label
-        htmlFor={id}
-        className="text-sm font-medium"
-      >
-        Selected Collections
-      </Label>
-      <Popover
-        open={open}
-        onOpenChange={setOpen}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-          >
-            {selectedCollections.length > 0
-              ? selectedCollections.length > 1
-                ? `${selectedCollections.length} collections selected`
-                : getCollectionNameFromId(selectedCollections[0])
-              : "Select collections"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-full p-0"
-          align="start"
-        >
-          <Command className="w-full">
-            <CommandInput placeholder="Search collections..." />
-            <CommandList>
-              <CommandEmpty>No collections found.</CommandEmpty>
-              <CommandGroup>
-                {collections.map((collection) => (
-                  <CommandItem
-                    key={collection.uuid}
-                    value={collection.uuid}
-                    onSelect={() => handleSelect(collection.uuid)}
-                    className="flex items-center justify-between"
-                  >
-                    <Check
-                      className={cn(
-                        "ml-auto h-4 w-4",
-                        selectedCollections.includes(collection.uuid)
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                    <p className="line-clamp-1 flex-1 truncate pr-2">
-                      {collection.name}
-                    </p>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AgentIcon, ToolsIcon, RAGIcon } from "@/components/icons";
+import { AgentIcon, ToolsIcon } from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 import { NavMain } from "./nav-main";
@@ -28,11 +28,6 @@ const data = {
       title: "Tools",
       url: "/tools",
       icon: ToolsIcon,
-    },
-    {
-      title: "RAG",
-      url: "/rag",
-      icon: RAGIcon,
     },
   ],
 };

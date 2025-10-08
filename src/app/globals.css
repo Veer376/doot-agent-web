@@ -375,6 +375,15 @@
   .dark *::-webkit-scrollbar-track-piece {
     background: transparent;
   }
+
+  /* Avatar: apply tokenized radius by default and inherit on children */
+  [data-slot="avatar"] {
+    border-radius: var(--radius-lg);
+  }
+  [data-slot="avatar-image"],
+  [data-slot="avatar-fallback"] {
+    border-radius: inherit;
+  }
 }
 
 /* ============================================

@@ -1,10 +1,6 @@
 import { forwardRef, ForwardedRef } from "react";
 import { motion } from "framer-motion";
-import {
-  Settings,
-  EllipsisVertical,
-  ChevronRight,
-} from "lucide-react";
+import { Settings, EllipsisVertical, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -46,7 +42,7 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
             variant="outline"
             size="icon"
             className={cn(
-              "bg-background hover:bg-muted rounded-full transition-all",
+              "bg-background hover:bg-muted cursor-pointer rounded-lg transition-all",
               isSidebarOpen ? "opacity-100 shadow-lg" : "opacity-0 shadow-none",
             )}
             onClick={() => {
@@ -73,7 +69,7 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
               variant="outline"
               size="icon"
               className={cn(
-                "bg-background hover:bg-muted size-9 rounded-full shadow-xs hover:cursor-pointer",
+                "bg-background hover:bg-muted size-9 cursor-pointer rounded-lg shadow-xs",
                 isSidebarOpen && "shadow-lg",
               )}
               onClick={handleConfigClick}

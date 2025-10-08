@@ -310,7 +310,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="bg-background sticky bottom-0 flex flex-col items-center gap-8">
+            <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-gradient-to-b from-transparent from-0% to-background to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (
@@ -327,7 +327,7 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "relative z-10 mx-auto w-full max-w-2xl min-w-0 pb-5 transition-all",
+                  "relative z-10 mx-auto w-full max-w-2xl min-w-0 pb-3 transition-all",
                   dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >

@@ -104,7 +104,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 group-data-[collapsible=icon]:p-0!"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 cursor-pointer group-data-[collapsible=icon]:p-0!"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage

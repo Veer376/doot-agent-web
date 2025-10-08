@@ -76,9 +76,9 @@ function ScrollToBottom(props: { className?: string }) {
   if (isAtBottom) return null;
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="icon"
-      className={cn("rounded-full", props.className)}
+      className={cn("cursor-pointer rounded-full", props.className)}
       onClick={() => scrollToBottom()}
     >
       <ArrowDownIcon />
@@ -310,7 +310,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-gradient-to-b from-transparent from-0% to-background to-40%">
+            <div className="to-background sticky bottom-0 flex flex-col items-center gap-8 bg-gradient-to-b from-transparent from-0% to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (

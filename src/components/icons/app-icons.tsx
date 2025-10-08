@@ -66,7 +66,9 @@ import {
   SidebarLeft01Icon as SidebarLeft01HugeIcon,
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
+  AiChat01Icon as Chat01HugeIcon,
 } from "hugeicons-react";
+
 import { cn } from "@/lib/utils";
 // Additional icons
 // Note: NoSignal icon isn't available in current hugeicons version; using SignalIcon as a fallback
@@ -78,13 +80,12 @@ import { SignalIcon as NoSignalHugeIcon } from "hugeicons-react";
 
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | number;
 
-// Global default size - change this to adjust all icons at once
 const DEFAULT_ICON_SIZE: IconSize = "sm";
 
 const SIZE_MAP: Record<string, number> = {
   xs: 16, // size-4
   sm: 20, // size-5
-  md: 24, // size-6  ← DEFAULT
+  md: 24, // size-6
   lg: 28, // size-7
   xl: 32, // size-8
 };
@@ -142,6 +143,17 @@ const IconWrapper: React.FC<{
     />
   );
 };
+
+
+
+
+// Chat icon for segmented control
+export const ChatIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Chat01HugeIcon}
+    {...props}
+  />
+);
 
 // ============================================
 // SIDEBAR & NAVIGATION ICONS
@@ -436,4 +448,5 @@ export default {
   SidebarLeft01: SidebarLeft01Icon,
   SidebarRight01: SidebarRight01Icon,
   Menu11: Menu11Icon,
+  Chat: ChatIcon,
 };

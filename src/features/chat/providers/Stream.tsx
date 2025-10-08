@@ -44,19 +44,24 @@ type StreamContextType = ReturnType<typeof useTypedStream>;
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 // PHASE 3: Agent Context for accessing agentId without URL
+// PHASE 4: Add isChatMode to separate UI mode from agent selection
 type AgentContextType = {
   agentId: string;
   setAgentId: (agentId: string) => void;
+  isChatMode: boolean;
+  setChatMode: (isChatMode: boolean) => void;
 };
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
 
 const StreamSession = ({
   children,
   agentId,
+  isChatMode,
   accessToken,
 }: {
   children: ReactNode;
   agentId: string;
+  isChatMode: boolean;
   accessToken?: string;
 }) => {
   if (!accessToken) {
@@ -69,9 +74,14 @@ const StreamSession = ({
   // Phase 2: Thread-Agent Persistence
   const { saveThreadAgent } = useThreadAgent();
 
+  // PHASE 4: Compute effective agentId based on chat mode
+  // When in chat mode, use "chat" as the assistant ID for backend
+  // Otherwise, use the actual selected agent ID
+  const effectiveAgentId = isChatMode ? "chat" : agentId;
+
   const streamValue = useTypedStream({
     apiUrl: process.env.NEXT_PUBLIC_API_URL,
-    assistantId: agentId,
+    assistantId: effectiveAgentId,
     threadId: threadId ?? null,
     onCustomEvent: (event, options) => {
       options.mutate((prev) => {
@@ -84,7 +94,10 @@ const StreamSession = ({
 
       // Phase 2: Save thread-agent mapping when thread is created
       // This ensures new threads remember which agent was used
-      saveThreadAgent(id, agentId);
+      // PHASE 4: Only save actual agent IDs, not chat mode
+      if (!isChatMode) {
+        saveThreadAgent(id, agentId);
+      }
 
       // Invalidate thread list cache to show new thread immediately
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
@@ -112,6 +125,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // PHASE 3: Remove agentId from URL, use localStorage instead
   const [threadId] = useQueryState("threadId");
   const [agentId, setAgentId] = useState<string>("");
+  // PHASE 4: Separate chat mode state from agentId
+  const [isChatMode, setChatMode] = useState<boolean>(false);
   const { getThreadAgent, getLastUsedAgent, saveThreadAgent } =
     useThreadAgent();
 
@@ -174,7 +189,9 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // REFACTOR: Wrap everything in AgentContext.Provider
   // This makes agentId available to both agent selector AND children
   return (
-    <AgentContext.Provider value={{ agentId, setAgentId }}>
+    <AgentContext.Provider
+      value={{ agentId, setAgentId, isChatMode, setChatMode }}
+    >
       {!session?.accessToken ? (
         // No access token - show error
         <>
@@ -185,6 +202,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         // Has agentId and access token - show stream session
         <StreamSession
           agentId={agentId}
+          isChatMode={isChatMode}
           accessToken={session.accessToken}
         >
           {children}

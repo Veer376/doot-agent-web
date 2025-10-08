@@ -33,13 +33,12 @@ export function NavMain({
             href={item.url}
             key={`${item.title}-${index}`}
           >
-            <SidebarMenuItem
-              className={cn(
-                pathname === item.url &&
-                  "bg-sidebar-accent text-sidebar-accent-foreground",
-              )}
-            >
-              <SidebarMenuButton tooltip={item.title}>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip={item.title}
+                // Treat "/" as an action link: don't mark it active to avoid persistent highlight
+                isActive={item.url !== "/" && pathname === item.url}
+              >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
               </SidebarMenuButton>

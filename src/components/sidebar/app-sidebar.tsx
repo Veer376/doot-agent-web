@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { AgentIcon, ToolsIcon } from "@/components/icons";
-import { useRouter } from "next/navigation";
+import { AgentIcon, NewThreadIcon } from "@/components/icons";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { ThreadList } from "./thread-list";
-import { PrimaryActions } from "./primary-actions";
 import {
   Sidebar,
   SidebarContent,
@@ -20,26 +18,19 @@ import { SiteHeader } from "./sidebar-header";
 const data = {
   navMain: [
     {
+      title: "New Thread",
+      url: "/",
+      icon: NewThreadIcon,
+    },
+    {
       title: "Agents",
       url: "/agents",
       icon: AgentIcon,
-    },
-    {
-      title: "Tools",
-      url: "/tools",
-      icon: ToolsIcon,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
-
-  const handleNewChat = () => {
-    // Navigate to base path without threadId (creates new thread)
-    router.push("/");
-  };
-
   return (
     <Sidebar
       collapsible="icon"
@@ -47,7 +38,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <PrimaryActions onNewChat={handleNewChat} />
         <NavMain items={data.navMain} />
         <ThreadList />
       </SidebarContent>

@@ -4,11 +4,11 @@ import { Tool } from "@/types/tool";
 import { useState } from "react";
 
 function getMCPUrlOrThrow() {
-  if (!process.env.NEXT_PUBLIC_BASE_API_URL) {
-    throw new Error("NEXT_PUBLIC_BASE_API_URL is not defined");
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL is not defined");
   }
 
-  const url = new URL(process.env.NEXT_PUBLIC_BASE_API_URL);
+  const url = new URL(process.env.NEXT_PUBLIC_API_URL);
   url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
   return url;
 }

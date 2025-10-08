@@ -4,15 +4,11 @@ import { AgentInbox } from "@/components/agent-inbox";
 import React from "react";
 import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu11Icon } from "@/components/icons";
 import { Toaster } from "@/components/ui/sonner";
 import { InboxSidebar, InboxSidebarTrigger } from "@/components/inbox-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
+import {} from "@/components/ui/breadcrumb";
 
 export default function InboxPage(): React.ReactNode {
   return (
@@ -20,23 +16,12 @@ export default function InboxPage(): React.ReactNode {
       <Toaster />
       <ThreadsProvider>
         <div className="flex min-h-full w-full flex-row">
-          {/* Header */}
+          {/* Main content with a mobile-only menu trigger */}
           <div className="w-full">
-            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>Inbox</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
+            <header className="flex items-center gap-2 px-4 py-2 md:hidden">
+              <SidebarTrigger icon={<Menu11Icon />} />
             </header>
 
-            {/* Main content */}
             <div className="flex h-full w-full flex-col">
               <AgentInbox />
             </div>

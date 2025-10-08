@@ -116,7 +116,7 @@ export function ThreadList() {
             onClick={() => setSearchOpen(true)}
             title="Search chats"
           >
-            <SearchIcon size="xs" />
+            <SearchIcon />
           </SidebarGroupAction>
         </SidebarGroupLabel>
         <SidebarMenu>

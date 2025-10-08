@@ -63,6 +63,9 @@ import {
   AiBrain03Icon,
   AiBrain04Icon,
   Wrench01Icon,
+  SidebarLeft01Icon as SidebarLeft01HugeIcon,
+  SidebarRight01Icon as SidebarRight01HugeIcon,
+  Menu11Icon as Menu11HugeIcon,
 } from "hugeicons-react";
 import { cn } from "@/lib/utils";
 // Additional icons
@@ -363,6 +366,30 @@ export const NoSignalIcon: React.FC<AppIconProps> = (props) => (
 );
 
 // ============================================
+// SIDEBAR STATE ICONS (Left/Right/Menu)
+// ============================================
+export const SidebarLeft01Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={SidebarLeft01HugeIcon}
+    {...props}
+  />
+);
+
+export const SidebarRight01Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={SidebarRight01HugeIcon}
+    {...props}
+  />
+);
+
+export const Menu11Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Menu11HugeIcon}
+    {...props}
+  />
+);
+
+// ============================================
 // ICON VARIANTS
 // ============================================
 
@@ -406,4 +433,7 @@ export default {
   Delete: DeleteIcon,
   MoreVerticalMenu: MoreVerticalMenuIcon,
   NoSignal: NoSignalIcon,
+  SidebarLeft01: SidebarLeft01Icon,
+  SidebarRight01: SidebarRight01Icon,
+  Menu11: Menu11Icon,
 };

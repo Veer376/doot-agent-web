@@ -4,7 +4,6 @@ import { startCase } from "lodash";
 import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
-import { getDeployments } from "@/lib/environment/deployments";
 import { toast } from "sonner";
 
 export function prettifyText(action: string) {

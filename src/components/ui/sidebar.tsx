@@ -43,6 +43,7 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
  * - state: expanded | collapsed
  * - open/openMobile: current visibility for desktop/mobile
  * - toggleSidebar: helper that toggles based on current device
+ * - railHovered: shared hover state for the sidebar rail
  */
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
@@ -52,6 +53,8 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  railHovered: boolean;
+  setRailHovered: (hovered: boolean) => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -91,6 +94,7 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const [railHovered, setRailHovered] = React.useState(false);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -145,8 +149,19 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      railHovered,
+      setRailHovered,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      railHovered,
+    ],
   );
 
   return (
@@ -328,7 +343,7 @@ function SidebarTrigger({
  * It overlays the edge and toggles the sidebar on click.
  */
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, setRailHovered } = useSidebar();
 
   return (
     <button
@@ -337,6 +352,8 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       aria-label="Toggle Sidebar"
       tabIndex={-1}
       onClick={toggleSidebar}
+      onMouseEnter={() => setRailHovered(true)}
+      onMouseLeave={() => setRailHovered(false)}
       title="Toggle Sidebar"
       className={cn(
         "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",

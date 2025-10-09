@@ -67,6 +67,7 @@ import {
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
   AiChat01Icon as Chat01HugeIcon,
+  Orbit01Icon
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -418,6 +419,13 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
   return isExpanded ? <FoldIcon {...props} /> : <UnfoldIcon {...props} />;
 };
 
+
+export const OrbitIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Orbit01Icon}
+    {...props}
+  />
+);
 // ============================================
 // EXPORTS
 // ============================================
@@ -449,4 +457,5 @@ export default {
   SidebarRight01: SidebarRight01Icon,
   Menu11: Menu11Icon,
   Chat: ChatIcon,
+  Orbit: OrbitIcon,
 };

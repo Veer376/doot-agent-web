@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LangGraphLogoSVG } from "../icons/langgraph";
+import { OrbitIcon } from "@/components/icons/app-icons";
 import {
   Menu11Icon,
   SidebarLeft01Icon,
@@ -17,8 +17,12 @@ import {
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
-  const { state, toggleSidebar, isMobile } = useSidebar();
+  const { state, toggleSidebar, isMobile, railHovered } = useSidebar();
   const [hovered, setHovered] = React.useState(false);
+
+  // Combine local hover state with rail hover state
+  const isHovered = hovered || railHovered;
+
   return (
     <SidebarHeader>
       <SidebarMenu>
@@ -29,16 +33,16 @@ export function SiteHeader() {
             className={cn("flex h-8 items-center gap-2 p-2", "hidden md:flex")}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            onClick={() => hovered && toggleSidebar()}
+            onClick={() => isHovered && toggleSidebar()}
           >
-            {hovered ? (
+            {isHovered ? (
               state === "expanded" ? (
                 <SidebarLeft01Icon size="sm" />
               ) : (
                 <SidebarRight01Icon size="sm" />
               )
             ) : (
-              <LangGraphLogoSVG className="!h-4 !w-auto flex-shrink-0" />
+              <OrbitIcon />
             )}
             {/* Keep brand name visible only when not collapsed */}
             <div className="grid flex-1 pl-0 text-left text-sm leading-none transition-all group-data-[collapsible=icon]:opacity-0">

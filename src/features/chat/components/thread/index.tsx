@@ -22,7 +22,6 @@ import {
   AssistantMessageLoading,
 } from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
-import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ArrowDown, LoaderCircle, AlertCircle } from "lucide-react";
 import { ArrowDownIcon } from "@/components/icons";
@@ -44,6 +43,7 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { useThreadAgent } from "@/hooks/use-thread-agent";
+import { OrbitIcon } from "@/components/icons";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -315,7 +315,7 @@ export function Thread() {
               <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
-                  <LangGraphLogoSVG className="h-8 flex-shrink-0" />
+                  <OrbitIcon />
                   <h1 className="text-2xl font-semibold tracking-tight">
                     Open Agent Platform
                   </h1>

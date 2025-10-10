@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Open Agent Platform - Auth",
-  description: "Open Agent Platform by LangChain",
+  title: "Orbit Agent - Auth",
+  description: "Handoff complexity to Orbit",
 };
 
 export default function Layout({

@@ -63,6 +63,18 @@ module.exports = {
   theme: {
     extend: {
       /**
+       * FONT FAMILIES
+       * 
+       * Geist font family variables configured in layout.tsx
+       * - sans: Geist Sans for body text and UI
+       * - mono: Geist Mono for code blocks
+       */
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        mono: ["var(--font-mono)"],
+      },
+
+      /**
        * CUSTOM UTILITIES
        * 
        * Project-specific utility classes.

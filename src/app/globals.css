@@ -11,12 +11,24 @@
  * and our new design system tokens.
  * 
  * STRUCTURE:
- * 1. Existing shadcn/ui variables (background, foreground, primary, etc.)
- * 2. New design system variables (brand colors, semantic colors, neutral scale)
- * 3. Theme inline mappings (for Tailwind CSS v4)
- * 4. Base styles
- * 5. Utility classes
+ * 1. Font families (Geist Sans & Mono)
+ * 2. Existing shadcn/ui variables (background, foreground, primary, etc.)
+ * 3. New design system variables (brand colors, semantic colors, neutral scale)
+ * 4. Theme inline mappings (for Tailwind CSS v4)
+ * 5. Base styles
+ * 6. Utility classes
  */
+
+/* ============================================
+   FONT FAMILIES
+   ============================================ */
+:root {
+  /* Geist Sans for body text and UI */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  /* Geist Mono for code blocks and technical content */
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
 
 /* ============================================
    EXISTING SHADCN/UI VARIABLES (Light Mode)
@@ -288,9 +300,18 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Code and preformatted text use Geist Mono */
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
   }
 
   /* Global Scrollbar Styling - Thin & Modern - Only visible thumb */

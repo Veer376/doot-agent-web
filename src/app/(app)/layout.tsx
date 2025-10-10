@@ -16,8 +16,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Open Agent Platform",
-  description: "Open Agent Platform by LangChain",
+  title: "Orbit Agent",
+  description: "Handoff complexity to Orbit",
 };
 
 export default function RootLayout({

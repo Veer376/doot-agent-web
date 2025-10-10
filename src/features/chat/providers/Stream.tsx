@@ -75,9 +75,9 @@ const StreamSession = ({
   const { saveThreadAgent } = useThreadAgent();
 
   // PHASE 4: Compute effective agentId based on chat mode
-  // When in chat mode, use "chat" as the assistant ID for backend
+  // When in chat mode, use "chat_mode" as the assistant ID for backend
   // Otherwise, use the actual selected agent ID
-  const effectiveAgentId = isChatMode ? "chat" : agentId;
+  const effectiveAgentId = isChatMode ? "chat_mode" : agentId;
 
   const streamValue = useTypedStream({
     apiUrl: process.env.NEXT_PUBLIC_API_URL,

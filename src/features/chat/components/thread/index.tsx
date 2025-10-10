@@ -33,16 +33,11 @@ import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-respons
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
-import { useAgentsContext } from "@/providers/Agents";
-import {
-  isUserSpecifiedDefaultAgent,
-  requiresApiKeysButNotSet,
-} from "@/lib/agent-utils";
+import { requiresApiKeysButNotSet, } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
-import { useThreadAgent } from "@/hooks/use-thread-agent";
 import { OrbitIcon } from "@/components/icons";
 
 function StickyToBottomContent(props: {
@@ -110,6 +105,11 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+
+  // Handle cancellation of the current stream
+  const handleCancel = useCallback(() => {
+    stream.stop();
+  }, [stream]);
 
   const lastError = useRef<string | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState("");
@@ -251,7 +251,7 @@ export function Thread() {
       <StickToBottom className="relative min-w-0 flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
-            "absolute inset-0 overflow-y-auto px-4",
+            "absolute inset-0 overflow-y-auto px-4 transition-all duration-500 ease-out",
             !hasMessages &&
               !threadId &&
               "mt-[25vh] flex flex-col items-stretch",
@@ -317,7 +317,7 @@ export function Thread() {
                 <div className="flex items-center gap-3">
                   <OrbitIcon />
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    Open Agent Platform
+                    Orbit Agent
                   </h1>
                 </div>
               )}
@@ -338,6 +338,7 @@ export function Thread() {
                     setHasInput(!!e.target.value.trim());
                   }}
                   onSubmit={handleSubmit}
+                  onCancel={handleCancel}
                   onPaste={handlePaste}
                   onKeyDown={(e) => {
                     if (
@@ -356,6 +357,7 @@ export function Thread() {
                   contentBlocks={contentBlocks}
                   onRemoveBlock={removeBlock}
                   onFileUpload={handleFileUpload}
+                  focusKey={threadId}
                 />
               </div>
             </div>

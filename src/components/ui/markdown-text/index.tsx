@@ -118,6 +118,18 @@ const defaultComponents: any = {
       {...props}
     />
   ),
+  strong: ({ className, ...props }: { className?: string }) => (
+    <strong
+      className={cn("font-semibold", className)}
+      {...props}
+    />
+  ),
+  em: ({ className, ...props }: { className?: string }) => (
+    <em
+      className={cn("italic", className)}
+      {...props}
+    />
+  ),
   a: ({ className, ...props }: { className?: string }) => (
     <a
       className={cn(
@@ -236,7 +248,7 @@ const defaultComponents: any = {
 
     return (
       <code
-        className={cn("rounded font-semibold", className)}
+        className={cn("from-normal rounded", className)}
         {...props}
       >
         {children}

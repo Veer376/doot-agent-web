@@ -48,6 +48,7 @@ import {
   PencilEdit02Icon,
   Delete03Icon,
   Cancel01Icon,
+  StopIcon as StopHugeIcon,
   Edit01Icon,
   SentIcon,
   Copy01Icon,
@@ -67,7 +68,7 @@ import {
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
   AiChat01Icon as Chat01HugeIcon,
-  Orbit01Icon
+  Orbit01Icon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -144,9 +145,6 @@ const IconWrapper: React.FC<{
     />
   );
 };
-
-
-
 
 // Chat icon for segmented control
 export const ChatIcon: React.FC<AppIconProps> = (props) => (
@@ -305,6 +303,13 @@ export const CancelIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
+export const StopIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={StopHugeIcon}
+    {...props}
+  />
+);
+
 // ============================================
 // DESTRUCTIVE ICONS (Custom Styled)
 // ============================================
@@ -418,7 +423,6 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
 }) => {
   return isExpanded ? <FoldIcon {...props} /> : <UnfoldIcon {...props} />;
 };
-
 
 export const OrbitIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper

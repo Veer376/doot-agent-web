@@ -1,7 +1,10 @@
 import { parsePartialJson } from "@langchain/core/output_parsers";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
-import { getContentString } from "@/features/chat/utils/content-string";
+import {
+  getContentString,
+  getThinkingBlocks,
+} from "@/features/chat/utils/content-string";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
@@ -9,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
+import { ThinkingBlock } from "./thinking-block";
 
 function CustomComponent({
   message,
@@ -77,9 +81,14 @@ export function AssistantMessage({
 }) {
   const content = message?.content ?? [];
   const contentString = getContentString(content);
+  const thinkingBlocks = getThinkingBlocks(content);
 
   const thread = useStreamContext();
   const meta = message ? thread.getMessagesMetadata(message) : undefined;
+
+  // Extract usage metadata for thinking token count
+  const usageMetadata =
+    message && "usage_metadata" in message ? message.usage_metadata : undefined;
 
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
   const anthropicStreamedToolCalls = Array.isArray(content)
@@ -105,8 +114,17 @@ export function AssistantMessage({
         <ToolResult message={message} />
       ) : (
         <div className="flex flex-col gap-2">
+          {/* Render chain of thoughts timeline */}
+          {thinkingBlocks.length > 0 && (
+            <ThinkingBlock
+              thinkingBlocks={thinkingBlocks}
+              usageMetadata={usageMetadata}
+            />
+          )}
+
+          {/* Render regular content */}
           {contentString.length > 0 && (
-            <div className="py-1">
+            <div className="py-1 text-[0.95em]">
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}

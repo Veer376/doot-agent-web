@@ -69,6 +69,10 @@ import {
   Menu11Icon as Menu11HugeIcon,
   AiChat01Icon as Chat01HugeIcon,
   Orbit01Icon,
+  Note02Icon as Note02HugeIcon,
+  Alert02Icon as Alert02HugeIcon,
+  TipsIcon as TipsHugeIcon,
+  TaskDaily02Icon as TaskDaily02HugeIcon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -353,7 +357,7 @@ export const CheckmarkCircleIcon: React.FC<AppIconProps> = ({
 }) => (
   <IconWrapper
     icon={CheckmarkCircle04Icon}
-    className={cn("text-green-500", className)}
+    className={cn("text-green-600", className)}
     {...props}
   />
 );
@@ -430,6 +434,38 @@ export const OrbitIcon: React.FC<AppIconProps> = (props) => (
     {...props}
   />
 );
+
+// ============================================
+// CALLOUT ICONS
+// ============================================
+
+export const Note02Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Note02HugeIcon}
+    {...props}
+  />
+);
+
+export const Alert02Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Alert02HugeIcon}
+    {...props}
+  />
+);
+
+export const TipsIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={TipsHugeIcon}
+    {...props}
+  />
+);
+
+export const TaskDaily02Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={TaskDaily02HugeIcon}
+    {...props}
+  />
+);
 // ============================================
 // EXPORTS
 // ============================================
@@ -462,4 +498,8 @@ export default {
   Menu11: Menu11Icon,
   Chat: ChatIcon,
   Orbit: OrbitIcon,
+  Note02: Note02Icon,
+  Alert02: Alert02Icon,
+  Tips: TipsIcon,
+  TaskDaily02: TaskDaily02Icon,
 };

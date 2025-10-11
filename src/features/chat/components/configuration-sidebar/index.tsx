@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ConfigField,
   ConfigFieldAgents,
-  ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";

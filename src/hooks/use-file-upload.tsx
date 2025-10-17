@@ -198,7 +198,7 @@ export function useFileUpload({
    * Can be used as onPaste={handlePaste} on a textarea or input
    */
   const handlePaste = async (
-    e: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>,
+    e: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement | HTMLDivElement>,
   ) => {
     const items = e.clipboardData.items;
     if (!items) return;

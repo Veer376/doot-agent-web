@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDown01Icon } from "hugeicons-react";
-import { AiBrain03Icon, CheckmarkSquare01Icon } from "hugeicons-react";
+import { AiBrain03Icon, CheckmarkSquare01Icon, NeuralNetworkIcon } from "hugeicons-react";
 import { CheckmarkCircleIcon } from "@/components/icons"
+import { Shimmer } from '@/components/ai-elements/shimmer';
 
 interface ThinkingStep {
   heading: string;
@@ -35,7 +36,7 @@ export function ThinkingBlock({ thinkingBlocks, usageMetadata }: ThinkingBlockPr
         className="group flex w-full items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
       >
         {/* Icon */}
-        <AiBrain03Icon 
+        <NeuralNetworkIcon
           className="h-5 w-5 flex-shrink-0"
         />
 

@@ -101,7 +101,7 @@ const defaultComponents: any = {
     if (!match) {
       return (
         <p
-          className={cn("mt-5 mb-5 leading-7 first:mt-0 last:mb-0", className)}
+          className={cn("mt-4 mb-4 leading-7 first:mt-0 last:mb-0", className)}
           {...props}
         >
           {children}
@@ -262,7 +262,7 @@ const defaultComponents: any = {
   h1: ({ className, ...props }: { className?: string }) => (
     <h1
       className={cn(
-        "mb-6 scroll-m-20 text-2xl font-bold tracking-tight last:mb-0",
+        "mb-5 scroll-m-20 text-2xl font-bold tracking-tight last:mb-0",
         className,
       )}
       {...props}
@@ -271,7 +271,7 @@ const defaultComponents: any = {
   h2: ({ className, ...props }: { className?: string }) => (
     <h2
       className={cn(
-        "mt-6 mb-3 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
+        "mt-5 mb-2 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -280,7 +280,7 @@ const defaultComponents: any = {
   h3: ({ className, ...props }: { className?: string }) => (
     <h3
       className={cn(
-        "mt-5 mb-3 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0",
+        "mt-3 mb-2 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}

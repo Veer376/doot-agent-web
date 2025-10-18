@@ -73,7 +73,7 @@ function ScrollToBottom(props: { className?: string }) {
     <Button
       variant="secondary"
       size="icon"
-      className={cn("cursor-pointer rounded-full", props.className)}
+      className={cn("cursor-pointer rounded-full hover:bg-secondary", props.className)}
       onClick={() => scrollToBottom()}
     >
       <ArrowDownIcon />
@@ -322,7 +322,7 @@ export function Thread() {
                 </div>
               )}
 
-              <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
+              <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full right-[calc(50%-24rem)] mb-4" />
 
               <div
                 ref={dropRef}

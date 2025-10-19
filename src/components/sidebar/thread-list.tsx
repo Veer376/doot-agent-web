@@ -1,8 +1,13 @@
 "use client";
 
-import { useThreads } from "@/hooks/use-threads";
+import {
+  useThreads,
+  useUpdateThread,
+  useDeleteThread,
+  useCopyThread,
+} from "@/hooks/use-threads";
 // Use shared app icons for consistency
-import { NoSignalIcon, SearchIcon } from "@/components/icons";
+import { NoSignalIcon, SearchIcon, CopyIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -23,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -73,9 +78,25 @@ export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
   const { data: threads = [], isLoading } = useThreads();
+  const updateThread = useUpdateThread();
+  const deleteThread = useDeleteThread();
+  const copyThread = useCopyThread();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // Inline edit state
+  const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
+  const [editingThreadName, setEditingThreadName] = useState("");
+  const [originalThreadName, setOriginalThreadName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const { state } = useSidebar();
+
+  // Focus input when entering edit mode
+  useEffect(() => {
+    if (editingThreadId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingThreadId]);
 
   // Don't render thread list when sidebar is collapsed
   if (state === "collapsed") {
@@ -97,14 +118,92 @@ export function ThreadList() {
     router.push(`/?threadId=${id}`);
   };
 
-  const handleRenameThread = (threadId: string) => {
-    // TODO: Implement rename functionality
-    console.log("Rename thread:", threadId);
+  const handleStartEdit = (threadId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const thread = threads.find((t) => t.thread_id === threadId);
+    const currentName =
+      getFirstHumanMessageContent(thread!) ||
+      (thread?.metadata?.name as string) ||
+      "";
+    setEditingThreadId(threadId);
+    setEditingThreadName(currentName);
+    setOriginalThreadName(currentName); // Store original for comparison
   };
 
-  const handleDeleteThread = (threadId: string) => {
-    // TODO: Implement delete functionality
-    console.log("Delete thread:", threadId);
+  const handleCancelEdit = () => {
+    setEditingThreadId(null);
+    setEditingThreadName("");
+    setOriginalThreadName("");
+  };
+
+  const handleSaveEdit = async () => {
+    // If no thread ID or empty name, cancel edit
+    if (!editingThreadId || !editingThreadName.trim()) {
+      handleCancelEdit();
+      return;
+    }
+
+    // Check if the name actually changed
+    const trimmedNewName = editingThreadName.trim();
+    const trimmedOriginalName = originalThreadName.trim();
+
+    if (trimmedNewName === trimmedOriginalName) {
+      // No changes made, just close edit mode without API call
+      handleCancelEdit();
+      return;
+    }
+
+    try {
+      await updateThread.mutateAsync({
+        threadId: editingThreadId,
+        metadata: { name: trimmedNewName },
+      });
+      setEditingThreadId(null);
+      setEditingThreadName("");
+      setOriginalThreadName("");
+    } catch (error) {
+      console.error("Failed to rename thread:", error);
+      // TODO: Show error toast
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancelEdit();
+    }
+  };
+
+  const handleDeleteThread = async (threadIdToDelete: string) => {
+    try {
+      await deleteThread.mutateAsync(threadIdToDelete);
+      // If we're deleting the currently active thread, clear the selection
+      if (threadIdToDelete === threadId) {
+        setThreadId(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete thread:", error);
+      // TODO: Show error toast
+    }
+  };
+
+  // For now we're disabling thread copy functionality
+  const handleCopyThread = async (threadIdToCopy: string) => {
+    try {
+      const copiedThread = await copyThread.mutateAsync(threadIdToCopy);
+      // Navigate to the newly copied thread
+      if (copiedThread?.thread_id) {
+        router.push(`/?threadId=${copiedThread.thread_id}`);
+      }
+    } catch (error) {
+      console.error("Failed to copy thread:", error);
+      // TODO: Show error toast
+    }
   };
 
   return (
@@ -146,52 +245,79 @@ export function ThreadList() {
                 (thread.metadata?.name as string) ||
                 `New thread ${thread.thread_id.slice(0, 5)}`;
               const isActive = thread.thread_id === threadId;
+              const isEditing = editingThreadId === thread.thread_id;
 
               return (
                 <SidebarMenuItem key={thread.thread_id}>
-                  <SidebarMenuButton
-                    onClick={() => handleSelectThread(thread.thread_id)}
-                    isActive={isActive}
-                  >
-                    <span className="truncate text-sm">{title}</span>
-                  </SidebarMenuButton>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuAction
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        showOnHover
+                  {isEditing ? (
+                    <div className="flex items-center px-1 py-1">
+                      <Input
+                        ref={inputRef}
+                        value={editingThreadName}
+                        onChange={(e) => setEditingThreadName(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onBlur={handleSaveEdit}
+                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 rounded-3xl border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                        placeholder="Thread name..."
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <SidebarMenuButton
+                        onClick={() => handleSelectThread(thread.thread_id)}
+                        isActive={isActive}
                       >
-                        <MoreVerticalMenuIcon />
-                        <span className="sr-only">More options</span>
-                      </SidebarMenuAction>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      side="right"
-                      align="start"
-                    >
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRenameThread(thread.thread_id);
-                        }}
-                      >
-                        <EditIcon size="sm" />
-                        <span>Rename</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteThread(thread.thread_id);
-                        }}
-                      >
-                        <DeleteIcon size="sm" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <span className="truncate text-sm">{title}</span>
+                      </SidebarMenuButton>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <SidebarMenuAction
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            showOnHover
+                          >
+                            <MoreVerticalMenuIcon />
+                            <span className="sr-only">More options</span>
+                          </SidebarMenuAction>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          side="right"
+                          align="start"
+                        >
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(thread.thread_id);
+                            }}
+                          >
+                            <EditIcon size="sm" />
+                            <span>Rename</span>
+                          </DropdownMenuItem>
+                          {/* For now we're disabling thread copy functionality
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyThread(thread.thread_id);
+                            }}
+                          >
+                            <CopyIcon size="sm" />
+                            <span>Clone thread</span>
+                          </DropdownMenuItem> */}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteThread(thread.thread_id);
+                            }}
+                          >
+                            <DeleteIcon size="sm" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
                 </SidebarMenuItem>
               );
             })}

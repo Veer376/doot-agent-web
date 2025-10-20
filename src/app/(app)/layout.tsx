@@ -5,7 +5,6 @@ import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
 import { AuthProvider } from "@/providers/Auth";
-import { ThemeProvider } from "@/providers/Theme";
 import { ReactQueryProvider } from "@/providers/QueryClient";
 import { DOCS_LINK } from "@/constants";
 
@@ -42,15 +41,13 @@ export default function RootLayout({
     //         </a>
     //       </div>
     //     )}
-        <ThemeProvider>
-          <NuqsAdapter>
-            <AuthProvider>
-              <ReactQueryProvider>
-                <SidebarLayout>{children}</SidebarLayout>
-              </ReactQueryProvider>
-            </AuthProvider>
-          </NuqsAdapter>
-        </ThemeProvider>
+    <NuqsAdapter>
+      <AuthProvider>
+        <ReactQueryProvider>
+          <SidebarLayout>{children}</SidebarLayout>
+        </ReactQueryProvider>
+      </AuthProvider>
+    </NuqsAdapter>
     //   </body>
     // </html>
   );

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { ThemeProvider } from "@/providers/Theme";
 
 export const metadata: Metadata = {
   title: "Orbit Agent",
@@ -20,7 +21,9 @@ export default function Layout({
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body className={GeistSans.className}>
-        <main>{children}</main>
+        <ThemeProvider>
+          <main>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

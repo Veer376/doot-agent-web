@@ -19,7 +19,7 @@ import { ThreadView } from "./thread-view";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents } from "@/hooks/use-agents";
 
 // Wrap the actual implementation in the provider
 function AgentInboxWithProvider<
@@ -195,14 +195,14 @@ function AgentInboxWithProvider<
 export function AgentInbox<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
-  const { agents } = useAgentsContext();
+  const { data: agents = [] } = useFetchAgents();
   const [agentId, setAgentId] = useQueryState("agentInbox");
 
   useEffect(() => {
     if (!agents.length || agentId) return;
 
     const firstAgent = agents[0];
-    setAgentId(`${firstAgent.assistant_id}:${firstAgent.deploymentId}`);
+    setAgentId(firstAgent.assistant_id);
   }, [agents, agentId, agents]);
 
   return <AgentInboxWithProvider<ThreadValues> />;

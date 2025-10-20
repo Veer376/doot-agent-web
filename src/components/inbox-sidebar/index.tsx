@@ -27,14 +27,14 @@ import {
   isUserCreatedDefaultAssistant,
 } from "@/lib/agent-utils";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents } from "@/hooks/use-agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
   const { setThreadData, fetchThreads } = useThreadsContext();
-  const { agents, loading } = useAgentsContext();
+  const { data: agents = [], isLoading: loading } = useFetchAgents();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
 
   const [_offset, setOffset] = useQueryState(

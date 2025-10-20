@@ -37,7 +37,7 @@ import {
   ConfigurableFieldMCPMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents } from "@/hooks/use-agents";
 import { toast } from "sonner";
 
 interface Option {
@@ -421,7 +421,7 @@ export function ConfigFieldAgents({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:agents`;
 
-  const { agents, loading } = useAgentsContext();
+  const { data: agents = [], isLoading: loading } = useFetchAgents();
 
   // Do not allow adding itself as a sub-agent
   const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);

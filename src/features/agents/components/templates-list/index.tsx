@@ -5,13 +5,13 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { TemplateCard } from "./templates-card";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents } from "@/hooks/use-agents";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import { TemplatesLoading } from "./templates-loading";
 import { GraphGroup } from "../../types";
 
 export function TemplatesList() {
-  const { agents, loading: agentsLoading } = useAgentsContext();
+  const { data: agents = [], isLoading: agentsLoading } = useFetchAgents();
 
   const [searchQueryState, setSearchQueryState] = useState("");
   const [openTemplatesState, setOpenTemplatesState] = useState<string[]>([]);

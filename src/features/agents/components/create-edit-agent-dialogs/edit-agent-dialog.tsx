@@ -8,12 +8,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAgents } from "@/hooks/use-agents";
+import { useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
 import { FormProvider, useForm } from "react-hook-form";
@@ -31,8 +30,8 @@ function EditAgentDialogContent({
   agent: Agent;
   onClose: () => void;
 }) {
-  const { updateAgent, deleteAgent } = useAgents();
-  const { refreshAgents } = useAgentsContext();
+  const { mutateAsync: updateAgent } = useUpdateAgent();
+  const { mutateAsync: deleteAgent } = useDeleteAgent();
   const {
     getSchemaAndUpdateConfig,
 
@@ -60,11 +59,10 @@ function EditAgentDialogContent({
       return;
     }
 
-    const updatedAgent = await updateAgent(
-      agent.assistant_id,
-      agent.deploymentId,
-      data,
-    );
+    const updatedAgent = await updateAgent({
+      agentId: agent.assistant_id,
+      args: data,
+    });
 
     if (!updatedAgent) {
       toast.error("Failed to update agent", {
@@ -76,25 +74,18 @@ function EditAgentDialogContent({
     toast.success("Agent updated successfully!");
 
     onClose();
-    refreshAgents();
   };
 
   const handleDelete = async () => {
     setDeleteSubmitting(true);
-    const deleted = await deleteAgent(agent.deploymentId, agent.assistant_id);
-    setDeleteSubmitting(false);
-
-    if (!deleted) {
-      toast.error("Failed to delete agent", {
-        description: "Please try again",
-      });
-      return;
+    try {
+      await deleteAgent(agent.assistant_id);
+      onClose();
+    } catch (error) {
+      // Error toast is handled by the mutation
+    } finally {
+      setDeleteSubmitting(false);
     }
-
-    toast.success("Agent deleted successfully!");
-
-    onClose();
-    refreshAgents();
   };
 
   return (

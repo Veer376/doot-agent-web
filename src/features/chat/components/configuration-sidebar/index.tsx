@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import { useAgentContext } from "@/features/chat/providers/Stream";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAgents } from "@/hooks/use-agents";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +30,7 @@ import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { useAgentConfig } from "@/hooks/use-agent-config";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents, useUpdateAgent, useCreateAgent } from "@/hooks/use-agents";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -127,7 +126,7 @@ export const ConfigurationSidebar = forwardRef<
   // PHASE 3: Get agentId from context instead of URL
   const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
-  const { agents, refreshAgentsLoading } = useAgentsContext();
+  const { data: agents = [], isFetching: refreshAgentsLoading } = useFetchAgents();
   const {
     getSchemaAndUpdateConfig,
     configurations,
@@ -137,7 +136,8 @@ export const ConfigurationSidebar = forwardRef<
     loading,
     supportedConfigs,
   } = useAgentConfig();
-  const { updateAgent, createAgent } = useAgents();
+  const { mutate: updateAgent } = useUpdateAgent();
+  const { mutate: createAgent } = useCreateAgent();
 
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -190,33 +190,50 @@ export const ConfigurationSidebar = forwardRef<
       setOpenNameAndDescriptionAlertDialog(true);
       return;
     } else if (isUserCreatedDefaultAssistant(selectedAgent) && newName) {
-      const newAgent = await createAgent(selectedAgent.graph_id, {
-        name: newName,
-        description: newDescription,
-        config: configsByAgentId[agentId],
-      });
-      if (!newAgent) {
-        toast.error("Failed to create agent", { richColors: true });
-        return;
-      }
-      // Reload the page, using the new assistant ID
-      const newQueryParams = new URLSearchParams({
-        agentId: newAgent.assistant_id,
-        ...(threadId ? { threadId } : {}),
-      });
-      window.location.href = `/?${newQueryParams.toString()}`;
+      // Create new agent with React Query mutation
+      createAgent(
+        {
+          graphId: selectedAgent.graph_id,
+          args: {
+            name: newName,
+            description: newDescription,
+            config: configsByAgentId[agentId],
+          },
+        },
+        {
+          onSuccess: (newAgent) => {
+            // Reload the page, using the new assistant ID
+            const newQueryParams = new URLSearchParams({
+              agentId: newAgent.assistant_id,
+              ...(threadId ? { threadId } : {}),
+            });
+            window.location.href = `/?${newQueryParams.toString()}`;
+          },
+          onError: () => {
+            toast.error("Failed to create agent", { richColors: true });
+          },
+        },
+      );
       return;
     }
 
-    const updatedAgent = await updateAgent(agentId, {
-      config: configsByAgentId[agentId],
-    });
-    if (!updatedAgent) {
-      toast.error("Failed to update agent configuration");
-      return;
-    }
-
-    toast.success("Agent configuration saved successfully");
+    // Update existing agent with React Query mutation
+    updateAgent(
+      {
+        agentId: agentId,
+        args: {
+          config: configsByAgentId[agentId],
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Agent configuration saved successfully");
+        },
+        onError: () => {
+          toast.error("Failed to update agent configuration");
+        },
+      },
+    );
   };
 
   return (

@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { AgentIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useAgentsContext } from "@/providers/Agents";
+import { useFetchAgents } from "@/hooks/use-agents";
 import { useAgentContext } from "@/features/chat/providers/Stream";
 import { useQueryState } from "nuqs";
 import { useThreadAgent } from "@/hooks/use-thread-agent";
@@ -33,7 +33,7 @@ export function IconAgentSelector({
   variant = "icon",
   buttonRef,
 }: IconAgentSelectorProps) {
-  const { agents, loading } = useAgentsContext();
+  const { data: agents = [], isLoading: loading } = useFetchAgents();
   const [open, setOpen] = useState(false);
 
   // PHASE 3: Get agentId from context instead of URL

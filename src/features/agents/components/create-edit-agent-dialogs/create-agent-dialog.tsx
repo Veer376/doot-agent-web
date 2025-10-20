@@ -8,13 +8,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAgents } from "@/hooks/use-agents";
 import { Bot, LoaderCircle, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAgentsContext } from "@/providers/Agents";
+import { useCreateAgent, useFetchAgents } from "@/hooks/use-agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
-import { Deployment } from "@/types/deployment";
 import { Agent } from "@/types/agent";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
@@ -43,8 +41,7 @@ function CreateAgentFormContent(props: {
     },
   });
 
-  const { createAgent } = useAgents();
-  const { refreshAgents } = useAgentsContext();
+  const { mutateAsync: createAgent } = useCreateAgent();
   const {
     getSchemaAndUpdateConfig,
     loading,
@@ -92,8 +89,6 @@ function CreateAgentFormContent(props: {
     });
 
     props.onClose();
-    // Do not await so that the refresh is non-blocking
-    refreshAgents();
   };
 
   return (
@@ -141,7 +136,7 @@ export function CreateAgentDialog({
   open,
   onOpenChange,
 }: CreateAgentDialogProps) {
-  const { agents } = useAgentsContext();
+  const { data: agents = [] } = useFetchAgents();
   const [selectedGraph, setSelectedGraph] = useState<Agent | undefined>();
 
   useEffect(() => {
@@ -149,7 +144,7 @@ export function CreateAgentDialog({
     if (agentId && graphId) {
       // Find the deployment & default agent, then set them
       const defaultAgent = agents.find(
-        (a) => a.assistant_id === agentId
+        (a: any) => a.assistant_id === agentId
       );
       if (!defaultAgent) {
         toast.error("Something went wrong. Please try again.", {

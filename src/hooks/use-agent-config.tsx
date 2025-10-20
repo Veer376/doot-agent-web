@@ -5,7 +5,6 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { useCallback, useState } from "react";
-import { useAgents } from "./use-agents";
 import {
   extractConfigurationsFromAgent,
   getConfigurableDefaults,
@@ -19,7 +18,7 @@ import { useQueryState } from "nuqs";
  * fields on an agent.
  */
 export function useAgentConfig() {
-  const { getAgentConfigSchema } = useAgents();
+  const { session } = useAuthContext();
   const [chatWithCollectionId, setChatWithCollectionId] = useQueryState(
     "chatWithCollectionId",
   );
@@ -60,10 +59,24 @@ export function useAgentConfig() {
 
       setLoading(true);
       try {
-        const schema = await getAgentConfigSchema(
+        if (!session?.accessToken) {
+          toast.error("No access token found", {
+            richColors: true,
+          });
+          return {
+            name: agent.name,
+            description:
+              (agent.metadata?.description as string | undefined) ?? "",
+            config: {},
+          };
+        }
+
+        const client = createClient(session.accessToken);
+        const schemas = await client.assistants.getSchemas(
           agent.assistant_id,
-          agent.deploymentId,
         );
+        const schema = schemas.config_schema ?? undefined;
+        
         if (!schema)
           return {
             name: agent.name,
@@ -130,13 +143,13 @@ export function useAgentConfig() {
         setLoading(false);
       }
     },
-    [clearState, getAgentConfigSchema],
+    [clearState, session?.accessToken],
   );
 
   return {
     clearState,
     getSchemaAndUpdateConfig,
-
+ 
     configurations,
     toolConfigurations,
     ragConfigurations,

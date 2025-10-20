@@ -12,6 +12,9 @@ import {
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
 import { useQueryState } from "nuqs";
+import { useAuthContext } from "@/providers/Auth";
+import { toast } from "sonner";
+import { createClient } from "@/lib/client";
 
 /**
  * A custom hook for managing and accessing the configurable

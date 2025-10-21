@@ -141,17 +141,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       const threadAgent = getThreadAgent(threadId);
 
       if (threadAgent) {
-        console.log(
-          `[Phase 3] Loading thread ${threadId} with remembered agent: ${threadAgent}`,
-        );
         setAgentId(threadAgent);
       } else {
         // Thread not in localStorage yet - keep current agent or use fallback
         const fallbackAgent = agentId || getLastUsedAgent() || "";
         if (fallbackAgent) {
-          console.log(
-            `[Phase 3] Thread ${threadId} has no remembered agent, using fallback: ${fallbackAgent}`,
-          );
           setAgentId(fallbackAgent);
           saveThreadAgent(threadId, fallbackAgent); // Remember for next time
         }
@@ -160,9 +154,6 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       // No thread - try to restore last used agent
       const lastUsed = getLastUsedAgent();
       if (lastUsed && !agentId) {
-        console.log(
-          `[Phase 3] No thread, loading last used agent: ${lastUsed}`,
-        );
         setAgentId(lastUsed);
       }
     }

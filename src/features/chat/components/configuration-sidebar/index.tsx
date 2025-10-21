@@ -131,7 +131,6 @@ export const ConfigurationSidebar = forwardRef<
     getSchemaAndUpdateConfig,
     configurations,
     toolConfigurations,
-    ragConfigurations,
     agentsConfigurations,
     loading,
     supportedConfigs,
@@ -429,23 +428,6 @@ export const ConfigurationSidebar = forwardRef<
                         </div>
                       )}
                     </div>
-                  </ConfigSection>
-                </TabsContent>
-              )}
-
-              {supportedConfigs.includes("rag") && (
-                <TabsContent
-                  value="rag"
-                  className="m-0 overflow-y-auto p-4"
-                >
-                  <ConfigSection title="Agent RAG">
-                    {agentId && (
-                      <ConfigFieldRAG
-                        id={ragConfigurations[0].label}
-                        label={ragConfigurations[0].label}
-                        agentId={agentId}
-                      />
-                    )}
                   </ConfigSection>
                 </TabsContent>
               )}

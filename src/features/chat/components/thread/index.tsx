@@ -3,8 +3,6 @@ import {
   ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
-  useMemo,
   useRef,
   useImperativeHandle,
   forwardRef,
@@ -19,13 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import {
   AssistantMessage,
-  AssistantMessageLoading,
 } from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { ArrowDown, LoaderCircle, AlertCircle } from "lucide-react";
+import { LoaderCircle, AlertCircle } from "lucide-react";
 import { ArrowDownIcon } from "@/components/icons";
-import { AttachIcon, CancelIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
@@ -33,7 +28,7 @@ import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-respons
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
-import { requiresApiKeysButNotSet, } from "@/lib/agent-utils";
+import { requiresApiKeysButNotSet } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";

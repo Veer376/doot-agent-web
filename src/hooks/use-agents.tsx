@@ -3,7 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/client";
 import { Agent } from "@/types/agent";
-import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
 import {
@@ -37,8 +36,6 @@ async function fetchAgents(
   const assistants = await client.assistants.search({
     limit: 100,
   });
-
-  console.log(`Fetched assistants: ${JSON.stringify(assistants)}`);
 
   // Group agents by their graph_id
   const assistantsGroupedByGraphs = groupAgentsByGraphs(assistants);

@@ -12,9 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { AgentList } from "./agent-list";
 import { cn } from "@/lib/utils";
 import { Agent } from "@/types/agent";
-import { Deployment } from "@/types/deployment";
 import { TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
+import { Tooltip } from "@radix-ui/react-tooltip";
 import _ from "lodash";
 
 interface TemplateCardProps {

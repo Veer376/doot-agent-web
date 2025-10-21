@@ -243,7 +243,7 @@ function ThreadsProviderInternal<
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
+    const assistantId = agentInboxId.split(":")[0];
 
     try {
       // Fetch threads
@@ -271,7 +271,6 @@ function ThreadsProviderInternal<
         return;
       }
 
-      const [_, deploymentId] = agentInboxId.split(":");
       const client = createClient(session.accessToken);
 
       try {
@@ -352,7 +351,6 @@ function ThreadsProviderInternal<
       return;
     }
 
-    const [_, deploymentId] = agentInboxId.split(":");
     const client = createClient(session.accessToken);
 
     try {
@@ -406,7 +404,7 @@ function ThreadsProviderInternal<
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
+    const assistantId = agentInboxId.split(":")[0];
     const client = createClient(session.accessToken);
 
     try {

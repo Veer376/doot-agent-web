@@ -81,8 +81,6 @@ function EditAgentDialogContent({
     try {
       await deleteAgent(agent.assistant_id);
       onClose();
-    } catch (error) {
-      // Error toast is handled by the mutation
     } finally {
       setDeleteSubmitting(false);
     }

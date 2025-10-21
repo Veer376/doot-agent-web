@@ -3,11 +3,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { AttachIcon, ChatIcon } from "@/components/icons";
+import { ChatIcon } from "@/components/icons";
 import { IconAgentSelector } from "./icon-agent-selector";
 import { useAgentContext } from "@/features/chat/providers/Stream";
-import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ComposerSegmentedControlProps {
   onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;

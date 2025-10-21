@@ -9,7 +9,6 @@ import go from "react-syntax-highlighter/dist/esm/languages/prism/go";
 import dart from "react-syntax-highlighter/dist/esm/languages/prism/dart";
 import java from "react-syntax-highlighter/dist/esm/languages/prism/java";
 import kotlin from "react-syntax-highlighter/dist/esm/languages/prism/kotlin";
-import swift from "react-syntax-highlighter/dist/esm/languages/prism/swift";
 import csharp from "react-syntax-highlighter/dist/esm/languages/prism/csharp";
 import cpp from "react-syntax-highlighter/dist/esm/languages/prism/cpp";
 import c from "react-syntax-highlighter/dist/esm/languages/prism/c";
@@ -27,7 +26,6 @@ import php from "react-syntax-highlighter/dist/esm/languages/prism/php";
 import docker from "react-syntax-highlighter/dist/esm/languages/prism/docker";
 import toml from "react-syntax-highlighter/dist/esm/languages/prism/toml";
 import ini from "react-syntax-highlighter/dist/esm/languages/prism/ini";
-import lua from "react-syntax-highlighter/dist/esm/languages/prism/lua";
 import {
   coldarkDark,
   coldarkCold,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, User, Loader2, TriangleAlert } from "lucide-react";
+import { User, Loader2, TriangleAlert } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   ToggleIcon,
@@ -12,7 +12,6 @@ import {
   LogOutIcon,
   type IconSize,
 } from "@/components/icons";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,

@@ -10,7 +10,6 @@ import { useQueryState } from "nuqs";
 import { useThreadAgent } from "@/hooks/use-thread-agent";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface IconAgentSelectorProps {
   className?: string;

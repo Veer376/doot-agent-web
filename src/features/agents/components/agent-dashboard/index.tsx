@@ -26,25 +26,22 @@ export function AgentDashboard() {
 
   const allGraphGroups: GraphGroup[] = useMemo(() => {
     if (agentsLoading) return [];
-  //   const groups: GraphGroup[] = [];
-  //   deployments.forEach((deployment) => {
-  //     const agentsInDeployment = agents.filter(
-  //       (agent) => agent.deploymentId === deployment.id,
-  //     );
-  //     const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
-  //     agentsGroupedByGraphs.forEach((agentGroup) => {
-  //       if (agentGroup.length > 0) {
-  //         const graphId = agentGroup[0].graph_id;
-  //         groups.push({
-  //           agents: agentGroup,
-  //           deployment,
-  //           graphId,
-  //         });
-  //       }
-  //     });
-  //   });
-    // return groups;
-    return []
+    
+    // Group agents by their graph_id
+    const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
+    const groups: GraphGroup[] = [];
+    
+    agentsGroupedByGraphs.forEach((agentGroup) => {
+      if (agentGroup.length > 0) {
+        const graphId = agentGroup[0].graph_id;
+        groups.push({
+          agents: agentGroup,
+          graphId,
+        });
+      }
+    });
+    
+    return groups;
   }, [agents, agentsLoading]);
 
   const filteredAgents = useMemo(() => {
@@ -54,12 +51,9 @@ export function AgentDashboard() {
     if (graphFilter === "all") {
       groupsMatchingGraphFilter = allGraphGroups;
     } else {
-      // Parse the combined ID "deploymentId:graphId"
-      const [selectedDeploymentId, selectedGraphId] = graphFilter.split(":");
+      // Filter by graphId
       groupsMatchingGraphFilter = allGraphGroups.filter(
-        (group) =>
-          group.deployment.id === selectedDeploymentId &&
-          group.graphId === selectedGraphId,
+        (group) => group.graphId === graphFilter,
       );
     }
 
@@ -111,12 +105,9 @@ export function AgentDashboard() {
               <SelectItem value="all">All Templates</SelectItem>
               {allGraphGroups.map((graph) => (
                 <SelectItem
-                  key={`${graph.deployment.id}:${graph.graphId}`}
-                  value={`${graph.deployment.id}:${graph.graphId}`} // Use combined ID for value
+                  key={graph.graphId}
+                  value={graph.graphId}
                 >
-                  <span className="text-muted-foreground">
-                    [{graph.deployment.name}]
-                  </span>
                   {_.startCase(graph.graphId)}
                 </SelectItem>
               ))}

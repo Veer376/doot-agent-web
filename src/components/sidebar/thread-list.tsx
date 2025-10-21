@@ -4,10 +4,9 @@ import {
   useThreads,
   useUpdateThread,
   useDeleteThread,
-  useCopyThread,
 } from "@/hooks/use-threads";
 // Use shared app icons for consistency
-import { NoSignalIcon, SearchIcon, CopyIcon } from "@/components/icons";
+import { NoSignalIcon, SearchIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -80,7 +79,6 @@ export function ThreadList() {
   const { data: threads = [], isLoading } = useThreads();
   const updateThread = useUpdateThread();
   const deleteThread = useDeleteThread();
-  const copyThread = useCopyThread();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   // Inline edit state
@@ -188,20 +186,6 @@ export function ThreadList() {
       }
     } catch (error) {
       console.error("Failed to delete thread:", error);
-      // TODO: Show error toast
-    }
-  };
-
-  // For now we're disabling thread copy functionality
-  const handleCopyThread = async (threadIdToCopy: string) => {
-    try {
-      const copiedThread = await copyThread.mutateAsync(threadIdToCopy);
-      // Navigate to the newly copied thread
-      if (copiedThread?.thread_id) {
-        router.push(`/?threadId=${copiedThread.thread_id}`);
-      }
-    } catch (error) {
-      console.error("Failed to copy thread:", error);
       // TODO: Show error toast
     }
   };

@@ -66,14 +66,14 @@ function CreateAgentFormContent(props: {
     }
 
     setSubmitting(true);
-    const newAgent = await createAgent(
-      props.selectedGraph.graph_id,
-      {
+    const newAgent = await createAgent({
+      graphId: props.selectedGraph.graph_id,
+      args: {
         name,
         description,
         config,
       },
-    );
+    });
     setSubmitting(false);
 
     if (!newAgent) {

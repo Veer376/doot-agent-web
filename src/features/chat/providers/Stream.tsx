@@ -62,6 +62,7 @@ const StreamSession = ({
   mode: "agent" | "chat";
   accessToken?: string;
 }) => {
+  
   if (!accessToken) {
     toast.error("Access token must be provided");
   }
@@ -147,6 +148,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         </>
       ) : agentId ? (
         <StreamSession
+          key={threadId ?? 'no-thread'} // Force remount on thread change - only reliable way to clear SDK state
           agentId={agentId}
           mode={mode}
           accessToken={session.accessToken}

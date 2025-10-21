@@ -41,18 +41,16 @@ export function ComposerSegmentedControl({
 
   // PHASE 4: Use isChatMode and setChatMode from context
   // Also read agentId so we can re-measure when agent label/text changes
-  const { isChatMode, setChatMode, agentId } = useAgentContext();
+  const { mode, setMode, agentId } = useAgentContext();
 
   const handleChatClick = () => {
-    setChatMode(true);
-    // Show informative toast when switching to chat mode
-    toast.info("Chat mode - Agent selection required to send messages");
+    setMode("chat");
   };
 
   // Update indicator position on mode change, agent changes, size changes, and font load
   useEffect(() => {
     const compute = () => {
-      const activeButton = isChatMode
+      const activeButton = mode === "chat"
         ? chatButtonRef.current
         : agentButtonRef.current;
       const containerEl = containerRef.current;
@@ -107,7 +105,7 @@ export function ComposerSegmentedControl({
       window.removeEventListener("resize", compute);
       ro?.disconnect();
     };
-  }, [isChatMode, agentId, hasMeasured]);
+  }, [mode, agentId, hasMeasured]);
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -159,22 +157,34 @@ export function ComposerSegmentedControl({
           buttonRef={agentButtonRef}
         />
 
-        {/* Right segment: Chat (no background, indicator handles it) */}
-        <button
-          ref={chatButtonRef}
-          type="button"
-          onClick={handleChatClick}
-          className={cn(
-            "relative z-10 h-8 cursor-pointer rounded-2xl px-3 text-sm font-medium transition-colors",
-            "flex items-center gap-2",
-            // Text color changes based on selection
-            isChatMode
-              ? "text-background"
-              : "text-foreground/80 hover:text-foreground",
-          )}
-        >
-          <ChatIcon className={cn("size-5", isChatMode && "text-background")} />
-        </button>
+        {/* Right segment: Chat (tooltip + hover background on inactive only) */}
+        <TooltipProvider>
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <button
+                ref={chatButtonRef}
+                type="button"
+                onClick={handleChatClick}
+                aria-label="Chat mode"
+                className={cn(
+                  "relative z-10 h-9 cursor-pointer rounded-full px-3 text-sm font-medium transition-colors",
+                  "flex items-center gap-2",
+                  // Keep background managed by indicator when active
+                  // and add a soft hover surface only when inactive
+                  mode === "chat"
+                    ? "text-background"
+                    : "text-foreground hover:bg-accent/60 dark:hover:bg-accent/40",
+                  "focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none",
+                )}
+              >
+                <ChatIcon
+                  className={cn("size-5", mode === "chat" && "text-background")}
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Chat mode</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

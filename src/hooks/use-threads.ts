@@ -15,8 +15,9 @@ export const threadKeys = {
 };
 
 // Type for thread metadata
-interface ThreadMetadata {
-  assistant_id?: string;
+export interface ThreadMetadata {
+  assistant_id?: string;  // Which agent to use
+  mode?: "agent" | "chat";  // UI mode (agent mode vs chat mode)
   [key: string]: unknown;
 }
 

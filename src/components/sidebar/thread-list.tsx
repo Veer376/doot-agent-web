@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useThreads,
+  useFetchThreads,
   useUpdateThread,
   useDeleteThread,
 } from "@/hooks/use-threads";
@@ -76,7 +76,7 @@ function getFirstHumanMessageContent(thread: Thread) {
 export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
-  const { data: threads = [], isLoading } = useThreads();
+  const { data: threads = [], isLoading } = useFetchThreads();
   const updateThread = useUpdateThread();
   const deleteThread = useDeleteThread();
   const [searchOpen, setSearchOpen] = useState(false);

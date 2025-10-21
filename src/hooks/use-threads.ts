@@ -20,55 +20,31 @@ interface ThreadMetadata {
   [key: string]: unknown;
 }
 
-// Fetch all threads with optional agent filtering
-async function fetchThreads(
-  accessToken: string,
-  agentId?: string
-): Promise<Thread<ThreadMetadata>[]> {
-  const client = createClient(accessToken);
-
-  const response = await client.threads.search({
-    limit: 100,
-    ...(agentId && {
-      metadata: {
-        assistant_id: agentId,
-      },
-    }),
-  });
-
-  return response as Thread<ThreadMetadata>[];
-}
-
 // Hook to fetch all threads (or filtered by agent)
-export function useThreads(agentId?: string) {
+export function useFetchThreads(agentId?: string) {
   const { session } = useAuthContext();
   const accessToken = session?.accessToken;
 
   return useQuery({
     queryKey: threadKeys.list({ agentId }),
-    queryFn: () => {
+    queryFn: async () => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      return fetchThreads(accessToken, agentId);
+      const client = createClient(accessToken);
+      const response = await client.threads.search({
+        limit: 100,
+        ...(agentId && {
+          metadata: {
+            assistant_id: agentId,
+          },
+        }),
+      });
+      return response as Thread<ThreadMetadata>[];
     },
     enabled: !!accessToken,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
-}
-
-// Create new thread
-async function createThread(
-  accessToken: string,
-  metadata?: ThreadMetadata
-): Promise<Thread<ThreadMetadata>> {
-  const client = createClient(accessToken);
-
-  const thread = await client.threads.create({
-    metadata: metadata || {},
-  });
-
-  return thread as Thread<ThreadMetadata>;
 }
 
 // Hook to create a new thread
@@ -78,11 +54,15 @@ export function useCreateThread() {
   const accessToken = session?.accessToken;
 
   return useMutation({
-    mutationFn: (metadata?: ThreadMetadata) => {
+    mutationFn: async (metadata?: ThreadMetadata) => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      return createThread(accessToken, metadata);
+      const client = createClient(accessToken);
+      const thread = await client.threads.create({
+        metadata: metadata || {},
+      });
+      return thread as Thread<ThreadMetadata>;
     },
     onSuccess: () => {
       // Invalidate all thread lists to trigger refetch
@@ -91,13 +71,108 @@ export function useCreateThread() {
   });
 }
 
-// Delete thread
-async function deleteThread(
-  accessToken: string,
-  threadId: string
-): Promise<void> {
-  const client = createClient(accessToken);
-  await client.threads.delete(threadId);
+// Hook to update a thread
+export function useUpdateThread() {
+  const { session } = useAuthContext();
+  const queryClient = useQueryClient();
+  const accessToken = session?.accessToken;
+
+  return useMutation({
+    mutationFn: async ({
+      threadId,
+      metadata,
+    }: {
+      threadId: string;
+      metadata: ThreadMetadata;
+    }) => {
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const client = createClient(accessToken);
+      const thread = await client.threads.update(threadId, {
+        metadata,
+      });
+      return thread as Thread<ThreadMetadata>;
+    },
+    onMutate: async ({ threadId, metadata }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
+
+      // Snapshot previous value
+      const previousThreads = queryClient.getQueryData(threadKeys.lists());
+
+      // Optimistically update thread metadata
+      queryClient.setQueriesData(
+        { queryKey: threadKeys.lists() },
+        (old: Thread<ThreadMetadata>[] | undefined) =>
+          old?.map((thread) =>
+            thread.thread_id === threadId
+              ? {
+                ...thread,
+                metadata: { ...thread.metadata, ...metadata },
+              }
+              : thread
+          ) ?? []
+      );
+
+      return { previousThreads };
+    },
+    onError: (err, { threadId }, context) => {
+      // Rollback on error
+      if (context?.previousThreads) {
+        queryClient.setQueryData(threadKeys.lists(), context.previousThreads);
+      }
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+    },
+  });
+}
+
+// Hook to copy a thread
+export function useCopyThread() {
+  const { session } = useAuthContext();
+  const queryClient = useQueryClient();
+  const accessToken = session?.accessToken;
+
+  return useMutation({
+    mutationFn: async (threadId: string) => {
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("API URL not configured");
+      }
+
+      const response = await fetch(`${apiUrl}/threads/${threadId}/copy`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "x-supabase-access-token": accessToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to copy thread: ${response.statusText} - ${errorText}`);
+      }
+
+      return (await response.json()) as Thread<ThreadMetadata>;
+    },
+    onSuccess: (newThread) => {
+      // Invalidate and refetch thread lists to show the new copied thread
+      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+    },
+    onError: (error) => {
+      console.error("Failed to copy thread:", error);
+      // TODO: Show error toast
+    },
+  });
 }
 
 // Hook to delete a thread
@@ -107,11 +182,12 @@ export function useDeleteThread() {
   const accessToken = session?.accessToken;
 
   return useMutation({
-    mutationFn: (threadId: string) => {
+    mutationFn: async (threadId: string) => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      return deleteThread(accessToken, threadId);
+      const client = createClient(accessToken);
+      await client.threads.delete(threadId);
     },
     onMutate: async (threadId) => {
       // Cancel outgoing refetches

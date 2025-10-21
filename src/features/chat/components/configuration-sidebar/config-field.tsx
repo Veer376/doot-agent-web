@@ -14,20 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
@@ -38,7 +25,6 @@ import {
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
-import { toast } from "sonner";
 
 interface Option {
   label: string;

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   ConfigField,
   ConfigFieldAgents,
-  ConfigFieldRAG,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
@@ -217,21 +216,11 @@ export function AgentFieldsForm({
         {ragConfigurations.length > 0 && (
           <>
             <Separator />
-            <div className="flex w-full flex-col items-start justify-start gap-2">
+            <div className="mt-4 space-y-4">
               <p className="text-lg font-semibold tracking-tight">Agent RAG</p>
-              <Controller
-                control={form.control}
-                name={`config.${ragConfigurations[0].label}`}
-                render={({ field: { value, onChange } }) => (
-                  <ConfigFieldRAG
-                    id={ragConfigurations[0].label}
-                    label={ragConfigurations[0].label}
-                    agentId={agentId}
-                    value={value}
-                    setValue={onChange}
-                  />
-                )}
-              />
+              <div className="text-muted-foreground text-sm">
+                RAG configuration has been removed in this dialog.
+              </div>
             </div>
           </>
         )}

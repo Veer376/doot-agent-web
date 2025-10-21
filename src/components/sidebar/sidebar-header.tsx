@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
-  const { state, toggleSidebar, isMobile, railHovered } = useSidebar();
+  const { state, toggleSidebar, railHovered } = useSidebar();
   const [hovered, setHovered] = React.useState(false);
 
   // Combine local hover state with rail hover state

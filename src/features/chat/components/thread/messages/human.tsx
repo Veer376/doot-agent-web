@@ -8,7 +8,6 @@ import { getContentString } from "@/features/chat/utils/content-string";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
-import { useQueryState } from "nuqs";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useAuthContext } from "@/providers/Auth";
 import { MultimodalPreview } from "./MultimodalPreview";

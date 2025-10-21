@@ -1,11 +1,8 @@
 "use client";
-
-import React, { useRef } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef } from "react";
 import { ComposerSegmentedControl } from "./composer-segmented-control";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
-import { CancelIcon } from "@/components/icons";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { StopIcon } from "@/components/icons";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { cn } from "@/lib/utils";
 import { useAgentContext } from "@/features/chat/providers/Stream";

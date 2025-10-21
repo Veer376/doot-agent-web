@@ -49,10 +49,6 @@ export function useThreadAgent() {
 
       // 2. Update global last-used agent
       localStorage.setItem(LAST_AGENT_KEY, agentId);
-
-      console.log(
-        `[useThreadAgent] Saved: Thread ${threadId} -> Agent ${agentId}`,
-      );
     } catch (error) {
       console.error("[useThreadAgent] Failed to save thread-agent:", error);
     }
@@ -74,12 +70,6 @@ export function useThreadAgent() {
       const map: Record<string, string> = JSON.parse(existingMap);
       const agentId = map[threadId] || null;
 
-      if (agentId) {
-        console.log(
-          `[useThreadAgent] Retrieved: Thread ${threadId} -> Agent ${agentId}`,
-        );
-      }
-
       return agentId;
     } catch (error) {
       console.error("[useThreadAgent] Failed to get thread-agent:", error);
@@ -97,9 +87,6 @@ export function useThreadAgent() {
 
     try {
       const lastAgent = localStorage.getItem(LAST_AGENT_KEY);
-      if (lastAgent) {
-        console.log(`[useThreadAgent] Last used agent: ${lastAgent}`);
-      }
       return lastAgent;
     } catch (error) {
       console.error("[useThreadAgent] Failed to get last used agent:", error);
@@ -115,7 +102,6 @@ export function useThreadAgent() {
 
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log("[useThreadAgent] Cleared thread-agent map");
     } catch (error) {
       console.error("[useThreadAgent] Failed to clear map:", error);
     }

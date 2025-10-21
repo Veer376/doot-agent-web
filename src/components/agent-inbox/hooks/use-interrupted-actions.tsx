@@ -276,9 +276,9 @@ export default function useInterruptedActions<
         if (updatedThreadData && updatedThreadData?.status === "interrupted") {
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
         } else {
-          const [assistantId, deploymentId] = agentInboxId.split(":");
+          const assistantId = agentInboxId.split(":")[0];
           // Re-fetch threads before routing back so the inbox is up to date
-          await fetchThreads(assistantId, deploymentId);
+          await fetchThreads(assistantId);
           // Clear the selected thread ID to go back to inbox view
           await setSelectedThreadId(null);
         }
@@ -325,9 +325,9 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
-    const [assistantId, deploymentId] = agentInboxId.split(":");
+    const assistantId = agentInboxId.split(":")[0];
     // Re-fetch threads before routing back so the inbox is up to date
-    await fetchThreads(assistantId, deploymentId);
+    await fetchThreads(assistantId);
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -358,8 +358,8 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await ignoreThread(threadData.thread.thread_id);
-    const [assistantId, deploymentId] = agentInboxId.split(":");
-    await fetchThreads(assistantId, deploymentId);
+    const assistantId = agentInboxId.split(":")[0];
+    await fetchThreads(assistantId);
 
     setLoading(false);
     // Clear the selected thread ID to go back to inbox view

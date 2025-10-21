@@ -4,7 +4,6 @@ import { startCase } from "lodash";
 import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
-import { toast } from "sonner";
 
 export function prettifyText(action: string) {
   return startCase(action.replace(/_/g, " "));
@@ -105,45 +104,19 @@ export function constructOpenInStudioURL(
   deploymentId: string,
   threadId?: string,
 ): string {
-  const deployments = getDeployments();
   const smithStudioBaseUrl = "https://smith.langchain.com/studio/thread";
-
-  const selectedDeployment = deployments.find((d) => d.id === deploymentId);
-  if (!selectedDeployment) {
-    toast.error("Failed to find selected deployment", { richColors: true });
-    return "";
-  }
-
-  // Check if deploymentUrl exists before using it
-  if (isDeployedUrl(selectedDeployment.deploymentUrl)) {
-    if (selectedDeployment.id && selectedDeployment.tenantId && threadId) {
-      const url = new URL(smithStudioBaseUrl);
-      url.searchParams.set("organizationId", selectedDeployment.tenantId);
-      url.searchParams.set("hostProjectId", selectedDeployment.id);
-      url.searchParams.set("threadId", threadId);
-      return url.toString();
-    }
-    // Invalid deployment config;
-    return "";
-  }
-
-  // --- Logic for local/non-deployed URLs ---
-  const smithStudioURL = new URL(smithStudioBaseUrl);
-
-  // Make sure deploymentUrl exists before using it
-  const trimmedDeploymentUrl = selectedDeployment.deploymentUrl.replace(
-    /\/$/,
-    "",
-  );
+  const url = new URL(smithStudioBaseUrl);
 
   if (threadId) {
-    smithStudioURL.searchParams.append("threadId", threadId);
+    url.searchParams.set("threadId", threadId);
   }
 
-  smithStudioURL.searchParams.append("baseUrl", trimmedDeploymentUrl);
-  // -----------------------------------------------------
+  // Use the API URL from env as baseUrl
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const trimmedApiUrl = apiUrl.replace(/\/$/, "");
+  url.searchParams.append("baseUrl", trimmedApiUrl);
 
-  return smithStudioURL.toString();
+  return url.toString();
 }
 
 export function createDefaultHumanResponse(

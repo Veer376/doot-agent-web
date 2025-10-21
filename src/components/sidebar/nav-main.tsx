@@ -6,13 +6,11 @@ import React from "react";
 
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import NextLink from "next/link";
-import { cn } from "@/lib/utils";
 
 export function NavMain({
   items,

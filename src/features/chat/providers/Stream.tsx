@@ -17,7 +17,6 @@ import {
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "nuqs";
 // Removed agent selection UI; auto-select a default agent instead
-import { useAgentsContext } from "@/providers/Agents";
 import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
@@ -26,6 +25,7 @@ import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { threadKeys } from "@/hooks/use-threads";
 import { useThreadAgent } from "@/hooks/use-thread-agent";
+import { useFetchAgents } from "@/hooks/use-agents";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -120,7 +120,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { agents } = useAgentsContext();
+  const { data: agents = [] } = useFetchAgents();
 
   // PHASE 3: Remove agentId from URL, use localStorage instead
   const [threadId] = useQueryState("threadId");
@@ -157,7 +157,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         setAgentId(lastUsed);
       }
     }
-  }, [threadId]); // Only depend on threadId to avoid loops
+  }, [threadId, agentId, getThreadAgent, getLastUsedAgent, saveThreadAgent]); // Only depend on threadId to avoid loops
 
   // Auto-select a default agent when none is chosen yet
   useEffect(() => {

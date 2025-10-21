@@ -6,8 +6,6 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { useAgentContext } from "@/features/chat/providers/Stream";
-import { useQueryState } from "nuqs";
-import { useThreadAgent } from "@/hooks/use-thread-agent";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
 
@@ -35,31 +33,18 @@ export function IconAgentSelector({
   const { data: agents = [], isLoading: loading } = useFetchAgents();
   const [open, setOpen] = useState(false);
 
-  // PHASE 3: Get agentId from context instead of URL
-  // PHASE 4: Also get isChatMode and setChatMode
-  const { agentId, setAgentId, isChatMode, setChatMode } = useAgentContext();
-  const [threadId] = useQueryState("threadId");
-
-  // Phase 2: Thread-Agent Persistence
-  const { saveThreadAgent } = useThreadAgent();
+  const { agentId, setSelectedAgent, mode, setMode } = useAgentContext();
 
   const onAgentChange = useCallback(
     (v: string | string[] | undefined) => {
       const nextValue = Array.isArray(v) ? v[0] : v;
       if (!nextValue) return;
 
-      // PHASE 4: Update agent selection and exit chat mode
-      setAgentId(nextValue);
-      setChatMode(false); // Selecting an agent always exits chat mode
-
-      // NOTE: Agent change does NOT create new thread - agent is a property of the thread
-      // Phase 2: Save thread-agent mapping when agent changes
-      // Only save if we have an active thread (not on initial selection)
-      if (threadId) {
-        saveThreadAgent(threadId, nextValue);
-      }
+      // Update agent selection and switch to agent mode
+      setSelectedAgent(nextValue);
+      setMode("agent");
     },
-    [setAgentId, setChatMode, threadId, saveThreadAgent],
+    [setSelectedAgent, setMode],
   );
 
   const agentValue = agentId || undefined;
@@ -77,7 +62,7 @@ export function IconAgentSelector({
   const handleOpenChange = (isOpen: boolean) => {
     // PHASE 4: Only allow opening if we're already in agent mode
     // This prevents the popup from opening when just switching from chat to agent mode
-    if (isOpen && isChatMode) {
+    if (isOpen && mode === "chat") {
       // Block popup from opening when in chat mode
       return;
     }
@@ -90,17 +75,17 @@ export function IconAgentSelector({
   // Second click: Open agent selector popup
   const handleSegmentClick = useCallback(
     (e: React.MouseEvent) => {
-      if (isChatMode) {
+      if (mode === "chat") {
         // First click when in chat mode: just switch to agent mode
         // Prevent the popover from opening
         e.preventDefault();
         e.stopPropagation();
-        setChatMode(false);
+        setMode("agent");
       }
       // When already in agent mode, let the normal popover behavior handle it
       // (it will open via the Popover's internal click handler)
     },
-    [isChatMode, setChatMode],
+    [mode, setMode],
   );
 
   // Get selected agent for display
@@ -108,9 +93,9 @@ export function IconAgentSelector({
     (agent) => agent.assistant_id === agentValue,
   );
 
-  // PHASE 4: Use isChatMode from context instead of checking agentId
+  // PHASE 4: Use mode from context instead of checking agentId
   // isAgentMode is true when Agent segment should appear selected
-  const isAgentMode = !isChatMode;
+  const isAgentMode = mode === "agent";
 
   const trigger =
     variant === "segment" ? (

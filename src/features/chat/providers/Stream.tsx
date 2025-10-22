@@ -119,6 +119,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const [agentId, setSelectedAgent] = useState<string>("");
   const [mode, setMode] = useState<"agent" | "chat">("agent");
 
+  // Track previous threadId for key computation
+  const prevThreadIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    prevThreadIdRef.current = threadId;
+  }, [threadId]);
+
   // Initialize with default agent on mount
   useEffect(() => {
     if (!agentId && agents.length > 0) {
@@ -148,7 +155,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         </>
       ) : agentId ? (
         <StreamSession
-          key={threadId ?? 'no-thread'} // Force remount on thread change - only reliable way to clear SDK state
+          key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
           agentId={agentId}
           mode={mode}
           accessToken={session.accessToken}

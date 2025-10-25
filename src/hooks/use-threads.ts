@@ -12,6 +12,7 @@ export const threadKeys = {
   list: (filters?: { agentId?: string }) =>
     [...threadKeys.lists(), filters] as const,
   detail: (id: string) => [...threadKeys.all, "detail", id] as const,
+  state: (id: string | null) => [...threadKeys.all, "state", id] as const,
 };
 
 // Type for thread metadata
@@ -45,6 +46,39 @@ export function useFetchThreads(agentId?: string) {
     },
     enabled: !!accessToken,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+// Hook to fetch thread state for cached display with initialValues
+// This enables instant thread loading by showing cached data immediately
+// while the SDK loads fresh data in the background
+export function useFetchThreadState(threadId: string | null) {
+  const { session } = useAuthContext();
+  const accessToken = session?.accessToken;
+
+  return useQuery({
+    queryKey: threadKeys.state(threadId),
+    queryFn: async () => {
+      if (!threadId || !accessToken) {
+        return null;
+      }
+
+      const client = createClient(accessToken);
+      
+      try {
+        // Fetch the latest state (current checkpoint) for the thread
+        const state = await client.threads.getState(threadId);
+        return state;
+      } catch (error) {
+        // Return null instead of throwing to avoid error states for missing threads
+        console.warn(`Failed to fetch state for thread ${threadId}:`, error);
+        return null;
+      }
+    },
+    enabled: !!threadId && !!accessToken,
+    staleTime: 1000 * 30, // 30 seconds - show cached data for 30s before refetching
+    gcTime: 1000 * 60 * 10, // 10 minutes - keep in cache for 10 mins after component unmount
+    retry: false, // Don't retry on failure (thread might not exist yet)
   });
 }
 

@@ -19,6 +19,7 @@ import {
   AssistantMessage,
 } from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
+import { AITurn } from "@/features/chat/components/thread/messages/ai-turn";
 import { LoaderCircle, AlertCircle } from "lucide-react";
 import { ArrowDownIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
@@ -34,6 +35,8 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
+import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
+import { Loader } from "@/components/ai-elements/loader";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -68,7 +71,10 @@ function ScrollToBottom(props: { className?: string }) {
     <Button
       variant="secondary"
       size="icon"
-      className={cn("cursor-pointer rounded-full hover:bg-secondary", props.className)}
+      className={cn(
+        "hover:bg-secondary cursor-pointer rounded-full",
+        props.className,
+      )}
       onClick={() => scrollToBottom()}
     >
       <ArrowDownIcon />
@@ -76,11 +82,62 @@ function ScrollToBottom(props: { className?: string }) {
   );
 }
 
+// Helper function to group messages into turns
+type MessageTurn =
+  | { type: "human"; message: Message; index: number }
+  | {
+      type: "ai-turn";
+      messages: Message[];
+      startIndex: number;
+      endIndex: number;
+      lastHumanIndex: number;
+    };
+
+function groupMessagesIntoTurns(messages: Message[]): MessageTurn[] {
+  const turns: MessageTurn[] = [];
+  let i = 0;
+  let lastHumanIndex = -1;
+
+  while (i < messages.length) {
+    const msg = messages[i];
+
+    if (msg.type === "human") {
+      lastHumanIndex = i;
+      turns.push({ type: "human", message: msg, index: i });
+      i++;
+    } else if (msg.type === "ai" || msg.type === "tool") {
+      // Start collecting AI turn
+      const start = i;
+      const turnMessages: Message[] = [];
+
+      while (
+        i < messages.length &&
+        (messages[i].type === "ai" || messages[i].type === "tool")
+      ) {
+        turnMessages.push(messages[i]);
+        i++;
+      }
+
+      turns.push({
+        type: "ai-turn",
+        messages: turnMessages,
+        startIndex: start,
+        endIndex: i - 1,
+        lastHumanIndex: lastHumanIndex,
+      });
+    } else {
+      // Unknown message type, skip
+      i++;
+    }
+  }
+
+  return turns;
+}
+
 export function Thread() {
   // PHASE 3: Get agentId from context instead of URL
   const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
-  const [hasInput, setHasInput] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const {
     contentBlocks,
@@ -147,7 +204,6 @@ export function Thread() {
 
     const content = inputValue.trim();
 
-    setHasInput(false);
     setInputValue(""); // Clear the input after submission
     if (!agentId) return;
     if ((content.length === 0 && contentBlocks.length === 0) || isLoading)
@@ -264,24 +320,32 @@ export function Thread() {
                 </div>
               ) : (
                 <>
-                  {messages
-                    .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
-                    .map((message, index) =>
-                      message.type === "human" ? (
+                  {groupMessagesIntoTurns(
+                    messages.filter(
+                      (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)
+                    )
+                  ).map((turn) => {
+                    if (turn.type === "human") {
+                      return (
                         <HumanMessage
-                          key={message.id || `${message.type}-${index}`}
-                          message={message}
+                          key={turn.index}
+                          message={turn.message}
                           isLoading={isLoading}
                         />
-                      ) : (
-                        <AssistantMessage
-                          key={message.id || `${message.type}-${index}`}
-                          message={message}
+                      );
+                    } else {
+                      return (
+                        <AITurn
+                          key={`ai-turn-${turn.startIndex}`}
+                          turnMessages={turn.messages}
+                          lastHumanIndex={turn.lastHumanIndex}
+                          allMessages={messages}
                           isLoading={isLoading}
                           handleRegenerate={handleRegenerate}
                         />
-                      ),
-                    )}
+                      );
+                    }
+                  })}
                   {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
                       We need to render it outside of the messages list, since there are no messages to render */}
                   {hasNoAIOrToolMessages && !!stream.interrupt && (
@@ -292,7 +356,14 @@ export function Thread() {
                       handleRegenerate={handleRegenerate}
                     />
                   )}
-                  {isLoading && <AssistantMessageLoading />}
+                  {/* Browser Snapshot Display - shows live browser updates from browser_agent */}
+                  {/* <BrowserSnapshotView /> */}
+                  {isLoading && (
+                    <div className="flex items-start justify-start p-4">
+                      {" "}
+                      <Loader />
+                    </div>
+                  )}
                   {errorMessage && (
                     <Alert variant="destructive">
                       <AlertCircle className="size-4" />
@@ -317,35 +388,21 @@ export function Thread() {
                 </div>
               )}
 
-              <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full right-[calc(50%-24rem)] mb-4" />
+              <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute right-[calc(50%-24rem)] bottom-full mb-4" />
 
               <div
                 ref={dropRef}
                 className={cn(
-                  "relative z-10 mx-auto w-full max-w-2xl min-w-0 pb-3 transition-all",
+                  "relative z-10 mx-auto w-full max-w-3xl min-w-0 pb-4 transition-all",
                   dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >
                 <Composer
                   value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e.target.value);
-                    setHasInput(!!e.target.value.trim());
-                  }}
+                  onChange={setInputValue}
                   onSubmit={handleSubmit}
                   onCancel={handleCancel}
                   onPaste={handlePaste}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.nativeEvent.isComposing
-                    ) {
-                      e.preventDefault();
-                      const form = e.currentTarget.closest("form");
-                      form?.requestSubmit();
-                    }
-                  }}
                   placeholder="Type your message..."
                   disabled={isLoading || requiresApiKeysButNotSet(hasApiKeys)}
                   isLoading={stream.isLoading}

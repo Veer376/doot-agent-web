@@ -5,9 +5,10 @@ import { AgentIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
-import { useAgentContext } from "@/features/chat/providers/Stream";
+import { useAgentContext, useStreamContext } from "@/features/chat/providers/Stream";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface IconAgentSelectorProps {
   className?: string;
@@ -34,17 +35,25 @@ export function IconAgentSelector({
   const [open, setOpen] = useState(false);
 
   const { agentId, setSelectedAgent, mode, setMode } = useAgentContext();
+  const stream = useStreamContext();
+  const isStreaming = stream.isLoading;
 
   const onAgentChange = useCallback(
     (v: string | string[] | undefined) => {
       const nextValue = Array.isArray(v) ? v[0] : v;
       if (!nextValue) return;
 
+      // Prevent agent switching during streaming (covers both mode switch and agent-to-agent change)
+      if (isStreaming) {
+        toast.info("Please wait for the current response to complete");
+        return;
+      }
+
       // Update agent selection and switch to agent mode
       setSelectedAgent(nextValue);
       setMode("agent");
     },
-    [setSelectedAgent, setMode],
+    [setSelectedAgent, setMode, isStreaming],
   );
 
   const agentValue = agentId || undefined;
@@ -76,6 +85,14 @@ export function IconAgentSelector({
   const handleSegmentClick = useCallback(
     (e: React.MouseEvent) => {
       if (mode === "chat") {
+        // Prevent switching to agent mode during streaming
+        if (isStreaming) {
+          e.preventDefault();
+          e.stopPropagation();
+          toast.info("Please wait for the current response to complete");
+          return;
+        }
+        
         // First click when in chat mode: just switch to agent mode
         // Prevent the popover from opening
         e.preventDefault();
@@ -85,7 +102,7 @@ export function IconAgentSelector({
       // When already in agent mode, let the normal popover behavior handle it
       // (it will open via the Popover's internal click handler)
     },
-    [mode, setMode],
+    [mode, setMode, isStreaming],
   );
 
   // Get selected agent for display

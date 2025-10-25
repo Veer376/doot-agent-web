@@ -3,21 +3,21 @@ import { getThinkingBlocks, getContentString } from "./content-string";
 
 export type ChainStep =
   | {
-      type: "thinking";
-      heading: string;
-      content: string;
-      status: "complete";
-    }
+    type: "thinking";
+    heading: string;
+    content: string;
+    status: "complete";
+  }
   | {
-      type: "tool";
-      toolCall: {
-        id: string;
-        name: string;
-        args: Record<string, any>;
-      };
-      toolResponse?: ToolMessage;
-      status: "pending" | "success" | "error";
+    type: "tool";
+    toolCall: {
+      id: string;
+      name: string;
+      args: Record<string, any>;
     };
+    toolResponse?: ToolMessage;
+    status: "pending" | "success" | "error";
+  };
 
 export interface ChainOfThoughtData {
   hasThinking: boolean;
@@ -71,16 +71,16 @@ export function extractChainOfThought(
         hasToolCalls = true;
         toolCalls.forEach((toolCall) => {
           const response = toolResponseMap.get(toolCall.id || "");
-          
+
           // Determine status
           let status: "pending" | "success" | "error" = "pending";
           if (response) {
             // Check if response indicates error
-            const responseContent = typeof response.content === "string" 
-              ? response.content 
+            const responseContent = typeof response.content === "string"
+              ? response.content
               : JSON.stringify(response.content);
-            status = responseContent.toLowerCase().includes("error") 
-              ? "error" 
+            status = responseContent.toLowerCase().includes("error")
+              ? "error"
               : "success";
           }
 

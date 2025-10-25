@@ -37,6 +37,7 @@ import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
 import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
 import { Loader } from "@/components/ai-elements/loader";
+import { useUpdateThread, useFetchThreads } from "@/hooks/use-threads";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -136,7 +137,7 @@ function groupMessagesIntoTurns(messages: Message[]): MessageTurn[] {
 
 export function Thread() {
   // PHASE 3: Get agentId from context instead of URL
-  const { agentId } = useAgentContext();
+  const { agentId, mode, setSelectedAgent, setMode } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
   const {
@@ -157,6 +158,53 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+
+  // Hook for updating thread metadata
+  const { mutate: updateThread } = useUpdateThread();
+
+  // Fetch all threads to access thread metadata
+  const { data: threads = [] } = useFetchThreads();
+
+  // Track the last saved agent/mode to avoid redundant updates
+  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string } | null>(null);
+
+  // Restore agent/mode from thread metadata when thread changes
+  // Only restore on threadId change, not when user changes agent/mode
+  useEffect(() => {
+    if (!threadId || !threads.length) {
+      // Reset tracking when no thread
+      lastSavedMetadataRef.current = null;
+      return;
+    }
+
+    const currentThread = threads.find((t) => t.thread_id === threadId);
+    if (!currentThread?.metadata) return;
+
+    const { assistant_id, mode: threadMode } = currentThread.metadata;
+
+    // Track what's saved in this thread
+    if (
+      typeof assistant_id === "string" &&
+      typeof threadMode === "string" &&
+      (threadMode === "agent" || threadMode === "chat")
+    ) {
+      lastSavedMetadataRef.current = {
+        agentId: assistant_id,
+        mode: threadMode,
+      };
+    }
+
+    // Restore agent if saved in metadata
+    if (typeof assistant_id === "string") {
+      setSelectedAgent(assistant_id);
+    }
+
+    // Restore mode if saved in metadata
+    if (threadMode && (threadMode === "agent" || threadMode === "chat")) {
+      setMode(threadMode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, threads]);
 
   // Handle cancellation of the current stream
   const handleCancel = useCallback(() => {
@@ -221,6 +269,11 @@ export function Thread() {
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     const { getAgentConfig } = useConfigStore.getState();
 
+    // Determine which agent config to use based on current mode
+    // This MUST match the effectiveAgentId used in the stream connection
+    // to ensure the submit goes to the same assistant the stream is connected to
+    const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
+
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
@@ -235,7 +288,7 @@ export function Thread() {
         }),
         config: {
           configurable: {
-            ...getAgentConfig(agentId),
+            ...getAgentConfig(effectiveAgentId),
             apiKeys,
           },
         },
@@ -248,6 +301,31 @@ export function Thread() {
     );
 
     setContentBlocks([]);
+
+    // Save agent/mode to thread metadata after message is sent
+    // This captures the agent and mode used for this conversation
+    // Only update if metadata has changed to avoid redundant API calls
+    if (threadId) {
+      const hasChanged =
+        !lastSavedMetadataRef.current ||
+        lastSavedMetadataRef.current.agentId !== agentId ||
+        lastSavedMetadataRef.current.mode !== mode;
+
+      if (hasChanged) {
+        // For existing threads, update metadata only if changed
+        updateThread({
+          threadId,
+          metadata: {
+            assistant_id: agentId,
+            mode: mode,
+          },
+        });
+        // Update tracking
+        lastSavedMetadataRef.current = { agentId, mode };
+      }
+    }
+    // Note: For new threads, the metadata will be set automatically
+    // when the thread is created (via onThreadId callback in Stream.tsx)
 
     // If user submits while scrolled up, politely re-pin so they see the response
     const api = stickApiRef.current;
@@ -265,12 +343,16 @@ export function Thread() {
     if (!agentId) return;
     const { getAgentConfig } = useConfigStore.getState();
 
+    // Determine which agent config to use based on current mode
+    // This MUST match the effectiveAgentId used in the stream connection
+    const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
+
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
       config: {
         configurable: {
-          ...getAgentConfig(agentId),
+          ...getAgentConfig(effectiveAgentId),
           apiKeys,
         },
       },

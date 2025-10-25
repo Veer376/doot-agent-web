@@ -22,7 +22,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { threadKeys } from "@/hooks/use-threads";
+import { threadKeys, useUpdateThread } from "@/hooks/use-threads";
 import { useFetchAgents } from "@/hooks/use-agents";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
@@ -56,11 +56,13 @@ const StreamSession = ({
   agentId,
   mode,
   accessToken,
+  threadId: currentThreadId,
 }: {
   children: ReactNode;
   agentId: string;
   mode: "agent" | "chat";
   accessToken?: string;
+  threadId: string | null;
 }) => {
   
   if (!accessToken) {
@@ -69,10 +71,11 @@ const StreamSession = ({
 
   const [threadId, setThreadId] = useQueryState("threadId");
   const queryClient = useQueryClient();
+  const { mutate: updateThread } = useUpdateThread();
 
-  // Compute effective agentId based on mode
-  // When in chat mode, use "chat_mode" as the assistant ID for backend
-  // Otherwise, use the actual selected agent ID from metadata
+  // Use a stable assistantId for the stream connection
+  // The actual agent/mode will be determined by the submit config, not the stream connection
+  // This prevents stream reconnections when user changes agent/mode in UI
   const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
 
   const streamValue = useTypedStream({
@@ -87,6 +90,17 @@ const StreamSession = ({
     },
     onThreadId: (id) => {
       setThreadId(id);
+      
+      // For new threads (when threadId was null before), save agent/mode metadata
+      if (!threadId) {
+        updateThread({
+          threadId: id,
+          metadata: {
+            assistant_id: agentId,
+            mode: mode,
+          },
+        });
+      }
       
       // Invalidate thread list cache to show new thread immediately
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
@@ -109,7 +123,6 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const { data: agents = [] } = useFetchAgents();
   const [threadId] = useQueryState("threadId");
-  const queryClient = useQueryClient();
   
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
@@ -117,13 +130,20 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 
   // State management - no persistence, local state only
   const [agentId, setSelectedAgent] = useState<string>("");
-  const [mode, setMode] = useState<"agent" | "chat">("agent");
+  const [mode, setMode] = useState<"agent" | "chat">("chat"); // Default to chat mode
 
   // Track previous threadId for key computation
   const prevThreadIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     prevThreadIdRef.current = threadId;
+  }, [threadId]);
+
+  // When threadId changes to null (new thread), reset to chat mode
+  useEffect(() => {
+    if (threadId === null) {
+      setMode("chat");
+    }
   }, [threadId]);
 
   // Initialize with default agent on mount
@@ -159,6 +179,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           agentId={agentId}
           mode={mode}
           accessToken={session.accessToken}
+          threadId={threadId}
         >
           {children}
         </StreamSession>

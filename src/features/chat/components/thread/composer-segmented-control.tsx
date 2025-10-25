@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChatIcon } from "@/components/icons";
 import { IconAgentSelector } from "./icon-agent-selector";
-import { useAgentContext } from "@/features/chat/providers/Stream";
+import { useAgentContext, useStreamContext } from "@/features/chat/providers/Stream";
 import {
   Tooltip,
   TooltipContent,
@@ -42,8 +42,15 @@ export function ComposerSegmentedControl({
   // PHASE 4: Use isChatMode and setChatMode from context
   // Also read agentId so we can re-measure when agent label/text changes
   const { mode, setMode, agentId } = useAgentContext();
+  const stream = useStreamContext();
+  const isStreaming = stream.isLoading;
 
   const handleChatClick = () => {
+    // Prevent mode switching during streaming
+    if (isStreaming) {
+      toast.info("Please wait for the current response to complete");
+      return;
+    }
     setMode("chat");
   };
 

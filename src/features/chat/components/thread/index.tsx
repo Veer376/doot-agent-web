@@ -37,7 +37,8 @@ import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
 import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
 import { Loader } from "@/components/ai-elements/loader";
-import { useUpdateThread, useFetchThreads } from "@/hooks/use-threads";
+import { useUpdateThread, useFetchThreads, threadKeys } from "@/hooks/use-threads";
+import { useQueryClient } from "@tanstack/react-query";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -158,6 +159,9 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+
+  // Query client for cache invalidation
+  const queryClient = useQueryClient();
 
   // Hook for updating thread metadata
   const { mutate: updateThread } = useUpdateThread();
@@ -323,6 +327,13 @@ export function Thread() {
         // Update tracking
         lastSavedMetadataRef.current = { agentId, mode };
       }
+
+      // Invalidate thread state cache after message send
+      // This ensures the next thread load will fetch fresh data
+      // The cache will be repopulated when the thread is revisited
+      queryClient.invalidateQueries({
+        queryKey: threadKeys.state(threadId),
+      });
     }
     // Note: For new threads, the metadata will be set automatically
     // when the thread is created (via onThreadId callback in Stream.tsx)

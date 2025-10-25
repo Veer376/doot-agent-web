@@ -250,6 +250,16 @@ export function ThreadList() {
                       <SidebarMenuButton
                         onClick={() => handleSelectThread(thread.thread_id)}
                         isActive={isActive}
+                        // TODO: Optional performance enhancement - Pre-fetch thread state on hover
+                        // This will load thread data in the background before user clicks
+                        // Implementation example:
+                        // onMouseEnter={() => {
+                        //   queryClient.prefetchQuery({
+                        //     queryKey: threadKeys.state(thread.thread_id),
+                        //     queryFn: () => fetchThreadState(thread.thread_id),
+                        //     staleTime: 1000 * 30,
+                        //   });
+                        // }}
                       >
                         <span className="truncate text-sm">{title}</span>
                       </SidebarMenuButton>

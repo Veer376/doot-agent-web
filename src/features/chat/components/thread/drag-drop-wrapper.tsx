@@ -13,7 +13,7 @@ export function DragAndDropWrapper({
   onFileDrop,
   className,
 }: DragAndDropWrapperProps) {
-  const [dragOver, setDragOver] = useState(false);
+  const [, setDragOver] = useState(false);
   const dragCounter = useRef(0);
 
   const handleDragEnter = (e: React.DragEvent) => {

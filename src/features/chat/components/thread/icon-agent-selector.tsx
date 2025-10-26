@@ -120,20 +120,23 @@ export function IconAgentSelector({
         ref={buttonRef}
         type="button"
         onClick={handleSegmentClick}
+        aria-label={
+          selectedAgent ? `Agent: ${selectedAgent.name}` : "Select Agent"
+        }
         className={cn(
-          "h-8 cursor-pointer rounded-2xl px-3 text-sm font-semibold transition-colors",
+          "h-8 cursor-pointer rounded-2xl px-3 text-sm transition-colors",
           "flex items-center gap-2",
-          // PHASE 5: Remove background, only manage text color
-          // The animated indicator in parent handles the background
           "bg-transparent",
+          // Keep background by indicator when active; hover tint on inactive only
           isAgentMode
             ? "text-background"
-            : "text-foreground/80 hover:text-foreground",
+            : "text-foreground hover:bg-accent/60 dark:hover:bg-accent/40",
+          "focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none",
           className,
         )}
       >
         <AgentIcon className={isAgentMode ? "text-background" : ""} />
-        <span className="max-w-[160px] truncate">
+        <span className="hidden max-w-[160px] truncate md:inline-block">
           {selectedAgent?.name ?? "Agent"}
         </span>
       </button>
@@ -143,10 +146,7 @@ export function IconAgentSelector({
           selectedAgent ? `Agent: ${selectedAgent.name}` : "Select Agent"
         }
         variant="ghost"
-        className={cn(
-          "flex-shrink-0 cursor-pointer rounded-3xl bg-blue-100 transition-colors ease-in-out hover:bg-blue-100",
-          className,
-        )}
+        className={className}
       >
         <AgentIcon />
         <span className="sr-only">Select Agent</span>

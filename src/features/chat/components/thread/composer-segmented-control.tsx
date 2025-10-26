@@ -12,18 +12,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface ComposerSegmentedControlProps {
-  onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
 }
 
 export function ComposerSegmentedControl({
-  onFileUpload,
   className,
 }: ComposerSegmentedControlProps) {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
   // Refs for measuring button positions and sizes
   const agentButtonRef = useRef<HTMLButtonElement>(null);
   const chatButtonRef = useRef<HTMLButtonElement>(null);
@@ -37,9 +34,7 @@ export function ComposerSegmentedControl({
   // Optional polish: fade-in indicator after first valid compute
   const [hasMeasured, setHasMeasured] = useState(false);
 
-  const handleFileClick = () => fileInputRef.current?.click();
-
-  // PHASE 4: Use isChatMode and setChatMode from context
+  // PHASE 4: Use mode and setMode from context
   // Also read agentId so we can re-measure when agent label/text changes
   const { mode, setMode, agentId } = useAgentContext();
   const stream = useStreamContext();
@@ -116,34 +111,14 @@ export function ComposerSegmentedControl({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {/* Attach button (outlined circle) */}
-      <div className="bg-background flex h-8 w-10 items-center justify-center rounded-full border">
-        <TooltipIconButton
-          tooltip="Attach file"
-          onClick={handleFileClick}
-        >
-          <AttachIcon />
-        </TooltipIconButton>
-      </div>
-
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={onFileUpload}
-        accept="image/*,.pdf,.txt,.doc,.docx,.csv,.json"
-      />
-
       {/* Segmented control pill with animated indicator */}
       <div
         ref={containerRef}
-        className="border-border bg-background relative flex items-center gap-1 overflow-hidden rounded-3xl border"
+        className="bg-card ring-border relative flex h-10 items-center gap-1 overflow-hidden rounded-full px-1 shadow-inner ring-1"
       >
         {/* Animated selection indicator */}
         <motion.div
-          className="bg-foreground absolute h-8 rounded-2xl shadow-inner"
+          className="bg-foreground absolute h-9 rounded-full shadow-sm"
           initial={false}
           animate={{
             left: indicatorStyle.left,

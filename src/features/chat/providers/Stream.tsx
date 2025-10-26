@@ -182,7 +182,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         </>
       ) : agentId ? (
         <StreamSession
-          key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
+          // key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
           agentId={agentId}
           mode={mode}
           accessToken={session.accessToken}

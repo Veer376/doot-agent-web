@@ -1,7 +1,7 @@
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { Checkpoint, Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { cn } from "@/lib/utils";
-import { BranchSwitcher, CommandBar } from "./shared";
+import { CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { extractChainOfThought } from "@/features/chat/utils/extract-chain-of-thought";
 import {
@@ -39,14 +39,6 @@ export const AITurn = React.memo(function AITurn({
     () => extractChainOfThought(turnMessages, isLoading),
     [turnMessages, isLoading]
   );
-
-  const lastAIMessage = [...turnMessages]
-    .reverse()
-    .find((m) => m.type === "ai");
-  
-  const meta = lastAIMessage
-    ? thread.getMessagesMetadata(lastAIMessage)
-    : undefined;
 
   const humanMessage = lastHumanIndex >= 0 ? allMessages[lastHumanIndex] : undefined;
   const humanMeta = humanMessage
@@ -270,18 +262,13 @@ export const AITurn = React.memo(function AITurn({
         })}
 
         {/* CommandBar - only shown at the end of the turn */}
+        {/* Branch switching is handled at the human message level, not here */}
         <div
           className={cn(
             "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
             "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0"
           )}
         >
-          <BranchSwitcher
-            branch={meta?.branch}
-            branchOptions={meta?.branchOptions}
-            onSelect={(branch) => thread.setBranch(branch)}
-            isLoading={isLoading}
-          />
           <CommandBar
             content={combinedContent}
             isLoading={isLoading}

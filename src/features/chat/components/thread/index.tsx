@@ -15,9 +15,6 @@ import {
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
-import {
-  AssistantMessage,
-} from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { AITurn } from "@/features/chat/components/thread/messages/ai-turn";
 import { LoaderCircle, AlertCircle } from "lucide-react";
@@ -442,9 +439,11 @@ export function Thread() {
                   {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
                       We need to render it outside of the messages list, since there are no messages to render */}
                   {hasNoAIOrToolMessages && !!stream.interrupt && (
-                    <AssistantMessage
-                      key="interrupt-msg"
-                      message={undefined}
+                    <AITurn
+                      key="interrupt-ai-turn"
+                      turnMessages={[]}
+                      lastHumanIndex={messages.length > 0 ? messages.length - 1 : -1}
+                      allMessages={messages}
                       isLoading={isLoading}
                       handleRegenerate={handleRegenerate}
                     />

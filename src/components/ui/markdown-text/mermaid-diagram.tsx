@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 
 interface MermaidDiagramProps {
@@ -15,6 +15,7 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const uniqueId = useId();
 
   useEffect(() => {
     const renderDiagram = async () => {
@@ -35,8 +36,8 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         // Clear previous content
         containerRef.current.innerHTML = "";
 
-        // Generate unique ID for this diagram
-        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        // Generate unique ID for this diagram using React's useId
+        const id = `mermaid-${uniqueId.replace(/:/g, "-")}`;
 
         // Render the diagram
         const { svg } = await mermaid.render(id, chart);

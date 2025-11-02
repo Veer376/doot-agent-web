@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AgentIcon, NewThreadIcon } from "@/components/icons";
+import { AgentIcon, NewThreadIcon, SearchIcon } from "@/components/icons";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -23,6 +23,12 @@ const data = {
       icon: NewThreadIcon,
     },
     {
+      title: "Search Threads",
+      // Special marker to indicate this is an action, not a navigation link
+      action: "search",
+      icon: SearchIcon,
+    },
+    {
       title: "Agents",
       url: "/agents",
       icon: AgentIcon,
@@ -38,7 +44,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.navMain} onSearchClick={() => {
+          const event = new CustomEvent('openThreadSearch');
+          window.dispatchEvent(event);
+        }} />
         <ThreadList />
       </SidebarContent>
       <SidebarFooter>

@@ -52,6 +52,7 @@ import {
   Edit01Icon,
   SentIcon,
   Copy01Icon,
+  Copy02Icon as Copy02HugeIcon,
   RepeatIcon,
   ArrowDown01Icon,
   ArrowLeft01Icon,
@@ -70,6 +71,9 @@ import {
   Alert02Icon as Alert02HugeIcon,
   TipsIcon as TipsHugeIcon,
   TaskDaily02Icon as TaskDaily02HugeIcon,
+  PinIcon as PinHugeIcon,
+  PinOffIcon as PinOffHugeIcon,
+  PlusSignCircleIcon as PlusSignCircleHugeIcon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -290,6 +294,13 @@ export const CopyIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
+export const Copy02Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Copy02HugeIcon}
+    {...props}
+  />
+);
+
 export const EditIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={Edit01Icon}
@@ -463,6 +474,32 @@ export const TaskDaily02Icon: React.FC<AppIconProps> = (props) => (
     {...props}
   />
 );
+
+// ============================================
+// PIN ICONS
+// ============================================
+
+export const PinIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={PinHugeIcon}
+    {...props}
+  />
+);
+
+export const PinOffIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={PinOffHugeIcon}
+    {...props}
+  />
+);
+
+export const PlusSignIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={PlusSignCircleHugeIcon}
+    {...props}
+  />
+);
+
 // ============================================
 // EXPORTS
 // ============================================
@@ -485,6 +522,7 @@ export default {
   LogOut: LogOutIcon,
   Send: SendIcon,
   Copy: CopyIcon,
+  Copy02: Copy02Icon,
   Edit: EditIcon,
   Cancel: CancelIcon,
   Delete: DeleteIcon,
@@ -499,4 +537,6 @@ export default {
   Alert02: Alert02Icon,
   Tips: TipsIcon,
   TaskDaily02: TaskDaily02Icon,
+  Pin: PinIcon,
+  PinOff: PinOffIcon,
 };

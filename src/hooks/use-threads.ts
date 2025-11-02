@@ -19,6 +19,8 @@ export const threadKeys = {
 export interface ThreadMetadata {
   assistant_id?: string;  // Which agent to use
   mode?: "agent" | "chat";  // UI mode (agent mode vs chat mode)
+  name?: string;  // Custom thread name
+  pinned?: boolean;  // Whether the thread is pinned
   [key: string]: unknown;
 }
 

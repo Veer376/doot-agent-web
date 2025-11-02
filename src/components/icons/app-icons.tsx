@@ -74,6 +74,16 @@ import {
   PinIcon as PinHugeIcon,
   PinOffIcon as PinOffHugeIcon,
   PlusSignCircleIcon as PlusSignCircleHugeIcon,
+  // Agent icon variations for testing
+  AiBrain01Icon,
+  AiBrain02Icon,
+  AiBrain03Icon,
+  AiBrain05Icon,
+  MachineRobotIcon,
+  RoboticIcon,
+  CopilotIcon,
+  NeuralNetworkIcon,
+  AiChat02Icon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -195,9 +205,73 @@ export const FoldIcon: React.FC<AppIconProps> = (props) => (
 // FEATURE ICONS
 // ============================================
 
-export const AgentIcon: React.FC<AppIconProps> = (props) => (
+export const AgentIconComplex: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={ChatBotIcon}
+    {...props}
+  />
+);
+
+// Agent Icon Variations for Testing
+export const AgentIcon1: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain01Icon}
+    {...props}
+  />
+);
+
+export const AgentIcon2: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain02Icon}
+    {...props}
+  />
+);
+
+export const AgentIcon3: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain03Icon}
+    {...props}
+  />
+);
+
+export const AgentBrainCPU: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain05Icon}
+    {...props}
+  />
+);
+
+export const AgentIcon5: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MachineRobotIcon}
+    {...props}
+  />
+);
+
+export const AgentIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={RoboticIcon}
+    {...props}
+  />
+);
+
+export const AgentIcon7: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CopilotIcon}
+    {...props}
+  />
+);
+
+export const AgentIcon8: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={NeuralNetworkIcon}
+    {...props}
+  />
+);
+
+export const AgentChat: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiChat02Icon}
     {...props}
   />
 );

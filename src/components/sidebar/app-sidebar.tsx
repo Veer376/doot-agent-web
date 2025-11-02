@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AgentIcon, NewThreadIcon, SearchIcon } from "@/components/icons";
+import { AgentBrainCPU, NewThreadIcon, SearchIcon } from "@/components/icons";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -31,7 +31,7 @@ const data = {
     {
       title: "Agents",
       url: "/agents",
-      icon: AgentIcon,
+      icon: AgentBrainCPU,
     },
   ],
 };

@@ -19,8 +19,9 @@ export default function Layout({
     <html
       lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
     >
-      <body className={GeistSans.className}>
+      <body className={GeistSans.className} suppressHydrationWarning>
         <ThemeProvider>
           <main>{children}</main>
         </ThemeProvider>

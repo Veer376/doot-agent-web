@@ -254,3 +254,46 @@ export function useDeleteThread() {
     },
   });
 }
+
+// Hook to delete messages from a checkpoint onwards (rollback)
+export function useDeleteFromCheckpoint() {
+  const { session } = useAuthContext();
+  const accessToken = session?.accessToken;
+
+  return useMutation({
+    mutationFn: async ({
+      threadId,
+      checkpointId,
+    }: {
+      threadId: string;
+      checkpointId: string;
+    }) => {
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("API URL not configured");
+      }
+
+      const response = await fetch(
+        `${apiUrl}/threads/${threadId}/checkpoints/${checkpointId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "x-supabase-access-token": accessToken,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to delete checkpoint: ${response.statusText} - ${errorText}`
+        );
+      }
+    },
+  });
+}

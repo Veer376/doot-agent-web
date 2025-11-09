@@ -202,7 +202,7 @@ export function Composer({
             style={{ transformOrigin: "0% 100%" }}
           >
             {hasAttachments && (
-              <div className="mr-auto flex w-full flex-wrap items-start gap-2">
+              <div className="w-full flex flex-wrap items-start gap-2">
                 <ContentBlocksPreview
                   blocks={contentBlocks}
                   onRemove={onRemoveBlock || (() => {})}

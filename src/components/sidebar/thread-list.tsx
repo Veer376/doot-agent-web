@@ -452,160 +452,13 @@ export function ThreadList() {
     );
   };
 
-  // Don't render thread list when sidebar is collapsed
-  if (state === "collapsed") {
-    return null;
-  }
-
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupLabel>
-          Threads
-        </SidebarGroupLabel>
-        <SidebarMenu>
-          {isLoading && (
-            <>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <SidebarMenuItem key={`skeleton-${index}`}>
-                  <Skeleton className="h-12 w-full" />
-                </SidebarMenuItem>
-              ))}
-            </>
-          )}
-
-          {!isLoading && sortedThreads.length === 0 && (
-            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
-              <NoSignalIcon size="xl" />
-              <p className="text-sm">
-                {searchQuery ? "No threads found" : "No threads yet"}
-              </p>
-            </div>
-          )}
-
-          {!isLoading &&
-            sortedThreads.map((thread) => {
-              const title =
-                getFirstHumanMessageContent(thread) ||
-                (thread.metadata?.name as string) ||
-                `New thread ${thread.thread_id.slice(0, 5)}`;
-              const isActive = thread.thread_id === threadId;
-              const isEditing = editingThreadId === thread.thread_id;
-              const isPinned = thread.metadata?.pinned === true;
-
-              return (
-                <SidebarMenuItem key={thread.thread_id}>
-                  {isEditing ? (
-                    <div className="flex items-center px-1 py-1">
-                      <Input
-                        ref={inputRef}
-                        value={editingThreadName}
-                        onChange={(e) => setEditingThreadName(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onBlur={handleSaveEdit}
-                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 rounded-3xl border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
-                        placeholder="Thread name..."
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <SidebarMenuButton
-                        onClick={() => handleSelectThread(thread.thread_id)}
-                        isActive={isActive}
-                        // TODO: Optional performance enhancement - Pre-fetch thread state on hover
-                        // This will load thread data in the background before user clicks
-                        // Implementation example:
-                        // onMouseEnter={() => {
-                        //   queryClient.prefetchQuery({
-                        //     queryKey: threadKeys.state(thread.thread_id),
-                        //     queryFn: () => fetchThreadState(thread.thread_id),
-                        //     staleTime: 1000 * 30,
-                        //   });
-                        // }}
-                      >
-                        <span className="truncate text-sm">{title}</span>
-                      </SidebarMenuButton>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <SidebarMenuAction
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                            showOnHover={!isPinned}
-                            className={cn(
-                              "data-[state=open]:opacity-100",
-                              isPinned && "md:opacity-100"
-                            )}
-                          >
-                            <span className="group-hover/menu-item:hidden">
-                              {isPinned ? (
-                                <PinIcon className="text-muted-foreground" size="xs"/>
-                              ) : (
-                                <MoreVerticalMenuIcon />
-                              )}
-                            </span>
-                            <span className="hidden group-hover/menu-item:block">
-                              <MoreVerticalMenuIcon />
-                            </span>
-                            <span className="sr-only">More options</span>
-                          </SidebarMenuAction>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          side="right"
-                          align="start"
-                        >
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTogglePin(thread.thread_id, isPinned);
-                            }}
-                          >
-                            {isPinned ? (
-                              <PinOffIcon size="sm" />
-                            ) : (
-                              <PinIcon size="sm" />
-                            )}
-                            <span>{isPinned ? "Unpin thread" : "Pin thread"}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(thread.thread_id);
-                            }}
-                          >
-                            <EditIcon size="sm" />
-                            <span>Rename</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyThread(thread.thread_id);
-                            }}
-                          >
-                            <Copy02Icon size="sm" />
-                            <span>Clone thread</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteThread(thread.thread_id);
-                            }}
-                          >
-                            <DeleteIcon size="sm" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </>
-                  )}
-                </SidebarMenuItem>
-              );
-            })}
-        </SidebarMenu>
-      </SidebarGroup>
-
       {/* Search Dialog - Thread Browser */}
+      {/* ARCHITECTURE: Dialog is always rendered, independent of sidebar collapse state.
+          This ensures the search functionality works whether sidebar is expanded or collapsed.
+          Radix UI Dialog uses portals, so it's lightweight when closed (open={false}).
+          The dialog is controlled via the searchOpen state, not by conditional rendering. */}
       <Dialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
@@ -755,6 +608,155 @@ export function ThreadList() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Thread List in Sidebar - Only render when sidebar is expanded */}
+      {state === "collapsed" ? null : (
+        <SidebarGroup>
+        <SidebarGroupLabel>
+          Threads
+        </SidebarGroupLabel>
+        <SidebarMenu>
+          {isLoading && (
+            <>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <SidebarMenuItem key={`skeleton-${index}`}>
+                  <Skeleton className="h-12 w-full" />
+                </SidebarMenuItem>
+              ))}
+            </>
+          )}
+
+          {!isLoading && sortedThreads.length === 0 && (
+            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
+              <NoSignalIcon size="xl" />
+              <p className="text-sm">
+                {searchQuery ? "No threads found" : "No threads yet"}
+              </p>
+            </div>
+          )}
+
+          {!isLoading &&
+            sortedThreads.map((thread) => {
+              const title =
+                getFirstHumanMessageContent(thread) ||
+                (thread.metadata?.name as string) ||
+                `New thread ${thread.thread_id.slice(0, 5)}`;
+              const isActive = thread.thread_id === threadId;
+              const isEditing = editingThreadId === thread.thread_id;
+              const isPinned = thread.metadata?.pinned === true;
+
+              return (
+                <SidebarMenuItem key={thread.thread_id}>
+                  {isEditing ? (
+                    <div className="flex items-center px-1 py-1">
+                      <Input
+                        ref={inputRef}
+                        value={editingThreadName}
+                        onChange={(e) => setEditingThreadName(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onBlur={handleSaveEdit}
+                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 rounded-3xl border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                        placeholder="Thread name..."
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <SidebarMenuButton
+                        onClick={() => handleSelectThread(thread.thread_id)}
+                        isActive={isActive}
+                        // TODO: Optional performance enhancement - Pre-fetch thread state on hover
+                        // This will load thread data in the background before user clicks
+                        // Implementation example:
+                        // onMouseEnter={() => {
+                        //   queryClient.prefetchQuery({
+                        //     queryKey: threadKeys.state(thread.thread_id),
+                        //     queryFn: () => fetchThreadState(thread.thread_id),
+                        //     staleTime: 1000 * 30,
+                        //   });
+                        // }}
+                      >
+                        <span className="truncate text-sm">{title}</span>
+                      </SidebarMenuButton>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <SidebarMenuAction
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            showOnHover={!isPinned}
+                            className={cn(
+                              "data-[state=open]:opacity-100",
+                              isPinned && "md:opacity-100"
+                            )}
+                          >
+                            <span className="group-hover/menu-item:hidden">
+                              {isPinned ? (
+                                <PinIcon className="text-muted-foreground" size="xs"/>
+                              ) : (
+                                <MoreVerticalMenuIcon />
+                              )}
+                            </span>
+                            <span className="hidden group-hover/menu-item:block">
+                              <MoreVerticalMenuIcon />
+                            </span>
+                            <span className="sr-only">More options</span>
+                          </SidebarMenuAction>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          side="right"
+                          align="start"
+                        >
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePin(thread.thread_id, isPinned);
+                            }}
+                          >
+                            {isPinned ? (
+                              <PinOffIcon size="sm" />
+                            ) : (
+                              <PinIcon size="sm" />
+                            )}
+                            <span>{isPinned ? "Unpin thread" : "Pin thread"}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEdit(thread.thread_id);
+                            }}
+                          >
+                            <EditIcon size="sm" />
+                            <span>Rename</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyThread(thread.thread_id);
+                            }}
+                          >
+                            <Copy02Icon size="sm" />
+                            <span>Clone thread</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteThread(thread.thread_id);
+                            }}
+                          >
+                            <DeleteIcon size="sm" />
+                            <span>Delete</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </SidebarMenuItem>
+              );
+            })}
+        </SidebarMenu>
+      </SidebarGroup>
+      )}
     </>
   );
 }

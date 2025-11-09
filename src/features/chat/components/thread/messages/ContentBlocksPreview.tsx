@@ -1,7 +1,18 @@
 import React from "react";
-import type { Base64ContentBlock } from "@langchain/core/messages";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { cn } from "@/lib/utils";
+
+// Type for content blocks - defining locally to avoid import issues  
+interface Base64ContentBlock {
+  type: "image" | "file";
+  source_type: "base64";
+  mime_type: string;
+  data: string;
+  metadata?: {
+    name?: string;
+    filename?: string;
+  };
+}
 
 interface ContentBlocksPreviewProps {
   blocks: Base64ContentBlock[];
@@ -22,7 +33,7 @@ export const ContentBlocksPreview: React.FC<ContentBlocksPreviewProps> = ({
 }) => {
   if (!blocks.length) return null;
   return (
-    <div className={cn("flex flex-wrap gap-2 p-3.5 pb-0", className)}>
+    <div className={cn("flex flex-wrap gap-2", className)}>
       {blocks.map((block, idx) => (
         <MultimodalPreview
           key={idx}

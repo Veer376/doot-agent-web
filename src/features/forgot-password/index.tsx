@@ -4,15 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/providers/Auth";
 
@@ -55,69 +46,70 @@ export default function ForgotPasswordInterface() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Reset Password</CardTitle>
-          <CardDescription className="text-center">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-4 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground text-center leading-tight">
+            Reset your password
+          </h1>
+          <p className="text-muted-foreground text-sm text-center">
             Enter your email address and we'll send you a link to reset your
             password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {success ? (
-            <Alert className="mb-4">
-              <AlertDescription>
-                If your email address is associated with an account, you will
-                receive an email with instructions to reset your password
-                shortly.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+          </p>
+        </div>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+        {success ? (
+          <Alert className="mb-4">
+            <AlertDescription>
+              If your email address is associated with an account, you will
+              receive an email with instructions to reset your password
+              shortly.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3"
+          >
+            <div className="space-y-2">
+              <Input
+                id="email"
+                type="email"
+                placeholder="Email address"
+                className="h-11 rounded-2xl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="pt-2">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
                 disabled={isLoading}
               >
-                {isLoading ? "Sending..." : "Send Reset Link"}
+                {isLoading ? "Sending..." : "Send reset link"}
               </Button>
-            </form>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Remember your password?{" "}
-            <Link
-              href="/signin"
-              className="text-primary font-medium hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+            </div>
+          </form>
+        )}
+
+        <div className="mt-4 text-center text-sm">
+          <Link
+            href="/signin"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Remember your password? Sign in
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

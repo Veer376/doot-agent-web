@@ -50,7 +50,6 @@ export function NavUser() {
         name: authUser.displayName || authUser.email?.split("@")[0] || "User",
         email: authUser.email || "",
         avatar: authUser.avatarUrl || "",
-        company: authUser.companyName || "",
         firstName: authUser.firstName || "",
         lastName: authUser.lastName || "",
       }
@@ -58,7 +57,6 @@ export function NavUser() {
         name: "Guest",
         email: "Not signed in",
         avatar: "",
-        company: "",
         firstName: "",
         lastName: "",
       };
@@ -119,11 +117,6 @@ export function NavUser() {
                   {displayUser.name}
                 </span>
                 <span className="truncate text-xs">{displayUser.email}</span>
-                {"company" in displayUser && (
-                  <span className="text-muted-foreground truncate text-xs">
-                    {displayUser.company}
-                  </span>
-                )}
               </div>
               <ToggleIcon
                 size={DEFAULT_ICON_SIZE}
@@ -155,11 +148,6 @@ export function NavUser() {
                     {displayUser.name}
                   </span>
                   <span className="truncate text-xs">{displayUser.email}</span>
-                  {"company" in displayUser && (
-                    <span className="text-muted-foreground truncate text-xs">
-                      {displayUser.company}
-                    </span>
-                  )}
                 </div>
               </div>
             </DropdownMenuLabel>

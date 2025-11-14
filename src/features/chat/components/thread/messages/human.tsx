@@ -34,7 +34,7 @@ function EditableContent({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="focus-visible:ring-0"
+      className="min-h-11 resize-none rounded-2xl px-4 py-3 focus-visible:ring-0"
     />
   );
 }

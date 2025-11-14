@@ -6,15 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
@@ -107,141 +98,152 @@ export default function SigninInterface() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Welcome back to Orbit Agent
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {message && !isSuccess && (
-            <Alert className="mb-4 bg-blue-50 text-blue-800">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          )}
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground text-center leading-tight">
+            Log into your account
+          </h1>
+        </div>
 
-          {isSuccess && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
-              <AlertDescription className="flex flex-col gap-2">
-                <span>Success! We're redirecting you to the dashboard...</span>
-                {showManualRedirect && (
-                  <Button
-                    onClick={() => router.push("/")}
-                    variant="outline"
-                    className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
-                  >
-                    Go to Dashboard Now
-                  </Button>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
+        {message && !isSuccess && (
+          <Alert className="mb-4 bg-blue-50 text-blue-800">
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-primary text-sm font-medium hover:underline"
+        {isSuccess && (
+          <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+            <AlertDescription className="flex flex-col gap-2">
+              <span>Success! We're redirecting you to the dashboard...</span>
+              {showManualRedirect && (
+                <Button
+                  onClick={() => router.push("/")}
+                  variant="outline"
+                  className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
                 >
-                  Forgot password?
-                </Link>
-              </div>
-              <PasswordInput
-                id="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+                  Go to Dashboard Now
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3"
+        >
+          <div className="space-y-2">
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email address"
+              className="h-11 rounded-2xl"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
+          <div className="space-y-2">
+            <PasswordInput
+              id="password"
+              placeholder="Password"
+              className="h-11 rounded-2xl"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="pt-2">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
               disabled={isLoading || isSuccess}
             >
               {isLoading
                 ? "Signing in..."
                 : isSuccess
                   ? "Signed In Successfully"
-                  : "Sign In"}
+                  : "Sign in"}
             </Button>
-          </form>
+          </div>
+        </form>
 
-          {!googleAuthDisabled() && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card text-muted-foreground px-2">
-                    Or continue with
-                  </span>
-                </div>
+        {!googleAuthDisabled() && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
               </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-background text-muted-foreground">
+                  or
+                </span>
+              </div>
+            </div>
 
-              <Button
-                variant="outline"
-                type="button"
-                className="flex w-full items-center justify-center gap-2"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || isSuccess}
+            <Button
+              variant="outline"
+              type="button"
+              size="lg"
+              className="w-full h-12 rounded-2xl"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading || isSuccess}
+            >
+              <svg
+                className="size-4"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                </svg>
-                Sign in with Google
-              </Button>
-            </>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Don&apos;t have an account?{" "}
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Sign in with Google
+            </Button>
+          </>
+        )}
+
+        <div className="mt-4 space-y-3 text-center text-sm">
+          <button
+            type="button"
+            onClick={() => router.push("/forgot-password")}
+            className="text-primary hover:underline"
+          >
+            Forgot password?
+          </button>
+
+          <div>
             <Link
               href="/signup"
-              className="text-primary font-medium hover:underline"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Sign up
+              Don&apos;t have an account? Sign up
             </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

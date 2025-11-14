@@ -7,15 +7,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
@@ -25,7 +16,6 @@ const signupSchema = z
   .object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    companyName: z.string().optional(),
     email: z.string().email("Please enter a valid email address"),
     password: z
       .string()
@@ -49,7 +39,6 @@ export default function SignupInterface() {
   const [formValues, setFormValues] = useState<Partial<SignupFormValues>>({
     firstName: "",
     lastName: "",
-    companyName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -103,7 +92,6 @@ export default function SignupInterface() {
         metadata: {
           first_name: formValues.firstName,
           last_name: formValues.lastName,
-          company_name: formValues.companyName || null,
           name: `${formValues.firstName} ${formValues.lastName}`.trim(),
         },
       });
@@ -145,188 +133,174 @@ export default function SignupInterface() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">
-            Create an Account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign up to get started with Open Agent Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  placeholder="John"
-                  value={formValues.firstName || ""}
-                  onChange={handleInputChange}
-                  aria-invalid={!!errors.firstName}
-                />
-                {errors.firstName && (
-                  <p className="text-destructive text-sm">{errors.firstName}</p>
-                )}
-              </div>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground text-center leading-tight">
+            Create your account
+          </h1>
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  placeholder="Doe"
-                  value={formValues.lastName || ""}
-                  onChange={handleInputChange}
-                  aria-invalid={!!errors.lastName}
-                />
-                {errors.lastName && (
-                  <p className="text-destructive text-sm">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3"
+        >
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="companyName">
-                Company Name{" "}
-                <span className="text-muted-foreground text-xs">
-                  (Optional)
-                </span>
-              </Label>
               <Input
-                id="companyName"
-                name="companyName"
+                id="firstName"
+                name="firstName"
                 type="text"
-                placeholder="Your Company Inc."
-                value={formValues.companyName || ""}
+                placeholder="First name"
+                className="h-11 rounded-2xl"
+                value={formValues.firstName || ""}
                 onChange={handleInputChange}
-                aria-invalid={!!errors.companyName}
+                aria-invalid={!!errors.firstName}
               />
-              {errors.companyName && (
-                <p className="text-destructive text-sm">{errors.companyName}</p>
+              {errors.firstName && (
+                <p className="text-destructive text-sm">{errors.firstName}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="name@example.com"
-                value={formValues.email || ""}
+                id="lastName"
+                name="lastName"
+                type="text"
+                placeholder="Last name"
+                className="h-11 rounded-2xl"
+                value={formValues.lastName || ""}
                 onChange={handleInputChange}
-                aria-invalid={!!errors.email}
+                aria-invalid={!!errors.lastName}
               />
-              {errors.email && (
-                <p className="text-destructive text-sm">{errors.email}</p>
+              {errors.lastName && (
+                <p className="text-destructive text-sm">{errors.lastName}</p>
               )}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <PasswordInput
-                id="password"
-                name="password"
-                placeholder="Create a password"
-                value={formValues.password || ""}
-                onChange={handleInputChange}
-                aria-invalid={!!errors.password}
-              />
-              {errors.password && (
-                <p className="text-destructive text-sm">{errors.password}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <PasswordInput
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                value={formValues.confirmPassword || ""}
-                onChange={handleInputChange}
-                aria-invalid={!!errors.confirmPassword}
-              />
-              {errors.confirmPassword && (
-                <p className="text-destructive text-sm">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {authError && (
-              <Alert variant="destructive">
-                <AlertDescription>{authError}</AlertDescription>
-              </Alert>
+          <div className="space-y-2">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Email address"
+              className="h-11 rounded-2xl"
+              value={formValues.email || ""}
+              onChange={handleInputChange}
+              aria-invalid={!!errors.email}
+            />
+            {errors.email && (
+              <p className="text-destructive text-sm">{errors.email}</p>
             )}
+          </div>
 
+          <div className="space-y-2">
+            <PasswordInput
+              id="password"
+              name="password"
+              placeholder="Password"
+              className="h-11 rounded-2xl"
+              value={formValues.password || ""}
+              onChange={handleInputChange}
+              aria-invalid={!!errors.password}
+            />
+            {errors.password && (
+              <p className="text-destructive text-sm">{errors.password}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <PasswordInput
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm password"
+              className="h-11 rounded-2xl"
+              value={formValues.confirmPassword || ""}
+              onChange={handleInputChange}
+              aria-invalid={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <p className="text-destructive text-sm">
+                {errors.confirmPassword}
+              </p>
+            )}
+          </div>
+
+          {authError && (
+            <Alert variant="destructive">
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="pt-2">
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
               disabled={isLoading}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? "Creating account..." : "Create account"}
             </Button>
-          </form>
+          </div>
+        </form>
 
-          {!googleAuthDisabled() && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card text-muted-foreground px-2">
-                    Or continue with
-                  </span>
-                </div>
+        {!googleAuthDisabled() && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
               </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-background text-muted-foreground">
+                  or
+                </span>
+              </div>
+            </div>
 
-              <Button
-                variant="outline"
-                type="button"
-                className="flex w-full items-center justify-center gap-2"
-                onClick={handleGoogleSignup}
-                disabled={isLoading}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                </svg>
-                Sign up with Google
-              </Button>
-            </>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Already have an account?{" "}
-            <Link
-              href="/signin"
-              className="text-primary font-medium hover:underline"
+            <Button
+              variant="outline"
+              type="button"
+              size="lg"
+              className="w-full h-12 rounded-2xl"
+              onClick={handleGoogleSignup}
+              disabled={isLoading}
             >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+              <svg
+                className="size-4"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Continue with Google
+            </Button>
+          </>
+        )}
+
+        <div className="mt-4 text-center text-sm">
+          <Link
+            href="/signin"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Already have an account? Sign in
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

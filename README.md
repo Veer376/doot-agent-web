@@ -1,3 +1,2 @@
 # Open Agent Platform Web App
-
-This is the web app for the Open Agent Platform.
+4. In orbit, if the user is not logged in we move it to the sign in or sign up whatever, but instead we show the textfield, and allow the user to enter the message, but as soon as the user hit enter, we show the sign in or sign up pop up. are you getting my point, instead of having the /signin /signup endpoints, we will how the textfield, and can sho wthe log in, and sign up button at the top right corner, and allow the user enter the message, and as soon as the user hit enter we make the user sign in or sign up. Now after the user log in, we should process that message also, it might be complex flow, but you have to do it meticulously. 

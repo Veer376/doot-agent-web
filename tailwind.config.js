@@ -65,13 +65,13 @@ module.exports = {
       /**
        * FONT FAMILIES
        * 
-       * Geist font family variables configured in layout.tsx
-       * - sans: Geist Sans for body text and UI
-       * - mono: Geist Mono for code blocks
+       * Roobert font family variables configured in layout.tsx
+       * - sans: Roobert for body text and UI
+       * - mono: Roobert Mono for code blocks
        */
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"],
+        sans: ["var(--font-roobert)"],
+        mono: ["var(--font-roobert-mono)"],
       },
 
       /**

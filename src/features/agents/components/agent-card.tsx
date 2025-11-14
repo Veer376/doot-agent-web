@@ -5,10 +5,10 @@ import {
   Bot,
   Brain,
   Edit,
-  MessageSquare,
   User,
   Wrench,
 } from "lucide-react";
+import { Comment01Icon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Agent } from "@/types/agent";
@@ -34,19 +34,19 @@ function SupportedConfigBadge({
       <Tooltip>
         <TooltipTrigger>
           {type === "rag" && (
-            <Badge variant="brand">
+            <Badge variant="secondary">
               <Brain />
               RAG
             </Badge>
           )}
           {type === "tools" && (
-            <Badge variant="info">
+            <Badge variant="secondary">
               <Wrench />
               MCP Tools
             </Badge>
           )}
           {type === "supervisor" && (
-            <Badge variant="brand">
+            <Badge variant="secondary">
               <User />
               Supervisor
             </Badge>
@@ -88,7 +88,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        The graph the agent belongs to.
+                        Agent’s corresponding graph
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -116,6 +116,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             <Button
               variant="outline"
               size="sm"
+              className="rounded-2xl"
               onClick={() => setShowEditDialog(true)}
             >
               <Edit className="mr-2 h-3.5 w-3.5" />
@@ -126,8 +127,8 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             href={`/?agentId=${agent.assistant_id}`}
             className="ml-auto"
           >
-            <Button size="sm">
-              <MessageSquare className="mr-2 h-3.5 w-3.5" />
+            <Button size="sm" className="rounded-2xl bg-black text-white hover:bg-black/90">
+              <Comment01Icon className="mr-1 h-3.5 w-3.5" />
               Chat
             </Button>
           </NextLink>

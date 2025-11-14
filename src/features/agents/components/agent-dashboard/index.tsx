@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Filter, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { FilterIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,10 +79,10 @@ export function AgentDashboard() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-sm">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search agents..."
-              className="pl-8"
+              className="h-11 rounded-2xl pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -90,7 +91,7 @@ export function AgentDashboard() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <Filter className="text-muted-foreground h-4 w-4" />
+            <FilterIcon className="text-muted-foreground h-4 w-4" />
             <span className="text-sm font-medium">Filters:</span>
           </div>
 
@@ -98,7 +99,7 @@ export function AgentDashboard() {
             value={graphFilter}
             onValueChange={setGraphFilter}
           >
-            <SelectTrigger className="h-9 min-w-[180px]">
+            <SelectTrigger className="h-11 min-w-[180px] rounded-2xl">
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +134,10 @@ export function AgentDashboard() {
             We couldn't find any agents matching your search criteria. Try
             adjusting your filters or create a new agent.
           </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            className="h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+          >
             Create Agent
           </Button>
         </div>

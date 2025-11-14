@@ -1,8 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { roobert } from "./fonts/roobert";
+import { roobertMono } from "./fonts/roobert-mono";
 import { ThemeProvider } from "@/providers/Theme";
 
 export const metadata: Metadata = {
@@ -18,10 +18,10 @@ export default function Layout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${roobert.variable} ${roobertMono.variable}`}
       suppressHydrationWarning
     >
-      <body className={GeistSans.className} suppressHydrationWarning>
+      <body className={roobert.className} suppressHydrationWarning>
         <ThemeProvider>
           <main>{children}</main>
         </ThemeProvider>

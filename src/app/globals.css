@@ -25,7 +25,7 @@
 :root {
   /* Geist Sans for body text and UI */
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  
+
   /* Geist Mono for code blocks and technical content */
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
 }
@@ -37,51 +37,54 @@
   /* Background & Foreground */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
-  
+
   /* Card */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  
+
   /* Popover */
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  
+
   /* Primary */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  
+
   /* Secondary */
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  
+
   /* Muted */
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  
+
   /* Accent - CHANGE LIGHTNESS HERE (0-1 scale): 0.95 = lighter, 0.85 = darker */
   --accent: oklch(93.705% 0.00011 271.152 / 0.805);
   --accent-foreground: oklch(0.205 0 0);
-  
+
   /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  
+
   /* Border & Input */
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.87 0 0);
-  
+
   /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  
+
   /* Border Radius */
-  --radius: 0.7rem; /* Base radius - Consistent rectangular rounded radius */
-  --radius1: 0.7rem; /* Radius 1 for main UI elements */
-  --radius2: 1.1rem; /* Radius 2 for special containers like messages and tools */
+  --radius: 0.7rem;
+  /* Base radius - Consistent rectangular rounded radius */
+  --radius1: 0.7rem;
+  /* Radius 1 for main UI elements */
+  --radius2: 1.1rem;
+  /* Radius 2 for special containers like messages and tools */
 
   /* Sidebar (HSL format for compatibility) */
   --sidebar-background: 0 0% 98%;
@@ -92,7 +95,7 @@
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
-  
+
   /* Sidebar (OKLCH for consistency) */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground-oklch: oklch(0.145 0 0);
@@ -106,14 +109,14 @@
   /* ============================================
      NEW DESIGN SYSTEM VARIABLES (Light Mode)
      ============================================ */
-  
+
   /* Brand Colors */
   --color-brand-primary: oklch(0.35 0.08 180);
   --color-brand-primary-hover: oklch(0.30 0.08 180);
   --color-brand-primary-light: oklch(0.95 0.02 180);
   --color-brand-accent: oklch(0.60 0.20 280);
   --color-brand-accent-light: oklch(0.92 0.08 280);
-  
+
   /* Semantic Colors */
   --color-semantic-success: oklch(0.55 0.15 145);
   --color-semantic-success-light: oklch(0.93 0.06 145);
@@ -123,7 +126,7 @@
   --color-semantic-error-light: oklch(0.95 0.10 25);
   --color-semantic-info: oklch(0.55 0.18 250);
   --color-semantic-info-light: oklch(0.93 0.08 250);
-  
+
   /* Neutral Scale */
   --color-neutral-50: oklch(0.99 0 0);
   --color-neutral-100: oklch(0.97 0 0);
@@ -168,7 +171,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  
+
   /* Sidebar (OKLCH) */
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground-oklch: oklch(0.985 0 0);
@@ -178,7 +181,7 @@
   --sidebar-accent-foreground-oklch: oklch(0.985 0 0);
   --sidebar-border-oklch: oklch(0.269 0 0);
   --sidebar-ring-oklch: oklch(0.439 0 0);
-  
+
   /* Sidebar (HSL for compatibility) */
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
@@ -195,7 +198,7 @@
   --color-brand-primary-light: oklch(0.25 0.04 180);
   --color-brand-accent: oklch(0.70 0.22 280);
   --color-brand-accent-light: oklch(0.30 0.10 280);
-  
+
   --color-semantic-success: oklch(0.65 0.18 145);
   --color-semantic-success-light: oklch(0.28 0.08 145);
   --color-semantic-warning: oklch(0.70 0.20 65);
@@ -204,7 +207,7 @@
   --color-semantic-error-light: oklch(0.30 0.12 25);
   --color-semantic-info: oklch(0.65 0.20 250);
   --color-semantic-info-light: oklch(0.28 0.10 250);
-  
+
   /* Neutral Scale (Inverted for dark mode) */
   --color-neutral-50: oklch(0.15 0 0);
   --color-neutral-100: oklch(0.18 0 0);
@@ -260,14 +263,14 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground-oklch);
   --color-sidebar-border: var(--sidebar-border-oklch);
   --color-sidebar-ring: var(--sidebar-ring-oklch);
-  
+
   /* Brand Colors */
   --color-brand-primary: var(--color-brand-primary);
   --color-brand-primary-hover: var(--color-brand-primary-hover);
   --color-brand-primary-light: var(--color-brand-primary-light);
   --color-brand-accent: var(--color-brand-accent);
   --color-brand-accent-light: var(--color-brand-accent-light);
-  
+
   /* Semantic Colors */
   --color-semantic-success: var(--color-semantic-success);
   --color-semantic-success-light: var(--color-semantic-success-light);
@@ -277,7 +280,7 @@
   --color-semantic-error-light: var(--color-semantic-error-light);
   --color-semantic-info: var(--color-semantic-info);
   --color-semantic-info-light: var(--color-semantic-info-light);
-  
+
   /* Neutral Scale */
   --color-neutral-50: var(--color-neutral-50);
   --color-neutral-100: var(--color-neutral-100);
@@ -403,6 +406,7 @@
   [data-slot="avatar"] {
     border-radius: var(--radius-lg);
   }
+
   [data-slot="avatar-image"],
   [data-slot="avatar-fallback"] {
     border-radius: inherit;
@@ -412,23 +416,23 @@
   [data-radius="radius1"] {
     border-radius: var(--radius1);
   }
-  
+
   [data-radius="radius2"] {
     border-radius: var(--radius2);
   }
-  
+
   [data-radius="sm"] {
     border-radius: var(--radius-sm);
   }
-  
+
   [data-radius="md"] {
     border-radius: var(--radius-md);
   }
-  
+
   [data-radius="lg"] {
     border-radius: var(--radius-lg);
   }
-  
+
   [data-radius="xl"] {
     border-radius: var(--radius-xl);
   }
@@ -439,6 +443,7 @@
    Custom utilities specific to this project
    ============================================ */
 @layer utilities {
+
   /* Custom shadow utilities for inner shadows */
   .shadow-inner-right {
     box-shadow: inset -9px 0 6px -1px rgb(0 0 0 / 0.02);
@@ -447,28 +452,28 @@
   .shadow-inner-left {
     box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
   }
-  
+
   /* Dark mode shadow overrides for better visibility */
   .dark .shadow-xs {
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   }
-  
+
   .dark .shadow-sm {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
   }
-  
+
   .dark .shadow-md {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
   }
-  
+
   .dark .shadow-lg {
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
   }
-  
+
   .dark .shadow-xl {
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
   }
-  
+
   .dark .shadow-2xl {
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
   }

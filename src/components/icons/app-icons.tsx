@@ -57,7 +57,8 @@ import {
   ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
-  CheckmarkCircle04Icon,
+  CheckmarkCircle02Icon,
+  Tick02Icon,
   GitBranchIcon as GitBranchHugeIcon,
   MoreVerticalCircle01Icon,
   AiBrain04Icon,
@@ -438,8 +439,15 @@ export const CheckmarkCircleIcon: React.FC<AppIconProps> = ({
   ...props
 }) => (
   <IconWrapper
-    icon={CheckmarkCircle04Icon}
+    icon={CheckmarkCircle02Icon}
     className={cn("text-green-600", className)}
+    {...props}
+  />
+);
+
+export const CheckIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Tick02Icon}
     {...props}
   />
 );

@@ -64,7 +64,6 @@ const StreamSession = ({
   accessToken?: string;
   threadId: string | null;
 }) => {
-  
   if (!accessToken) {
     toast.error("Access token must be provided");
   }
@@ -76,7 +75,7 @@ const StreamSession = ({
   // Fetch cached thread state for instant display with initialValues
   // This shows cached data immediately while SDK loads fresh data in background
   // Result: sub-100ms perceived load time for previously visited threads
-  const { data: cachedThreadState } = useFetchThreadState(threadId);
+  const { data: cachedThreadState, isLoading: threadStateLoading } = useFetchThreadState(threadId);
 
   // Use a stable assistantId for the stream connection
   // The actual agent/mode will be determined by the submit config, not the stream connection
@@ -128,7 +127,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { data: agents = [] } = useFetchAgents();
+  const { data: agents = [], isLoading: agentsLoading } = useFetchAgents();
   const [threadId] = useQueryState("threadId");
   
   const { session } = useAuthContext();
@@ -180,20 +179,16 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           {toast.error("Access token must be provided")}
           {null}
         </>
-      ) : agentId ? (
+      ) : (
         <StreamSession
           // key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
-          agentId={agentId}
+          agentId={agentId || "chat_mode"}
           mode={mode}
           accessToken={session.accessToken}
           threadId={threadId}
         >
           {children}
         </StreamSession>
-      ) : (
-        <div className="text-muted-foreground flex w-full items-center justify-center p-6 text-sm">
-          Loading agent…
-        </div>
       )}
     </AgentContext.Provider>
   );

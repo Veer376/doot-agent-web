@@ -82,7 +82,8 @@ export function AgentDashboard() {
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search agents..."
-              className="h-11 rounded-2xl pl-9"
+              data-radius="radius2"
+              className="h-11 pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -99,7 +100,7 @@ export function AgentDashboard() {
             value={graphFilter}
             onValueChange={setGraphFilter}
           >
-            <SelectTrigger className="h-11 min-w-[180px] rounded-2xl">
+            <SelectTrigger data-radius="radius2" className="h-11 min-w-[180px]">
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>
@@ -136,7 +137,8 @@ export function AgentDashboard() {
           </p>
           <Button
             onClick={() => setShowCreateDialog(true)}
-            className="h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+            data-radius="radius2"
+            className="h-10 bg-black text-white hover:bg-black/90"
           >
             Create Agent
           </Button>

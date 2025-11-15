@@ -15,7 +15,7 @@ export default function DebugAuthPage() {
 
         <AuthDebug />
 
-        <div className="bg-muted/30 mt-8 rounded-lg border p-4">
+        <div data-radius="radius2" className="bg-muted/30 mt-8 border p-4">
           <h2 className="mb-2 text-lg font-medium">Testing Tips</h2>
           <ul className="list-inside list-disc space-y-1">
             <li>Use the Sign Out button to clear your current session</li>

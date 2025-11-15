@@ -369,7 +369,7 @@ export const ConfigurationSidebar = forwardRef<
                       onSearchChange={debouncedSetSearchTerm}
                       placeholder="Search tools..."
                     />
-                    <div className="flex-1 space-y-4 overflow-y-auto rounded-md">
+                    <div data-radius="radius2" className="flex-1 space-y-4 overflow-y-auto">
                       {agentId &&
                         displayTools.length > 0 &&
                         displayTools.map((c, index) => (

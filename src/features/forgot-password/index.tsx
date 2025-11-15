@@ -76,7 +76,8 @@ export default function ForgotPasswordInterface() {
                 id="email"
                 type="email"
                 placeholder="Email address"
-                className="h-11 rounded-2xl"
+                data-radius="radius2"
+                className="h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -92,7 +93,8 @@ export default function ForgotPasswordInterface() {
             <div className="pt-2">
               <Button
                 type="submit"
-                className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+                data-radius="radius2"
+                className="w-full h-10 bg-black text-white hover:bg-black/90"
                 disabled={isLoading}
               >
                 {isLoading ? "Sending..." : "Send reset link"}

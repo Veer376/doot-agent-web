@@ -59,16 +59,21 @@ export function IconAgentSelector({
   const agentValue = agentId || undefined;
 
   useEffect(() => {
-    if (agentValue || !agents.length) {
+    // Skip if agents are still loading or already have an agent selected
+    if (loading || agentValue || !agents.length) {
       return;
     }
     const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
     if (defaultAgent) {
       onAgentChange(defaultAgent.assistant_id);
     }
-  }, [agents, agentValue, onAgentChange]);
+  }, [agents, agentValue, onAgentChange, loading]);
 
   const handleOpenChange = (isOpen: boolean) => {
+    // Don't allow opening while agents are loading
+    if (isOpen && loading) {
+      return;
+    }
     // PHASE 4: Only allow opening if we're already in agent mode
     // This prevents the popup from opening when just switching from chat to agent mode
     if (isOpen && mode === "chat") {
@@ -84,6 +89,13 @@ export function IconAgentSelector({
   // Second click: Open agent selector popup
   const handleSegmentClick = useCallback(
     (e: React.MouseEvent) => {
+      // Prevent interaction while agents are loading
+      if (loading) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      
       if (mode === "chat") {
         // Prevent switching to agent mode during streaming
         if (isStreaming) {
@@ -102,7 +114,7 @@ export function IconAgentSelector({
       // When already in agent mode, let the normal popover behavior handle it
       // (it will open via the Popover's internal click handler)
     },
-    [mode, setMode, isStreaming],
+    [mode, setMode, isStreaming, loading],
   );
 
   // Get selected agent for display
@@ -124,7 +136,7 @@ export function IconAgentSelector({
           selectedAgent ? `Agent: ${selectedAgent.name}` : "Select Agent"
         }
         className={cn(
-          "h-8 cursor-pointer rounded-2xl px-3 text-sm transition-colors",
+          "h-8 cursor-pointer px-3 text-sm transition-colors",
           "flex items-center gap-2",
           "bg-transparent",
           // Keep background by indicator when active; hover tint on inactive only
@@ -132,21 +144,29 @@ export function IconAgentSelector({
             ? "text-background"
             : "text-foreground hover:bg-accent/60 dark:hover:bg-accent/40",
           "focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none",
+          loading && "opacity-60",
           className,
         )}
+        data-radius="radius2"
+        disabled={loading}
       >
         <AgentIcon className={isAgentMode ? "text-background" : ""} />
         <span className="hidden max-w-[160px] truncate md:inline-block">
-          {selectedAgent?.name ?? "Agent"}
+          {loading ? "Loading…" : selectedAgent?.name ?? "Agent"}
         </span>
       </button>
     ) : (
       <TooltipIconButton
         tooltip={
-          selectedAgent ? `Agent: ${selectedAgent.name}` : "Select Agent"
+          loading
+            ? "Loading agents…"
+            : selectedAgent
+            ? `Agent: ${selectedAgent.name}`
+            : "Select Agent"
         }
         variant="ghost"
-        className={className}
+        className={cn(loading && "opacity-60", className)}
+        disabled={loading}
       >
         <AgentIcon />
         <span className="sr-only">Select Agent</span>

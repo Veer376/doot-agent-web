@@ -10,8 +10,10 @@ import {
   ChainOfThoughtContent,
   ChainOfThoughtStep,
 } from "@/components/ai-elements/chain-of-thought";
-import { DotIcon, WrenchIcon, CheckCircle2Icon, XCircleIcon, LoaderCircleIcon } from "lucide-react";
+import { DotIcon, WrenchIcon, CheckCircle2Icon, XCircleIcon, LoaderCircle } from "lucide-react";
+import { CheckmarkCircleIcon, CopyIcon } from "@/components/icons";
 import React, { useMemo } from "react";
+import { toast } from "sonner";
 
 interface AITurnProps {
   turnMessages: Message[];
@@ -99,59 +101,64 @@ export const AITurn = React.memo(function AITurn({
         </ChainOfThoughtStep>
       );
     } else {
-      // Tool step
+      // Tool step - using same design as standalone tools but scaled down for thinking block
+      const handleCopy = () => {
+        const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ''}`;
+        navigator.clipboard.writeText(copyContent);
+        toast.success("Copied to clipboard");
+      };
+      
       return (
         <ChainOfThoughtStep
           key={`tool-${step.toolCall.id}-${idx}`}
           icon={WrenchIcon}
-          label={step.toolCall.name}
+          label=""
           status={step.status === "pending" ? "pending" : "complete"}
           className="space-y-1"
         >
-          {/* Tool call display */}
-          <div className="rounded border px-3 py-2 text-sm mt-1">
-            <div className="flex items-center gap-2">
+          <div className="inline-block -mt-0.5">
+            {/* Toolbar acts as peer; only its hover expands response - matches standalone design but smaller */}
+            <div 
+              data-radius="radius2"
+              className="group/tool peer inline-flex items-center gap-1.5 border bg-muted/30 px-2 py-1"
+            >
+              {/* Processing Icon / Tick */}
               {step.status === "pending" && (
-                <>
-                  <LoaderCircleIcon className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Processing...</span>
-                </>
+                <LoaderCircle className="h-3 w-3 animate-spin text-muted-foreground flex-shrink-0" />
               )}
               {step.status === "success" && (
-                <>
-                  <CheckCircle2Icon className="h-4 w-4 text-green-600" />
-                  <span className="text-green-600">Success</span>
-                </>
+                <CheckmarkCircleIcon size="xs" className="text-green-600 flex-shrink-0" />
               )}
               {step.status === "error" && (
-                <>
-                  <XCircleIcon className="h-4 w-4 text-red-600" />
-                  <span className="text-red-600">Error</span>
-                </>
+                <XCircleIcon className="h-3 w-3 text-red-600 flex-shrink-0" />
+              )}
+              <span className="text-xs font-medium">{step.toolCall.name}</span>
+              {step.toolResponse && (
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="ml-1 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100"
+                  aria-label="Copy tool and response"
+                >
+                  <CopyIcon size="xs" className="text-muted-foreground hover:text-foreground" />
+                </button>
               )}
             </div>
-            
-            {/* Show args if they exist */}
-            {Object.keys(step.toolCall.args).length > 0 && (
-              <div className="mt-1 text-xs text-muted-foreground">
-                <pre className="overflow-x-auto rounded bg-muted p-2">
-                  <code>{JSON.stringify(step.toolCall.args, null, 2)}</code>
-                </pre>
+            {step.toolResponse && (
+              <div className="grid grid-rows-[0fr] peer-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                <div className="overflow-hidden">
+                  <div 
+                    data-radius="radius2"
+                    className="mt-1.5 inline-block w-fit max-w-[60ch] border bg-muted/50 px-2 py-1.5"
+                  >
+                    <div className="whitespace-pre-wrap font-mono text-[10px] leading-relaxed">
+                      {formatToolResponse(step.toolResponse)}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Tool response display */}
-          {step.toolResponse && (
-            <div className="mt-1 rounded bg-muted p-3 text-sm">
-              <div className="mb-0.5 text-xs font-medium text-muted-foreground">
-                Response:
-              </div>
-              <div className="whitespace-pre-wrap font-mono text-xs">
-                {formatToolResponse(step.toolResponse)}
-              </div>
-            </div>
-          )}
         </ChainOfThoughtStep>
       );
     }
@@ -166,7 +173,7 @@ export const AITurn = React.memo(function AITurn({
           if (block.type === "thinking-group") {
             // Render thinking block with steps
             return (
-              <ChainOfThought key={`thinking-${blockIdx}`} defaultOpen={true}>
+              <ChainOfThought key={`thinking-${blockIdx}`} defaultOpen={false}>
                 <ChainOfThoughtHeader>
                   {getGroupHeader(block.steps)}
                 </ChainOfThoughtHeader>
@@ -194,61 +201,59 @@ export const AITurn = React.memo(function AITurn({
             );
           } else if (block.type === "tools-only") {
             // Render standalone tools WITHOUT thinking wrapper
-            // Just render the tool cards directly with consistent styling
+            // New design: Fixed container for tool name, response expands below independently
             return (
               <div key={`tools-${blockIdx}`} className="flex flex-col gap-2 my-2">
                 {block.tools.map((toolStep, stepIdx) => {
                   // Type assertion: we know tools array only contains tool steps
                   const step = toolStep as Extract<typeof toolStep, { type: "tool" }>;
                   
+                  const handleCopy = () => {
+                    const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ''}`;
+                    navigator.clipboard.writeText(copyContent);
+                    toast.success("Copied to clipboard");
+                  };
+                  
                   return (
-                    <div key={`tool-standalone-${stepIdx}`} className="space-y-1">
-                      {/* Tool call display with consistent styling */}
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <WrenchIcon className="h-4 w-4 text-muted-foreground" />
-                        <span>{step.toolCall.name}</span>
-                      </div>
-                      
-                      <div className="rounded border px-3 py-2 text-sm ml-6">
-                        <div className="flex items-center gap-2">
-                          {step.status === "pending" && (
-                            <>
-                              <LoaderCircleIcon className="h-4 w-4 animate-spin text-muted-foreground" />
-                              <span className="text-muted-foreground">Processing...</span>
-                            </>
-                          )}
-                          {step.status === "success" && (
-                            <>
-                              <CheckCircle2Icon className="h-4 w-4 text-green-600" />
-                              <span className="text-green-600">Success</span>
-                            </>
-                          )}
-                          {step.status === "error" && (
-                            <>
-                              <XCircleIcon className="h-4 w-4 text-red-600" />
-                              <span className="text-red-600">Error</span>
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Show args if they exist */}
-                        {Object.keys(step.toolCall.args).length > 0 && (
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            <pre className="overflow-x-auto rounded bg-muted p-2">
-                              <code>{JSON.stringify(step.toolCall.args, null, 2)}</code>
-                            </pre>
-                          </div>
+                    <div key={`tool-standalone-${stepIdx}`} className="inline-block">
+                      {/* Toolbar acts as peer; only its hover expands response */}
+                      <div 
+                        data-radius="radius2"
+                        className="group/tool peer inline-flex items-center gap-2 border bg-muted/30 px-3 py-2"
+                      >
+                        {/* Processing Icon / Tick */}
+                        {step.status === "pending" && (
+                          <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />
+                        )}
+                        {step.status === "success" && (
+                          <CheckmarkCircleIcon size="sm" className="text-green-600 flex-shrink-0" />
+                        )}
+                        {step.status === "error" && (
+                          <XCircleIcon className="h-4 w-4 text-red-600 flex-shrink-0" />
+                        )}
+                        <span className="text-sm font-medium">{step.toolCall.name}</span>
+                        {step.toolResponse && (
+                          <button
+                            type="button"
+                            onClick={handleCopy}
+                            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100"
+                            aria-label="Copy tool and response"
+                          >
+                            <CopyIcon size="xs" className="text-muted-foreground hover:text-foreground" />
+                          </button>
                         )}
                       </div>
-
-                      {/* Tool response display */}
                       {step.toolResponse && (
-                        <div className="mt-1 ml-6 rounded bg-muted p-3 text-sm">
-                          <div className="mb-0.5 text-xs font-medium text-muted-foreground">
-                            Response:
-                          </div>
-                          <div className="whitespace-pre-wrap font-mono text-xs">
-                            {formatToolResponse(step.toolResponse)}
+                        <div className="grid grid-rows-[0fr] peer-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                          <div className="overflow-hidden">
+                            <div 
+                              data-radius="radius2"
+                              className="mt-2 inline-block w-fit max-w-[70ch] border bg-muted/50 px-3 py-2"
+                            >
+                              <div className="whitespace-pre-wrap font-mono text-xs">
+                                {formatToolResponse(step.toolResponse)}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}

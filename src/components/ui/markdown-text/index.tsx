@@ -424,7 +424,7 @@ const defaultComponents: any = {
       // Detect Mermaid diagrams
       if (language.toLowerCase() === "mermaid") {
         return (
-          <div className="bg-card text-card-foreground relative overflow-hidden rounded-2xl border p-4">
+          <div data-radius="radius2" className="bg-card text-card-foreground relative overflow-hidden border p-4">
             <MermaidDiagram chart={code} />
           </div>
         );
@@ -432,7 +432,7 @@ const defaultComponents: any = {
 
       // Regular code block with syntax highlighting
       return (
-        <div className="bg-card text-card-foreground relative overflow-hidden rounded-2xl border">
+        <div data-radius="radius2" className="bg-card text-card-foreground relative overflow-hidden border">
           <CodeHeader
             language={language}
             code={code}

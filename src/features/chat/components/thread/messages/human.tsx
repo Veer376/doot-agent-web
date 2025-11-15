@@ -34,7 +34,8 @@ function EditableContent({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="min-h-11 resize-none rounded-2xl px-4 py-3 focus-visible:ring-0"
+      data-radius="radius2"
+      className="min-h-11 resize-none px-4 py-3 focus-visible:ring-0"
     />
   );
 }
@@ -131,7 +132,7 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <p className="bg-muted ml-auto w-fit max-w-xl rounded-3xl px-4 py-2 text-left whitespace-pre-wrap">
+              <p data-radius="radius2" className="bg-muted ml-auto w-fit max-w-xl px-4 py-2 text-left whitespace-pre-wrap">
                 {contentString}
               </p>
             ) : null}

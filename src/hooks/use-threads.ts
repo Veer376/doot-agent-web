@@ -78,7 +78,7 @@ export function useFetchThreadState(threadId: string | null) {
       }
     },
     enabled: !!threadId && !!accessToken,
-    staleTime: 1000 * 30, // 30 seconds - show cached data for 30s before refetching
+    staleTime: 1000 * 60 * 5, // 5 minutes - match agents cache time for consistency
     gcTime: 1000 * 60 * 10, // 10 minutes - keep in cache for 10 mins after component unmount
     retry: false, // Don't retry on failure (thread might not exist yet)
   });

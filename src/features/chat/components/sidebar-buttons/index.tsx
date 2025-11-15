@@ -41,8 +41,9 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
           <Button
             variant="outline"
             size="icon"
+            data-radius="radius2"
             className={cn(
-              "bg-background hover:bg-muted cursor-pointer rounded-lg transition-all",
+              "bg-background hover:bg-muted cursor-pointer transition-all",
               isSidebarOpen ? "opacity-100 shadow-lg" : "opacity-0 shadow-none",
             )}
             onClick={() => {
@@ -69,9 +70,10 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
               variant="outline"
               size="icon"
               className={cn(
-                "bg-background hover:bg-muted size-9 cursor-pointer rounded-lg shadow-xs",
+                "bg-background hover:bg-muted size-9 cursor-pointer shadow-xs",
                 isSidebarOpen && "shadow-lg",
               )}
+              data-radius="radius2"
               onClick={handleConfigClick}
               aria-label="Agent Configuration"
             >

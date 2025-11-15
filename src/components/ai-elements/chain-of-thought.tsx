@@ -65,7 +65,7 @@ export const ChainOfThought = memo(
     return (
       <ChainOfThoughtContext.Provider value={chainOfThoughtContext}>
         <div
-          className={cn("not-prose max-w-prose space-y-4", className)}
+          className={cn("not-prose max-w-prose py-1", className)}
           {...props}
         >
           {children}
@@ -93,15 +93,16 @@ export const ChainOfThoughtHeader = memo(
           {...props}
         >
           <BrainIcon className="size-4" />
-          <span className="flex-1 text-left">
-            {children ?? "Chain of Thought"}
+          {/* Group text and chevron together so arrow stays next to text */}
+          <span className="inline-flex items-center gap-2">
+            <span className="text-left">{children ?? "Chain of Thought"}</span>
+            <ChevronDownIcon
+              className={cn(
+                "size-4 transition-transform",
+                isOpen ? "rotate-180" : "rotate-0"
+              )}
+            />
           </span>
-          <ChevronDownIcon
-            className={cn(
-              "size-4 transition-transform",
-              isOpen ? "rotate-180" : "rotate-0"
-            )}
-          />
         </CollapsibleTrigger>
       </Collapsible>
     );
@@ -145,7 +146,7 @@ export const ChainOfThoughtStep = memo(
           <Icon className="size-4" />
           <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
         </div>
-        <div className="flex-1 space-y-1">
+        <div className="flex-1">
           <div>{label}</div>
           {description && (
             <div className="text-muted-foreground text-xs">{description}</div>

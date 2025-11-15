@@ -116,7 +116,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             <Button
               variant="outline"
               size="sm"
-              className="rounded-2xl"
+              data-radius="radius2"
               onClick={() => setShowEditDialog(true)}
             >
               <Edit className="mr-2 h-3.5 w-3.5" />
@@ -127,7 +127,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             href={`/?agentId=${agent.assistant_id}`}
             className="ml-auto"
           >
-            <Button size="sm" className="rounded-2xl bg-black text-white hover:bg-black/90">
+            <Button size="sm" data-radius="radius2" className="bg-black text-white hover:bg-black/90">
               <Comment01Icon className="mr-1 h-3.5 w-3.5" />
               Chat
             </Button>

@@ -2,6 +2,7 @@ import { AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { ToolContainer } from "@/components/ai-elements/tool-container";
 
 function isComplexValue(value: any): boolean {
   return Array.isArray(value) || (typeof value === "object" && value !== null);
@@ -20,20 +21,7 @@ export function ToolCalls({
         const args = tc.args as Record<string, any>;
         const hasArgs = Object.keys(args).length > 0;
         return (
-          <div
-            key={idx}
-            className="overflow-hidden rounded-lg border border-gray-200"
-          >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-              <h3 className="font-medium text-gray-900">
-                {tc.name}
-                {tc.id && (
-                  <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">
-                    {tc.id}
-                  </code>
-                )}
-              </h3>
-            </div>
+          <ToolContainer key={idx} title={tc.name} code={tc.id}>
             {hasArgs ? (
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200">
@@ -56,9 +44,9 @@ export function ToolCalls({
                 </tbody>
               </table>
             ) : (
-              <code className="block p-3 text-sm">{"{}"}</code>
+              <code className="block text-sm">{"{}"}</code>
             )}
-          </div>
+          </ToolContainer>
         );
       })}
     </div>
@@ -100,33 +88,31 @@ export function ToolResult({ message }: { message: ToolMessage }) {
       : contentStr;
 
   return (
-    <div className="w-full max-w-4xl overflow-hidden rounded-lg border border-gray-200">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+    <ToolContainer
+      className="w-full max-w-4xl"
+      header={
         <div className="flex flex-wrap items-center justify-between gap-2">
           {message.name ? (
             <h3 className="font-medium text-gray-900">
               Tool Result:{" "}
-              <code className="rounded bg-gray-100 px-2 py-1">
-                {message.name}
-              </code>
+              <code className="rounded bg-gray-100 px-2 py-1">{message.name}</code>
             </h3>
           ) : (
             <h3 className="font-medium text-gray-900">Tool Result</h3>
           )}
           {message.tool_call_id && (
-            <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">
-              {message.tool_call_id}
-            </code>
+            <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">{message.tool_call_id}</code>
           )}
         </div>
-      </div>
+      }
+    >
       <motion.div
-        className="min-w-full bg-gray-100"
+        className="min-w-full"
         initial={false}
         animate={{ height: "auto" }}
         transition={{ duration: 0.3 }}
       >
-        <div className="p-3">
+        <div>
           <AnimatePresence
             mode="wait"
             initial={false}
@@ -192,6 +178,6 @@ export function ToolResult({ message }: { message: ToolMessage }) {
           </motion.button>
         )}
       </motion.div>
-    </div>
+    </ToolContainer>
   );
 }

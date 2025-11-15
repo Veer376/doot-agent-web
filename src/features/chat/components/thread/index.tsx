@@ -33,6 +33,7 @@ import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
 import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
+import { PreviewPanel } from "./PreviewPanel";
 import { Loader } from "@/components/ai-elements/loader";
 import { useUpdateThread, useFetchThreads, threadKeys } from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
@@ -70,8 +71,9 @@ function ScrollToBottom(props: { className?: string }) {
     <Button
       variant="secondary"
       size="icon"
+      data-radius="radius2"
       className={cn(
-        "hover:bg-secondary cursor-pointer rounded-full",
+        "hover:bg-secondary cursor-pointer",
         props.className,
       )}
       onClick={() => scrollToBottom()}
@@ -448,8 +450,7 @@ export function Thread() {
                       handleRegenerate={handleRegenerate}
                     />
                   )}
-                  {/* Browser Snapshot Display - shows live browser updates from browser_agent */}
-                  {/* <BrowserSnapshotView /> */}
+                  {/* Browser Snapshot moved to PreviewPanel above Composer */}
                   {isLoading && (
                     <div className="flex items-start justify-start p-4">
                       {" "}
@@ -468,7 +469,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="to-background sticky bottom-0 flex flex-col items-center gap-8 bg-gradient-to-b from-transparent from-0% to-40%">
+            <div className="to-background sticky bottom-0 flex flex-col items-center gap-3 bg-gradient-to-b from-transparent from-0% to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (
@@ -481,6 +482,9 @@ export function Thread() {
               )}
 
               <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute right-[calc(50%-24rem)] bottom-full mb-4" />
+
+              {/* Browser Preview Panel - Floating above Composer */}
+              <PreviewPanel />
 
               <div
                 ref={dropRef}

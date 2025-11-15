@@ -23,7 +23,8 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
       {action || (
         <Button
           onClick={() => setShowCreateAgentDialog(true)}
-          className="h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+          data-radius="radius2"
+          className="h-10 bg-black text-white hover:bg-black/90"
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Agent

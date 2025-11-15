@@ -114,11 +114,13 @@ export function ComposerSegmentedControl({
       {/* Segmented control pill with animated indicator */}
       <div
         ref={containerRef}
-        className="bg-card ring-border relative flex h-10 items-center gap-1 overflow-hidden rounded-full px-1 shadow-inner ring-1"
+        data-radius="radius2"
+        className="bg-card ring-border relative flex items-center gap-1 overflow-hidden p-0.5 shadow-inner ring-1"
       >
         {/* Animated selection indicator */}
         <motion.div
-          className="bg-foreground absolute h-9 rounded-full shadow-sm"
+          data-radius="radius2"
+          className="bg-foreground absolute h-8 shadow-sm"
           initial={false}
           animate={{
             left: indicatorStyle.left,
@@ -149,7 +151,7 @@ export function ComposerSegmentedControl({
                 onClick={handleChatClick}
                 aria-label="Chat mode"
                 className={cn(
-                  "relative z-10 h-9 cursor-pointer rounded-full px-3 text-sm font-medium transition-colors",
+                  "relative z-10 h-8 cursor-pointer rounded-full px-2 text-sm font-medium transition-colors",
                   "flex items-center gap-2",
                   // Keep background managed by indicator when active
                   // and add a soft hover surface only when inactive

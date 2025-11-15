@@ -1,11 +1,23 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useStreamContext } from "@/features/chat/providers/Stream";
+import { cn } from "@/lib/utils";
+
+type BrowserSnapshot = {
+  url?: string;
+  screenshot?: string;
+  dom_text?: string;
+};
 
 export function BrowserSnapshotView() {
   const stream = useStreamContext();
-  const browserSnapshot = stream.values?.browser_snapshot;
+  const browserSnapshot =
+    (stream.values as Record<string, unknown> | undefined)
+      ?.browser_snapshot as BrowserSnapshot | undefined;
+  const [showDomText, setShowDomText] = useState(false);
 
-  // For debugging - show component even if no data
-  const showDebug = true; // Set to false to hide when no data
+  // Only show placeholder when explicitly toggled for debugging
+  const showDebug = false;
 
   if (!browserSnapshot && !showDebug) {
     return null;
@@ -21,41 +33,62 @@ export function BrowserSnapshotView() {
   };
 
   return (
-    <div className="bg-muted/30 mb-4 rounded-lg border p-4">
-      <h3 className="mb-2 text-sm font-semibold">Browser Snapshot</h3>
+    <div data-radius="radius2" className="bg-muted/30 mb-4 w-full max-w-lg border px-0 pb-0 pt-3">
+      <div className="flex items-center justify-between px-4 pb-3">
+        <h3 className="text-sm font-semibold">Browser Snapshot</h3>
+        <button
+          type="button"
+          className={cn(
+            "text-muted-foreground inline-flex h-6 w-6 items-center justify-center transition-colors",
+            browserSnapshot?.dom_text
+              ? "hover:bg-muted focus-visible:ring-2"
+              : "cursor-not-allowed opacity-50",
+          )}
+          data-radius="radius2"
+          onClick={() =>
+            browserSnapshot?.dom_text && setShowDomText((prev) => !prev)
+          }
+          aria-expanded={showDomText}
+          aria-label="Toggle DOM text"
+          disabled={!browserSnapshot?.dom_text}
+        >
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 transition-transform",
+              showDomText ? "rotate-180" : "rotate-0",
+            )}
+          />
+        </button>
+      </div>
 
       {!browserSnapshot ? (
-        <div className="text-muted-foreground text-xs">
+        <div className="px-4 pb-4 text-xs text-muted-foreground">
           No browser snapshot data available. Check console for debug info.
         </div>
       ) : (
         <>
           {browserSnapshot.url && (
-            <div className="mb-2">
-              <span className="text-muted-foreground text-xs">URL: </span>
-              <span className="font-mono text-xs">{browserSnapshot.url}</span>
+            <div data-radius="radius2" className="mx-4 mb-3 border bg-background px-3 py-2 text-xs font-medium text-muted-foreground">
+              {browserSnapshot.url}
             </div>
           )}
 
           {browserSnapshot.screenshot && (
-            <div className="mt-2">
+            <div className="overflow-hidden border-t">
               <img
                 src={getImageSrc(browserSnapshot.screenshot)}
                 alt="Browser screenshot"
-                className="w-full rounded border"
+                className="w-full"
               />
             </div>
           )}
 
-          {browserSnapshot.dom_text && (
-            <details className="mt-2">
-              <summary className="text-muted-foreground cursor-pointer text-xs">
-                DOM Text (click to expand)
-              </summary>
-              <pre className="bg-background mt-2 max-h-40 overflow-x-auto overflow-y-auto rounded border p-2 text-xs">
+          {browserSnapshot.dom_text && showDomText && (
+            <div className="px-4 pb-4">
+              <pre className="bg-background max-h-40 overflow-x-auto overflow-y-auto rounded border p-2 text-xs">
                 {browserSnapshot.dom_text}
               </pre>
-            </details>
+            </div>
           )}
         </>
       )}

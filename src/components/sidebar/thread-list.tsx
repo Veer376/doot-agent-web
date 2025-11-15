@@ -6,6 +6,7 @@ import {
   useDeleteThread,
   useCopyThread,
 } from "@/hooks/use-threads";
+import { useFetchAgents } from "@/hooks/use-agents";
 // Use shared app icons for consistency
 import { NoSignalIcon, SearchIcon, PinIcon, PinOffIcon, PlusSignIcon } from "@/components/icons";
 import { useQueryState } from "nuqs";
@@ -91,6 +92,24 @@ function getThreadTitle(thread: Thread): string {
   return `New thread ${thread.thread_id.slice(0, 5)}`;
 }
 
+// Utility: Get agent display info from metadata
+function getAgentDisplayInfo(
+  thread: Thread,
+  agents: Array<{ assistant_id: string; name: string }>
+): string | null {
+  const mode = thread.metadata?.mode as string | undefined;
+  const assistantId = thread.metadata?.assistant_id as string | undefined;
+  
+  // If mode is agent, return the agent name
+  if (mode === "agent" && assistantId) {
+    const agent = agents.find((a) => a.assistant_id === assistantId);
+    return agent?.name || assistantId;
+  }
+  
+  // For chat mode or any other mode, return null (don't display anything)
+  return null;
+}
+
 // Utility: Get date category for grouping
 function getDateCategory(date: Date): 'today' | 'yesterday' | 'previous7days' | 'older' {
   const now = new Date();
@@ -142,6 +161,7 @@ export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
   const { data: threads = [], isLoading } = useFetchThreads();
+  const { data: agents = [] } = useFetchAgents();
   const updateThread = useUpdateThread();
   const deleteThread = useDeleteThread();
   const copyThread = useCopyThread();
@@ -407,13 +427,8 @@ export function ThreadList() {
     const isPinned = thread.metadata?.pinned === true;
     const isSelected = index === selectedIndex;
     
-    // Get agent and mode info
-    const mode = typeof thread.metadata?.mode === 'string' 
-      ? thread.metadata.mode 
-      : 'Chat';
-    const agentName = typeof thread.metadata?.assistant_id === 'string' 
-      ? thread.metadata.assistant_id 
-      : 'Agent';
+    // Get agent name (only shown for agent mode)
+    const agentName = getAgentDisplayInfo(thread, agents);
 
     return (
       <button
@@ -425,12 +440,13 @@ export function ThreadList() {
         }}
         onMouseEnter={() => setSelectedIndex(index)}
         className={cn(
-          "w-full text-left px-3 py-2.5 rounded-lg transition-colors",
+          "w-full text-left px-3 py-3 transition-colors",
           isSelected && "bg-accent",
           !isSelected && "hover:bg-accent/50"
         )}
+        data-radius="radius2"
       >
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {/* Thread Title */}
           <div className="text-sm font-medium truncate flex items-center gap-2">
             {title}
@@ -443,10 +459,12 @@ export function ThreadList() {
               </span>
             )}
           </div>
-          {/* Mode - Agent Name */}
-          <div className="text-xs text-muted-foreground">
-            {mode} • {agentName}
-          </div>
+          {/* Agent Name - only shown for agent mode */}
+          {agentName && (
+            <div className="text-xs text-muted-foreground truncate">
+              {agentName}
+            </div>
+          )}
         </div>
       </button>
     );
@@ -534,7 +552,8 @@ export function ThreadList() {
                 {/* New Thread Button - Thread Format */}
                 <button
                   onClick={handleCreateNewThread}
-                  className="w-full text-left px-3 py-2.5 mb-4 rounded-lg transition-colors hover:bg-accent/50"
+                  className="w-full text-left px-3 py-2.5 mb-4 transition-colors hover:bg-accent/50"
+                  data-radius="radius2"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="text-sm font-medium flex items-center gap-2">
@@ -644,6 +663,7 @@ export function ThreadList() {
               const isActive = thread.thread_id === threadId;
               const isEditing = editingThreadId === thread.thread_id;
               const isPinned = thread.metadata?.pinned === true;
+              const agentName = getAgentDisplayInfo(thread, agents);
 
               return (
                 <SidebarMenuItem key={thread.thread_id}>
@@ -655,7 +675,8 @@ export function ThreadList() {
                         onChange={(e) => setEditingThreadName(e.target.value)}
                         onKeyDown={handleKeyDown}
                         onBlur={handleSaveEdit}
-                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 rounded-3xl border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                        data-radius="radius2"
                         placeholder="Thread name..."
                       />
                     </div>
@@ -664,6 +685,7 @@ export function ThreadList() {
                       <SidebarMenuButton
                         onClick={() => handleSelectThread(thread.thread_id)}
                         isActive={isActive}
+                        className="!py-2 px-3 !h-auto"
                         // TODO: Optional performance enhancement - Pre-fetch thread state on hover
                         // This will load thread data in the background before user clicks
                         // Implementation example:
@@ -675,7 +697,14 @@ export function ThreadList() {
                         //   });
                         // }}
                       >
-                        <span className="truncate text-sm">{title}</span>
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="truncate text-sm leading-tight">{title}</span>
+                          {agentName && (
+                            <span className="text-xs text-muted-foreground truncate leading-tight">
+                              {agentName}
+                            </span>
+                          )}
+                        </div>
                       </SidebarMenuButton>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -686,7 +715,7 @@ export function ThreadList() {
                             }}
                             showOnHover={!isPinned}
                             className={cn(
-                              "data-[state=open]:opacity-100",
+                              "data-[state=open]:opacity-100 !top-1/2 !-translate-y-1/2",
                               isPinned && "md:opacity-100"
                             )}
                           >

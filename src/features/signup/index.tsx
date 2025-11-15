@@ -152,7 +152,8 @@ export default function SignupInterface() {
                 name="firstName"
                 type="text"
                 placeholder="First name"
-                className="h-11 rounded-2xl"
+                data-radius="radius2"
+                className="h-11"
                 value={formValues.firstName || ""}
                 onChange={handleInputChange}
                 aria-invalid={!!errors.firstName}
@@ -168,7 +169,8 @@ export default function SignupInterface() {
                 name="lastName"
                 type="text"
                 placeholder="Last name"
-                className="h-11 rounded-2xl"
+                data-radius="radius2"
+                className="h-11"
                 value={formValues.lastName || ""}
                 onChange={handleInputChange}
                 aria-invalid={!!errors.lastName}
@@ -185,7 +187,8 @@ export default function SignupInterface() {
               name="email"
               type="email"
               placeholder="Email address"
-              className="h-11 rounded-2xl"
+              data-radius="radius2"
+              className="h-11"
               value={formValues.email || ""}
               onChange={handleInputChange}
               aria-invalid={!!errors.email}
@@ -200,7 +203,8 @@ export default function SignupInterface() {
               id="password"
               name="password"
               placeholder="Password"
-              className="h-11 rounded-2xl"
+              data-radius="radius2"
+              className="h-11"
               value={formValues.password || ""}
               onChange={handleInputChange}
               aria-invalid={!!errors.password}
@@ -215,7 +219,8 @@ export default function SignupInterface() {
               id="confirmPassword"
               name="confirmPassword"
               placeholder="Confirm password"
-              className="h-11 rounded-2xl"
+              data-radius="radius2"
+              className="h-11"
               value={formValues.confirmPassword || ""}
               onChange={handleInputChange}
               aria-invalid={!!errors.confirmPassword}
@@ -236,7 +241,8 @@ export default function SignupInterface() {
           <div className="pt-2">
             <Button
               type="submit"
-              className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+              data-radius="radius2"
+              className="w-full h-10 bg-black text-white hover:bg-black/90"
               disabled={isLoading}
             >
               {isLoading ? "Creating account..." : "Create account"}
@@ -261,7 +267,8 @@ export default function SignupInterface() {
               variant="outline"
               type="button"
               size="lg"
-              className="w-full h-12 rounded-2xl"
+              data-radius="radius2"
+              className="w-full h-12"
               onClick={handleGoogleSignup}
               disabled={isLoading}
             >

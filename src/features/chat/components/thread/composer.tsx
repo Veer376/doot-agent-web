@@ -153,11 +153,12 @@ export function Composer({
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
       <div
         className={cn(
-          "group/composer bg-card text-card-foreground dark:bg-card dark:text-card-foreground border-border w-full transition-all duration-300 ease-out",
-          "focus-within:border-primary/30 overflow-hidden rounded-3xl border shadow-sm",
+          "group/composer bg-card text-card-foreground dark:bg-card rounded-3xl dark:text-card-foreground border-border w-full transition-all duration-300 ease-out",
+          "focus-within:border-primary/30 overflow-hidden border shadow-sm",
           className,
         )}
         data-expanded={isExpanded}
+        data-radius="radius2"
       >
         <form
           onSubmit={handleFormSubmit}
@@ -169,7 +170,7 @@ export function Composer({
             "[grid-template-areas:'leading_primary_trailing']",
             "group-data-[expanded=true]/composer:[grid-template-areas:'primary_primary_primary'_'leading_footer_trailing']",
             // Dynamic padding: reduced when collapsed, normal when expanded
-            "gap-2.5 p-2.5 group-data-[expanded=true]/composer:p-2.5",
+            "gap-2 p-2 group-data-[expanded=true]/composer:p-2",
           )}
         >
           {/* Leading Area - Attach + Segmented Control */}
@@ -188,7 +189,7 @@ export function Composer({
             >
               <AttachIcon />
             </TooltipIconButton>
-            <ComposerSegmentedControl className="max-w-[240px] min-w-[140px] flex-1" />
+            <ComposerSegmentedControl className="max-w-[240px] flex-1" />
           </div>
 
           {/* Primary Area - Editor + Attachments */}
@@ -212,11 +213,12 @@ export function Composer({
             {/* Wrapper with transitioning max-height for smooth expansion/collapse */}
             <div
               className={cn(
-                "relative w-full rounded-2xl transition-all duration-300 ease-out",
+                "relative w-full transition-all duration-300 ease-out",
                 "group-data-[expanded=false]/composer:overflow-hidden",
                 "group-data-[expanded=false]/composer:flex group-data-[expanded=false]/composer:items-center",
                 "group-data-[expanded=true]/composer:overflow-visible",
               )}
+              data-radius="radius2"
               style={{
                 maxHeight: isExpanded ? "208px" : "44px", // 208px = max-h-52 (52 * 4)
               }}
@@ -259,13 +261,14 @@ export function Composer({
             )}
             style={{ transformOrigin: "50% 50%" }}
           >
-            <div className="relative h-10 w-10">
+            <div className="relative h-8 w-8">
               {isLoading ? (
                 <button
                   type="button"
                   onClick={onCancel}
                   aria-label="Cancel"
-                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center rounded-full bg-black text-white transition duration-200 hover:bg-black/90 focus-visible:ring-2 focus-visible:outline-none dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  data-radius="radius2"
+                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center bg-black text-white transition duration-200 hover:bg-black/90 focus-visible:ring-2 focus-visible:outline-none dark:bg-zinc-900 dark:hover:bg-zinc-800"
                 >
                   <StopIcon />
                 </button>
@@ -273,7 +276,8 @@ export function Composer({
                 <button
                   disabled={isSendDisabled}
                   type="submit"
-                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center rounded-full bg-black text-white transition duration-300 hover:bg-black/90 focus-visible:ring-2 focus-visible:outline-none disabled:bg-gray-200 disabled:text-gray-500 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+                  data-radius="radius2"
+                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center bg-black text-white transition duration-300 hover:bg-black/90 focus-visible:ring-2 focus-visible:outline-none disabled:bg-gray-200 disabled:text-gray-500 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

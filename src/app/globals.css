@@ -79,8 +79,10 @@
   --chart-5: oklch(0.769 0.188 70.08);
   
   /* Border Radius */
-  --radius: 0.7rem; /* 8px - Consistent rectangular rounded radius */
-  
+  --radius: 0.7rem; /* Base radius - Consistent rectangular rounded radius */
+  --radius1: 0.7rem; /* Radius 1 for main UI elements */
+  --radius2: 1.1rem; /* Radius 2 for special containers like messages and tools */
+
   /* Sidebar (HSL format for compatibility) */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
@@ -404,6 +406,31 @@
   [data-slot="avatar-image"],
   [data-slot="avatar-fallback"] {
     border-radius: inherit;
+  }
+
+  /* Data-radius system: Flexible radius application */
+  [data-radius="radius1"] {
+    border-radius: var(--radius1);
+  }
+  
+  [data-radius="radius2"] {
+    border-radius: var(--radius2);
+  }
+  
+  [data-radius="sm"] {
+    border-radius: var(--radius-sm);
+  }
+  
+  [data-radius="md"] {
+    border-radius: var(--radius-md);
+  }
+  
+  [data-radius="lg"] {
+    border-radius: var(--radius-lg);
+  }
+  
+  [data-radius="xl"] {
+    border-radius: var(--radius-xl);
   }
 }
 

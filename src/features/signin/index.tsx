@@ -138,7 +138,8 @@ export default function SigninInterface() {
               id="email"
               type="email"
               placeholder="Email address"
-              className="h-11 rounded-2xl"
+              data-radius="radius2"
+              className="h-11"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -149,7 +150,8 @@ export default function SigninInterface() {
             <PasswordInput
               id="password"
               placeholder="Password"
-              className="h-11 rounded-2xl"
+              data-radius="radius2"
+              className="h-11"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -165,7 +167,8 @@ export default function SigninInterface() {
           <div className="pt-2">
             <Button
               type="submit"
-              className="w-full h-10 rounded-2xl bg-black text-white hover:bg-black/90"
+              data-radius="radius2"
+              className="w-full h-10 bg-black text-white hover:bg-black/90"
               disabled={isLoading || isSuccess}
             >
               {isLoading
@@ -194,7 +197,8 @@ export default function SigninInterface() {
               variant="outline"
               type="button"
               size="lg"
-              className="w-full h-12 rounded-2xl"
+              data-radius="radius2"
+              className="w-full h-12"
               onClick={handleGoogleSignIn}
               disabled={isLoading || isSuccess}
             >

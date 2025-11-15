@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { ComponentProps } from "react";
 import { createContext, memo, useContext, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type ChainOfThoughtContextValue = {
   isOpen: boolean;
@@ -110,10 +111,11 @@ export const ChainOfThoughtHeader = memo(
 );
 
 export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
-  icon?: LucideIcon;
+  icon?: LucideIcon | React.ComponentType<any>;
   label: string;
   description?: string;
   status?: "complete" | "active" | "pending";
+  isPreview?: boolean; // Hide connecting line in preview mode
 };
 
 export const ChainOfThoughtStep = memo(
@@ -123,6 +125,7 @@ export const ChainOfThoughtStep = memo(
     label,
     description,
     status = "complete",
+    isPreview = false,
     children,
     ...props
   }: ChainOfThoughtStepProps) => {
@@ -144,7 +147,10 @@ export const ChainOfThoughtStep = memo(
       >
         <div className="relative mt-0.5">
           <Icon className="size-4" />
-          <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
+          {/* Hide connecting line in preview mode */}
+          {!isPreview && (
+            <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
+          )}
         </div>
         <div className="flex-1">
           <div>{label}</div>
@@ -205,6 +211,52 @@ export const ChainOfThoughtContent = memo(
   }
 );
 
+export type ChainOfThoughtPreviewProps = ComponentProps<"div"> & {
+  showPreview?: boolean; // Explicitly control preview visibility from parent
+  contentKey?: string; // Key to trigger smooth transitions when content changes
+};
+
+export const ChainOfThoughtPreview = memo(
+  ({ className, children, showPreview = false, contentKey, ...props }: ChainOfThoughtPreviewProps) => {
+    const { isOpen } = useChainOfThought();
+
+    // Hide preview if user manually expands or if parent says not to show
+    if (isOpen || !showPreview) return null;
+
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={contentKey || "preview"}
+          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+            scale: 1,
+            transition: { 
+              duration: 0.3,
+              ease: [0.16, 1, 0.3, 1] // Smooth easeOutExpo
+            }
+          }}
+          exit={{
+            opacity: 0,
+            y: -8,
+            scale: 0.98,
+            transition: { 
+              duration: 0.2,
+              ease: [0.7, 0, 0.84, 0] // Smooth easeInExpo
+            }
+          }}
+          className={cn("mt-2 space-y-1 overflow-hidden", className)}
+        >
+          <div {...props}>
+            {children}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+);
+
 export type ChainOfThoughtImageProps = ComponentProps<"div"> & {
   caption?: string;
 };
@@ -226,4 +278,5 @@ ChainOfThoughtStep.displayName = "ChainOfThoughtStep";
 ChainOfThoughtSearchResults.displayName = "ChainOfThoughtSearchResults";
 ChainOfThoughtSearchResult.displayName = "ChainOfThoughtSearchResult";
 ChainOfThoughtContent.displayName = "ChainOfThoughtContent";
+ChainOfThoughtPreview.displayName = "ChainOfThoughtPreview";
 ChainOfThoughtImage.displayName = "ChainOfThoughtImage";

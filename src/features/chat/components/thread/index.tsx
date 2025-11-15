@@ -416,7 +416,7 @@ export function Thread() {
                     messages.filter(
                       (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)
                     )
-                  ).map((turn) => {
+                  ).map((turn, turnIndex, allTurns) => {
                     if (turn.type === "human") {
                       return (
                         <HumanMessage
@@ -426,13 +426,18 @@ export function Thread() {
                         />
                       );
                     } else {
+                      // Find the last AI turn index
+                      const lastAITurnIndex = allTurns.map((t, i) => t.type === "ai-turn" ? i : -1).filter(i => i !== -1).pop();
+                      const isLastAITurn = turnIndex === lastAITurnIndex;
+                      const turnIsLoading = isLoading && isLastAITurn;
+                      
                       return (
                         <AITurn
                           key={`ai-turn-${turn.startIndex}`}
                           turnMessages={turn.messages}
                           lastHumanIndex={turn.lastHumanIndex}
                           allMessages={messages}
-                          isLoading={isLoading}
+                          isLoading={turnIsLoading}
                           handleRegenerate={handleRegenerate}
                         />
                       );
@@ -452,7 +457,7 @@ export function Thread() {
                   )}
                   {/* Browser Snapshot moved to PreviewPanel above Composer */}
                   {isLoading && (
-                    <div className="flex items-start justify-start p-4">
+                    <div className="flex items-start justify-start p-2">
                       {" "}
                       <Loader />
                     </div>

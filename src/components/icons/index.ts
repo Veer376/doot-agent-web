@@ -4,4 +4,3 @@
  */
 
 export * from './app-icons';
-export { default as Icons } from './app-icons';

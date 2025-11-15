@@ -8,12 +8,15 @@ import {
   ChainOfThought,
   ChainOfThoughtHeader,
   ChainOfThoughtContent,
+  ChainOfThoughtPreview,
   ChainOfThoughtStep,
 } from "@/components/ai-elements/chain-of-thought";
-import { DotIcon, WrenchIcon, CheckCircle2Icon, XCircleIcon, LoaderCircle } from "lucide-react";
-import { CheckmarkCircleIcon, CopyIcon } from "@/components/icons";
+import { DotIcon, CheckCircle2Icon, XCircleIcon, LoaderCircle } from "lucide-react";
+import { Tick02Icon } from "hugeicons-react";
+import { CheckmarkCircleIcon, CopyIcon, ToolsIcon } from "@/components/icons";
 import React, { useMemo } from "react";
 import { toast } from "sonner";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 
 interface AITurnProps {
   turnMessages: Message[];
@@ -72,27 +75,16 @@ export const AITurn = React.memo(function AITurn({
     return JSON.stringify(response.content, null, 2);
   };
 
-  // Get dynamic header text from last step in a group
-  const getGroupHeader = (steps: any[]) => {
-    if (steps.length === 0) return "Thinking...";
-    
-    const lastStep = steps[steps.length - 1];
-    if (lastStep.type === "thinking") {
-      return lastStep.heading;
-    } else {
-      return lastStep.toolCall.name;
-    }
-  };
-
   // Render a single step (thinking or tool)
-  const renderStep = (step: any, idx: number) => {
+  const renderStep = (step: any, idx: number, isPreview: boolean = false) => {
     if (step.type === "thinking") {
       return (
         <ChainOfThoughtStep
-          key={`thinking-${idx}`}
+          key={`thinking-${idx}-${isPreview ? 'preview' : 'full'}`}
           icon={DotIcon}
           label={step.heading}
           status="complete"
+          isPreview={isPreview}
           className="space-y-1"
         >
           <div className="prose prose-sm max-w-none text-sm mt-1">
@@ -110,13 +102,14 @@ export const AITurn = React.memo(function AITurn({
       
       return (
         <ChainOfThoughtStep
-          key={`tool-${step.toolCall.id}-${idx}`}
-          icon={WrenchIcon}
+          key={`tool-${step.toolCall.id}-${idx}-${isPreview ? 'preview' : 'full'}`}
+          icon={ToolsIcon}
           label=""
           status={step.status === "pending" ? "pending" : "complete"}
+          isPreview={isPreview}
           className="space-y-1"
         >
-          <div className="inline-block -mt-0.5">
+          <div className="inline-block">
             {/* Toolbar acts as peer; only its hover expands response - matches standalone design but smaller */}
             <div 
               data-radius="radius2"
@@ -124,13 +117,13 @@ export const AITurn = React.memo(function AITurn({
             >
               {/* Processing Icon / Tick */}
               {step.status === "pending" && (
-                <LoaderCircle className="h-3 w-3 animate-spin text-muted-foreground flex-shrink-0" />
+                <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />
               )}
               {step.status === "success" && (
                 <CheckmarkCircleIcon size="xs" className="text-green-600 flex-shrink-0" />
               )}
               {step.status === "error" && (
-                <XCircleIcon className="h-3 w-3 text-red-600 flex-shrink-0" />
+                <XCircleIcon className="h-4 w-4 text-red-600 flex-shrink-0" />
               )}
               <span className="text-xs font-medium">{step.toolCall.name}</span>
               {step.toolResponse && (
@@ -144,14 +137,18 @@ export const AITurn = React.memo(function AITurn({
                 </button>
               )}
             </div>
+            {/* Show response always in preview mode, on hover in full mode */}
             {step.toolResponse && (
-              <div className="grid grid-rows-[0fr] peer-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+              <div className={cn(
+                "grid transition-all duration-300 ease-in-out",
+                isPreview ? "grid-rows-[1fr]" : "grid-rows-[0fr] peer-hover:grid-rows-[1fr]"
+              )}>
                 <div className="overflow-hidden">
                   <div 
                     data-radius="radius2"
                     className="mt-1.5 inline-block w-fit max-w-[60ch] border bg-muted/50 px-2 py-1.5"
                   >
-                    <div className="whitespace-pre-wrap font-mono text-[10px] leading-relaxed">
+                    <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed">
                       {formatToolResponse(step.toolResponse)}
                     </div>
                   </div>
@@ -171,14 +168,50 @@ export const AITurn = React.memo(function AITurn({
         {/* Render all blocks in order */}
         {chainData.renderBlocks.map((block, blockIdx) => {
           if (block.type === "thinking-group") {
+            // Get the last step for preview
+            const lastStep = block.steps[block.steps.length - 1];
+            
+            // Determine if this is active thinking or completed thoughts
+            // Active: last thinking-group block AND still loading
+            // Complete: everything else (has content after, not loading, or not last block)
+            const isLastThinkingGroup = blockIdx === chainData.renderBlocks.length - 1;
+            const isActiveThinking = isLoading && isLastThinkingGroup;
+            const headerText = isActiveThinking ? "Thinking..." : "Thoughts";
+            
+            // Determine if we should show preview:
+            // Show preview ONLY when:
+            // 1. Still loading (actively streaming)
+            // 2. This is the last thinking block
+            // 3. No content block follows (if content exists, user should focus on that)
+            const hasContentAfter = chainData.renderBlocks
+              .slice(blockIdx + 1)
+              .some(b => b.type === "content");
+            const shouldShowPreview = isLoading && isLastThinkingGroup && !hasContentAfter;
+            
             // Render thinking block with steps
             return (
               <ChainOfThought key={`thinking-${blockIdx}`} defaultOpen={false}>
                 <ChainOfThoughtHeader>
-                  {getGroupHeader(block.steps)}
+                  {isActiveThinking ? (
+                    <Shimmer duration={1} spread={2}>
+                      Thinking...
+                    </Shimmer>
+                  ) : (
+                    "Thoughts"
+                  )}
                 </ChainOfThoughtHeader>
+                
+                {/* Preview: Show last step when actively streaming and no content after */}
+                <ChainOfThoughtPreview 
+                  showPreview={shouldShowPreview}
+                  contentKey={lastStep ? `${lastStep.type}-${block.steps.length}-${blockIdx}` : undefined}
+                >
+                  {lastStep && renderStep(lastStep, block.steps.length - 1, true)}
+                </ChainOfThoughtPreview>
+                
+                {/* Full content: Show all steps when expanded */}
                 <ChainOfThoughtContent>
-                  {block.steps.map((step, stepIdx) => renderStep(step, stepIdx))}
+                  {block.steps.map((step, stepIdx) => renderStep(step, stepIdx, false))}
                   
                   {/* Done step if group is complete */}
                   {block.showDone && (
@@ -219,14 +252,14 @@ export const AITurn = React.memo(function AITurn({
                       {/* Toolbar acts as peer; only its hover expands response */}
                       <div 
                         data-radius="radius2"
-                        className="group/tool peer inline-flex items-center gap-2 border bg-muted/30 px-3 py-2"
+                        className="group/tool peer inline-flex items-center gap-2 border bg-muted/30 p-1.5 px-2"
                       >
                         {/* Processing Icon / Tick */}
                         {step.status === "pending" && (
                           <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />
                         )}
                         {step.status === "success" && (
-                          <CheckmarkCircleIcon size="sm" className="text-green-600 flex-shrink-0" />
+                          <CheckmarkCircleIcon size="xs" className="text-green-600 flex-shrink-0" />
                         )}
                         {step.status === "error" && (
                           <XCircleIcon className="h-4 w-4 text-red-600 flex-shrink-0" />
@@ -266,21 +299,23 @@ export const AITurn = React.memo(function AITurn({
           return null;
         })}
 
-        {/* CommandBar - only shown at the end of the turn */}
-        {/* Branch switching is handled at the human message level, not here */}
-        <div
-          className={cn(
-            "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
-            "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0"
-          )}
-        >
-          <CommandBar
-            content={combinedContent}
-            isLoading={isLoading}
-            isAiMessage={true}
-            handleRegenerate={handleRegenerateFromHuman}
-          />
-        </div>
+        {/* CommandBar - only shown when streaming is complete */}
+        {/* Don't render at all while loading to avoid showing non-functional buttons */}
+        {!isLoading && (
+          <div
+            className={cn(
+              "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
+              "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0"
+            )}
+          >
+            <CommandBar
+              content={combinedContent}
+              isLoading={false}
+              isAiMessage={true}
+              handleRegenerate={handleRegenerateFromHuman}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

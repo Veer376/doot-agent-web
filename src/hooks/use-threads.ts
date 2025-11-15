@@ -66,7 +66,7 @@ export function useFetchThreadState(threadId: string | null) {
       }
 
       const client = createClient(accessToken);
-      
+
       try {
         // Fetch the latest state (current checkpoint) for the thread
         const state = await client.threads.getState(threadId);

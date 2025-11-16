@@ -6,12 +6,12 @@ let websocketUrl = null;
 async function checkDebuggerStatus() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tabs.length === 0) return;
-  
+
   currentTabId = tabs[0].id;
-  
+
   // Check storage for existing connection
   const stored = await chrome.storage.local.get(['debuggerAttached', 'websocketUrl', 'tabId']);
-  
+
   if (stored.debuggerAttached && stored.tabId === currentTabId && stored.websocketUrl) {
     debuggerAttached = true;
     websocketUrl = stored.websocketUrl;
@@ -29,24 +29,24 @@ document.getElementById('enableBtn').addEventListener('click', async () => {
       alert('No active tab found');
       return;
     }
-    
+
     currentTabId = tabs[0].id;
     const debuggee = { tabId: currentTabId };
-    
+
     // Attach debugger to this tab
     await chrome.debugger.attach(debuggee, '1.3');
-    
+
     // Get all debug targets
     const targets = await chrome.debugger.getTargets();
     const target = targets.find(t => t.tabId === currentTabId);
-    
+
     if (target && target.id) {
       // Construct WebSocket URL for Playwright to connect
       // Chrome's CDP WebSocket endpoint format
       websocketUrl = `ws://127.0.0.1:9222/devtools/page/${target.id}`;
-      
+
       debuggerAttached = true;
-      
+
       // Store state
       await chrome.storage.local.set({
         debuggerAttached: true,
@@ -54,20 +54,20 @@ document.getElementById('enableBtn').addEventListener('click', async () => {
         tabId: currentTabId,
         targetId: target.id
       });
-      
+
       updateUI(true, websocketUrl);
-      
+
       // Send message to background script
       chrome.runtime.sendMessage({
         type: 'DEBUGGER_ATTACHED',
         tabId: currentTabId,
         websocketUrl: websocketUrl
       });
-      
+
     } else {
       throw new Error('Could not get target ID from Chrome');
     }
-    
+
   } catch (error) {
     console.error('Failed to attach debugger:', error);
     alert(`Failed to enable browser control: ${error.message}`);
@@ -80,19 +80,19 @@ document.getElementById('disableBtn').addEventListener('click', async () => {
     if (currentTabId) {
       await chrome.debugger.detach({ tabId: currentTabId });
     }
-    
+
     debuggerAttached = false;
     websocketUrl = null;
-    
+
     await chrome.storage.local.clear();
     updateUI(false);
-    
+
     // Notify background script
     chrome.runtime.sendMessage({
       type: 'DEBUGGER_DETACHED',
       tabId: currentTabId
     });
-    
+
   } catch (error) {
     console.error('Failed to detach debugger:', error);
   }
@@ -102,7 +102,7 @@ document.getElementById('disableBtn').addEventListener('click', async () => {
 document.getElementById('copyBtn').addEventListener('click', async () => {
   if (websocketUrl) {
     await navigator.clipboard.writeText(websocketUrl);
-    
+
     const btn = document.getElementById('copyBtn');
     const originalText = btn.textContent;
     btn.textContent = 'Copied ✓';
@@ -120,7 +120,7 @@ function updateUI(attached, wsUrl = null) {
   const enableBtn = document.getElementById('enableBtn');
   const copyBtn = document.getElementById('copyBtn');
   const disableBtn = document.getElementById('disableBtn');
-  
+
   if (attached && wsUrl) {
     statusDot.classList.add('active');
     statusText.textContent = 'Browser Control Active ✓';

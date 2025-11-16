@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <style>
@@ -12,20 +13,24 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
+
     .header {
       text-align: center;
       margin-bottom: 20px;
     }
+
     .header h1 {
       margin: 0 0 10px 0;
       font-size: 24px;
       font-weight: 600;
     }
+
     .header p {
       margin: 0;
       font-size: 14px;
       opacity: 0.9;
     }
+
     .status {
       background: rgba(255, 255, 255, 0.2);
       border-radius: 12px;
@@ -33,26 +38,38 @@
       margin-bottom: 15px;
       backdrop-filter: blur(10px);
     }
+
     .status-indicator {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 10px;
     }
+
     .status-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       background: #ef4444;
     }
+
     .status-dot.active {
       background: #10b981;
       animation: pulse 2s infinite;
     }
+
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
     }
+
     .websocket-url {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 8px;
@@ -64,6 +81,7 @@
       max-height: 100px;
       overflow-y: auto;
     }
+
     .btn {
       width: 100%;
       padding: 12px;
@@ -75,26 +93,32 @@
       transition: all 0.2s;
       margin-bottom: 10px;
     }
+
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     .btn-primary {
       background: white;
       color: #667eea;
     }
+
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+
     .btn-danger {
       background: #ef4444;
       color: white;
     }
+
     .btn-success {
       background: #10b981;
       color: white;
     }
+
     .instructions {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 8px;
@@ -102,13 +126,16 @@
       font-size: 13px;
       line-height: 1.6;
     }
+
     .instructions ol {
       margin: 10px 0;
       padding-left: 20px;
     }
+
     .instructions li {
       margin: 5px 0;
     }
+
     .warning {
       background: rgba(255, 193, 7, 0.2);
       border-left: 3px solid #ffc107;
@@ -119,6 +146,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="header">
     <h1>🌍 Orbit Agent</h1>
@@ -152,4 +180,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

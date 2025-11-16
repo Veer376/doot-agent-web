@@ -4,6 +4,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist/electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,12 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && tsc -p electron/tsconfig.json && electron-builder",
+    "electron:build:win": "npm run build && tsc -p electron/tsconfig.json && electron-builder --win",
+    "electron:build:mac": "npm run build && tsc -p electron/tsconfig.json && electron-builder --mac",
+    "electron:build:linux": "npm run build && tsc -p electron/tsconfig.json && electron-builder --linux"
   },
   "dependencies": {
     "@langchain/core": "^1.0.1",
@@ -85,7 +91,10 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "10.0.0",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
     "dotenv": "^16.5.0",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.3.0",
     "eslint": "^9.19.0",
     "eslint-config-next": "15.2.2",
     "eslint-plugin-react-hooks": "^5.0.0",
@@ -98,9 +107,78 @@
     "tailwind-scrollbar": "3.1.0",
     "tailwindcss": "^4.0.13",
     "typescript": "~5.7.2",
-    "typescript-eslint": "^8.22.0"
+    "typescript-eslint": "^8.22.0",
+    "wait-on": "^8.0.4"
   },
   "overrides": {
     "react-is": "^19.0.0-rc-69d4b800-20241021"
+  },
+  "build": {
+    "appId": "com.orbitagent.app",
+    "productName": "Orbit Agent",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      ".next/standalone/**/*",
+      ".next/static/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "app",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": ".next/static",
+        "to": "app/.next/static"
+      },
+      {
+        "from": "public",
+        "to": "app/public"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

@@ -15,7 +15,6 @@ import type { Message, Thread } from "@langchain/langgraph-sdk";
 import {
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarGroupAction,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -29,7 +28,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Dialog,

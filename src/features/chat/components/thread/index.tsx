@@ -32,7 +32,6 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
-import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
 import { PreviewPanel } from "./PreviewPanel";
 import { Loader } from "@/components/ai-elements/loader";
 import { useUpdateThread, useFetchThreads, threadKeys } from "@/hooks/use-threads";

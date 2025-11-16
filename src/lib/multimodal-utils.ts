@@ -1,9 +1,9 @@
-import type { Base64ContentBlock } from "@langchain/core/messages";
+import type { Data } from "@langchain/core/messages";
 import { toast } from "sonner";
 // Returns a Promise of a typed multimodal block for images or PDFs
 export async function fileToContentBlock(
   file: File,
-): Promise<Base64ContentBlock> {
+): Promise<Data.Base64ContentBlock> {
   const supportedImageTypes = [
     "image/jpeg",
     "image/png",
@@ -57,7 +57,7 @@ export async function fileToBase64(file: File): Promise<string> {
 
 export function isBase64ContentBlock(
   block: unknown,
-): block is Base64ContentBlock {
+): block is Data.Base64ContentBlock {
   if (typeof block !== "object" || block === null || !("type" in block))
     return false;
   // file type (legacy)

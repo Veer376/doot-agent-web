@@ -75,7 +75,7 @@ const StreamSession = ({
   // Fetch cached thread state for instant display with initialValues
   // This shows cached data immediately while SDK loads fresh data in background
   // Result: sub-100ms perceived load time for previously visited threads
-  const { data: cachedThreadState, isLoading: threadStateLoading } = useFetchThreadState(threadId);
+  const { data: cachedThreadState } = useFetchThreadState(threadId);
 
   // Use a stable assistantId for the stream connection
   // The actual agent/mode will be determined by the submit config, not the stream connection
@@ -127,7 +127,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { data: agents = [], isLoading: agentsLoading } = useFetchAgents();
+  const { data: agents = [] } = useFetchAgents();
   const [threadId] = useQueryState("threadId");
   
   const { session } = useAuthContext();

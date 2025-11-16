@@ -12,7 +12,6 @@ import {
   ChainOfThoughtStep,
 } from "@/components/ai-elements/chain-of-thought";
 import { DotIcon, CheckCircle2Icon, XCircleIcon, LoaderCircle } from "lucide-react";
-import { Tick02Icon } from "hugeicons-react";
 import { CheckmarkCircleIcon, CopyIcon, ToolsIcon } from "@/components/icons";
 import React, { useMemo } from "react";
 import { toast } from "sonner";
@@ -176,7 +175,6 @@ export const AITurn = React.memo(function AITurn({
             // Complete: everything else (has content after, not loading, or not last block)
             const isLastThinkingGroup = blockIdx === chainData.renderBlocks.length - 1;
             const isActiveThinking = isLoading && isLastThinkingGroup;
-            const headerText = isActiveThinking ? "Thinking..." : "Thoughts";
             
             // Determine if we should show preview:
             // Show preview ONLY when:

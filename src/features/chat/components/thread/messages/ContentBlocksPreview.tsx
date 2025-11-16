@@ -1,21 +1,10 @@
 import React from "react";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { cn } from "@/lib/utils";
-
-// Type for content blocks - defining locally to avoid import issues  
-interface Base64ContentBlock {
-  type: "image" | "file";
-  source_type: "base64";
-  mime_type: string;
-  data: string;
-  metadata?: {
-    name?: string;
-    filename?: string;
-  };
-}
+import type { Data } from "@langchain/core/messages";
 
 interface ContentBlocksPreviewProps {
-  blocks: Base64ContentBlock[];
+  blocks: Data.Base64ContentBlock[];
   onRemove: (idx: number) => void;
   size?: "sm" | "md" | "lg";
   className?: string;

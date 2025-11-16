@@ -28,10 +28,10 @@ interface StateViewRecursiveProps {
 
 const messageTypeToLabel = (message: BaseMessage) => {
   let type = "";
-  if ("type" in message) {
-    type = message.type as string;
-  } else {
+  if ("_getType" in message && typeof message._getType === "function") {
     type = message._getType();
+  } else if ("type" in message) {
+    type = message.type as string;
   }
 
   switch (type) {

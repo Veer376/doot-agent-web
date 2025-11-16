@@ -23,30 +23,6 @@ import type { Config } from 'tailwindcss';
 import { designTokens } from './tokens';
 
 /**
- * Helper function to convert theme-aware colors to CSS variables
- * This allows us to switch between light/dark mode using CSS variables
- */
-function createColorScale(colorObject: any, prefix: string = '') {
-  const colors: Record<string, string> = {};
-  
-  for (const [key, value] of Object.entries(colorObject)) {
-    const colorKey = prefix ? `${prefix}-${key}` : key;
-    
-    if (typeof value === 'object' && value !== null) {
-      if ('light' in value && 'dark' in value) {
-        // This is a theme-aware color, use CSS variable
-        colors[key] = `var(--color-${colorKey.replace(/\./g, '-')})`;
-      } else {
-        // This is a nested object, recurse
-        Object.assign(colors, createColorScale(value, colorKey));
-      }
-    }
-  }
-  
-  return colors;
-}
-
-/**
  * Design System Preset Configuration
  * 
  * This preset extends Tailwind's default theme with our design tokens.
@@ -76,7 +52,7 @@ export const designSystemPreset: Partial<Config> = {
           accent: 'var(--color-brand-accent)',
           'accent-light': 'var(--color-brand-accent-light)',
         },
-        
+
         // Semantic colors - Meaning-based colors
         semantic: {
           success: 'var(--color-semantic-success)',
@@ -88,7 +64,7 @@ export const designSystemPreset: Partial<Config> = {
           info: 'var(--color-semantic-info)',
           'info-light': 'var(--color-semantic-info-light)',
         },
-        
+
         // Neutral scale - Grays for everything else
         neutral: {
           50: 'var(--color-neutral-50)',

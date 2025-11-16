@@ -697,7 +697,7 @@ export function ThreadList() {
                         //   });
                         // }}
                       >
-                        <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex flex-col gap-0.3 min-w-0">
                           <span className="truncate text-sm leading-tight">{title}</span>
                           {agentName && (
                             <span className="text-xs text-muted-foreground truncate leading-tight">

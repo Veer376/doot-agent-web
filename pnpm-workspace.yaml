@@ -1,0 +1,6 @@
+ignoredBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - electron
+  - electron-winstaller
+  - sharp
+  - unrs-resolver

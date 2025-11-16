@@ -4,7 +4,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "dist/electron/main.js",
+  "main": "dist/electron/main.cjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,12 +13,12 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "npm run build && tsc -p electron/tsconfig.json && electron-builder",
-    "electron:build:win": "npm run build && tsc -p electron/tsconfig.json && electron-builder --win portable",
-    "electron:build:win:installer": "npm run build && tsc -p electron/tsconfig.json && electron-builder --win nsis",
-    "electron:build:mac": "npm run build && tsc -p electron/tsconfig.json && electron-builder --mac",
-    "electron:build:linux": "npm run build && tsc -p electron/tsconfig.json && electron-builder --linux"
+    "electron:dev": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder",
+    "electron:build:win": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --win portable",
+    "electron:build:win:installer": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --win nsis",
+    "electron:build:mac": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --mac",
+    "electron:build:linux": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --linux"
   },
   "dependencies": {
     "@langchain/core": "^1.0.1",
@@ -42,7 +42,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.2",
     "@radix-ui/react-tabs": "^1.1.7",
-    "@radix-ui/react-toast": "1.1.0",
+    "@radix-ui/react-toast": "^1.2.2",
     "@radix-ui/react-tooltip": "^1.2.3",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@supabase/ssr": "^0.6.1",
@@ -93,9 +93,10 @@
     "@types/uuid": "10.0.0",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0",
     "dotenv": "^16.5.0",
     "electron": "^34.0.0",
-    "electron-builder": "^25.3.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.19.0",
     "eslint-config-next": "15.2.2",
     "eslint-plugin-react-hooks": "^5.0.0",
@@ -151,7 +152,6 @@
       ],
       "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "sign": null,
       "verifyUpdateCodeSignature": false
     },
     "mac": {

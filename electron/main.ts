@@ -85,7 +85,12 @@ async function createWindow() {
     console.log(`[Electron] Loading app from: ${appUrl}`);
 
     // Load the Next.js app
-    await mainWindow.loadURL(appUrl);
+    try {
+        await mainWindow.loadURL(appUrl);
+        console.log('[Electron] URL loaded successfully');
+    } catch (error) {
+        console.error('[Electron] Failed to load URL:', error);
+    }
 
     // Show window when ready
     mainWindow.once('ready-to-show', () => {
@@ -97,29 +102,95 @@ async function createWindow() {
         }
     });
 
+    // Fallback: show window after 5 seconds if ready-to-show doesn't fire
+    setTimeout(() => {
+        if (mainWindow && !mainWindow.isVisible()) {
+            console.log('[Electron] Showing window (fallback timeout)');
+            mainWindow.show();
+            if (isDev) {
+                mainWindow.webContents.openDevTools();
+            }
+        }
+    }, 5000);
+
     // Handle window closed
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
 
-    // Open external links in browser
+    // Handle new window requests (OAuth popups)
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        console.log('[Electron] Window open request:', url);
+        
+        // Allow OAuth provider URLs to open in the same window
+        if (url.includes('supabase.co/auth') || 
+            url.includes('accounts.google.com') || 
+            url.includes('github.com/login') ||
+            url.includes('oauth')) {
+            console.log('[Electron] OAuth navigation - loading in main window');
+            mainWindow?.loadURL(url);
+            return { action: 'deny' };
+        }
+        
+        // Allow OAuth callbacks to navigate in current window
+        if (url.includes('?code=') || url.includes('&code=')) {
+            console.log('[Electron] OAuth callback - loading in current window');
+            mainWindow?.loadURL(url);
+            return { action: 'deny' };
+        }
+        
+        // Allow same-app URLs
+        if (url.startsWith(appUrl)) {
+            return { action: 'allow' };
+        }
+        
+        // Open other external links in default browser
         if (url.startsWith('http://') || url.startsWith('https://')) {
+            console.log('[Electron] Opening external URL in browser:', url);
             shell.openExternal(url);
             return { action: 'deny' };
         }
+        
         return { action: 'allow' };
     });
 
-    // Handle navigation to external URLs
+    // Handle navigation in the main window
     mainWindow.webContents.on('will-navigate', (event, url) => {
+        console.log('[Electron] Navigation request:', url);
+        
         const appHost = new URL(appUrl).host;
-        const urlHost = new URL(url).host;
-
-        if (urlHost !== appHost) {
+        
+        try {
+            const urlObj = new URL(url);
+            const urlHost = urlObj.host;
+            
+            // Allow OAuth callbacks (contains code parameter)
+            const hasAuthCode = urlObj.searchParams.has('code');
+            
+            // Allow Supabase OAuth URLs
+            const isSupabaseAuth = url.includes('supabase.co/auth');
+            
+            // Allow Google OAuth URLs
+            const isGoogleAuth = url.includes('accounts.google.com');
+            
+            // Allow same-host navigation, OAuth callbacks, and OAuth providers
+            if (urlHost === appHost || hasAuthCode || isSupabaseAuth || isGoogleAuth) {
+                console.log('[Electron] Allowing navigation to:', url);
+                return; // Allow navigation
+            }
+            
+            // Only prevent navigation to truly external sites
+            console.log('[Electron] Preventing external navigation');
             event.preventDefault();
-            shell.openExternal(url);
+        } catch (error) {
+            console.error('[Electron] Error parsing URL:', error);
         }
+    });
+
+    // Listen for new windows created (OAuth popup) - remove this since we handle it above
+    mainWindow.webContents.on('did-create-window', (childWindow) => {
+        console.log('[Electron] Child window created');
+        childWindow.close(); // Close any popups since we handle OAuth in main window
     });
 }
 

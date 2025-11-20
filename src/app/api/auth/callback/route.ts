@@ -22,11 +22,15 @@ export async function GET(request: NextRequest) {
         throw error;
       }
 
-      // Successfully authenticated
+      // Successfully authenticated - redirect to destination
+      return NextResponse.redirect(new URL(redirectTo, request.url));
     }
 
-    // Redirect to the requested page or home
-    return NextResponse.redirect(new URL(redirectTo, request.url));
+    // No code parameter - this shouldn't happen in normal flow
+    // Redirect to sign-in with from_oauth flag to show loading state
+    const signinUrl = new URL("/signin", request.url);
+    signinUrl.searchParams.set("from_oauth", "true");
+    return NextResponse.redirect(signinUrl);
   } catch (error) {
     console.error("Auth callback error:", error);
 

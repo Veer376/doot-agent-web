@@ -5,7 +5,10 @@ import { AgentIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
-import { useAgentContext, useStreamContext } from "@/features/chat/providers/Stream";
+import {
+  useAgentContext,
+  useStreamContext,
+} from "@/features/chat/providers/Stream";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -39,7 +42,7 @@ export function IconAgentSelector({
   const isStreaming = stream.isLoading;
 
   const onAgentChange = useCallback(
-    (v: string | string[] | undefined) => {
+    async (v: string | string[] | undefined) => {
       const nextValue = Array.isArray(v) ? v[0] : v;
       if (!nextValue) return;
 
@@ -52,6 +55,40 @@ export function IconAgentSelector({
       // Update agent selection and switch to agent mode
       setSelectedAgent(nextValue);
       setMode("agent");
+
+      // Get CDP WebSocket URL for browser agent
+      if (nextValue === "browser_agent") {
+        try {
+          if (window.electron?.getCdpUrl) {
+            const cdpBaseUrl = await window.electron.getCdpUrl();
+            console.log("CDP base URL:", cdpBaseUrl);
+
+            // Fetch the CDP targets to get the WebSocket URL
+            const response = await fetch(`${cdpBaseUrl}/json`);
+            const targets = await response.json();
+
+            // Find the main app page
+            const mainAppTarget = targets.find(
+              (target: any) =>
+                target.title === "Orbit Agent" &&
+                target.url === "http://localhost:3000/",
+            );
+
+            if (mainAppTarget?.webSocketDebuggerUrl) {
+              console.log(
+                "CDP WebSocket URL for browser agent:",
+                mainAppTarget.webSocketDebuggerUrl,
+              );
+            } else {
+              console.log("Could not find main app target in CDP targets");
+            }
+          } else {
+            console.log("Electron API not available");
+          }
+        } catch (error) {
+          console.error("Error getting CDP WebSocket URL:", error);
+        }
+      }
     },
     [setSelectedAgent, setMode, isStreaming],
   );
@@ -95,7 +132,7 @@ export function IconAgentSelector({
         e.stopPropagation();
         return;
       }
-      
+
       if (mode === "chat") {
         // Prevent switching to agent mode during streaming
         if (isStreaming) {
@@ -104,7 +141,7 @@ export function IconAgentSelector({
           toast.info("Please wait for the current response to complete");
           return;
         }
-        
+
         // First click when in chat mode: just switch to agent mode
         // Prevent the popover from opening
         e.preventDefault();
@@ -152,7 +189,7 @@ export function IconAgentSelector({
       >
         <AgentIcon className={isAgentMode ? "text-background" : ""} />
         <span className="hidden max-w-[160px] truncate md:inline-block">
-          {loading ? "Loading…" : selectedAgent?.name ?? "Agent"}
+          {loading ? "Loading…" : (selectedAgent?.name ?? "Agent")}
         </span>
       </button>
     ) : (
@@ -161,8 +198,8 @@ export function IconAgentSelector({
           loading
             ? "Loading agents…"
             : selectedAgent
-            ? `Agent: ${selectedAgent.name}`
-            : "Select Agent"
+              ? `Agent: ${selectedAgent.name}`
+              : "Select Agent"
         }
         variant="ghost"
         className={cn(loading && "opacity-60", className)}

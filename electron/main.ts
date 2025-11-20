@@ -6,9 +6,11 @@ import type { ChildProcess } from 'child_process';
 // Keep a global reference to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
 let nextProcess: ChildProcess | null = null;
+let automationBrowserProcess: ChildProcess | null = null;
 
 // Enable CDP for browser automation
 const CDP_PORT = 9222;
+const AUTOMATION_CDP_PORT = 9223; // Separate port for automation browser
 app.commandLine.appendSwitch('remote-debugging-port', String(CDP_PORT));
 
 // Disable hardware acceleration if needed for compatibility
@@ -47,6 +49,80 @@ function startNextServer(): Promise<void> {
             console.log('[Electron] Next.js server started');
             resolve();
         }, 2000);
+    });
+}
+
+/**
+ * Launch automation browser (separate Chrome instance)
+ */
+function launchAutomationBrowser(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        console.log('[Electron] Launching automation browser...');
+
+        // Find Chrome executable
+        const chromePaths = [
+            'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+            process.env.USERPROFILE + '\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe'
+        ];
+
+        let chromePath = null;
+        for (const path of chromePaths) {
+            if (require('fs').existsSync(path)) {
+                chromePath = path;
+                break;
+            }
+        }
+
+        if (!chromePath) {
+            reject(new Error('Chrome not found'));
+            return;
+        }
+
+        // Launch Chrome with CDP enabled
+        automationBrowserProcess = spawn(chromePath, [
+            `--remote-debugging-port=${AUTOMATION_CDP_PORT}`,
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--user-data-dir=' + require('os').tmpdir() + '\\orbit-automation-profile',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor'
+        ], {
+            detached: true,
+            stdio: 'ignore'
+        });
+
+        automationBrowserProcess.on('error', (error) => {
+            console.error('[Electron] Failed to launch automation browser:', error);
+            reject(error);
+        });
+
+        // Wait for Chrome to start and CDP to be available
+        let attempts = 0;
+        const checkCdp = () => {
+            attempts++;
+            fetch(`http://localhost:${AUTOMATION_CDP_PORT}/json`)
+                .then(response => response.json())
+                .then((targets: any) => {
+                    const targetArray = targets as any[];
+                    if (targetArray && targetArray.length > 0) {
+                        const wsUrl = targetArray[0].webSocketDebuggerUrl;
+                        console.log('[Electron] Automation browser ready, WebSocket:', wsUrl);
+                        resolve(wsUrl);
+                    } else {
+                        throw new Error('No targets found');
+                    }
+                })
+                .catch(() => {
+                    if (attempts < 30) { // Try for 30 seconds
+                        setTimeout(checkCdp, 1000);
+                    } else {
+                        reject(new Error('Timeout waiting for automation browser CDP'));
+                    }
+                });
+        };
+
+        setTimeout(checkCdp, 2000); // Initial delay
     });
 }
 
@@ -255,6 +331,26 @@ app.on('before-quit', () => {
 // Get CDP URL
 ipcMain.handle('get-cdp-url', () => {
     return `http://localhost:${CDP_PORT}`;
+});
+
+// Get automation browser WebSocket URL
+ipcMain.handle('get-automation-browser-ws-url', async () => {
+    try {
+        if (!automationBrowserProcess) {
+            await launchAutomationBrowser();
+        }
+        // Return the WebSocket URL for the automation browser
+        const response = await fetch(`http://localhost:${AUTOMATION_CDP_PORT}/json`);
+        const targets: any = await response.json();
+        const targetArray = targets as any[];
+        if (targetArray && targetArray.length > 0) {
+            return targetArray[0].webSocketDebuggerUrl;
+        }
+        throw new Error('No automation browser targets found');
+    } catch (error) {
+        console.error('[Electron] Error getting automation browser WebSocket URL:', error);
+        throw error;
+    }
 });
 
 // Get app version

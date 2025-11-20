@@ -8,6 +8,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 // Define the API interface
 export interface ElectronAPI {
     getCdpUrl: () => Promise<string>;
+    getAutomationBrowserWsUrl: () => Promise<string>;
     getAppVersion: () => Promise<string>;
     isElectron: () => Promise<boolean>;
     openExternal: (url: string) => Promise<void>;
@@ -18,6 +19,7 @@ export interface ElectronAPI {
 // Expose Electron API to renderer process
 contextBridge.exposeInMainWorld('electron', {
     getCdpUrl: () => ipcRenderer.invoke('get-cdp-url'),
+    getAutomationBrowserWsUrl: () => ipcRenderer.invoke('get-automation-browser-ws-url'),
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     isElectron: () => ipcRenderer.invoke('is-electron'),
     openExternal: (url: string) => ipcRenderer.invoke('open-external', url),

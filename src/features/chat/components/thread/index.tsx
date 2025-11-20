@@ -34,7 +34,11 @@ import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
 import { Loader } from "@/components/ai-elements/loader";
-import { useUpdateThread, useFetchThreads, threadKeys } from "@/hooks/use-threads";
+import {
+  useUpdateThread,
+  useFetchThreads,
+  threadKeys,
+} from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
 
 function StickyToBottomContent(props: {
@@ -71,10 +75,7 @@ function ScrollToBottom(props: { className?: string }) {
       variant="secondary"
       size="icon"
       data-radius="radius2"
-      className={cn(
-        "hover:bg-secondary cursor-pointer",
-        props.className,
-      )}
+      className={cn("hover:bg-secondary cursor-pointer", props.className)}
       onClick={() => scrollToBottom()}
     >
       <ArrowDownIcon />
@@ -168,7 +169,9 @@ export function Thread() {
   const { data: threads = [] } = useFetchThreads();
 
   // Track the last saved agent/mode to avoid redundant updates
-  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string } | null>(null);
+  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string } | null>(
+    null,
+  );
 
   // Restore agent/mode from thread metadata when thread changes
   // Only restore on threadId change, not when user changes agent/mode
@@ -249,7 +252,7 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const content = inputValue.trim();
@@ -276,6 +279,23 @@ export function Thread() {
     // to ensure the submit goes to the same assistant the stream is connected to
     const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
 
+    // Get CDP WebSocket URL if using browser agent
+    let browserContext = undefined;
+    if (effectiveAgentId === "browser_agent") {
+      try {
+        if (window.electron?.getAutomationBrowserWsUrl) {
+          const wsUrl = await window.electron.getAutomationBrowserWsUrl();
+          browserContext = {
+            browser_config: {
+              wss_url: wsUrl,
+            },
+          };
+        }
+      } catch (error) {
+        console.error("Error getting automation browser WebSocket URL:", error);
+      }
+    }
+
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
@@ -297,6 +317,7 @@ export function Thread() {
         metadata: {
           supabaseAccessToken: session?.accessToken,
         },
+        context: browserContext,
         streamSubgraphs: true,
         streamResumable: true,
       },
@@ -413,8 +434,8 @@ export function Thread() {
                 <>
                   {groupMessagesIntoTurns(
                     messages.filter(
-                      (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)
-                    )
+                      (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
+                    ),
                   ).map((turn, turnIndex, allTurns) => {
                     if (turn.type === "human") {
                       return (
@@ -426,10 +447,13 @@ export function Thread() {
                       );
                     } else {
                       // Find the last AI turn index
-                      const lastAITurnIndex = allTurns.map((t, i) => t.type === "ai-turn" ? i : -1).filter(i => i !== -1).pop();
+                      const lastAITurnIndex = allTurns
+                        .map((t, i) => (t.type === "ai-turn" ? i : -1))
+                        .filter((i) => i !== -1)
+                        .pop();
                       const isLastAITurn = turnIndex === lastAITurnIndex;
                       const turnIsLoading = isLoading && isLastAITurn;
-                      
+
                       return (
                         <AITurn
                           key={`ai-turn-${turn.startIndex}`}
@@ -448,7 +472,9 @@ export function Thread() {
                     <AITurn
                       key="interrupt-ai-turn"
                       turnMessages={[]}
-                      lastHumanIndex={messages.length > 0 ? messages.length - 1 : -1}
+                      lastHumanIndex={
+                        messages.length > 0 ? messages.length - 1 : -1
+                      }
                       allMessages={messages}
                       isLoading={isLoading}
                       handleRegenerate={handleRegenerate}

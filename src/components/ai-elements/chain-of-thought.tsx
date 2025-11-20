@@ -136,11 +136,19 @@ export const ChainOfThoughtStep = memo(
     };
 
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ 
+          opacity: 1, 
+          x: 0,
+          transition: { 
+            duration: 0.4,
+            ease: [0.16, 1, 0.3, 1]
+          }
+        }}
         className={cn(
           "flex gap-2 text-sm",
           statusStyles[status],
-          "fade-in-0 slide-in-from-top-2 animate-in",
           className
         )}
         {...props}
@@ -159,7 +167,7 @@ export const ChainOfThoughtStep = memo(
           )}
           {children}
         </div>
-      </div>
+      </motion.div>
     );
   }
 );
@@ -227,22 +235,22 @@ export const ChainOfThoughtPreview = memo(
       <AnimatePresence mode="wait">
         <motion.div
           key={contentKey || "preview"}
-          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          initial={{ opacity: 0, y: -12, scale: 0.96 }}
           animate={{ 
             opacity: 1, 
             y: 0,
             scale: 1,
             transition: { 
-              duration: 0.3,
+              duration: 0.5,
               ease: [0.16, 1, 0.3, 1] // Smooth easeOutExpo
             }
           }}
           exit={{
             opacity: 0,
-            y: -8,
-            scale: 0.98,
+            y: -12,
+            scale: 0.96,
             transition: { 
-              duration: 0.2,
+              duration: 0.4,
               ease: [0.7, 0, 0.84, 0] // Smooth easeInExpo
             }
           }}

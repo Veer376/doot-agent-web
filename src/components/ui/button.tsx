@@ -55,6 +55,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
+      data-radius="radius2"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

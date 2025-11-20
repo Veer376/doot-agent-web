@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
@@ -9,6 +9,7 @@ import { Agent } from "@/types/agent";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 import _ from "lodash";
 import { AgentCard } from "../agent-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface AgentListProps {
   agents: Agent[];
@@ -50,20 +51,24 @@ export function AgentList({ agents }: AgentListProps) {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-          <h3 className="text-lg font-medium">No agents found</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Create a new agent or try a different search.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Agent
-          </Button>
+        <div className="flex flex-col items-center justify-center rounded-lg p-6 py-12">
+          {searchQuery ? (
+            <EmptyState
+              icon={Search}
+              title="No agents found"
+              description="No agents match your search criteria. Try adjusting your search."
+            />
+          ) : (
+            <EmptyState
+              icon={Bot}
+              title="No agents configured"
+              description="Create your first agent to get started with AI assistance"
+              action={{
+                label: "Create Agent",
+                onClick: () => setShowCreateDialog(true),
+              }}
+            />
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

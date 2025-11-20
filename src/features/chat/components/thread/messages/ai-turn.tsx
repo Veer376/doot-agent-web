@@ -1,6 +1,7 @@
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { Checkpoint, Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { extractChainOfThought } from "@/features/chat/utils/extract-chain-of-thought";
@@ -188,9 +189,29 @@ export const AITurn = React.memo(function AITurn({
               .some(b => b.type === "content");
             const shouldShowPreview = isLoading && isLastThinkingGroup && !hasContentAfter;
             
-            // Render thinking block with steps
+            // Render thinking block with steps and smooth entrance animation
             return (
-              <ChainOfThought key={`thinking-${blockIdx}`} defaultOpen={false}>
+              <motion.div
+                key={`thinking-wrapper-${blockIdx}`}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { 
+                    duration: 0.5,
+                    ease: [0.16, 1, 0.3, 1]
+                  }
+                }}
+                exit={{
+                  opacity: 0,
+                  y: -8,
+                  transition: { 
+                    duration: 0.4,
+                    ease: [0.7, 0, 0.84, 0]
+                  }
+                }}
+              >
+                <ChainOfThought key={`thinking-${blockIdx}`} defaultOpen={false}>
                 <ChainOfThoughtHeader>
                   {isActiveThinking ? (
                     <Shimmer duration={1} spread={2}>
@@ -224,13 +245,28 @@ export const AITurn = React.memo(function AITurn({
                   )}
                 </ChainOfThoughtContent>
               </ChainOfThought>
+              </motion.div>
             );
           } else if (block.type === "content") {
-            // Render content block
+            // Render content block with smooth animation
             return (
-              <div key={`content-${blockIdx}`} className="py-1 text-[0.95em]">
+              <motion.div 
+                key={`content-${blockIdx}`} 
+                className="py-1 text-[0.95em]"
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  scale: 1,
+                  transition: { 
+                    duration: 0.6,
+                    ease: [0.16, 1, 0.3, 1],
+                    delay: 0.1
+                  }
+                }}
+              >
                 <MarkdownText>{block.content}</MarkdownText>
-              </div>
+              </motion.div>
             );
           } else if (block.type === "tools-only") {
             // Render standalone tools WITHOUT thinking wrapper

@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { AITurn } from "@/features/chat/components/thread/messages/ai-turn";
-import { LoaderCircle, AlertCircle } from "lucide-react";
+import { LoaderCircle, AlertCircle, MessageSquare } from "lucide-react";
 import { ArrowDownIcon } from "@/components/icons";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useQueryState } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { toast } from "sonner";
@@ -275,7 +276,7 @@ export function Thread() {
     // Determine which agent config to use based on current mode
     // This MUST match the effectiveAgentId used in the stream connection
     // to ensure the submit goes to the same assistant the stream is connected to
-    const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
+    const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
@@ -355,7 +356,7 @@ export function Thread() {
 
     // Determine which agent config to use based on current mode
     // This MUST match the effectiveAgentId used in the stream connection
-    const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
+    const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
 
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
@@ -403,12 +404,20 @@ export function Thread() {
           contentClassName="pt-8 pb-12 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
-              {!hasMessages && threadId ? (
+              {!hasMessages && threadId && isLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="text-muted-foreground flex items-center gap-2">
                     <LoaderCircle className="h-4 w-4 animate-spin" />
                     <span>Loading thread...</span>
                   </div>
+                </div>
+              ) : !hasMessages && threadId ? (
+                <div className="flex items-center justify-center py-16">
+                  <EmptyState
+                    icon={MessageSquare}
+                    title="No messages yet"
+                    description="Start the conversation by sending your first message below"
+                  />
                 </div>
               ) : (
                 <>

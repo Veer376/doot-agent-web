@@ -80,7 +80,7 @@ const StreamSession = ({
   // Use a stable assistantId for the stream connection
   // The actual agent/mode will be determined by the submit config, not the stream connection
   // This prevents stream reconnections when user changes agent/mode in UI
-  const effectiveAgentId = mode === "chat" ? "chat_mode" : agentId;
+  const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
 
   const streamValue = useTypedStream({
     apiUrl: process.env.NEXT_PUBLIC_API_URL,
@@ -182,7 +182,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       ) : (
         <StreamSession
           // key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
-          agentId={agentId || "chat_mode"}
+          agentId={agentId || "chat_agent"}
           mode={mode}
           accessToken={session.accessToken}
           threadId={threadId}

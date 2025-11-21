@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export default function SigninInterface() {
   const { signIn, signInWithGoogle, isAuthenticated } = useAuthContext();
@@ -22,12 +23,26 @@ export default function SigninInterface() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [showManualRedirect, setShowManualRedirect] = useState<boolean>(false);
+  const [isOAuthCallback, setIsOAuthCallback] = useState<boolean>(false);
+
+  // Detect OAuth callback - show loading state immediately
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const fromOAuth = searchParams.get("from_oauth");
+    
+    // If we have a code parameter or from_oauth flag, we're in OAuth callback flow
+    if (code || fromOAuth === "true") {
+      setIsOAuthCallback(true);
+      setIsLoading(true);
+      setMessage("Completing sign in with Google...");
+    }
+  }, [searchParams]);
 
   // Handle URL parameters
   useEffect(() => {
     // Check for message parameter
     const urlMessage = searchParams.get("message");
-    if (urlMessage) {
+    if (urlMessage && !isOAuthCallback) {
       setMessage(urlMessage);
     }
 
@@ -35,8 +50,10 @@ export default function SigninInterface() {
     const urlError = searchParams.get("error");
     if (urlError) {
       setError(urlError);
+      setIsOAuthCallback(false);
+      setIsLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, isOAuthCallback]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -85,17 +102,47 @@ export default function SigninInterface() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
+    setMessage("Redirecting to Google...");
+
+    // Store a flag in sessionStorage to detect OAuth flow
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("oauth_flow_started", "true");
+    }
 
     const { error } = await signInWithGoogle();
     if (error) {
       setIsLoading(false);
       setError(error.message);
-
+      setMessage(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("oauth_flow_started");
+      }
       return;
     }
 
     // keep isLoading: true, as we're doing a redirect
   };
+
+  // Show OAuth callback loading state
+  if (isOAuthCallback) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground text-center">
+              Completing sign in...
+            </h2>
+            <p className="text-sm text-muted-foreground text-center">
+              Please wait while we verify your Google account
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -106,14 +153,23 @@ export default function SigninInterface() {
           </h1>
         </div>
 
-        {message && !isSuccess && (
-          <Alert className="mb-4 bg-blue-50 text-blue-800">
+        {message && !isSuccess && !isLoading && (
+          <Alert className="mb-4 bg-blue-50 text-blue-800" data-radius="radius2">
             <AlertDescription>{message}</AlertDescription>
+          </Alert>
+        )}
+        
+        {isLoading && message && !isOAuthCallback && (
+          <Alert className="mb-4 bg-blue-50 text-blue-800" data-radius="radius2">
+            <AlertDescription className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {message}
+            </AlertDescription>
           </Alert>
         )}
 
         {isSuccess && (
-          <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+          <Alert className="mb-4 border-green-200 bg-green-50 text-green-800" data-radius="radius2">
             <AlertDescription className="flex flex-col gap-2">
               <span>Success! We're redirecting you to the dashboard...</span>
               {showManualRedirect && (
@@ -121,6 +177,7 @@ export default function SigninInterface() {
                   onClick={() => router.push("/")}
                   variant="outline"
                   className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                  data-radius="radius2"
                 >
                   Go to Dashboard Now
                 </Button>
@@ -159,7 +216,7 @@ export default function SigninInterface() {
           </div>
 
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" data-radius="radius2">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}

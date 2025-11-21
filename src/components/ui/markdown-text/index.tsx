@@ -16,11 +16,33 @@ import {
 import { CopyIcon, CheckmarkCircleIcon } from "@/components/icons";
 import { SyntaxHighlighter } from "./syntax-highlighter";
 import { MermaidDiagram } from "./mermaid-diagram";
+import {
+  InlineCitation,
+  InlineCitationCard,
+  InlineCitationCardTrigger,
+  InlineCitationCardBody,
+  InlineCitationCarousel,
+  InlineCitationCarouselContent,
+  InlineCitationCarouselItem,
+  InlineCitationCarouselHeader,
+  InlineCitationCarouselIndex,
+  InlineCitationCarouselPrev,
+  InlineCitationCarouselNext,
+  InlineCitationSource,
+} from "@/components/ai-elements/inline-citation";
 
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { cn } from "@/lib/utils";
 
 import "katex/dist/katex.min.css";
+
+interface Citation {
+  number: string;
+  title: string;
+  url: string;
+  description?: string;
+}
+
 // Toggle line numbers for fenced code blocks (global default)
 const SHOW_CODE_LINE_NUMBERS = true;
 
@@ -77,11 +99,79 @@ const defaultComponents: any = {
   p: ({
     className,
     children,
+    citations,
     ...props
   }: {
     className?: string;
     children: any;
+    citations?: Map<string, Citation>;
   }) => {
+    // Citation processing function
+    const processChildren = (children: any): any => {
+      if (!citations || citations.size === 0) {
+        return children;
+      }
+
+      if (typeof children === "string") {
+        const parts = children.split(/(\[\d+(?:\s*,\s*\d+)*\])/g);
+
+        return parts.map((part: string, index: number) => {
+          const citationMatch = part.match(/\[(\d+(?:\s*,\s*\d+)*)\]/);
+
+          if (citationMatch) {
+            const numbers = citationMatch[1]
+              .split(",")
+              .map((n: string) => n.trim());
+            const citationsForThis = numbers
+              .map((num) => citations.get(num))
+              .filter((c): c is Citation => c !== undefined);
+
+            if (citationsForThis.length === 0) {
+              return <span key={index}>{part}</span>;
+            }
+
+            return (
+              <InlineCitation key={index}>
+                <InlineCitationCard>
+                  <InlineCitationCardTrigger
+                    sources={citationsForThis.map((c) => c.url)}
+                  />
+                  <InlineCitationCardBody>
+                    <InlineCitationCarousel>
+                      <InlineCitationCarouselHeader>
+                        <InlineCitationCarouselPrev />
+                        <InlineCitationCarouselNext />
+                        <InlineCitationCarouselIndex />
+                      </InlineCitationCarouselHeader>
+                      <InlineCitationCarouselContent>
+                        {citationsForThis.map((citation) => (
+                          <InlineCitationCarouselItem key={citation.url}>
+                            <InlineCitationSource
+                              title={citation.title}
+                              url={citation.url}
+                              description={citation.description}
+                            />
+                          </InlineCitationCarouselItem>
+                        ))}
+                      </InlineCitationCarouselContent>
+                    </InlineCitationCarousel>
+                  </InlineCitationCardBody>
+                </InlineCitationCard>
+              </InlineCitation>
+            );
+          }
+
+          return part;
+        });
+      }
+
+      if (Array.isArray(children)) {
+        return children.map((child) => processChildren(child));
+      }
+
+      return children;
+    };
+
     const getText = (node: any): string => {
       if (typeof node === "string") return node;
       if (Array.isArray(node)) return node.map(getText).join("");
@@ -102,7 +192,7 @@ const defaultComponents: any = {
           className={cn("mt-4 mb-4 leading-7 first:mt-0 last:mb-0", className)}
           {...props}
         >
-          {children}
+          {processChildren(children)}
         </p>
       );
     }
@@ -422,7 +512,10 @@ const defaultComponents: any = {
       // Detect Mermaid diagrams
       if (language.toLowerCase() === "mermaid") {
         return (
-          <div data-radius="radius2" className="bg-card text-card-foreground relative overflow-hidden border p-4">
+          <div
+            data-radius="radius2"
+            className="bg-card text-card-foreground relative overflow-hidden border p-4"
+          >
             <MermaidDiagram chart={code} />
           </div>
         );
@@ -430,7 +523,10 @@ const defaultComponents: any = {
 
       // Regular code block with syntax highlighting
       return (
-        <div data-radius="radius2" className="bg-card text-card-foreground relative overflow-hidden border">
+        <div
+          data-radius="radius2"
+          className="bg-card text-card-foreground relative overflow-hidden border"
+        >
           <CodeHeader
             language={language}
             code={code}
@@ -464,14 +560,73 @@ const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
   children,
   className,
 }) => {
+  // Parse citations from the content
+  const parseCitations = (text: string): Map<string, Citation> => {
+    const citations = new Map<string, Citation>();
+
+    const sourcesMatch = text.match(/\*\*Sources:\*\*\s*\n([\s\S]+?)$/i);
+    if (!sourcesMatch) return citations;
+
+    const sourcesList = sourcesMatch[1];
+    const citationLines = sourcesList
+      .split(/(?=\n\[\d+\])/g)
+      .filter((line) => line.trim());
+
+    citationLines.forEach((line) => {
+      const trimmedLine = line.trim();
+      // Match: [number] title - URL - description
+      const match = trimmedLine.match(
+        /^\[(\d+)\]\s*(.+?)\s+-\s+(https?:\/\/[^\s]+)\s+-\s+([\s\S]+?)$/,
+      );
+
+      if (match) {
+        const [, number, title, url, description] = match;
+        citations.set(number.trim(), {
+          number: number.trim(),
+          title: title.trim(),
+          url: url.trim(),
+          description: description.trim(),
+        });
+      } else {
+        // Fallback: [number] title - URL
+        const simpleMatch = trimmedLine.match(
+          /^\[(\d+)\]\s*(.+?)\s+-\s+(https?:\/\/[^\s]+)/,
+        );
+        if (simpleMatch) {
+          const [, number, title, url] = simpleMatch;
+          citations.set(number.trim(), {
+            number: number.trim(),
+            title: title.trim(),
+            url: url.trim(),
+          });
+        }
+      }
+    });
+
+    return citations;
+  };
+
+  const removeSources = (text: string): string => {
+    return text.replace(/\n*\*\*Sources:\*\*\s*\n[\s\S]+?$/i, "");
+  };
+
+  const citations = parseCitations(children);
+  const content = citations.size > 0 ? removeSources(children) : children;
+
+  // Create components with citations injected
+  const componentsWithCitations = {
+    ...defaultComponents,
+    p: (props: any) => defaultComponents.p({ ...props, citations }),
+  };
+
   return (
     <div className={cn("markdown-content max-w-3xl", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
-        components={defaultComponents}
+        components={componentsWithCitations}
       >
-        {children}
+        {content}
       </ReactMarkdown>
     </div>
   );

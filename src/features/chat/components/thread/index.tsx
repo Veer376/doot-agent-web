@@ -34,7 +34,7 @@ import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
-import { Loader } from "@/components/ai-elements/loader";
+import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
   useUpdateThread,
   useFetchThreads,
@@ -484,8 +484,7 @@ export function Thread() {
                   {/* Browser Snapshot moved to PreviewPanel above Composer */}
                   {isLoading && (
                     <div className="flex items-start justify-start p-2">
-                      {" "}
-                      <Loader />
+                      <EnhancedLoader messages={messages} />
                     </div>
                   )}
                   {errorMessage && (

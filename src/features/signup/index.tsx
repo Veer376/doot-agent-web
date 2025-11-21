@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 // Form validation schema
 const signupSchema = z
@@ -35,6 +36,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupInterface() {
   const { signUp, signInWithGoogle } = useAuthContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [formValues, setFormValues] = useState<Partial<SignupFormValues>>({
     firstName: "",
@@ -49,6 +51,29 @@ export default function SignupInterface() {
   >({});
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isOAuthCallback, setIsOAuthCallback] = useState<boolean>(false);
+  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+
+  // Detect OAuth callback - show loading state immediately
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const fromOAuth = searchParams.get("from_oauth");
+    const urlError = searchParams.get("error");
+    
+    // If we have a code parameter or from_oauth flag, we're in OAuth callback flow
+    if (code || fromOAuth === "true") {
+      setIsOAuthCallback(true);
+      setIsLoading(true);
+      setLoadingMessage("Completing sign up with Google...");
+    }
+
+    // Check for error parameter
+    if (urlError) {
+      setAuthError(urlError);
+      setIsOAuthCallback(false);
+      setIsLoading(false);
+    }
+  }, [searchParams]);
 
   const validateForm = () => {
     try {
@@ -116,21 +141,56 @@ export default function SignupInterface() {
   const handleGoogleSignup = async () => {
     setIsLoading(true);
     setAuthError(null);
+    setLoadingMessage("Redirecting to Google...");
+
+    // Store a flag in sessionStorage to detect OAuth flow
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("oauth_flow_started", "true");
+    }
 
     try {
       const { error } = await signInWithGoogle();
 
       if (error) {
         setAuthError(error.message);
+        setLoadingMessage(null);
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("oauth_flow_started");
+        }
       }
       // The redirect will be handled by the OAuth provider
     } catch (error) {
       console.error("Google signup error:", error);
       setAuthError("An error occurred while signing up with Google.");
+      setLoadingMessage(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("oauth_flow_started");
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show OAuth callback loading state
+  if (isOAuthCallback) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+            <div className="relative">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground text-center">
+              Completing sign up...
+            </h2>
+            <p className="text-sm text-muted-foreground text-center">
+              Please wait while we verify your Google account
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -140,6 +200,15 @@ export default function SignupInterface() {
             Create your account
           </h1>
         </div>
+
+        {isLoading && loadingMessage && !isOAuthCallback && (
+          <Alert className="mb-4 bg-blue-50 text-blue-800" data-radius="radius2">
+            <AlertDescription className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {loadingMessage}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -233,7 +302,7 @@ export default function SignupInterface() {
           </div>
 
           {authError && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" data-radius="radius2">
               <AlertDescription>{authError}</AlertDescription>
             </Alert>
           )}

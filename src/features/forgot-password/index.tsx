@@ -59,7 +59,7 @@ export default function ForgotPasswordInterface() {
         </div>
 
         {success ? (
-          <Alert className="mb-4">
+          <Alert className="mb-4" data-radius="radius2">
             <AlertDescription>
               If your email address is associated with an account, you will
               receive an email with instructions to reset your password
@@ -85,7 +85,7 @@ export default function ForgotPasswordInterface() {
             </div>
 
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-radius="radius2">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}

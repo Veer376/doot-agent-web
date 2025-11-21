@@ -9,6 +9,7 @@ import {
 import { useFetchAgents } from "@/hooks/use-agents";
 // Use shared app icons for consistency
 import { NoSignalIcon, SearchIcon, PinIcon, PinOffIcon, PlusSignIcon } from "@/components/icons";
+import { MessageCircleIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -29,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
@@ -528,21 +530,29 @@ export function ThreadList() {
             {isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton key={`search-skeleton-${index}`} className="h-14 w-full rounded-lg" />
+                  <Skeleton key={`search-skeleton-${index}`} className="h-14 w-full" />
                 ))}
               </div>
             ) : sortedThreads.length === 0 ? (
-              <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-12 text-center">
-                <NoSignalIcon size="xl" />
-                <p className="text-sm">
-                  {searchQuery ? "No threads found" : "No threads yet"}
-                </p>
-                {searchQuery && (
-                  <p className="text-xs text-muted-foreground">
-                    Try a different search term
-                  </p>
-                )}
-              </div>
+              <EmptyState
+                icon={MessageCircleIcon}
+                title={searchQuery ? "No threads found" : "No threads yet"}
+                description={
+                  searchQuery
+                    ? "Try adjusting your search terms or filters"
+                    : "Create your first thread to start a conversation"
+                }
+                action={
+                  searchQuery
+                    ? undefined
+                    : {
+                        label: "New Thread",
+                        onClick: handleCreateNewThread,
+                        variant: "default",
+                      }
+                }
+                className="py-16"
+              />
             ) : (
               <div className="p-3">
                 {/* PERF-TODO: Pre-compute threadIndexMap using useMemo to avoid O(n²) complexity */}
@@ -646,12 +656,12 @@ export function ThreadList() {
           )}
 
           {!isLoading && sortedThreads.length === 0 && (
-            <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
-              <NoSignalIcon size="xl" />
-              <p className="text-sm">
-                {searchQuery ? "No threads found" : "No threads yet"}
-              </p>
-            </div>
+            <EmptyState
+              icon={MessageCircleIcon}
+              title="No threads yet"
+              description="Create your first thread to start a conversation with the agent"
+              className="py-12"
+            />
           )}
 
           {!isLoading &&

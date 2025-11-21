@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDown01Icon } from "hugeicons-react";
-import { AiBrain03Icon, CheckmarkSquare01Icon, NeuralNetworkIcon } from "hugeicons-react";
+import { NeuralNetworkIcon } from "hugeicons-react";
 import { CheckmarkCircleIcon } from "@/components/icons"
-import { Shimmer } from '@/components/ai-elements/shimmer';
 import { ToolContainer } from "@/components/ai-elements/tool-container";
 
 interface ThinkingStep {
@@ -18,11 +17,8 @@ interface ThinkingBlockProps {
   usageMetadata?: any; // For showing token count
 }
 
-export function ThinkingBlock({ thinkingBlocks, usageMetadata }: ThinkingBlockProps) {
+export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Get thinking token count from usage metadata
-  const thinkingTokens = usageMetadata?.output_token_details?.reasoning || 0;
   
   // Get summary from last thinking block heading
   const summary = thinkingBlocks.length > 0 

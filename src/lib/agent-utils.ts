@@ -110,10 +110,9 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
 }
 
 /**
- * Checks if API keys are required but not set for a deployment.
- * @param deploymentId The deployment ID to check
+ * Checks if API keys are required but not set.
  * @param hasApiKeys Whether the user has API keys set
- * @returns True if the deployment requires API keys but user doesn't have them
+ * @returns True if API keys are required but user doesn't have them
  */
 export function requiresApiKeysButNotSet(
   hasApiKeys: boolean,

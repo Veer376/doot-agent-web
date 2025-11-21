@@ -2,18 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Pdf01Icon, DocumentCodeIcon, CancelCircleIcon } from "hugeicons-react";
-
-// Type for content blocks - defining locally to avoid import issues
-interface Base64ContentBlock {
-  type: "image" | "file";
-  source_type: "base64";
-  mime_type: string;
-  data: string;
-  metadata?: {
-    name?: string;
-    filename?: string;
-  };
-}
+import type { Base64ContentBlock } from "@/types/multimodal";
 
 export interface MultimodalPreviewProps {
   block: Base64ContentBlock;

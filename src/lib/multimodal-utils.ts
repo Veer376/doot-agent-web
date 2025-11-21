@@ -1,4 +1,4 @@
-import type { Base64ContentBlock } from "@langchain/core/messages";
+import type { Base64ContentBlock } from "@/types/multimodal";
 import { toast } from "sonner";
 // Returns a Promise of a typed multimodal block for images or PDFs
 export async function fileToContentBlock(

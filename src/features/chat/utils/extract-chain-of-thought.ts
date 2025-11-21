@@ -114,24 +114,23 @@ export function extractChainOfThought(
       if (hasThinkingInMessage) {
         // Add thinking steps (with deduplication)
         thinkingBlocks.forEach((block) => {
-          if (block.content.trim().length > 0) {
-            // Check if this exact thinking block already exists in the current group
-            const isDuplicate = currentGroupSteps.some(
-              (step) =>
-                step.type === "thinking" &&
-                step.heading === block.heading &&
-                step.content === block.content
-            );
+          // Always add thinking steps, even if empty (to show "Thinking..." immediately)
+          // Check if this exact thinking block already exists in the current group
+          const isDuplicate = currentGroupSteps.some(
+            (step) =>
+              step.type === "thinking" &&
+              step.heading === block.heading &&
+              step.content === block.content
+          );
 
-            // Only add if not a duplicate
-            if (!isDuplicate) {
-              currentGroupSteps.push({
-                type: "thinking",
-                heading: block.heading,
-                content: block.content,
-                status: "complete",
-              });
-            }
+          // Only add if not a duplicate
+          if (!isDuplicate) {
+            currentGroupSteps.push({
+              type: "thinking",
+              heading: block.heading,
+              content: block.content,
+              status: "complete",
+            });
           }
         });
       }

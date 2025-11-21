@@ -33,12 +33,12 @@ import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { OrbitIcon } from "@/components/icons";
-import { BrowserSnapshotView } from "@/features/chat/components/BrowserSnapshotView";
 import { PreviewPanel } from "./PreviewPanel";
 import { Loader } from "@/components/ai-elements/loader";
 import {
   useUpdateThread,
   useFetchThreads,
+  useFetchThreadState,
   threadKeys,
 } from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
@@ -161,6 +161,9 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
+  // Check if we're loading the thread state (when switching threads)
+  const { isLoading: isLoadingThreadState } = useFetchThreadState(threadId);
+
   // Query client for cache invalidation
   const queryClient = useQueryClient();
 
@@ -260,7 +263,9 @@ export function Thread() {
     const content = inputValue.trim();
 
     setInputValue(""); // Clear the input after submission
-    if (!agentId) return;
+    // In chat mode, agentId can be empty since we use chat_agent
+    // In agent mode, we need an agentId selected
+    if (mode === "agent" && !agentId) return;
     if ((content.length === 0 && contentBlocks.length === 0) || isLoading)
       return;
 
@@ -407,7 +412,7 @@ export function Thread() {
           contentClassName="pt-8 pb-12 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
-              {!hasMessages && threadId && isLoading ? (
+              {!hasMessages && threadId && isLoadingThreadState ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="text-muted-foreground flex items-center gap-2">
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -425,9 +430,12 @@ export function Thread() {
               ) : (
                 <>
                   {groupMessagesIntoTurns(
-                    messages.filter(
-                      (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
-                    ),
+                    messages
+                      .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
+                      // Deduplicate consecutive messages with the same ID to prevent ghosting
+                      .filter(
+                        (m, i, arr) => i === 0 || !m.id || m.id !== arr[i - 1].id
+                      )
                   ).map((turn, turnIndex, allTurns) => {
                     if (turn.type === "human") {
                       return (

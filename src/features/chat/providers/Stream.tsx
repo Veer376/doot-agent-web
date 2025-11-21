@@ -22,7 +22,11 @@ import { useAuthContext } from "@/providers/Auth";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { threadKeys, useUpdateThread, useFetchThreadState } from "@/hooks/use-threads";
+import {
+  threadKeys,
+  useUpdateThread,
+  useFetchThreadState,
+} from "@/hooks/use-threads";
 import { useFetchAgents } from "@/hooks/use-agents";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
@@ -96,7 +100,7 @@ const StreamSession = ({
     },
     onThreadId: (id) => {
       setThreadId(id);
-      
+
       // For new threads (when threadId was null before), save agent/mode metadata
       if (!threadId) {
         updateThread({
@@ -107,7 +111,7 @@ const StreamSession = ({
           },
         });
       }
-      
+
       // Invalidate thread list cache to show new thread immediately
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
     },
@@ -129,7 +133,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const { data: agents = [] } = useFetchAgents();
   const [threadId] = useQueryState("threadId");
-  
+
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");
@@ -155,7 +159,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // Initialize with default agent on mount
   useEffect(() => {
     if (!agentId && agents.length > 0) {
-      const defaultAgent = agents.find(isUserSpecifiedDefaultAgent) ?? agents[0];
+      const defaultAgent =
+        agents.find(isUserSpecifiedDefaultAgent) ?? agents[0];
       if (defaultAgent) {
         setSelectedAgent(defaultAgent.assistant_id);
       }
@@ -171,9 +176,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   }, [agentId, hasApiKeys]);
 
   return (
-    <AgentContext.Provider
-      value={{ agentId, setSelectedAgent, mode, setMode }}
-    >
+    <AgentContext.Provider value={{ agentId, setSelectedAgent, mode, setMode }}>
       {!session?.accessToken ? (
         <>
           {toast.error("Access token must be provided")}

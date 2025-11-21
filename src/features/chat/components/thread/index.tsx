@@ -434,8 +434,9 @@ export function Thread() {
                       .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
                       // Deduplicate consecutive messages with the same ID to prevent ghosting
                       .filter(
-                        (m, i, arr) => i === 0 || !m.id || m.id !== arr[i - 1].id
-                      )
+                        (m, i, arr) =>
+                          i === 0 || !m.id || m.id !== arr[i - 1].id,
+                      ),
                   ).map((turn, turnIndex, allTurns) => {
                     if (turn.type === "human") {
                       return (

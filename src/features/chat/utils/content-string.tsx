@@ -53,7 +53,7 @@ export function getThinkingBlocks(
       // Use regex to find all **heading** patterns
       const headingRegex = /\*\*([^*]+)\*\*/g;
       const matches = [...thinkingText.matchAll(headingRegex)];
-      
+
       if (matches.length === 0) {
         // No headings found at all
         blocks.push({
@@ -67,16 +67,23 @@ export function getThinkingBlocks(
       matches.forEach((match, idx) => {
         const heading = match[1].trim();
         const headingEndPos = match.index! + match[0].length;
-        
+
         // Find content between this heading and the next (or end of text)
         const nextMatch = matches[idx + 1];
-        const contentEndPos = nextMatch ? nextMatch.index! : thinkingText.length;
-        
-        let content = thinkingText.substring(headingEndPos, contentEndPos).trim();
-        
+        const contentEndPos = nextMatch
+          ? nextMatch.index!
+          : thinkingText.length;
+
+        let content = thinkingText
+          .substring(headingEndPos, contentEndPos)
+          .trim();
+
         // Clean up content: remove leading/trailing newlines, normalize multiple newlines
-        content = content.replace(/^\n+/, '').replace(/\n+$/, '').replace(/\n{3,}/g, "\n\n");
-        
+        content = content
+          .replace(/^\n+/, "")
+          .replace(/\n+$/, "")
+          .replace(/\n{3,}/g, "\n\n");
+
         if (heading) {
           blocks.push({ heading, content });
         }

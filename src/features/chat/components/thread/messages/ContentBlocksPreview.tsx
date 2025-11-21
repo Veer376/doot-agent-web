@@ -1,18 +1,7 @@
 import React from "react";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { cn } from "@/lib/utils";
-
-// Type for content blocks - defining locally to avoid import issues  
-interface Base64ContentBlock {
-  type: "image" | "file";
-  source_type: "base64";
-  mime_type: string;
-  data: string;
-  metadata?: {
-    name?: string;
-    filename?: string;
-  };
-}
+import type { Base64ContentBlock } from "@/types/multimodal";
 
 interface ContentBlocksPreviewProps {
   blocks: Base64ContentBlock[];

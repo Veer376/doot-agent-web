@@ -6,6 +6,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Menu11Icon } from "@/components/icons";
 import React from "react";
 
+// Force dynamic rendering for this page
+export const dynamic = "force-dynamic";
+
 /**
  * The /settings page.
  * Contains the settings interface for managing API keys and other user preferences.

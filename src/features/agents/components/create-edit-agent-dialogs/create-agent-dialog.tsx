@@ -20,7 +20,6 @@ import { FormProvider, useForm } from "react-hook-form";
 
 interface CreateAgentDialogProps {
   agentId?: string;
-  deploymentId?: string;
   graphId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;

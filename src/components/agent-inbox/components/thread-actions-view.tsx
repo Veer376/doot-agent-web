@@ -144,11 +144,10 @@ export function ThreadActionsView<
   });
 
   const handleOpenInStudio = (id: string) => {
-    const [assistantId, deploymentId] = id.split(":");
+    const assistantId = id.split(":")[0];
 
     const studioUrl = constructOpenInStudioURL(
       assistantId,
-      deploymentId,
       threadData.thread.thread_id,
     );
 

@@ -16,7 +16,6 @@ import type { Message, Thread } from "@langchain/langgraph-sdk";
 import {
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarGroupAction,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,

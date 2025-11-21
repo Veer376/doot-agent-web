@@ -35,40 +35,53 @@ export function getThinkingBlocks(
 ): Array<{ heading: string; content: string }> {
   if (typeof content === "string") return [];
 
-  return content
+  const blocks: Array<{ heading: string; content: string }> = [];
+
+  content
     .filter(
       (c: any) => typeof c === "object" && c !== null && c.type === "thinking",
     )
-    .map((c: any) => {
+    .forEach((c: any) => {
       // The thinking content might be in 'thinking' or 'text' property
       const thinkingText = c.thinking || c.text || "";
 
       if (!thinkingText || thinkingText.trim().length === 0) {
-        return null;
+        return;
       }
 
-      // Split into lines and find heading
-      const lines = thinkingText.trim().split("\n");
-      let heading = "Thinking";
-      let content = thinkingText.trim();
+      // Match pattern: **Heading**\n\nContent (with multiple newlines before next heading)
+      // Use regex to find all **heading** patterns
+      const headingRegex = /\*\*([^*]+)\*\*/g;
+      const matches = [...thinkingText.matchAll(headingRegex)];
+      
+      if (matches.length === 0) {
+        // No headings found at all
+        blocks.push({
+          heading: "Thinking",
+          content: thinkingText.trim().replace(/\n{3,}/g, "\n\n"),
+        });
+        return;
+      }
 
-      // Check if first line is a bold heading **...**
-      const firstLine = lines[0]?.trim();
-      if (firstLine) {
-        const boldMatch = firstLine.match(/^\*\*(.+?)\*\*$/);
-        if (boldMatch) {
-          // Extract heading and remove it from content
-          heading = boldMatch[1].trim();
-          content = lines.slice(1).join("\n").trim();
+      // Extract each section with its heading
+      matches.forEach((match, idx) => {
+        const heading = match[1].trim();
+        const headingEndPos = match.index! + match[0].length;
+        
+        // Find content between this heading and the next (or end of text)
+        const nextMatch = matches[idx + 1];
+        const contentEndPos = nextMatch ? nextMatch.index! : thinkingText.length;
+        
+        let content = thinkingText.substring(headingEndPos, contentEndPos).trim();
+        
+        // Clean up content: remove leading/trailing newlines, normalize multiple newlines
+        content = content.replace(/^\n+/, '').replace(/\n+$/, '').replace(/\n{3,}/g, "\n\n");
+        
+        if (heading) {
+          blocks.push({ heading, content });
         }
-      }
+      });
+    });
 
-      // Remove extra newlines (replace multiple newlines with double newline)
-      content = content.replace(/\n{3,}/g, "\n\n").trim();
-
-      return { heading, content };
-    })
-    .filter(
-      (block): block is { heading: string; content: string } => block !== null,
-    );
+  return blocks;
 }

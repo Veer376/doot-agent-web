@@ -48,7 +48,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           const event = new CustomEvent('openThreadSearch');
           window.dispatchEvent(event);
         }} />
-        <ThreadList />
+        <React.Suspense fallback={<div className="px-2 py-4 text-sm text-muted-foreground">Loading threads...</div>}>
+          <ThreadList />
+        </React.Suspense>
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

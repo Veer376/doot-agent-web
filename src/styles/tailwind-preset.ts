@@ -26,7 +26,7 @@ import { designTokens } from './tokens';
  * Helper function to convert theme-aware colors to CSS variables
  * This allows us to switch between light/dark mode using CSS variables
  */
-function createColorScale(colorObject: any, prefix: string = '') {
+function _createColorScale(colorObject: any, prefix: string = '') {
   const colors: Record<string, string> = {};
   
   for (const [key, value] of Object.entries(colorObject)) {
@@ -38,7 +38,7 @@ function createColorScale(colorObject: any, prefix: string = '') {
         colors[key] = `var(--color-${colorKey.replace(/\./g, '-')})`;
       } else {
         // This is a nested object, recurse
-        Object.assign(colors, createColorScale(value, colorKey));
+        Object.assign(colors, _createColorScale(value, colorKey));
       }
     }
   }

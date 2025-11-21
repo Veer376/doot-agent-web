@@ -44,11 +44,10 @@ export function GenericInboxItem<
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
+    const assistantId = agentInboxId.split(":")[0];
 
     const studioUrl = constructOpenInStudioURL(
       assistantId,
-      deploymentId,
       threadData.thread.thread_id,
     );
 

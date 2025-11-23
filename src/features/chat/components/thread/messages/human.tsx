@@ -35,7 +35,7 @@ function EditableContent({
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
       data-radius="radius2"
-      className="min-h-11 resize-none px-4 py-3 backdrop-blur-sm bg-card/50 dark:bg-card/30 border-border focus-visible:border-primary/30 focus-visible:ring-ring/50 focus-visible:ring-[3px] shadow-sm transition-[color,box-shadow,border-color]"
+      className="bg-card/50 dark:bg-card/30 border-border focus-visible:border-primary/30 min-h-11 resize-none px-4 py-3 shadow-sm backdrop-blur-sm transition-[color,box-shadow,border-color] focus-visible:ring-0"
     />
   );
 }
@@ -132,7 +132,10 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <p data-radius="radius2" className="bg-muted ml-auto w-fit max-w-xl px-4 py-2 text-left whitespace-pre-wrap">
+              <p
+                data-radius="radius2"
+                className="bg-muted ml-auto w-fit max-w-xl px-4 py-2 text-left whitespace-pre-wrap"
+              >
                 {contentString}
               </p>
             ) : null}

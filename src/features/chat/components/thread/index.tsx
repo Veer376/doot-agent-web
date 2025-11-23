@@ -42,6 +42,7 @@ import {
   threadKeys,
 } from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
+import { useComposerDraft } from "@/hooks/use-composer-draft";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -142,6 +143,10 @@ export function Thread() {
   const { agentId, mode, setSelectedAgent, setMode } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
+
+  // Auto-save composer drafts to localStorage
+  const { clearDraft } = useComposerDraft(threadId, inputValue, setInputValue);
+
   const {
     contentBlocks,
     setContentBlocks,
@@ -151,6 +156,10 @@ export function Thread() {
     dragOver,
     handlePaste,
   } = useFileUpload();
+
+  const [selectedComposioProfiles, setSelectedComposioProfiles] = useState<
+    string[]
+  >([]);
 
   const { apiKeys } = useApiKeys();
   const hasApiKeys = useHasApiKeys();
@@ -263,6 +272,7 @@ export function Thread() {
     const content = inputValue.trim();
 
     setInputValue(""); // Clear the input after submission
+    clearDraft(threadId); // Clear the saved draft
     // In chat mode, agentId can be empty since we use chat_agent
     // In agent mode, we need an agentId selected
     if (mode === "agent" && !agentId) return;
@@ -306,6 +316,7 @@ export function Thread() {
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
+          composio_profile_ids: selectedComposioProfiles,
         },
         streamSubgraphs: true,
         streamResumable: true,
@@ -378,6 +389,7 @@ export function Thread() {
       optimisticValues,
       metadata: {
         supabaseAccessToken: session?.accessToken,
+        composio_profile_ids: selectedComposioProfiles,
       },
       streamSubgraphs: true,
       streamResumable: true,
@@ -536,6 +548,8 @@ export function Thread() {
                   onRemoveBlock={removeBlock}
                   onFileUpload={handleFileUpload}
                   focusKey={threadId}
+                  selectedComposioProfiles={selectedComposioProfiles}
+                  onComposioSelectionChange={setSelectedComposioProfiles}
                 />
               </div>
             </div>

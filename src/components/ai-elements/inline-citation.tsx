@@ -23,17 +23,54 @@ import {
   useState,
 } from "react";
 
+// Extract clean hostname from URL (remove www., .com, .org, etc.)
+const getCleanHostname = (url: string): string => {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname
+      .replace(/^www\./, "") // Remove www.
+      .replace(
+        /\.(com|org|net|io|dev|app|ai|co|gov|edu|mil)(\.[a-z]{2})?$/i,
+        "",
+      ); // Remove common TLDs
+  } catch {
+    return "unknown";
+  }
+};
+
+// Context to share hover state between components
+type HoverStateContextType = {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+};
+
+const HoverStateContext = createContext<HoverStateContextType | undefined>(
+  undefined,
+);
+
+const useHoverState = () => {
+  const context = useContext(HoverStateContext);
+  return context;
+};
+
 export type InlineCitationProps = ComponentProps<"span">;
 
 export const InlineCitation = ({
   className,
   ...props
-}: InlineCitationProps) => (
-  <span
-    className={cn("group inline items-center gap-1", className)}
-    {...props}
-  />
-);
+}: InlineCitationProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <HoverStateContext.Provider value={{ isOpen, setIsOpen }}>
+      <span
+        className={cn("group inline items-center gap-1", className)}
+        data-state={isOpen ? "open" : "closed"}
+        {...props}
+      />
+    </HoverStateContext.Provider>
+  );
+};
 
 export type InlineCitationTextProps = ComponentProps<"span">;
 
@@ -49,13 +86,19 @@ export const InlineCitationText = ({
 
 export type InlineCitationCardProps = ComponentProps<typeof HoverCard>;
 
-export const InlineCitationCard = (props: InlineCitationCardProps) => (
-  <HoverCard
-    closeDelay={0}
-    openDelay={0}
-    {...props}
-  />
-);
+export const InlineCitationCard = (props: InlineCitationCardProps) => {
+  const hoverState = useHoverState();
+
+  return (
+    <HoverCard
+      closeDelay={200}
+      openDelay={430}
+      open={hoverState?.isOpen}
+      onOpenChange={hoverState?.setIsOpen}
+      {...props}
+    />
+  );
+};
 
 export type InlineCitationCardTriggerProps = ComponentProps<typeof Badge> & {
   sources: string[];
@@ -65,28 +108,34 @@ export const InlineCitationCardTrigger = ({
   sources,
   className,
   ...props
-}: InlineCitationCardTriggerProps) => (
-  <HoverCardTrigger asChild>
-    <Badge
-      data-radius="radius2"
-      className={cn(
-        "bg-muted/30 hover:bg-muted/50 ml-1 cursor-pointer border transition-all hover:scale-105",
-        className,
-      )}
-      variant="outline"
-      {...props}
-    >
-      {sources[0] ? (
-        <>
-          {new URL(sources[0]).hostname}{" "}
-          {sources.length > 1 && `+${sources.length - 1}`}
-        </>
-      ) : (
-        "unknown"
-      )}
-    </Badge>
-  </HoverCardTrigger>
-);
+}: InlineCitationCardTriggerProps) => {
+  const hoverState = useHoverState();
+
+  return (
+    <HoverCardTrigger asChild>
+      <Badge
+        data-radius="radius2"
+        className={cn(
+          "bg-muted/20 hover:bg-muted/40 border-muted/20 ml-1 cursor-pointer border opacity-60 transition-all hover:opacity-100",
+          hoverState?.isOpen && "scale-105 opacity-100",
+          !hoverState?.isOpen && "hover:scale-105",
+          className,
+        )}
+        variant="outline"
+        {...props}
+      >
+        {sources[0] ? (
+          <>
+            {getCleanHostname(sources[0])}{" "}
+            {sources.length > 1 && `+${sources.length - 1}`}
+          </>
+        ) : (
+          "unknown"
+        )}
+      </Badge>
+    </HoverCardTrigger>
+  );
+};
 
 export type InlineCitationCardBodyProps = ComponentProps<"div">;
 
@@ -96,7 +145,7 @@ export const InlineCitationCardBody = ({
 }: InlineCitationCardBodyProps) => (
   <HoverCardContent
     data-radius="radius2"
-    className={cn("relative w-80 border p-0", className)}
+    className={cn("relative w-80 border p-0 select-text", className)}
     {...props}
   />
 );
@@ -122,6 +171,7 @@ export const InlineCitationCarousel = ({
       <Carousel
         className={cn("w-full", className)}
         setApi={setApi}
+        opts={{ watchDrag: false }}
         {...props}
       >
         {children}
@@ -137,7 +187,7 @@ export const InlineCitationCarouselContent = ({
   ...props
 }: InlineCitationCarouselContentProps) => (
   <CarouselContent
-    className={cn("ml-0", className)}
+    className={cn("pointer-events-none ml-0", className)}
     {...props}
   />
 );
@@ -149,7 +199,7 @@ export const InlineCitationCarouselItem = ({
   ...props
 }: InlineCitationCarouselItemProps) => (
   <CarouselItem
-    className={cn("w-full space-y-2 px-4 py-3", className)}
+    className={cn("pointer-events-auto w-full space-y-2 px-4 py-3", className)}
     {...props}
   />
 );
@@ -213,6 +263,22 @@ export const InlineCitationCarouselPrev = ({
   ...props
 }: InlineCitationCarouselPrevProps) => {
   const api = useCarouselApi();
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const updateScrollState = () => {
+      setCanScrollPrev(api.canScrollPrev());
+    };
+
+    updateScrollState();
+    api.on("select", updateScrollState);
+
+    return () => {
+      api.off("select", updateScrollState);
+    };
+  }, [api]);
 
   const handleClick = useCallback(() => {
     if (api) {
@@ -223,17 +289,25 @@ export const InlineCitationCarouselPrev = ({
   return (
     <button
       aria-label="Previous"
+      data-radius="radius1"
       className={cn(
-        "hover:text-foreground shrink-0 transition-colors",
+        "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
+        canScrollPrev && "hover:bg-accent",
         className,
       )}
       onClick={handleClick}
       type="button"
+      disabled={!canScrollPrev}
       {...props}
     >
       <ArrowLeftIcon
         size="sm"
-        className="text-muted-foreground"
+        className={cn(
+          "transition-colors",
+          canScrollPrev
+            ? "text-muted-foreground hover:text-foreground"
+            : "text-muted-foreground/40",
+        )}
       />
     </button>
   );
@@ -246,6 +320,22 @@ export const InlineCitationCarouselNext = ({
   ...props
 }: InlineCitationCarouselNextProps) => {
   const api = useCarouselApi();
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const updateScrollState = () => {
+      setCanScrollNext(api.canScrollNext());
+    };
+
+    updateScrollState();
+    api.on("select", updateScrollState);
+
+    return () => {
+      api.off("select", updateScrollState);
+    };
+  }, [api]);
 
   const handleClick = useCallback(() => {
     if (api) {
@@ -256,17 +346,25 @@ export const InlineCitationCarouselNext = ({
   return (
     <button
       aria-label="Next"
+      data-radius="radius1"
       className={cn(
-        "hover:text-foreground shrink-0 transition-colors",
+        "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
+        canScrollNext && "hover:bg-accent",
         className,
       )}
       onClick={handleClick}
       type="button"
+      disabled={!canScrollNext}
       {...props}
     >
       <ArrowRightIcon
         size="sm"
-        className="text-muted-foreground"
+        className={cn(
+          "transition-colors",
+          canScrollNext
+            ? "text-muted-foreground hover:text-foreground"
+            : "text-muted-foreground/40",
+        )}
       />
     </button>
   );

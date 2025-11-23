@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Thread } from "@langchain/langgraph-sdk";
@@ -9,7 +9,7 @@ import type { Thread } from "@langchain/langgraph-sdk";
 export const threadKeys = {
   all: ["threads"] as const,
   lists: () => [...threadKeys.all, "list"] as const,
-  list: (filters?: { agentId?: string }) =>
+  list: (filters?: { agentId?: string; limit?: number; offset?: number }) =>
     [...threadKeys.lists(), filters] as const,
   detail: (id: string) => [...threadKeys.all, "detail", id] as const,
   state: (id: string | null) => [...threadKeys.all, "state", id] as const,
@@ -25,19 +25,22 @@ export interface ThreadMetadata {
 }
 
 // Hook to fetch all threads (or filtered by agent)
-export function useFetchThreads(agentId?: string) {
+export function useFetchThreads(agentId?: string, options?: { limit?: number; offset?: number }) {
   const { session } = useAuthContext();
   const accessToken = session?.accessToken;
+  const limit = options?.limit || 100;
+  const offset = options?.offset || 0;
 
   return useQuery({
-    queryKey: threadKeys.list({ agentId }),
+    queryKey: threadKeys.list({ agentId, limit, offset }),
     queryFn: async () => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
       const client = createClient(accessToken);
       const response = await client.threads.search({
-        limit: 100,
+        limit,
+        offset,
         ...(agentId && {
           metadata: {
             assistant_id: agentId,
@@ -46,6 +49,43 @@ export function useFetchThreads(agentId?: string) {
       });
       return response as Thread<ThreadMetadata>[];
     },
+    enabled: !!accessToken,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+// Hook to fetch threads with infinite scroll pagination
+export function useFetchThreadsInfinite(agentId?: string, pageSize = 20) {
+  const { session } = useAuthContext();
+  const accessToken = session?.accessToken;
+
+  return useInfiniteQuery({
+    queryKey: [...threadKeys.lists(), { agentId, pageSize }] as const,
+    queryFn: async ({ pageParam = 0 }) => {
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const client = createClient(accessToken);
+      const response = await client.threads.search({
+        limit: pageSize,
+        offset: pageParam,
+        ...(agentId && {
+          metadata: {
+            assistant_id: agentId,
+          },
+        }),
+      });
+      return response as Thread<ThreadMetadata>[];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // If the last page has fewer items than pageSize, we've reached the end
+      if (lastPage.length < pageSize) {
+        return undefined;
+      }
+      // Otherwise, return the offset for the next page
+      return allPages.length * pageSize;
+    },
+    initialPageParam: 0,
     enabled: !!accessToken,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -135,29 +175,40 @@ export function useUpdateThread() {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
 
-      // Snapshot previous value
-      const previousThreads = queryClient.getQueryData(threadKeys.lists());
+      // Snapshot previous value for all infinite queries
+      const previousInfiniteData = queryClient.getQueriesData({
+        queryKey: threadKeys.lists(),
+      });
 
-      // Optimistically update thread metadata
+      // Optimistically update thread metadata in InfiniteData structure
       queryClient.setQueriesData(
         { queryKey: threadKeys.lists() },
-        (old: Thread<ThreadMetadata>[] | undefined) =>
-          old?.map((thread) =>
-            thread.thread_id === threadId
-              ? {
-                ...thread,
-                metadata: { ...thread.metadata, ...metadata },
-              }
-              : thread
-          ) ?? []
+        (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
+              page.map((thread) =>
+                thread.thread_id === threadId
+                  ? {
+                      ...thread,
+                      metadata: { ...thread.metadata, ...metadata },
+                    }
+                  : thread
+              )
+            ),
+          };
+        }
       );
 
-      return { previousThreads };
+      return { previousInfiniteData };
     },
     onError: (err, { threadId }, context) => {
       // Rollback on error
-      if (context?.previousThreads) {
-        queryClient.setQueryData(threadKeys.lists(), context.previousThreads);
+      if (context?.previousInfiniteData) {
+        context.previousInfiniteData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
@@ -230,22 +281,33 @@ export function useDeleteThread() {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
 
-      // Snapshot previous value
-      const previousThreads = queryClient.getQueryData(threadKeys.lists());
+      // Snapshot previous value for all infinite queries
+      const previousInfiniteData = queryClient.getQueriesData({
+        queryKey: threadKeys.lists(),
+      });
 
-      // Optimistically update to remove thread
+      // Optimistically remove thread from InfiniteData structure
       queryClient.setQueriesData(
         { queryKey: threadKeys.lists() },
-        (old: Thread<ThreadMetadata>[] | undefined) =>
-          old?.filter((thread) => thread.thread_id !== threadId) ?? []
+        (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
+              page.filter((thread) => thread.thread_id !== threadId)
+            ),
+          };
+        }
       );
 
-      return { previousThreads };
+      return { previousInfiniteData };
     },
     onError: (err, threadId, context) => {
       // Rollback on error
-      if (context?.previousThreads) {
-        queryClient.setQueryData(threadKeys.lists(), context.previousThreads);
+      if (context?.previousInfiniteData) {
+        context.previousInfiniteData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {

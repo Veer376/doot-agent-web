@@ -106,8 +106,11 @@ const defaultComponents: any = {
     children: any;
     citations?: Map<string, Citation>;
   }) => {
-    // Citation processing function
-    const processChildren = (children: any): any => {
+    // Citation processing function - now shared
+    const processChildrenForCitations = (
+      children: any,
+      citations?: Map<string, Citation>,
+    ): any => {
       if (!citations || citations.size === 0) {
         return children;
       }
@@ -166,7 +169,9 @@ const defaultComponents: any = {
       }
 
       if (Array.isArray(children)) {
-        return children.map((child) => processChildren(child));
+        return children.map((child) =>
+          processChildrenForCitations(child, citations),
+        );
       }
 
       return children;
@@ -192,7 +197,7 @@ const defaultComponents: any = {
           className={cn("mt-4 mb-4 leading-7 first:mt-0 last:mb-0", className)}
           {...props}
         >
-          {processChildren(children)}
+          {processChildrenForCitations(children, citations)}
         </p>
       );
     }
@@ -439,6 +444,96 @@ const defaultComponents: any = {
       {...props}
     />
   ),
+  li: ({
+    className,
+    children,
+    citations,
+    ...props
+  }: {
+    className?: string;
+    children: any;
+    citations?: Map<string, Citation>;
+  }) => {
+    // Reuse the same citation processing function from p component
+    const processChildrenForCitations = (
+      children: any,
+      citations?: Map<string, Citation>,
+    ): any => {
+      if (!citations || citations.size === 0) {
+        return children;
+      }
+
+      if (typeof children === "string") {
+        const parts = children.split(/(\[\d+(?:\s*,\s*\d+)*\])/g);
+
+        return parts.map((part: string, index: number) => {
+          const citationMatch = part.match(/\[(\d+(?:\s*,\s*\d+)*)\]/);
+
+          if (citationMatch) {
+            const numbers = citationMatch[1]
+              .split(",")
+              .map((n: string) => n.trim());
+            const citationsForThis = numbers
+              .map((num) => citations.get(num))
+              .filter((c): c is Citation => c !== undefined);
+
+            if (citationsForThis.length === 0) {
+              return <span key={index}>{part}</span>;
+            }
+
+            return (
+              <InlineCitation key={index}>
+                <InlineCitationCard>
+                  <InlineCitationCardTrigger
+                    sources={citationsForThis.map((c) => c.url)}
+                  />
+                  <InlineCitationCardBody>
+                    <InlineCitationCarousel>
+                      <InlineCitationCarouselHeader>
+                        <InlineCitationCarouselPrev />
+                        <InlineCitationCarouselNext />
+                        <InlineCitationCarouselIndex />
+                      </InlineCitationCarouselHeader>
+                      <InlineCitationCarouselContent>
+                        {citationsForThis.map((citation) => (
+                          <InlineCitationCarouselItem key={citation.url}>
+                            <InlineCitationSource
+                              title={citation.title}
+                              url={citation.url}
+                              description={citation.description}
+                            />
+                          </InlineCitationCarouselItem>
+                        ))}
+                      </InlineCitationCarouselContent>
+                    </InlineCitationCarousel>
+                  </InlineCitationCardBody>
+                </InlineCitationCard>
+              </InlineCitation>
+            );
+          }
+
+          return part;
+        });
+      }
+
+      if (Array.isArray(children)) {
+        return children.map((child) =>
+          processChildrenForCitations(child, citations),
+        );
+      }
+
+      return children;
+    };
+
+    return (
+      <li
+        className={className}
+        {...props}
+      >
+        {processChildrenForCitations(children, citations)}
+      </li>
+    );
+  },
   hr: ({ className, ...props }: { className?: string }) => (
     <hr
       className={cn("my-5 border-b", className)}
@@ -556,10 +651,11 @@ const defaultComponents: any = {
   },
 };
 
-const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
-  children,
-  className,
-}) => {
+const MarkdownTextImpl: FC<{
+  children: string;
+  className?: string;
+  citations?: Map<string, Citation>;
+}> = ({ children, className, citations: externalCitations }) => {
   // Parse citations from the content
   const parseCitations = (text: string): Map<string, Citation> => {
     const citations = new Map<string, Citation>();
@@ -574,9 +670,12 @@ const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
 
     citationLines.forEach((line) => {
       const trimmedLine = line.trim();
-      // Match: [number] title - URL - description
+      // Match: [number] Title | URL | Description
+      // Uses pipe (|) as delimiter to avoid conflicts with hyphens in titles
+      // Allows optional space after opening bracket: [ 1] or [1]
+      // Format: [1] Title | https://url | Optional description
       const match = trimmedLine.match(
-        /^\[(\d+)\]\s*(.+?)\s+-\s+(https?:\/\/[^\s]+)\s+-\s+([\s\S]+?)$/,
+        /^\[\s*(\d+)\s*\]\s*(.+?)\s*\|\s*(https?:\/\/\S+)(?:\s*\|\s*(.+))?$/,
       );
 
       if (match) {
@@ -585,21 +684,8 @@ const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
           number: number.trim(),
           title: title.trim(),
           url: url.trim(),
-          description: description.trim(),
+          description: description?.trim(),
         });
-      } else {
-        // Fallback: [number] title - URL
-        const simpleMatch = trimmedLine.match(
-          /^\[(\d+)\]\s*(.+?)\s+-\s+(https?:\/\/[^\s]+)/,
-        );
-        if (simpleMatch) {
-          const [, number, title, url] = simpleMatch;
-          citations.set(number.trim(), {
-            number: number.trim(),
-            title: title.trim(),
-            url: url.trim(),
-          });
-        }
       }
     });
 
@@ -610,13 +696,14 @@ const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
     return text.replace(/\n*\*\*Sources:\*\*\s*\n[\s\S]+?$/i, "");
   };
 
-  const citations = parseCitations(children);
+  const citations = externalCitations || parseCitations(children);
   const content = citations.size > 0 ? removeSources(children) : children;
 
   // Create components with citations injected
   const componentsWithCitations = {
     ...defaultComponents,
     p: (props: any) => defaultComponents.p({ ...props, citations }),
+    li: (props: any) => defaultComponents.li({ ...props, citations }),
   };
 
   return (

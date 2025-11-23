@@ -1,15 +1,23 @@
 "use client";
 
 import {
-  useFetchThreads,
+  useFetchThreadsInfinite,
   useUpdateThread,
   useDeleteThread,
   useCopyThread,
 } from "@/hooks/use-threads";
 import { useFetchAgents } from "@/hooks/use-agents";
-// Use shared app icons for consistency
-import { NoSignalIcon, SearchIcon, PinIcon, PinOffIcon, PlusSignIcon } from "@/components/icons";
-import { MessageCircleIcon } from "lucide-react";
+import { useAuthContext } from "@/providers/Auth";
+import type { Agent } from "@/types/agent";
+import {
+  SearchIcon,
+  PinIcon,
+  PinOffIcon,
+  PlusSignIcon,
+  DownloadIcon,
+  PdfIcon,
+} from "@/components/icons";
+import { MessageCircleIcon, FileText, FileJson } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -30,8 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -40,10 +47,20 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MoreVerticalMenuIcon, EditIcon, DeleteIcon, Copy02Icon } from "@/components/icons";
+import {
+  MoreVerticalMenuIcon,
+  EditIcon,
+  DeleteIcon,
+  Copy02Icon,
+} from "@/components/icons";
 import { MessageContent } from "@langchain/core/messages";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  exportThreadAsMarkdown,
+  exportThreadAsJSON,
+  exportThreadAsPDF,
+} from "@/lib/export-thread";
 
 // Utility: Extract text content from MessageContent
 const getMessageStringContent = (
@@ -85,48 +102,51 @@ function getFirstHumanMessageContent(thread: Thread) {
 function getThreadTitle(thread: Thread): string {
   const customName = thread.metadata?.name as string | undefined;
   if (customName) return customName;
-  
+
   const firstMessage = getFirstHumanMessageContent(thread);
   if (firstMessage) return firstMessage;
-  
+
   // Fallback to "New thread" with thread ID prefix
   return `New thread ${thread.thread_id.slice(0, 5)}`;
 }
 
 // Utility: Get agent display info from metadata
-function getAgentDisplayInfo(
-  thread: Thread,
-  agents: Array<{ assistant_id: string; name: string }>
-): string | null {
+function getAgentDisplayInfo(thread: Thread, agents: Agent[]): string | null {
   const mode = thread.metadata?.mode as string | undefined;
   const assistantId = thread.metadata?.assistant_id as string | undefined;
-  
+
   // If mode is agent, return the agent name
   if (mode === "agent" && assistantId) {
     const agent = agents.find((a) => a.assistant_id === assistantId);
     return agent?.name || assistantId;
   }
-  
+
   // For chat mode or any other mode, return null (don't display anything)
   return null;
 }
 
 // Utility: Get date category for grouping
-function getDateCategory(date: Date): 'today' | 'yesterday' | 'previous7days' | 'older' {
+function getDateCategory(
+  date: Date,
+): "today" | "yesterday" | "previous7days" | "older" {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const sevenDaysAgo = new Date(today);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  
+
   const threadDate = new Date(date);
-  const threadDay = new Date(threadDate.getFullYear(), threadDate.getMonth(), threadDate.getDate());
-  
-  if (threadDay.getTime() === today.getTime()) return 'today';
-  if (threadDay.getTime() === yesterday.getTime()) return 'yesterday';
-  if (threadDate >= sevenDaysAgo) return 'previous7days';
-  return 'older';
+  const threadDay = new Date(
+    threadDate.getFullYear(),
+    threadDate.getMonth(),
+    threadDate.getDate(),
+  );
+
+  if (threadDay.getTime() === today.getTime()) return "today";
+  if (threadDay.getTime() === yesterday.getTime()) return "yesterday";
+  if (threadDate >= sevenDaysAgo) return "previous7days";
+  return "older";
 }
 
 // Utility: Group threads by date
@@ -150,7 +170,7 @@ function groupThreadsByDate(threads: Thread[]) {
       groups.older.push(thread);
       return;
     }
-    
+
     const category = getDateCategory(new Date(dateStr));
     groups[category].push(thread);
   });
@@ -161,7 +181,10 @@ function groupThreadsByDate(threads: Thread[]) {
 export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
-  const { data: threads = [], isLoading } = useFetchThreads();
+  const { session } = useAuthContext();
+  const THREADS_PER_PAGE = 20;
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
   const { data: agents = [] } = useFetchAgents();
   const updateThread = useUpdateThread();
   const deleteThread = useDeleteThread();
@@ -171,12 +194,113 @@ export function ThreadList() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const selectedItemRef = useRef<HTMLButtonElement>(null);
+  const searchLoadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  const searchScrollContainerRef = useRef<HTMLDivElement>(null);
+  // Ref to track isFetchingNextPage without causing effect re-runs
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+  // Ref to store the IntersectionObserver instance
+  const observerRef = useRef<IntersectionObserver | null>(null);
   // Inline edit state
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
   const [editingThreadName, setEditingThreadName] = useState("");
   const [originalThreadName, setOriginalThreadName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { state } = useSidebar();
+
+  // Flatten all pages into a single array
+  const allLoadedThreads = useMemo(() => {
+    return data?.pages.flat() ?? [];
+  }, [data]);
+
+  // Sync isFetchingNextPage state to ref to avoid stale closures in observer callback
+  useEffect(() => {
+    isFetchingNextPageRef.current = isFetchingNextPage;
+  }, [isFetchingNextPage]);
+
+  // Callback ref for trigger element - sets up observer when element is mounted
+  const loadMoreTriggerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      // Cleanup existing observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+
+      // If no node or no more pages, don't create observer
+      if (!node || !hasNextPage) return;
+
+      // Find scroll container - guaranteed to exist now because DOM element is mounted
+      const scrollContainer = node.closest('[data-sidebar="content"]');
+
+      // Defensive check - should never happen but prevents observer with null root
+      if (!scrollContainer) {
+        console.warn(
+          "Scroll container not found - infinite scroll will not work",
+        );
+        return;
+      }
+
+      // Create observer with correct root
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Guard against double-fetching by reading current value from ref (avoids stale closure)
+          if (
+            entries[0]?.isIntersecting &&
+            hasNextPage &&
+            !isFetchingNextPageRef.current
+          ) {
+            fetchNextPage();
+          }
+        },
+        {
+          root: scrollContainer,
+          threshold: 0.1,
+          rootMargin: "20px",
+        },
+      );
+
+      observer.observe(node);
+      observerRef.current = observer;
+    },
+    [hasNextPage, fetchNextPage],
+  );
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Infinite scroll for search dialog
+  useEffect(() => {
+    if (!searchLoadMoreTriggerRef.current || !hasNextPage || !searchOpen)
+      return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Guard against double-fetching by reading current value from ref (avoids stale closure)
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPageRef.current
+        ) {
+          fetchNextPage();
+        }
+      },
+      {
+        root: searchScrollContainerRef.current,
+        threshold: 0.1,
+        rootMargin: "20px",
+      },
+    );
+
+    observer.observe(searchLoadMoreTriggerRef.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, searchOpen, fetchNextPage]);
 
   // Focus search input when dialog opens
   useEffect(() => {
@@ -216,47 +340,40 @@ export function ThreadList() {
     }
   }, [editingThreadId]);
 
-  // REFACTOR-TODO: Replace custom DOM events with Context API or callback props for type safety
-  // Why: String-based events are fragile and not type-safe, typos won't be caught at compile time
   // Listen for custom event to open search dialog
   useEffect(() => {
     const handleOpenSearch = () => {
       setSearchOpen(true);
     };
 
-    window.addEventListener('openThreadSearch', handleOpenSearch);
-    
+    window.addEventListener("openThreadSearch", handleOpenSearch);
+
     return () => {
-      window.removeEventListener('openThreadSearch', handleOpenSearch);
+      window.removeEventListener("openThreadSearch", handleOpenSearch);
     };
   }, []);
 
-  // PERF-TODO: Wrap in useMemo with [threads, searchQuery] dependencies
-  // Why: getFirstHumanMessageContent() is expensive and runs on every render
   // Filter threads by search query
-  const filteredThreads = threads.filter((thread) => {
-    if (!searchQuery.trim()) return true;
-    const title =
-      getFirstHumanMessageContent(thread) ||
-      (thread.metadata?.name as string) ||
-      `New thread-${thread.thread_id}`;
-    return title.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredThreads = useMemo(() => {
+    return allLoadedThreads.filter((thread) => {
+      if (!searchQuery.trim()) return true;
+      const title = getThreadTitle(thread);
+      return title.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [allLoadedThreads, searchQuery]);
 
-  // PERF-TODO: Wrap in useMemo with [filteredThreads] dependency
-  // Why: Creating new array and sorting on every render is expensive
   // Sort threads: pinned first, then by most recent
-  const sortedThreads = [...filteredThreads].sort((a, b) => {
-    const aPinned = a.metadata?.pinned === true;
-    const bPinned = b.metadata?.pinned === true;
-    
-    // If one is pinned and the other isn't, pinned comes first
-    if (aPinned && !bPinned) return -1;
-    if (!aPinned && bPinned) return 1;
-    
-    // Otherwise, maintain original order (most recent first from API)
-    return 0;
-  });
+  const sortedThreads = useMemo(() => {
+    return [...filteredThreads].sort((a, b) => {
+      const aPinned = a.metadata?.pinned === true;
+      const bPinned = b.metadata?.pinned === true;
+
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      return 0;
+    });
+  }, [filteredThreads]);
 
   // Memoize grouped threads for search dialog
   const groupedThreads = useMemo(() => {
@@ -273,7 +390,7 @@ export function ThreadList() {
     if (e) {
       e.stopPropagation();
     }
-    const thread = threads.find((t) => t.thread_id === threadId);
+    const thread = allLoadedThreads.find((t) => t.thread_id === threadId);
     const currentName =
       getFirstHumanMessageContent(thread!) ||
       (thread?.metadata?.name as string) ||
@@ -290,21 +407,15 @@ export function ThreadList() {
   };
 
   const handleSaveEdit = async () => {
-    // RACE-CONDITION-TODO: Add loading state to prevent double-submit and only clear state on success
-    // Why: User can trigger save multiple times (blur + Enter) causing duplicate API calls, state clears even on error
-    
-    // If no thread ID or empty name, cancel edit
     if (!editingThreadId || !editingThreadName.trim()) {
       handleCancelEdit();
       return;
     }
 
-    // Check if the name actually changed
     const trimmedNewName = editingThreadName.trim();
     const trimmedOriginalName = originalThreadName.trim();
 
     if (trimmedNewName === trimmedOriginalName) {
-      // No changes made, just close edit mode without API call
       handleCancelEdit();
       return;
     }
@@ -319,7 +430,7 @@ export function ThreadList() {
       setOriginalThreadName("");
     } catch (error) {
       console.error("Failed to rename thread:", error);
-      // TODO: Show error toast
+      toast.error("Failed to rename thread");
     }
   };
 
@@ -338,8 +449,8 @@ export function ThreadList() {
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => 
-        prev < sortedThreads.length - 1 ? prev + 1 : prev
+      setSelectedIndex((prev) =>
+        prev < sortedThreads.length - 1 ? prev + 1 : prev,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -362,6 +473,7 @@ export function ThreadList() {
   const handleDeleteThread = async (threadIdToDelete: string) => {
     try {
       await deleteThread.mutateAsync(threadIdToDelete);
+      // React Query will automatically refetch and update the cache
       // If we're deleting the currently active thread, clear the selection
       if (threadIdToDelete === threadId) {
         setThreadId(null);
@@ -392,24 +504,66 @@ export function ThreadList() {
     }
   };
 
-  const handleTogglePin = async (threadIdToPin: string, currentPinState: boolean) => {
+  const handleTogglePin = async (
+    threadIdToPin: string,
+    currentPinState: boolean,
+  ) => {
     try {
       await updateThread.mutateAsync({
         threadId: threadIdToPin,
         metadata: { pinned: !currentPinState },
       });
-      toast.success(
-        currentPinState ? "Thread unpinned" : "Thread pinned",
-        {
-          duration: 2000,
-        }
-      );
+      toast.success(currentPinState ? "Thread unpinned" : "Thread pinned", {
+        duration: 2000,
+      });
     } catch (error) {
       console.error("Failed to toggle pin:", error);
       toast.error("Failed to update thread", {
         description: error instanceof Error ? error.message : "Unknown error",
         duration: 5000,
       });
+    }
+  };
+
+  const handleExportMarkdown = async (thread: Thread) => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required");
+      return;
+    }
+    try {
+      await exportThreadAsMarkdown(thread, session.accessToken);
+      toast.success("Thread exported as Markdown");
+    } catch (error) {
+      console.error("Failed to export as Markdown:", error);
+      toast.error("Failed to export thread");
+    }
+  };
+
+  const handleExportJSON = async (thread: Thread) => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required");
+      return;
+    }
+    try {
+      await exportThreadAsJSON(thread, session.accessToken);
+      toast.success("Thread exported as JSON");
+    } catch (error) {
+      console.error("Failed to export as JSON:", error);
+      toast.error("Failed to export thread");
+    }
+  };
+
+  const handleExportPDF = async (thread: Thread) => {
+    if (!session?.accessToken) {
+      toast.error("Authentication required");
+      return;
+    }
+    try {
+      await exportThreadAsPDF(thread, session.accessToken);
+      toast.success("Thread exported as PDF");
+    } catch (error) {
+      console.error("Failed to export as PDF:", error);
+      toast.error("Failed to export thread");
     }
   };
 
@@ -427,7 +581,7 @@ export function ThreadList() {
     const isActive = thread.thread_id === threadId;
     const isPinned = thread.metadata?.pinned === true;
     const isSelected = index === selectedIndex;
-    
+
     // Get agent name (only shown for agent mode)
     const agentName = getAgentDisplayInfo(thread, agents);
 
@@ -441,28 +595,31 @@ export function ThreadList() {
         }}
         onMouseEnter={() => setSelectedIndex(index)}
         className={cn(
-          "w-full text-left px-3 py-3 transition-colors",
+          "w-full px-3 py-3 text-left transition-colors",
           isSelected && "bg-accent",
-          !isSelected && "hover:bg-accent/50"
+          !isSelected && "hover:bg-accent/50",
         )}
         data-radius="radius2"
       >
         <div className="flex flex-col gap-1.5">
           {/* Thread Title */}
-          <div className="text-sm font-medium truncate flex items-center gap-2">
+          <div className="flex items-center gap-2 truncate text-sm font-medium">
             {title}
             {isPinned && (
-              <PinIcon className="text-muted-foreground flex-shrink-0" size="xs" />
+              <PinIcon
+                className="text-muted-foreground flex-shrink-0"
+                size="xs"
+              />
             )}
             {isActive && (
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full flex-shrink-0">
+              <span className="bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5 text-xs">
                 Current
               </span>
             )}
           </div>
           {/* Agent Name - only shown for agent mode */}
           {agentName && (
-            <div className="text-xs text-muted-foreground truncate">
+            <div className="text-muted-foreground truncate text-xs">
               {agentName}
             </div>
           )}
@@ -474,23 +631,16 @@ export function ThreadList() {
   return (
     <>
       {/* Search Dialog - Thread Browser */}
-      {/* ARCHITECTURE: Dialog is always rendered, independent of sidebar collapse state.
-          This ensures the search functionality works whether sidebar is expanded or collapsed.
-          Radix UI Dialog uses portals, so it's lightweight when closed (open={false}).
-          The dialog is controlled via the searchOpen state, not by conditional rendering. */}
       <Dialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
       >
-        <DialogContent className="sm:max-w-2xl h-[80vh] p-0 gap-0 flex flex-col [&>button]:hidden">
-          {/* Accessibility: Hidden title for screen readers */}
+        <DialogContent className="flex h-[80vh] flex-col gap-0 p-0 sm:max-w-2xl [&>button]:hidden">
           <DialogTitle className="sr-only">Search Threads</DialogTitle>
           <DialogDescription className="sr-only">
             Browse and search all your conversation threads
           </DialogDescription>
-
-          {/* Top Bar: Icon + Search Field + Close Button */}
-          <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pt-4 pb-3">
             <SearchIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
             <Input
               ref={searchInputRef}
@@ -498,10 +648,10 @@ export function ThreadList() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              className="flex-1 border-0 shadow-none focus-visible:ring-0 px-0"
+              className="flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
             />
             <DialogClose asChild>
-              <button className="flex-shrink-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <button className="ring-offset-background focus:ring-ring flex-shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -522,14 +672,18 @@ export function ThreadList() {
           </div>
 
           {/* Thread List with Date Grouping */}
-          <div 
+          <div
+            ref={searchScrollContainerRef}
             className="flex-1 overflow-y-auto"
             onMouseLeave={() => setSelectedIndex(-1)}
           >
             {isLoading ? (
-              <div className="p-4 space-y-2">
+              <div className="space-y-2 p-4">
                 {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton key={`search-skeleton-${index}`} className="h-14 w-full" />
+                  <Skeleton
+                    key={`search-skeleton-${index}`}
+                    className="h-14 w-full"
+                  />
                 ))}
               </div>
             ) : sortedThreads.length === 0 ? (
@@ -554,18 +708,14 @@ export function ThreadList() {
               />
             ) : (
               <div className="p-3">
-                {/* PERF-TODO: Pre-compute threadIndexMap using useMemo to avoid O(n²) complexity */}
-                {/* Why: Each findIndex call is O(n), called for every thread in every group = O(n²) performance issue */}
-                {/* Fix: const threadIndexMap = useMemo(() => new Map(sortedThreads.map((t, i) => [t.thread_id, i])), [sortedThreads]) */}
-                
-                {/* New Thread Button - Thread Format */}
+                {/* New Thread Button */}
                 <button
                   onClick={handleCreateNewThread}
-                  className="w-full text-left px-3 py-2.5 mb-4 transition-colors hover:bg-accent/50"
+                  className="hover:bg-accent/50 mb-4 w-full px-3 py-2.5 text-left transition-colors"
                   data-radius="radius2"
                 >
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-medium flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
                       <PlusSignIcon size="sm" />
                       New Thread
                     </div>
@@ -575,12 +725,14 @@ export function ThreadList() {
                 {/* Today */}
                 {groupedThreads.today.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-xs font-semibold text-muted-foreground px-3 mb-2">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Today
                     </div>
                     <div className="space-y-1">
                       {groupedThreads.today.map((thread, index) => {
-                        const globalIndex = sortedThreads.findIndex(t => t.thread_id === thread.thread_id);
+                        const globalIndex = sortedThreads.findIndex(
+                          (t) => t.thread_id === thread.thread_id,
+                        );
                         return renderThreadItem(thread, globalIndex);
                       })}
                     </div>
@@ -590,12 +742,14 @@ export function ThreadList() {
                 {/* Yesterday */}
                 {groupedThreads.yesterday.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-xs font-semibold text-muted-foreground px-3 mb-2">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Yesterday
                     </div>
                     <div className="space-y-1">
                       {groupedThreads.yesterday.map((thread, index) => {
-                        const globalIndex = sortedThreads.findIndex(t => t.thread_id === thread.thread_id);
+                        const globalIndex = sortedThreads.findIndex(
+                          (t) => t.thread_id === thread.thread_id,
+                        );
                         return renderThreadItem(thread, globalIndex);
                       })}
                     </div>
@@ -605,12 +759,14 @@ export function ThreadList() {
                 {/* Previous 7 Days */}
                 {groupedThreads.previous7days.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-xs font-semibold text-muted-foreground px-3 mb-2">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Previous 7 Days
                     </div>
                     <div className="space-y-1">
                       {groupedThreads.previous7days.map((thread, index) => {
-                        const globalIndex = sortedThreads.findIndex(t => t.thread_id === thread.thread_id);
+                        const globalIndex = sortedThreads.findIndex(
+                          (t) => t.thread_id === thread.thread_id,
+                        );
                         return renderThreadItem(thread, globalIndex);
                       })}
                     </div>
@@ -620,15 +776,35 @@ export function ThreadList() {
                 {/* Older */}
                 {groupedThreads.older.length > 0 && (
                   <div>
-                    <div className="text-xs font-semibold text-muted-foreground px-3 mb-2">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Older
                     </div>
                     <div className="space-y-1">
                       {groupedThreads.older.map((thread, index) => {
-                        const globalIndex = sortedThreads.findIndex(t => t.thread_id === thread.thread_id);
+                        const globalIndex = sortedThreads.findIndex(
+                          (t) => t.thread_id === thread.thread_id,
+                        );
                         return renderThreadItem(thread, globalIndex);
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Infinite scroll trigger */}
+                <div
+                  ref={searchLoadMoreTriggerRef}
+                  className={!hasNextPage ? "hidden" : "h-2"}
+                />
+
+                {/* Loading skeletons for search dialog pagination */}
+                {isFetchingNextPage && (
+                  <div className="space-y-2 px-3 pb-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Skeleton
+                        key={`search-pagination-skeleton-${index}`}
+                        className="h-14 w-full"
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -640,160 +816,213 @@ export function ThreadList() {
       {/* Thread List in Sidebar - Only render when sidebar is expanded */}
       {state === "collapsed" ? null : (
         <SidebarGroup>
-        <SidebarGroupLabel>
-          Threads
-        </SidebarGroupLabel>
-        <SidebarMenu>
-          {isLoading && (
-            <>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <SidebarMenuItem key={`skeleton-${index}`}>
-                  <Skeleton className="h-12 w-full" />
-                </SidebarMenuItem>
-              ))}
-            </>
-          )}
+          <SidebarGroupLabel>Threads</SidebarGroupLabel>
+          <SidebarMenu>
+            {isLoading && (
+              <>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <SidebarMenuItem key={`skeleton-${index}`}>
+                    <Skeleton className="h-12 w-full" />
+                  </SidebarMenuItem>
+                ))}
+              </>
+            )}
 
-          {!isLoading && sortedThreads.length === 0 && (
-            <EmptyState
-              icon={MessageCircleIcon}
-              title="No threads yet"
-              description="Create your first thread to start a conversation with the agent"
-              className="py-12"
-            />
-          )}
+            {!isLoading && sortedThreads.length === 0 && (
+              <EmptyState
+                icon={MessageCircleIcon}
+                title="No threads yet"
+                description="Create your first thread to start a conversation with the agent"
+                className="py-12"
+              />
+            )}
 
-          {!isLoading &&
-            sortedThreads.map((thread) => {
-              const title =
-                getFirstHumanMessageContent(thread) ||
-                (thread.metadata?.name as string) ||
-                `New thread ${thread.thread_id.slice(0, 5)}`;
-              const isActive = thread.thread_id === threadId;
-              const isEditing = editingThreadId === thread.thread_id;
-              const isPinned = thread.metadata?.pinned === true;
-              const agentName = getAgentDisplayInfo(thread, agents);
+            {!isLoading &&
+              sortedThreads.map((thread) => {
+                const title = getThreadTitle(thread);
+                const isActive = thread.thread_id === threadId;
+                const isEditing = editingThreadId === thread.thread_id;
+                const isPinned = thread.metadata?.pinned === true;
+                const agentName = getAgentDisplayInfo(thread, agents);
 
-              return (
-                <SidebarMenuItem key={thread.thread_id}>
-                  {isEditing ? (
-                    <div className="flex items-center px-1 py-1">
-                      <Input
-                        ref={inputRef}
-                        value={editingThreadName}
-                        onChange={(e) => setEditingThreadName(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onBlur={handleSaveEdit}
-                        className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
-                        data-radius="radius2"
-                        placeholder="Thread name..."
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <SidebarMenuButton
-                        onClick={() => handleSelectThread(thread.thread_id)}
-                        isActive={isActive}
-                        className="!py-2 px-3 !h-auto"
-                        // TODO: Optional performance enhancement - Pre-fetch thread state on hover
-                        // This will load thread data in the background before user clicks
-                        // Implementation example:
-                        // onMouseEnter={() => {
-                        //   queryClient.prefetchQuery({
-                        //     queryKey: threadKeys.state(thread.thread_id),
-                        //     queryFn: () => fetchThreadState(thread.thread_id),
-                        //     staleTime: 1000 * 30,
-                        //   });
-                        // }}
-                      >
-                        <div className="flex flex-col gap-0.3 min-w-0">
-                          <span className="truncate text-sm leading-tight">{title}</span>
-                          {agentName && (
-                            <span className="text-xs text-muted-foreground truncate leading-tight">
-                              {agentName}
-                            </span>
-                          )}
-                        </div>
-                      </SidebarMenuButton>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <SidebarMenuAction
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                            showOnHover={!isPinned}
-                            className={cn(
-                              "data-[state=open]:opacity-100 !top-1/2 !-translate-y-1/2",
-                              isPinned && "md:opacity-100"
-                            )}
-                          >
-                            <span className="group-hover/menu-item:hidden">
-                              {isPinned ? (
-                                <PinIcon className="text-muted-foreground" size="xs"/>
-                              ) : (
-                                <MoreVerticalMenuIcon />
-                              )}
-                            </span>
-                            <span className="hidden group-hover/menu-item:block">
-                              <MoreVerticalMenuIcon />
-                            </span>
-                            <span className="sr-only">More options</span>
-                          </SidebarMenuAction>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          side="right"
-                          align="start"
+                return (
+                  <SidebarMenuItem key={thread.thread_id}>
+                    {isEditing ? (
+                      <div className="flex items-center px-1 py-1">
+                        <Input
+                          ref={inputRef}
+                          value={editingThreadName}
+                          onChange={(e) => setEditingThreadName(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          onBlur={handleSaveEdit}
+                          className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                          data-radius="radius2"
+                          placeholder="Thread name..."
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          onClick={() => handleSelectThread(thread.thread_id)}
+                          isActive={isActive}
+                          className="!h-auto px-3 !py-2"
                         >
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTogglePin(thread.thread_id, isPinned);
-                            }}
-                          >
-                            {isPinned ? (
-                              <PinOffIcon size="sm" />
-                            ) : (
-                              <PinIcon size="sm" />
+                          <div className="gap-0.3 flex min-w-0 flex-col">
+                            <span className="truncate text-sm leading-tight">
+                              {title}
+                            </span>
+                            {agentName && (
+                              <span className="text-muted-foreground truncate text-xs leading-tight">
+                                {agentName}
+                              </span>
                             )}
-                            <span>{isPinned ? "Unpin thread" : "Pin thread"}</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartEdit(thread.thread_id);
-                            }}
+                          </div>
+                        </SidebarMenuButton>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <SidebarMenuAction
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              showOnHover={!isPinned}
+                              className={cn(
+                                "!top-1/2 !right-3 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
+                                isPinned && "md:opacity-100",
+                              )}
+                            >
+                              <span className="group-hover/menu-item:hidden">
+                                {isPinned ? (
+                                  <PinIcon
+                                    className="text-muted-foreground"
+                                    size="xs"
+                                  />
+                                ) : (
+                                  <MoreVerticalMenuIcon size={5} />
+                                )}
+                              </span>
+                              <span className="hidden group-hover/menu-item:block">
+                                <MoreVerticalMenuIcon />
+                              </span>
+                              <span className="sr-only">More options</span>
+                            </SidebarMenuAction>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            side="right"
+                            align="start"
                           >
-                            <EditIcon size="sm" />
-                            <span>Rename</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyThread(thread.thread_id);
-                            }}
-                          >
-                            <Copy02Icon size="sm" />
-                            <span>Clone thread</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteThread(thread.thread_id);
-                            }}
-                          >
-                            <DeleteIcon size="sm" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </>
-                  )}
-                </SidebarMenuItem>
-              );
-            })}
-        </SidebarMenu>
-      </SidebarGroup>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTogglePin(thread.thread_id, isPinned);
+                              }}
+                            >
+                              {isPinned ? (
+                                <PinOffIcon size="sm" />
+                              ) : (
+                                <PinIcon size="sm" />
+                              )}
+                              <span>
+                                {isPinned ? "Unpin thread" : "Pin thread"}
+                              </span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartEdit(thread.thread_id);
+                              }}
+                            >
+                              <EditIcon size="sm" />
+                              <span>Rename</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyThread(thread.thread_id);
+                              }}
+                            >
+                              <Copy02Icon size="sm" />
+                              <span>Clone thread</span>
+                            </DropdownMenuItem>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                >
+                                  <DownloadIcon size="sm" />
+                                  <span>Export thread</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                side="right"
+                                align="start"
+                              >
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportMarkdown(thread);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  <span>Markdown</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportJSON(thread);
+                                  }}
+                                >
+                                  <FileJson className="h-4 w-4" />
+                                  <span>JSON</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportPDF(thread);
+                                  }}
+                                >
+                                  <PdfIcon size="sm" />
+                                  <span>PDF</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteThread(thread.thread_id);
+                              }}
+                            >
+                              <DeleteIcon size="sm" />
+                              <span>Delete</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+
+            {/* Infinite scroll trigger */}
+            <SidebarMenuItem className={!hasNextPage ? "hidden" : ""}>
+              <div
+                ref={loadMoreTriggerRef}
+                className="h-2"
+              />
+            </SidebarMenuItem>
+
+            {/* Loading skeletons for pagination */}
+            {isFetchingNextPage && (
+              <>
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <SidebarMenuItem key={`pagination-skeleton-${index}`}>
+                    <Skeleton className="h-12 w-full" />
+                  </SidebarMenuItem>
+                ))}
+              </>
+            )}
+          </SidebarMenu>
+        </SidebarGroup>
       )}
     </>
   );

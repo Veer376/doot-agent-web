@@ -60,7 +60,7 @@ import {
   CheckmarkCircle02Icon,
   Tick02Icon,
   GitBranchIcon as GitBranchHugeIcon,
-  MoreVerticalCircle01Icon,
+  MoreHorizontalIcon,
   AiBrain04Icon,
   Wrench01Icon,
   SidebarLeft01Icon as SidebarLeft01HugeIcon,
@@ -85,6 +85,8 @@ import {
   CopilotIcon,
   NeuralNetworkIcon,
   AiChat02Icon,
+  Download02Icon,
+  Pdf01Icon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -461,7 +463,7 @@ export const GitBranchIcon: React.FC<AppIconProps> = (props) => (
 
 export const MoreVerticalMenuIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
-    icon={MoreVerticalCircle01Icon}
+    icon={MoreHorizontalIcon}
     {...props}
   />
 );
@@ -578,6 +580,20 @@ export const PinOffIcon: React.FC<AppIconProps> = (props) => (
 export const PlusSignIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={PlusSignCircleHugeIcon}
+    {...props}
+  />
+);
+
+export const DownloadIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Download02Icon}
+    {...props}
+  />
+);
+
+export const PdfIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Pdf01Icon}
     {...props}
   />
 );

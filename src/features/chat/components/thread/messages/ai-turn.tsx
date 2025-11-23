@@ -62,6 +62,40 @@ export const AITurn = React.memo(function AITurn({
     .map((block) => (block as any).content)
     .join("\n\n");
 
+  // Parse citations once from combined content
+  const parseCitations = (text: string) => {
+    const citations = new Map<string, { number: string; title: string; url: string; description?: string }>();
+    
+    const sourcesMatch = text.match(/\*\*Sources:\*\*\s*\n([\s\S]+?)$/i);
+    if (!sourcesMatch) return citations;
+    
+    const sourcesList = sourcesMatch[1];
+    const citationLines = sourcesList
+      .split(/(?=\n\[\d+\])/g)
+      .filter((line) => line.trim());
+    
+    citationLines.forEach((line) => {
+      const trimmedLine = line.trim();
+      const match = trimmedLine.match(
+        /^\[\s*(\d+)\s*\]\s*(.+?)\s*\|\s*(https?:\/\/\S+)(?:\s*\|\s*(.+))?$/,
+      );
+      
+      if (match) {
+        const [, number, title, url, description] = match;
+        citations.set(number.trim(), {
+          number: number.trim(),
+          title: title.trim(),
+          url: url.trim(),
+          description: description?.trim(),
+        });
+      }
+    });
+    
+    return citations;
+  };
+  
+  const citations = parseCitations(combinedContent);
+
   const handleRegenerateFromHuman = () => {
     const checkpoint = humanMeta?.firstSeenState?.parent_checkpoint;
 
@@ -94,7 +128,7 @@ export const AITurn = React.memo(function AITurn({
           className="space-y-1"
         >
           <div className="prose prose-sm mt-1 max-w-none text-sm">
-            <MarkdownText>{step.content}</MarkdownText>
+            <MarkdownText citations={citations}>{step.content}</MarkdownText>
           </div>
         </ChainOfThoughtStep>
       );
@@ -293,7 +327,7 @@ export const AITurn = React.memo(function AITurn({
                   },
                 }}
               >
-                <MarkdownText>{block.content}</MarkdownText>
+                <MarkdownText citations={citations}>{block.content}</MarkdownText>
               </motion.div>
             );
           } else if (block.type === "tools-only") {

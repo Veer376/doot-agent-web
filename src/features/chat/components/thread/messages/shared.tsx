@@ -83,6 +83,8 @@ export function BranchSwitcher({
 }) {
   if (!branchOptions || !branch) return null;
   const index = branchOptions.indexOf(branch);
+  const canGoPrev = index > 0;
+  const canGoNext = index < branchOptions.length - 1;
 
   return (
     <div className="flex items-center gap-2">
@@ -95,7 +97,7 @@ export function BranchSwitcher({
           if (!prevBranch) return;
           onSelect(prevBranch);
         }}
-        disabled={isLoading}
+        disabled={isLoading || !canGoPrev}
       >
         <ArrowLeftIcon size={DEFAULT_ICON_SIZE} />
       </Button>
@@ -111,7 +113,7 @@ export function BranchSwitcher({
           if (!nextBranch) return;
           onSelect(nextBranch);
         }}
-        disabled={isLoading}
+        disabled={isLoading || !canGoNext}
       >
         <ArrowRightIcon size={DEFAULT_ICON_SIZE} />
       </Button>

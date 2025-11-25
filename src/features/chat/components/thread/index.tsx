@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
+import React, {
   ReactNode,
   useCallback,
   useEffect,
@@ -170,10 +170,8 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  // Check if we're loading the thread state (when switching threads)
   const { isLoading: isLoadingThreadState } = useFetchThreadState(threadId);
 
-  // Query client for cache invalidation
   const queryClient = useQueryClient();
 
   // Hook for updating thread metadata
@@ -314,9 +312,11 @@ export function Thread() {
             apiKeys,
           },
         },
+        context: {
+          connection_ids: selectedComposioProfiles,
+        },
         metadata: {
           supabaseAccessToken: session?.accessToken,
-          composio_profile_ids: selectedComposioProfiles,
         },
         streamSubgraphs: true,
         streamResumable: true,
@@ -387,9 +387,11 @@ export function Thread() {
         },
       },
       optimisticValues,
+      context: {
+        connection_ids: selectedComposioProfiles,
+      },
       metadata: {
         supabaseAccessToken: session?.accessToken,
-        composio_profile_ids: selectedComposioProfiles,
       },
       streamSubgraphs: true,
       streamResumable: true,

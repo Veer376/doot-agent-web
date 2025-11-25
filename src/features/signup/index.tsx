@@ -59,7 +59,7 @@ export default function SignupInterface() {
     const code = searchParams.get("code");
     const fromOAuth = searchParams.get("from_oauth");
     const urlError = searchParams.get("error");
-    
+
     // If we have a code parameter or from_oauth flag, we're in OAuth callback flow
     if (code || fromOAuth === "true") {
       setIsOAuthCallback(true);
@@ -83,7 +83,7 @@ export default function SignupInterface() {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Partial<Record<keyof SignupFormValues, string>> = {};
-        error.errors.forEach((err) => {
+        (error as any).errors.forEach((err: any) => {
           if (err.path[0]) {
             newErrors[err.path[0] as keyof SignupFormValues] = err.message;
           }
@@ -176,14 +176,14 @@ export default function SignupInterface() {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
+          <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
             <div className="relative">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <Loader2 className="text-primary h-12 w-12 animate-spin" />
             </div>
-            <h2 className="text-xl font-semibold text-foreground text-center">
+            <h2 className="text-foreground text-center text-xl font-semibold">
               Completing sign up...
             </h2>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-muted-foreground text-center text-sm">
               Please wait while we verify your Google account
             </p>
           </div>
@@ -195,14 +195,17 @@ export default function SignupInterface() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground text-center leading-tight">
+        <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
+          <h1 className="text-foreground text-center text-xl leading-tight font-semibold sm:text-2xl">
             Create your account
           </h1>
         </div>
 
         {isLoading && loadingMessage && !isOAuthCallback && (
-          <Alert className="mb-4 bg-blue-50 text-blue-800" data-radius="radius2">
+          <Alert
+            className="mb-4 bg-blue-50 text-blue-800"
+            data-radius="radius2"
+          >
             <AlertDescription className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               {loadingMessage}
@@ -302,7 +305,10 @@ export default function SignupInterface() {
           </div>
 
           {authError && (
-            <Alert variant="destructive" data-radius="radius2">
+            <Alert
+              variant="destructive"
+              data-radius="radius2"
+            >
               <AlertDescription>{authError}</AlertDescription>
             </Alert>
           )}
@@ -311,7 +317,7 @@ export default function SignupInterface() {
             <Button
               type="submit"
               data-radius="radius2"
-              className="w-full h-10 bg-black text-white hover:bg-black/90"
+              className="h-10 w-full bg-black text-white hover:bg-black/90"
               disabled={isLoading}
             >
               {isLoading ? "Creating account..." : "Create account"}
@@ -323,10 +329,10 @@ export default function SignupInterface() {
           <>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
+                <div className="border-border w-full border-t"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-background text-muted-foreground">
+                <span className="bg-background text-muted-foreground px-2">
                   or
                 </span>
               </div>
@@ -337,7 +343,7 @@ export default function SignupInterface() {
               type="button"
               size="lg"
               data-radius="radius2"
-              className="w-full h-12"
+              className="h-12 w-full"
               onClick={handleGoogleSignup}
               disabled={isLoading}
             >

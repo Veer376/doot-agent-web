@@ -14,14 +14,19 @@ import {
   DotIcon,
   type LucideIcon,
 } from "lucide-react";
-import type { ComponentProps } from "react";
-import { createContext, memo, useContext, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  createContext,
+  memo,
+  useContext,
+  useMemo,
+  type ComponentProps,
+} from "react";
+import { motion, AnimatePresence, type HTMLMotionProps } from "framer-motion";
 
-type ChainOfThoughtContextValue = {
+interface ChainOfThoughtContextValue {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-};
+}
 
 const ChainOfThoughtContext = createContext<ChainOfThoughtContextValue | null>(
   null,
@@ -113,12 +118,16 @@ export const ChainOfThoughtHeader = memo(
   },
 );
 
-export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
+export type ChainOfThoughtStepProps = Omit<
+  HTMLMotionProps<"div">,
+  "children"
+> & {
   icon?: LucideIcon | React.ComponentType<any>;
   label: string;
   description?: string;
   status?: "complete" | "active" | "pending";
   isPreview?: boolean; // Hide connecting line in preview mode
+  children?: React.ReactNode;
 };
 
 export const ChainOfThoughtStep = memo(

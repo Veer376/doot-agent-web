@@ -54,7 +54,7 @@ export default function ResetPasswordInterface() {
       if (error instanceof z.ZodError) {
         const formattedErrors: { password?: string; confirmPassword?: string } =
           {};
-        error.errors.forEach((err) => {
+        (error as any).errors.forEach((err: any) => {
           if (err.path[0]) {
             formattedErrors[err.path[0] as "password" | "confirmPassword"] =
               err.message;
@@ -96,7 +96,10 @@ export default function ResetPasswordInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md" data-radius="radius2">
+      <Card
+        className="w-full max-w-md"
+        data-radius="radius2"
+      >
         <CardHeader>
           <CardTitle className="text-center text-2xl">Reset Password</CardTitle>
           <CardDescription className="text-center">
@@ -141,7 +144,10 @@ export default function ResetPasswordInterface() {
             </div>
 
             {authError && (
-              <Alert variant="destructive" data-radius="radius2">
+              <Alert
+                variant="destructive"
+                data-radius="radius2"
+              >
                 <AlertDescription>{authError}</AlertDescription>
               </Alert>
             )}

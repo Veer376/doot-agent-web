@@ -1,12 +1,26 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { ComposerSegmentedControl } from "./composer-segmented-control";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
 import { StopIcon } from "@/components/icons";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { cn } from "@/lib/utils";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { AttachIcon } from "@/components/icons";
+import { ComposioAppSelector, ComposioManagerDialog } from "../composio";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Plus, Paperclip, Plug2 } from "lucide-react";
+import { useComposioToolkitIcon } from "@/lib/composio/hooks";
+import { Separator } from "@/components/ui/separator";
 
 interface ComposerProps {
   value?: string;
@@ -23,6 +37,8 @@ interface ComposerProps {
   onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
   focusKey?: string | null;
+  selectedComposioProfiles?: string[];
+  onComposioSelectionChange?: (profileIds: string[]) => void;
 }
 
 export function Composer({
@@ -40,9 +56,38 @@ export function Composer({
   onFileUpload,
   className,
   focusKey,
+  selectedComposioProfiles = [],
+  onComposioSelectionChange,
 }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const [showManagerDialog, setShowManagerDialog] = useState(false);
+  const [showPlusPopover, setShowPlusPopover] = useState(false);
+
+  // Define quick integrations
+  const quickIntegrations = useMemo(
+    () => [
+      { id: "gmail", name: "Gmail", slug: "gmail" },
+      { id: "slack", name: "Slack", slug: "slack" },
+      { id: "notion", name: "Notion", slug: "notion" },
+    ],
+    [],
+  );
+
+  // Fetch integration icons
+  const { data: gmailIcon } = useComposioToolkitIcon("gmail");
+  const { data: slackIcon } = useComposioToolkitIcon("slack");
+  const { data: notionIcon } = useComposioToolkitIcon("notion");
+
+  // Map icons to integrations
+  const integrationIcons = useMemo(
+    () => ({
+      gmail: gmailIcon?.icon_url,
+      slack: slackIcon?.icon_url,
+      notion: notionIcon?.icon_url,
+    }),
+    [gmailIcon, slackIcon, notionIcon],
+  );
 
   const hasMessage = Boolean(value?.trim()?.length);
   const hasAttachments = contentBlocks.length > 0;
@@ -153,7 +198,7 @@ export function Composer({
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
       <div
         className={cn(
-          "group/composer bg-card text-card-foreground dark:bg-card rounded-3xl dark:text-card-foreground border-border w-full transition-all duration-300 ease-out",
+          "group/composer bg-card text-card-foreground dark:bg-card dark:text-card-foreground border-border w-full rounded-3xl transition-all duration-300 ease-out",
           "focus-within:border-primary/30 overflow-hidden border shadow-sm",
           className,
         )}
@@ -173,7 +218,7 @@ export function Composer({
             "gap-2 p-2 group-data-[expanded=true]/composer:p-2",
           )}
         >
-          {/* Leading Area - Attach + Segmented Control */}
+          {/* Leading Area - Plus Button + Segmented Control */}
           <div
             className={cn(
               "flex items-center gap-2 transition-all duration-300 [grid-area:leading]",
@@ -181,29 +226,154 @@ export function Composer({
             )}
             style={{ transformOrigin: "50% 100%" }}
           >
-            <TooltipIconButton
-              tooltip="Attach files"
-              onClick={handleAttachmentClick}
-              aria-label="Attach files"
-              type="button"
-            >
-              <AttachIcon />
-            </TooltipIconButton>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Popover
+                    open={showPlusPopover}
+                    onOpenChange={setShowPlusPopover}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border bg-transparent p-0 transition-colors"
+                        type="button"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="w-[250px] p-0"
+                      sideOffset={8}
+                    >
+                      {/* Attachments Section */}
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            handleAttachmentClick();
+                            setShowPlusPopover(false);
+                          }}
+                          className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-2 text-sm transition-colors"
+                          type="button"
+                        >
+                          <div className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                            <Paperclip className="h-4 w-4" />
+                          </div>
+                          <div className="flex flex-1 flex-col items-start">
+                            <span className="font-medium">Upload files</span>
+                            <span className="text-muted-foreground text-xs">
+                              Images, PDFs, and more
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+
+                      <Separator />
+
+                      {/* Connectors Section */}
+                      <div className="p-2">
+                        <div className="mb-1.5 px-2">
+                          <span className="text-muted-foreground text-xs font-medium">
+                            Quick Connect
+                          </span>
+                        </div>
+                        <div className="space-y-0.5">
+                          {quickIntegrations.map((integration) => (
+                            <button
+                              key={integration.id}
+                              className="hover:bg-accent flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors"
+                              onClick={() => {
+                                setShowManagerDialog(true);
+                                setShowPlusPopover(false);
+                              }}
+                              type="button"
+                            >
+                              <div className="bg-card border-border flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+                                {integrationIcons[
+                                  integration.id as keyof typeof integrationIcons
+                                ] ? (
+                                  <img
+                                    src={
+                                      integrationIcons[
+                                        integration.id as keyof typeof integrationIcons
+                                      ]
+                                    }
+                                    alt={integration.name}
+                                    className="h-4 w-4 object-contain"
+                                  />
+                                ) : (
+                                  <div className="bg-muted h-4 w-4 rounded" />
+                                )}
+                              </div>
+                              <span className="flex-1 truncate text-left font-medium">
+                                {integration.name}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                Connect
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-1.5 text-sm transition-colors"
+                          onClick={() => {
+                            setShowManagerDialog(true);
+                            setShowPlusPopover(false);
+                          }}
+                          type="button"
+                        >
+                          <div className="bg-muted/50 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                            <Plug2 className="text-muted-foreground h-4 w-4" />
+                          </div>
+                          <span className="text-muted-foreground flex-1 text-left font-medium">
+                            Browse all integrations
+                          </span>
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Add attachments or connectors</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            {/* Composio app selector button: choose connections for this conversation */}
+            <ComposioAppSelector
+              selectedProfileIds={selectedComposioProfiles}
+              onSelectionChange={onComposioSelectionChange || (() => {})}
+              className="h-8 w-8"
+            />
             <ComposerSegmentedControl className="max-w-[240px] flex-1" />
           </div>
 
-          {/* Primary Area - Editor + Attachments */}
+          {/* Primary Area - Editor + Attachments + Connected Apps */}
           <div
             className={cn(
               "flex w-full transition-all duration-300 [grid-area:primary]",
               "group-data-[expanded=false]/composer:items-center",
               "group-data-[expanded=true]/composer:mb-2 group-data-[expanded=true]/composer:items-start",
-              hasAttachments ? "flex-col gap-2" : "flex-row items-center",
+              hasAttachments || selectedComposioProfiles.length > 0
+                ? "flex-col gap-2"
+                : "flex-row items-center",
             )}
             style={{ transformOrigin: "0% 100%" }}
           >
+            {/* Selected Composio Apps */}
+            {selectedComposioProfiles.length > 0 && (
+              <div className="flex w-full flex-wrap items-center gap-2">
+                <ComposioAppSelector
+                  selectedProfileIds={selectedComposioProfiles}
+                  onSelectionChange={onComposioSelectionChange || (() => {})}
+                  displayMode="badges"
+                />
+              </div>
+            )}
             {hasAttachments && (
-              <div className="w-full flex flex-wrap items-start gap-2">
+              <div className="flex w-full flex-wrap items-start gap-2">
                 <ContentBlocksPreview
                   blocks={contentBlocks}
                   onRemove={onRemoveBlock || (() => {})}
@@ -248,7 +418,7 @@ export function Composer({
                   "w-full overflow-y-auto text-base break-words whitespace-pre-wrap outline-none",
                   "disabled:text-muted-foreground disabled:cursor-not-allowed",
                   "group-data-[expanded=false]/composer:min-h-0 group-data-[expanded=false]/composer:p-2",
-                  "group-data-[expanded=true]/composer:max-h-52 group-data-[expanded=true]/composer:min-h-[32px] group-data-[expanded=true]/composer:p-2",
+                  "group-data-[expanded=true]/composer:max-h-40 group-data-[expanded=true]/composer:min-h-[32px] group-data-[expanded=true]/composer:p-2",
                 )}
               />
             </div>
@@ -321,6 +491,11 @@ export function Composer({
         multiple
         accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
         className="hidden"
+      />
+
+      <ComposioManagerDialog
+        open={showManagerDialog}
+        onOpenChange={setShowManagerDialog}
       />
     </DragAndDropWrapper>
   );

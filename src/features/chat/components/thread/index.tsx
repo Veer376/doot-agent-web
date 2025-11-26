@@ -497,7 +497,7 @@ export function Thread() {
                   )}
                   {/* Browser Snapshot moved to PreviewPanel above Composer */}
                   {isLoading && (
-                    <div className="flex items-start justify-start p-2">
+                    <div className="flex items-start justify-start">
                       <EnhancedLoader messages={messages} />
                     </div>
                   )}

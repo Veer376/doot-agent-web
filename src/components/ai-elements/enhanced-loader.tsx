@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Loader } from "@/components/ai-elements/loader";
+import { OrbitLoaderIcon } from "@/components/icons/app-icons";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Message } from "@langchain/langgraph-sdk";
 
@@ -94,7 +94,7 @@ export function EnhancedLoader({
         className,
       )}
     >
-      <Loader size={16} />
+      <OrbitLoaderIcon size={16} />
       <Shimmer duration={1.5} spread={2}>
         {statusMessage}
       </Shimmer>

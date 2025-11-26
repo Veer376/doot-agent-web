@@ -520,6 +520,71 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
   return isExpanded ? <FoldIcon {...props} /> : <UnfoldIcon {...props} />;
 };
 
+// ============================================
+// CUSTOM ORBIT ICONS
+// ============================================
+
+/**
+ * Static Orbit Logo Icon (for sidebar header)
+ * Black planet with black satellite (white stroke creates gap)
+ */
+export const OrbitLogoIcon: React.FC<AppIconProps> = ({ size, className, ...props }) => {
+  const sizeValue = getSizeValue(size || 24); // Default to larger size for sidebar
+  
+  return (
+    <svg
+      width={sizeValue}
+      height={sizeValue}
+      viewBox="0 0 120 120"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="Orbit Agent"
+      className={cn(getSizeClass(size), className)}
+      {...props}
+    >
+      <circle fill="currentColor" cx="60" cy="67" r="48" />
+      <circle fill="currentColor" stroke="white" strokeWidth="4.8" cx="60" cy="19" r="16" />
+    </svg>
+  );
+};
+
+/**
+ * Animated Orbit Loader Icon (for loading states)
+ * Black planet with black satellite (white stroke creates gap) that orbits around
+ */
+export const OrbitLoaderIcon: React.FC<AppIconProps> = ({ size, className, ...props }) => {
+  const sizeValue = getSizeValue(size);
+  
+  return (
+    <svg
+      width={sizeValue}
+      height={sizeValue}
+      viewBox="0 0 120 120"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="Orbit Loader"
+      className={cn(getSizeClass(size), className)}
+      {...props}
+    >
+      <style>{`
+        @keyframes orbit-rotation {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .orbit-satellite-group {
+          transform-origin: 60px 60px;
+          animation: orbit-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
+        }
+      `}</style>
+      
+      <circle fill="currentColor" cx="60" cy="67" r="48" />
+      
+      <g className="orbit-satellite-group">
+        <circle fill="currentColor" stroke="white" strokeWidth="4.8" cx="60" cy="19" r="16" />
+      </g>
+    </svg>
+  );
+};
+
+// Keep the HugeIcons orbit icon for backwards compatibility
 export const OrbitIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={Orbit01Icon}
@@ -631,6 +696,8 @@ export default {
   Menu11: Menu11Icon,
   Chat: ChatIcon,
   Orbit: OrbitIcon,
+  OrbitLogo: OrbitLogoIcon,
+  OrbitLoader: OrbitLoaderIcon,
   Note02: Note02Icon,
   Alert02: Alert02Icon,
   Tips: TipsIcon,

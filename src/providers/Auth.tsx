@@ -40,9 +40,21 @@ interface AuthContextProps {
 }
 
 // Create default authentication provider (Supabase in this case)
+// Use NEXT_PUBLIC_SITE_URL if set, otherwise fallback to window.location.origin
+const getRedirectUrl = () => {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  
+  if (siteUrl) {
+    return siteUrl;
+  }
+    if (typeof window !== "undefined") {
+    return `${window.location.origin}/api/auth/callback`;
+  }
+  return undefined;
+};
+
 const authProvider = new SupabaseAuthProvider({
-  redirectUrl:
-    typeof window !== "undefined" ? window.location.origin : undefined,
+  redirectUrl: getRedirectUrl(),
 });
 
 // Create auth context

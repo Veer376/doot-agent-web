@@ -1,0 +1,25 @@
+<svg 
+  width="48" 
+  height="48" 
+  viewBox="0 0 120 120" 
+  xmlns="http://www.w3.org/2000/svg"
+  aria-label="Orbit Agent"
+>
+  <style>
+    .orbit-planet {
+      fill: #000000;
+    }
+
+    .orbit-satellite {
+      fill: #000000;
+      stroke: #FFFFFF;
+      stroke-width: 4.8px;
+    }
+  </style>
+
+  <!-- Big Ball (Planet) - moved down to center visually -->
+  <circle class="orbit-planet" cx="60" cy="67" r="48" />
+
+  <!-- Small Ball (Satellite) positioned at top -->
+  <circle class="orbit-satellite" cx="60" cy="19" r="16" />
+</svg>

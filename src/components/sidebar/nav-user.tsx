@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, Loader2, TriangleAlert } from "lucide-react";
+import { UserIconHuge, LoaderIcon, TriangleAlertIcon } from "@/components/icons";
 import { useTheme } from "next-themes";
 import {
   ToggleIcon,
@@ -196,7 +196,7 @@ export function NavUser() {
               >
                 {isSigningOut ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <LoaderIcon className="mr-2 h-4 w-4" />
                     Logging out...
                   </>
                 ) : (
@@ -208,13 +208,13 @@ export function NavUser() {
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={handleSignIn}>
-                <User className="mr-2 h-4 w-4" />
+                <UserIconHuge className="mr-2 h-4 w-4" />
                 Sign in
               </DropdownMenuItem>
             )}
             {!isProdEnv && (
               <DropdownMenuItem onClick={handleClearLocalData}>
-                <TriangleAlert className="mr-2 h-4 w-4 text-red-500" />
+                <TriangleAlertIcon className="mr-2 h-4 w-4 text-red-500" />
                 Clear local data
               </DropdownMenuItem>
             )}

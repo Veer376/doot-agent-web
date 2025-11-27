@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";

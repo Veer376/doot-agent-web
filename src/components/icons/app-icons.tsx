@@ -1,37 +1,3 @@
-/**
- * Application Icons - Centralized Icon System
- *
- * All application icons are defined here using HugeIcons.
- * This provides:
- * - Single source of truth for all icons
- * - Consistent styling and sizing
- * - Custom variants (e.g., red delete icon)
- * - Easy maintenance and updates
- *
- * GLOBAL DEFAULT SIZE: md (24px)
- * - All icons use this size unless explicitly overridden
- * - Change DEFAULT_ICON_SIZE constant to adjust globally
- *
- * AVAILABLE SIZES:
- * - xs: 16px (4) - Small indicators, badges
- * - sm: 20px (5) - Text inline icons, compact UI
- * - md: 24px (6) - DEFAULT - Most common use
- * - lg: 28px (7) - Buttons, prominent actions
- * - xl: 32px (8) - Large buttons, headers
- *
- * Usage:
- * import { DeleteIcon, SendIcon } from '@/components/icons';
- *
- * // Uses global default (md = 24px):
- * <SendIcon />
- * <AgentIcon />
- *
- * // Override for specific needs:
- * <SendIcon size="lg" />    // 28px for buttons
- * <SendIcon size="xl" />    // 32px for headers
- * <SendIcon size={40} />    // Custom pixel size
- */
-
 import React from "react";
 import {
   SidebarLeftIcon,
@@ -87,6 +53,32 @@ import {
   AiChat02Icon,
   Download02Icon,
   Pdf01Icon,
+  Loading03Icon,
+  ArrowUp01Icon,
+  PlusSignIcon as PlusSignHugeIcon,
+  MultiplicationSignIcon,
+  File02Icon,
+  Image02Icon,
+  UserIcon,
+  Delete02Icon,
+  ViewIcon,
+  ViewOffSlashIcon,
+  StarIcon as StarHugeIcon,
+  Home01Icon,
+  LinkSquare02Icon,
+  MessageNotification02Icon,
+  Layers01Icon,
+  TriangleIcon,
+  CircleIcon as CircleHugeIcon,
+  Resize01Icon,
+  ElectricPlugsIcon,
+  Idea01Icon,
+  CancelCircleIcon,
+  DocumentCodeIcon,
+  MoreVerticalIcon as MoreVerticalHugeIcon,
+  InboxIcon as InboxHugeIcon,
+  ZapIcon,
+  Clock01Icon,
 } from "hugeicons-react";
 
 import { cn } from "@/lib/utils";
@@ -447,13 +439,6 @@ export const CheckmarkCircleIcon: React.FC<AppIconProps> = ({
   />
 );
 
-export const CheckIcon: React.FC<AppIconProps> = (props) => (
-  <IconWrapper
-    icon={Tick02Icon}
-    {...props}
-  />
-);
-
 export const GitBranchIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={GitBranchHugeIcon}
@@ -528,9 +513,13 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
  * Static Orbit Logo Icon (for sidebar header)
  * Black planet with black satellite (white stroke creates gap)
  */
-export const OrbitLogoIcon: React.FC<AppIconProps> = ({ size, className, ...props }) => {
+export const OrbitLogoIcon: React.FC<AppIconProps> = ({
+  size,
+  className,
+  ...props
+}) => {
   const sizeValue = getSizeValue(size || 24); // Default to larger size for sidebar
-  
+
   return (
     <svg
       width={sizeValue}
@@ -541,8 +530,20 @@ export const OrbitLogoIcon: React.FC<AppIconProps> = ({ size, className, ...prop
       className={cn(getSizeClass(size), className)}
       {...props}
     >
-      <circle fill="currentColor" cx="60" cy="67" r="48" />
-      <circle fill="currentColor" stroke="white" strokeWidth="4.8" cx="60" cy="19" r="16" />
+      <circle
+        fill="currentColor"
+        cx="60"
+        cy="67"
+        r="48"
+      />
+      <circle
+        fill="currentColor"
+        stroke="white"
+        strokeWidth="4.8"
+        cx="60"
+        cy="19"
+        r="16"
+      />
     </svg>
   );
 };
@@ -551,9 +552,13 @@ export const OrbitLogoIcon: React.FC<AppIconProps> = ({ size, className, ...prop
  * Animated Orbit Loader Icon (for loading states)
  * Black planet with black satellite (white stroke creates gap) that orbits around
  */
-export const OrbitLoaderIcon: React.FC<AppIconProps> = ({ size, className, ...props }) => {
+export const OrbitLoaderIcon: React.FC<AppIconProps> = ({
+  size,
+  className,
+  ...props
+}) => {
   const sizeValue = getSizeValue(size);
-  
+
   return (
     <svg
       width={sizeValue}
@@ -574,11 +579,23 @@ export const OrbitLoaderIcon: React.FC<AppIconProps> = ({ size, className, ...pr
           animation: orbit-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
         }
       `}</style>
-      
-      <circle fill="currentColor" cx="60" cy="67" r="48" />
-      
+
+      <circle
+        fill="currentColor"
+        cx="60"
+        cy="67"
+        r="48"
+      />
+
       <g className="orbit-satellite-group">
-        <circle fill="currentColor" stroke="white" strokeWidth="4.8" cx="60" cy="19" r="16" />
+        <circle
+          fill="currentColor"
+          stroke="white"
+          strokeWidth="4.8"
+          cx="60"
+          cy="19"
+          r="16"
+        />
       </g>
     </svg>
   );
@@ -664,9 +681,411 @@ export const PdfIcon: React.FC<AppIconProps> = (props) => (
 );
 
 // ============================================
+// COMMON ICONS (Lucide Replacements)
+// ============================================
+
+/**
+ * Loader Icon - replaces lucide Loader2 and LoaderCircle
+ * Animated spinning loader
+ */
+export const LoaderIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
+  <IconWrapper
+    icon={Loading03Icon}
+    className={cn("animate-spin", className)}
+    {...props}
+  />
+);
+
+/**
+ * Chevron Icons - for dropdowns, accordions, navigation
+ */
+export const ChevronUpIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowUp01Icon}
+    {...props}
+  />
+);
+
+export const ChevronDownIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowDown01Icon}
+    {...props}
+  />
+);
+
+export const ChevronLeftIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowLeft01Icon}
+    {...props}
+  />
+);
+
+export const ChevronRightIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ArrowRight01Icon}
+    {...props}
+  />
+);
+
+/**
+ * Plus Icon - for adding items
+ */
+export const PlusIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={PlusSignHugeIcon}
+    {...props}
+  />
+);
+
+/**
+ * PlusCircle Icon - for add buttons
+ */
+export const PlusCircleIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={PlusSignCircleHugeIcon}
+    {...props}
+  />
+);
+
+/**
+ * X/Close Icon - for closing dialogs, removing items
+ */
+export const XIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MultiplicationSignIcon}
+    {...props}
+  />
+);
+
+export const CloseIcon: React.FC<AppIconProps> = XIcon;
+
+/**
+ * File & Image Icons
+ */
+export const FileIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={File02Icon}
+    {...props}
+  />
+);
+
+export const FileTextIcon: React.FC<AppIconProps> = FileIcon;
+
+export const ImageIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Image02Icon}
+    {...props}
+  />
+);
+
+/**
+ * User Icon
+ */
+export const UserIconHuge: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={UserIcon}
+    {...props}
+  />
+);
+
+/**
+ * Trash Icon - additional delete icon
+ */
+export const TrashIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
+  <IconWrapper
+    icon={Delete02Icon}
+    className={cn("text-destructive", className)}
+    {...props}
+  />
+);
+
+/**
+ * Eye Icons - for password visibility toggle
+ */
+export const EyeIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ViewIcon}
+    {...props}
+  />
+);
+
+export const EyeOffIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ViewOffSlashIcon}
+    {...props}
+  />
+);
+
+/**
+ * Star Icon - for favorites/ratings
+ */
+export const StarIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={StarHugeIcon}
+    {...props}
+  />
+);
+
+/**
+ * Home Icon
+ */
+export const HomeIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Home01Icon}
+    {...props}
+  />
+);
+
+/**
+ * External Link Icon
+ */
+export const ExternalLinkIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={LinkSquare02Icon}
+    {...props}
+  />
+);
+
+/**
+ * Message Icon
+ */
+export const MessageSquareIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MessageNotification02Icon}
+    {...props}
+  />
+);
+
+/**
+ * Layers Icon
+ */
+export const LayersIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Layers01Icon}
+    {...props}
+  />
+);
+
+/**
+ * Circle Icon
+ */
+export const CircleIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CircleHugeIcon}
+    {...props}
+  />
+);
+
+/**
+ * TriangleAlert Icon - warning/alert triangle
+ */
+export const TriangleAlertIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={TriangleIcon}
+    {...props}
+  />
+);
+
+/**
+ * GripVertical Icon - for resizable handles
+ */
+export const GripVerticalIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Resize01Icon}
+    {...props}
+  />
+);
+
+/**
+ * Plug Icon - for integrations/plugins
+ */
+export const Plug2Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ElectricPlugsIcon}
+    {...props}
+  />
+);
+
+/**
+ * Lightbulb Icon - for ideas/tips
+ */
+export const LightbulbIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Idea01Icon}
+    {...props}
+  />
+);
+
+/**
+ * MoreVertical Icon - vertical ellipsis menu
+ */
+export const MoreVerticalIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MoreVerticalHugeIcon}
+    {...props}
+  />
+);
+
+export const EllipsisVerticalIcon: React.FC<AppIconProps> = MoreVerticalIcon;
+
+/**
+ * MoreHorizontal Icon - horizontal ellipsis menu
+ */
+export const MoreHorizontalIconWrapper: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MoreHorizontalIcon}
+    {...props}
+  />
+);
+
+/**
+ * ChevronsUpDown Icon - for sorting/combo boxes
+ */
+export const ChevronsUpDownIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={UnfoldMoreIcon}
+    {...props}
+  />
+);
+
+export const ChevronsDownUpIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={UnfoldLessIcon}
+    {...props}
+  />
+);
+
+/**
+ * CircleX Icon - circle with X
+ */
+export const CircleXIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CancelCircleIcon}
+    {...props}
+  />
+);
+
+/**
+ * FileJson Icon - JSON file
+ */
+export const FileJsonIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={DocumentCodeIcon}
+    {...props}
+  />
+);
+
+/**
+ * Inbox Icon
+ */
+export const InboxIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={InboxHugeIcon}
+    {...props}
+  />
+);
+
+/**
+ * Clock Icon
+ */
+export const ClockIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Clock01Icon}
+    {...props}
+  />
+);
+
+/**
+ * CheckCircle Icon - checkmark in circle
+ */
+export const CheckCircleIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CheckmarkCircle02Icon}
+    {...props}
+  />
+);
+
+/**
+ * Check Icon - for checkboxes
+ */
+export const CheckIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Tick02Icon}
+    {...props}
+  />
+);
+
+/**
+ * Copy Icons
+ */
+export const CopyIconAlt: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Copy01Icon}
+    {...props}
+  />
+);
+
+export const CopyCheckIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CheckmarkCircle02Icon}
+    {...props}
+  />
+);
+
+/**
+ * ZapOff Icon - lightning crossed out
+ */
+export const ZapOffIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ZapIcon}
+    className={cn("opacity-50", props.className)}
+    {...props}
+  />
+);
+
+/**
+ * Undo Icon
+ */
+export const Undo2Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={RepeatIcon}
+    {...props}
+  />
+);
+
+/**
+ * Trash2 Icon - alternative trash
+ */
+export const Trash2Icon: React.FC<AppIconProps> = TrashIcon;
+
+/**
+ * Save Icon - uses Sent/Check icon
+ */
+export const SaveIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={SentIcon}
+    {...props}
+  />
+);
+
+/**
+ * House Icon - home alternative
+ */
+export const HouseIcon: React.FC<AppIconProps> = HomeIcon;
+
+// ============================================
 // EXPORTS
 // ============================================
 
+// Named exports for individual icon components (used with import { IconName })
+export // These are already exported above as component definitions, just listing here for clarity
+// LoaderIcon, ChevronUpIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon,
+// PlusIcon, PlusCircleIcon, XIcon, CloseIcon, AlertCircleIconHuge, TriangleAlertIcon,
+// FileIcon, FileTextIcon, ImageIcon, UserIconHuge, TrashIcon, EyeIcon, EyeOffIcon,
+// StarIcon, HomeIcon, ExternalLinkIcon, MessageSquareIcon, LayersIcon, CircleIcon
+ {};
+
+// Default export object for convenient access
 export default {
   Sidebar: SidebarIcon,
   Unfold: UnfoldIcon,

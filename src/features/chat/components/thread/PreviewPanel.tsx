@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Image, FileText } from "lucide-react";
+import { ImageIcon, FileTextIcon } from "@/components/icons";
 import { SquareArrowExpand01Icon } from "hugeicons-react";
 
 type BrowserSnapshot = {
@@ -97,7 +97,7 @@ export function PreviewPanel() {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Image className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 Screenshot
               </button>
               {browserSnapshot.dom_text && (
@@ -111,7 +111,7 @@ export function PreviewPanel() {
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileTextIcon className="h-4 w-4" />
                   Text
                 </button>
               )}

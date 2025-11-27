@@ -1,6 +1,6 @@
 import { forwardRef, ForwardedRef } from "react";
 import { motion } from "framer-motion";
-import { Settings, EllipsisVertical, ChevronRight } from "lucide-react";
+import { SettingsIcon, EllipsisVerticalIcon, ChevronRightIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -53,9 +53,9 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
             }}
           >
             {isSidebarOpen ? (
-              <ChevronRight className="size-5" />
+              <ChevronRightIcon className="size-5" />
             ) : (
-              <EllipsisVertical className="size-5" />
+              <EllipsisVerticalIcon className="size-5" />
             )}
           </Button>
 
@@ -77,7 +77,7 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
               onClick={handleConfigClick}
               aria-label="Agent Configuration"
             >
-              <Settings className="size-5" />
+              <SettingsIcon className="size-5" />
             </TooltipIconButton>
           </div>
         </div>

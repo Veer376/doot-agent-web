@@ -9,7 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { LoaderIcon } from "@/components/icons";
 
 export default function SigninInterface() {
   const { signIn, signInWithGoogle, isAuthenticated } = useAuthContext();
@@ -130,7 +130,7 @@ export default function SigninInterface() {
         <div className="w-full max-w-sm">
           <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
             <div className="relative">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <LoaderIcon className="h-12 w-12 text-primary" />
             </div>
             <h2 className="text-xl font-semibold text-foreground text-center">
               Completing sign in...
@@ -162,7 +162,7 @@ export default function SigninInterface() {
         {isLoading && message && !isOAuthCallback && (
           <Alert className="mb-4 bg-blue-50 text-blue-800" data-radius="radius2">
             <AlertDescription className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LoaderIcon className="h-4 w-4" />
               {message}
             </AlertDescription>
           </Alert>

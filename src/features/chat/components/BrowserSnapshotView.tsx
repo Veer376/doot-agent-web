@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDownIcon } from "@/components/icons";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { cn } from "@/lib/utils";
 
@@ -11,9 +11,8 @@ type BrowserSnapshot = {
 
 export function BrowserSnapshotView() {
   const stream = useStreamContext();
-  const browserSnapshot =
-    (stream.values as Record<string, unknown> | undefined)
-      ?.browser_snapshot as BrowserSnapshot | undefined;
+  const browserSnapshot = (stream.values as Record<string, unknown> | undefined)
+    ?.browser_snapshot as BrowserSnapshot | undefined;
   const [showDomText, setShowDomText] = useState(false);
 
   // Only show placeholder when explicitly toggled for debugging
@@ -33,7 +32,10 @@ export function BrowserSnapshotView() {
   };
 
   return (
-    <div data-radius="radius2" className="bg-muted/30 mb-4 w-full max-w-lg border px-0 pb-0 pt-3">
+    <div
+      data-radius="radius2"
+      className="bg-muted/30 mb-4 w-full max-w-lg border px-0 pt-3 pb-0"
+    >
       <div className="flex items-center justify-between px-4 pb-3">
         <h3 className="text-sm font-semibold">Browser Snapshot</h3>
         <button
@@ -52,7 +54,7 @@ export function BrowserSnapshotView() {
           aria-label="Toggle DOM text"
           disabled={!browserSnapshot?.dom_text}
         >
-          <ChevronDown
+          <ChevronDownIcon
             className={cn(
               "h-4 w-4 transition-transform",
               showDomText ? "rotate-180" : "rotate-0",
@@ -62,13 +64,16 @@ export function BrowserSnapshotView() {
       </div>
 
       {!browserSnapshot ? (
-        <div className="px-4 pb-4 text-xs text-muted-foreground">
+        <div className="text-muted-foreground px-4 pb-4 text-xs">
           No browser snapshot data available. Check console for debug info.
         </div>
       ) : (
         <>
           {browserSnapshot.url && (
-            <div data-radius="radius2" className="mx-4 mb-3 border bg-background px-3 py-2 text-xs font-medium text-muted-foreground">
+            <div
+              data-radius="radius2"
+              className="bg-background text-muted-foreground mx-4 mb-3 border px-3 py-2 text-xs font-medium"
+            >
               {browserSnapshot.url}
             </div>
           )}

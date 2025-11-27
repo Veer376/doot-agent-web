@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Bot } from "lucide-react";
+import { PlusIcon, SearchIcon, AgentIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
@@ -33,7 +33,7 @@ export function AgentList({ agents }: AgentListProps) {
     <div className="space-y-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="relative w-full max-w-sm">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
           <Input
             placeholder="Search agents..."
             className="pl-8"
@@ -45,7 +45,7 @@ export function AgentList({ agents }: AgentListProps) {
           size="sm"
           onClick={() => setShowCreateDialog(true)}
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <PlusIcon className="mr-2 h-4 w-4" />
           New Agent
         </Button>
       </div>
@@ -54,13 +54,13 @@ export function AgentList({ agents }: AgentListProps) {
         <div className="flex flex-col items-center justify-center rounded-lg p-6 py-12">
           {searchQuery ? (
             <EmptyState
-              icon={Search}
+              icon={SearchIcon}
               title="No agents found"
               description="No agents match your search criteria. Try adjusting your search."
             />
           ) : (
             <EmptyState
-              icon={Bot}
+              icon={AgentIcon}
               title="No agents configured"
               description="Create your first agent to get started with AI assistance"
               action={{

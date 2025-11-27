@@ -10,7 +10,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { LoaderIcon } from "@/components/icons";
 
 // Form validation schema
 const signupSchema = z
@@ -178,7 +178,7 @@ export default function SignupInterface() {
         <div className="w-full max-w-sm">
           <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
             <div className="relative">
-              <Loader2 className="text-primary h-12 w-12 animate-spin" />
+              <LoaderIcon className="text-primary h-12 w-12" />
             </div>
             <h2 className="text-foreground text-center text-xl font-semibold">
               Completing sign up...
@@ -207,7 +207,7 @@ export default function SignupInterface() {
             data-radius="radius2"
           >
             <AlertDescription className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LoaderIcon className="h-4 w-4" />
               {loadingMessage}
             </AlertDescription>
           </Alert>

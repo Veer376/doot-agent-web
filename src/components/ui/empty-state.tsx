@@ -1,11 +1,10 @@
 import React from "react";
-import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { motion } from "framer-motion";
 
 export interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: React.ComponentType<any>;
   title: string;
   description: string;
   action?: {
@@ -18,10 +17,10 @@ export interface EmptyStateProps {
 
 /**
  * EmptyState Component
- * 
+ *
  * A reusable component for displaying empty states throughout the application.
  * Uses data-radius="radius2" for consistent border radius and proper elevation.
- * 
+ *
  * @example
  * ```tsx
  * <EmptyState
@@ -49,11 +48,11 @@ export function EmptyState({
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "flex flex-col items-center justify-center py-12 px-4 text-center",
-        className
+        "flex flex-col items-center justify-center px-4 py-12 text-center",
+        className,
       )}
     >
-      <div className="flex flex-col items-center space-y-4 max-w-sm">
+      <div className="flex max-w-sm flex-col items-center space-y-4">
         {/* Icon container with subtle background */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -61,9 +60,12 @@ export function EmptyState({
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
           data-radius="radius2"
           data-elevation="1"
-          className="bg-muted/50 p-6 mb-2"
+          className="bg-muted/50 mb-2 p-6"
         >
-          <Icon className="h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
+          <Icon
+            className="text-muted-foreground h-12 w-12"
+            strokeWidth={1.5}
+          />
         </motion.div>
 
         {/* Content */}
@@ -73,8 +75,8 @@ export function EmptyState({
           transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
           className="space-y-2"
         >
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <h3 className="text-foreground text-lg font-semibold">{title}</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
             {description}
           </p>
         </motion.div>

@@ -17,7 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
 import { AITurn } from "@/features/chat/components/thread/messages/ai-turn";
-import { LoaderCircle, AlertCircle, MessageSquare } from "lucide-react";
+import {
+  LoaderIcon,
+  AlertCircleIconHuge,
+  MessageSquareIcon,
+} from "@/components/icons";
 import { ArrowDownIcon } from "@/components/icons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useQueryState } from "nuqs";
@@ -429,14 +433,14 @@ export function Thread() {
               {!hasMessages && threadId && isLoadingThreadState ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="text-muted-foreground flex items-center gap-2">
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <LoaderIcon className="h-4 w-4" />
                     <span>Loading thread...</span>
                   </div>
                 </div>
               ) : !hasMessages && threadId ? (
                 <div className="flex items-center justify-center py-16">
                   <EmptyState
-                    icon={MessageSquare}
+                    icon={MessageSquareIcon}
                     title="No messages yet"
                     description="Start the conversation by sending your first message below"
                   />
@@ -503,7 +507,7 @@ export function Thread() {
                   )}
                   {errorMessage && (
                     <Alert variant="destructive">
-                      <AlertCircle className="size-4" />
+                      <AlertCircleIconHuge className="size-4" />
                       <AlertTitle>An error occurred:</AlertTitle>
                       <AlertDescription>{errorMessage}</AlertDescription>
                     </Alert>

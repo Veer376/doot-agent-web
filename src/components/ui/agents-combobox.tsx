@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Star, Loader2 } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronsUpDownIcon,
+  StarIcon,
+  LoaderIcon,
+} from "@/components/icons";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -176,7 +181,7 @@ export function AgentsCombobox({
                 ? getMultipleSelectedAgentValues(selectedValues, agents)
                 : getSelectedAgentValue(selectedValues[0], agents)
               : placeholder}
-            <ChevronsUpDown className="opacity-50" />
+            <ChevronsUpDownIcon className="opacity-50" />
           </Button>
         )}
       </PopoverTrigger>
@@ -199,7 +204,7 @@ export function AgentsCombobox({
             <CommandEmpty>
               {agentsLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
+                  <LoaderIcon className="size-4" />
                   Loading agents...
                 </span>
               ) : (
@@ -231,7 +236,7 @@ export function AgentsCombobox({
                             onSelect={handleSelect}
                             className="flex w-full items-center justify-between"
                           >
-                            <Check
+                            <CheckIcon
                               className={cn(
                                 isSelected ? "opacity-100" : "opacity-0",
                               )}
@@ -243,7 +248,7 @@ export function AgentsCombobox({
                             <div className="flex flex-shrink-0 items-center justify-end gap-2">
                               {isUserCreatedDefaultAssistant(item) && (
                                 <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                                  <Star />
+                                  <StarIcon />
                                   <p>Default</p>
                                 </span>
                               )}

@@ -17,7 +17,11 @@ import {
   DownloadIcon,
   PdfIcon,
 } from "@/components/icons";
-import { MessageCircleIcon, FileText, FileJson } from "lucide-react";
+import {
+  MessageSquareIcon,
+  FileTextIcon,
+  FileJsonIcon,
+} from "@/components/icons";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
@@ -688,7 +692,7 @@ export function ThreadList() {
               </div>
             ) : sortedThreads.length === 0 ? (
               <EmptyState
-                icon={MessageCircleIcon}
+                icon={MessageSquareIcon}
                 title={searchQuery ? "No threads found" : "No threads yet"}
                 description={
                   searchQuery
@@ -830,7 +834,7 @@ export function ThreadList() {
 
             {!isLoading && sortedThreads.length === 0 && (
               <EmptyState
-                icon={MessageCircleIcon}
+                icon={MessageSquareIcon}
                 title="No threads yet"
                 description="Create your first thread to start a conversation with the agent"
                 className="py-12"
@@ -963,7 +967,7 @@ export function ThreadList() {
                                     handleExportMarkdown(thread);
                                   }}
                                 >
-                                  <FileText className="h-4 w-4" />
+                                  <FileTextIcon className="h-4 w-4" />
                                   <span>Markdown</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -972,7 +976,7 @@ export function ThreadList() {
                                     handleExportJSON(thread);
                                   }}
                                 >
-                                  <FileJson className="h-4 w-4" />
+                                  <FileJsonIcon className="h-4 w-4" />
                                   <span>JSON</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem

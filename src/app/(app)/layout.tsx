@@ -7,8 +7,8 @@ import { AuthProvider } from "@/providers/Auth";
 import { ReactQueryProvider } from "@/providers/QueryClient";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent",
+  description: "Handoff complexity to DootAgent",
 };
 
 export default function RootLayout({

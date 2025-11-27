@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useConnectedApps } from "@/lib/composio";
 import { useComposioToolkitIcon } from "@/lib/composio/hooks";
 import { ComposioManagerDialog } from "./composio-manager-dialog";
@@ -209,8 +210,19 @@ export function ComposioAppSelector({
             <Separator />
 
             {isLoading ? (
-              <div className="text-muted-foreground p-4 text-center text-sm">
-                Loading...
+              <div className="space-y-3 p-4">
+                <Skeleton
+                  className="h-16 w-full"
+                  data-radius="radius2"
+                />
+                <Skeleton
+                  className="h-16 w-full"
+                  data-radius="radius2"
+                />
+                <Skeleton
+                  className="h-16 w-full"
+                  data-radius="radius2"
+                />
               </div>
             ) : !hasConnectedApps ? (
               <div className="p-4 text-center">
@@ -353,8 +365,19 @@ export function ComposioAppSelector({
           <Separator />
 
           {isLoading ? (
-            <div className="text-muted-foreground p-4 text-center text-sm">
-              Loading...
+            <div className="space-y-3 p-4">
+              <Skeleton
+                className="h-16 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-16 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-16 w-full"
+                data-radius="radius2"
+              />
             </div>
           ) : !hasConnectedApps ? (
             <div className="p-4 text-center">

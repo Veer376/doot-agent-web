@@ -33,7 +33,7 @@ import {
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
   AiChat01Icon as Chat01HugeIcon,
-  Orbit01Icon,
+  Orbit01Icon as Doot01Icon,
   Note02Icon as Note02HugeIcon,
   Alert02Icon as Alert02HugeIcon,
   TipsIcon as TipsHugeIcon,
@@ -507,14 +507,14 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
 };
 
 // ============================================
-// CUSTOM ORBIT ICONS
+// CUSTOM DOOT ICONS
 // ============================================
 
 /**
- * Static Orbit Logo Icon (for sidebar header)
+ * Static Doot Logo Icon (for sidebar header)
  * Black planet with black satellite (white stroke creates gap)
  */
-export const OrbitLogoIcon: React.FC<AppIconProps> = ({
+export const DootLogoIcon: React.FC<AppIconProps> = ({
   size,
   className,
   ...props
@@ -527,33 +527,33 @@ export const OrbitLogoIcon: React.FC<AppIconProps> = ({
       height={sizeValue}
       viewBox="0 0 120 120"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Orbit Agent"
+      aria-label="DootAgent"
       className={cn(getSizeClass(size), className)}
       {...props}
     >
       <circle
         fill="currentColor"
         cx="60"
-        cy="67"
-        r="48"
+        cy="60"
+        r="24"
       />
       <circle
         fill="currentColor"
         stroke="white"
-        strokeWidth="4.8"
+        strokeWidth="5"
         cx="60"
-        cy="19"
-        r="16"
+        cy="30"
+        r="24"
       />
     </svg>
   );
 };
 
 /**
- * Animated Orbit Loader Icon (for loading states)
+ * Animated Doot Loader Icon (for loading states)
  * Black planet with black satellite (white stroke creates gap) that orbits around
  */
-export const OrbitLoaderIcon: React.FC<AppIconProps> = ({
+export const DootLoaderIcon: React.FC<AppIconProps> = ({
   size,
   className,
   ...props
@@ -566,36 +566,36 @@ export const OrbitLoaderIcon: React.FC<AppIconProps> = ({
       height={sizeValue}
       viewBox="0 0 120 120"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Orbit Loader"
+      aria-label="Doot Loader"
       className={cn(getSizeClass(size), className)}
       {...props}
     >
       <style>{`
-        @keyframes orbit-rotation {
+        @keyframes doot-rotation {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        .orbit-satellite-group {
+        .doot-satellite-group {
           transform-origin: 60px 60px;
-          animation: orbit-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
+          animation: doot-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
         }
       `}</style>
 
       <circle
         fill="currentColor"
         cx="60"
-        cy="67"
-        r="48"
+        cy="60"
+        r="24"
       />
 
-      <g className="orbit-satellite-group">
+      <g className="doot-satellite-group">
         <circle
           fill="currentColor"
           stroke="white"
-          strokeWidth="4.8"
+          strokeWidth="5"
           cx="60"
-          cy="19"
-          r="16"
+          cy="30"
+          r="24"
         />
       </g>
     </svg>
@@ -603,9 +603,9 @@ export const OrbitLoaderIcon: React.FC<AppIconProps> = ({
 };
 
 // Keep the HugeIcons orbit icon for backwards compatibility
-export const OrbitIcon: React.FC<AppIconProps> = (props) => (
+export const DootIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
-    icon={Orbit01Icon}
+    icon={Doot01Icon}
     {...props}
   />
 );
@@ -758,7 +758,10 @@ export const CloseIcon: React.FC<AppIconProps> = XIcon;
 =======
  * Alert/Warning Icons
  */
-export const AlertCircleIconHuge: React.FC<AppIconProps> = ({ className, ...props }) => (
+export const AlertCircleIconHuge: React.FC<AppIconProps> = ({
+  className,
+  ...props
+}) => (
   <IconWrapper
     icon={AlertCircleHugeIcon}
     className={cn("text-yellow-600", className)}
@@ -766,7 +769,10 @@ export const AlertCircleIconHuge: React.FC<AppIconProps> = ({ className, ...prop
   />
 );
 
-export const TriangleAlertIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
+export const TriangleAlertIcon: React.FC<AppIconProps> = ({
+  className,
+  ...props
+}) => (
   <IconWrapper
     icon={TriangleIcon}
     className={cn("text-yellow-600", className)}
@@ -1116,9 +1122,9 @@ export default {
   SidebarRight01: SidebarRight01Icon,
   Menu11: Menu11Icon,
   Chat: ChatIcon,
-  Orbit: OrbitIcon,
-  OrbitLogo: OrbitLogoIcon,
-  OrbitLoader: OrbitLoaderIcon,
+  Orbit: DootIcon,
+  OrbitLogo: DootLogoIcon,
+  OrbitLoader: DootLoaderIcon,
   Note02: Note02Icon,
   Alert02: Alert02Icon,
   Tips: TipsIcon,

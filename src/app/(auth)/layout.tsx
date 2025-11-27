@@ -5,8 +5,8 @@ import type { Metadata } from "next";
 import { DOCS_LINK } from "@/constants";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent - Auth",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent - Auth",
+  description: "Handoff complexity to DootAgent",
 };
 
 export default function Layout({

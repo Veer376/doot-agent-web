@@ -6,8 +6,8 @@ import { roobertMono } from "./fonts/roobert-mono";
 import { ThemeProvider } from "@/providers/Theme";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent",
+  description: "Handoff complexity to DootAgent",
 };
 
 export default function Layout({
@@ -21,7 +21,10 @@ export default function Layout({
       className={`${roobert.variable} ${roobertMono.variable}`}
       suppressHydrationWarning
     >
-      <body className={roobert.className} suppressHydrationWarning>
+      <body
+        className={roobert.className}
+        suppressHydrationWarning
+      >
         <ThemeProvider>
           <main>{children}</main>
         </ThemeProvider>

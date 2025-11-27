@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { ChevronDownIcon } from "@/components/icons";
 import { useAuthContext } from "@/providers/Auth";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { isBase64ContentBlock } from "@/lib/multimodal-utils";
@@ -57,7 +58,12 @@ export function HumanMessage({
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
   const contentString = getContentString(message.content);
+
+  // Check if content is long enough to need expansion
+  const needsExpansion =
+    contentString.split("\n").length > 5 || contentString.length > 300;
 
   const handleSubmitEdit = () => {
     if (!agentId) return;
@@ -132,12 +138,47 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <p
-                data-radius="radius2"
-                className="bg-muted ml-auto w-fit max-w-xl px-4 py-2 text-left whitespace-pre-wrap"
-              >
-                {contentString}
-              </p>
+              <div className="relative ml-auto w-fit max-w-xl">
+                <p
+                  data-radius="radius2"
+                  className={cn(
+                    "bg-muted px-4 py-2 text-left whitespace-pre-wrap transition-all duration-200",
+                    !isExpanded &&
+                      needsExpansion &&
+                      "max-h-[120px] overflow-hidden",
+                    needsExpansion && "pb-8", // Extra padding when expandable to prevent content overlap with button
+                  )}
+                >
+                  {contentString}
+                </p>
+                {!isExpanded && needsExpansion && (
+                  <div
+                    data-radius="radius2"
+                    className="from-muted pointer-events-none absolute right-0 bottom-0 left-0 h-12 rounded-b-[var(--radius-2)] bg-gradient-to-t to-transparent"
+                  />
+                )}
+                {!isExpanded && needsExpansion && (
+                  <div className="pointer-events-none absolute bottom-2 left-4 flex items-center gap-1"></div>
+                )}
+                {needsExpansion && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="hover:bg-muted-foreground/10 group absolute right-4 bottom-2 cursor-pointer rounded-md p-1 transition-colors"
+                    aria-label={
+                      isExpanded ? "Collapse message" : "Expand message"
+                    }
+                  >
+                    <ChevronDownIcon
+                      size={16}
+                      className={cn(
+                        "text-muted-foreground group-hover:text-foreground transition-all",
+                        isExpanded && "rotate-180",
+                      )}
+                    />
+                  </button>
+                )}
+              </div>
             ) : null}
           </div>
         )}
@@ -146,7 +187,8 @@ export function HumanMessage({
           className={cn(
             "ml-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
             // Show instantly on hover/focus, delay hiding when leaving hover
-            "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0",
+            // Always visible on mobile (below md), hidden on desktop until hover
+            "opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0 md:delay-[600ms]",
             isEditing && "opacity-100 delay-0",
           )}
         >

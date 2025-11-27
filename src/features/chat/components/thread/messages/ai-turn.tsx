@@ -64,22 +64,25 @@ export const AITurn = React.memo(function AITurn({
 
   // Parse citations once from combined content
   const parseCitations = (text: string) => {
-    const citations = new Map<string, { number: string; title: string; url: string; description?: string }>();
-    
+    const citations = new Map<
+      string,
+      { number: string; title: string; url: string; description?: string }
+    >();
+
     const sourcesMatch = text.match(/\*\*Sources:\*\*\s*\n([\s\S]+?)$/i);
     if (!sourcesMatch) return citations;
-    
+
     const sourcesList = sourcesMatch[1];
     const citationLines = sourcesList
       .split(/(?=\n\[\d+\])/g)
       .filter((line) => line.trim());
-    
+
     citationLines.forEach((line) => {
       const trimmedLine = line.trim();
       const match = trimmedLine.match(
         /^\[\s*(\d+)\s*\]\s*(.+?)\s*\|\s*(https?:\/\/\S+)(?:\s*\|\s*(.+))?$/,
       );
-      
+
       if (match) {
         const [, number, title, url, description] = match;
         citations.set(number.trim(), {
@@ -90,10 +93,10 @@ export const AITurn = React.memo(function AITurn({
         });
       }
     });
-    
+
     return citations;
   };
-  
+
   const citations = parseCitations(combinedContent);
 
   const handleRegenerateFromHuman = () => {
@@ -327,7 +330,9 @@ export const AITurn = React.memo(function AITurn({
                   },
                 }}
               >
-                <MarkdownText citations={citations}>{block.content}</MarkdownText>
+                <MarkdownText citations={citations}>
+                  {block.content}
+                </MarkdownText>
               </motion.div>
             );
           } else if (block.type === "tools-only") {
@@ -345,10 +350,18 @@ export const AITurn = React.memo(function AITurn({
                     { type: "tool" }
                   >;
 
+                  const [isExpanded, setIsExpanded] = React.useState(false);
+
                   const handleCopy = () => {
                     const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ""}`;
                     navigator.clipboard.writeText(copyContent);
                     toast.success("Copied to clipboard");
+                  };
+
+                  const handleToggle = () => {
+                    if (step.toolResponse) {
+                      setIsExpanded(!isExpanded);
+                    }
                   };
 
                   return (
@@ -359,7 +372,12 @@ export const AITurn = React.memo(function AITurn({
                       {/* Wrap both tool name and response in a common group for hover persistence */}
                       <div
                         data-radius="radius2"
-                        className="group/tool bg-muted/30 inline-flex items-center gap-2 border p-1.5 px-2"
+                        className={cn(
+                          "group/tool bg-muted/30 inline-flex items-center gap-2 border p-1.5 px-2 transition-colors",
+                          step.toolResponse &&
+                            "hover:bg-muted/50 cursor-pointer",
+                        )}
+                        onClick={handleToggle}
                       >
                         {/* Processing Icon / Tick */}
                         {step.status === "pending" && (
@@ -380,8 +398,11 @@ export const AITurn = React.memo(function AITurn({
                         {step.toolResponse && (
                           <button
                             type="button"
-                            onClick={handleCopy}
-                            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy();
+                            }}
+                            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100 md:opacity-0 md:group-hover/tool:opacity-100"
                             aria-label="Copy tool and response"
                           >
                             <CopyIcon
@@ -392,7 +413,12 @@ export const AITurn = React.memo(function AITurn({
                         )}
                       </div>
                       {step.toolResponse && (
-                        <div className="grid grid-rows-[0fr] transition-all duration-300 ease-in-out group-hover/toolwrapper:grid-rows-[1fr]">
+                        <div
+                          className={cn(
+                            "grid transition-all duration-300 ease-in-out",
+                            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                          )}
+                        >
                           <div className="overflow-hidden">
                             <div
                               data-radius="radius2"
@@ -420,7 +446,7 @@ export const AITurn = React.memo(function AITurn({
           <div
             className={cn(
               "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
-              "opacity-0 delay-[600ms] group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0",
+              "opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0 md:delay-[600ms]",
             )}
           >
             <CommandBar

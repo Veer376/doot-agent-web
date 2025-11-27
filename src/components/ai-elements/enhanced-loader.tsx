@@ -1,13 +1,9 @@
 import { cn } from "@/lib/utils";
-import { OrbitLoaderIcon } from "@/components/icons/app-icons";
+import { DootLoaderIcon } from "@/components/icons/app-icons";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Message } from "@langchain/langgraph-sdk";
 
-type ActivityState =
-  | "thinking"
-  | "executing_tool"
-  | "writing"
-  | "processing";
+type ActivityState = "thinking" | "executing_tool" | "writing" | "processing";
 
 interface EnhancedLoaderProps {
   messages?: Message[];
@@ -90,15 +86,17 @@ export function EnhancedLoader({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 text-sm text-muted-foreground",
+        "text-muted-foreground flex items-center gap-2 text-sm",
         className,
       )}
     >
-      <OrbitLoaderIcon size={16} />
-      <Shimmer duration={1.5} spread={2}>
+      <DootLoaderIcon size={16} />
+      <Shimmer
+        duration={1.5}
+        spread={2}
+      >
         {statusMessage}
       </Shimmer>
     </div>
   );
 }
-

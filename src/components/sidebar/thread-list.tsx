@@ -13,7 +13,7 @@ import {
   SearchIcon,
   PinIcon,
   PinOffIcon,
-  PlusSignIcon,
+  PlusIcon,
   DownloadIcon,
   PdfIcon,
 } from "@/components/icons";
@@ -186,6 +186,7 @@ export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
   const { session } = useAuthContext();
+  const { state, isMobile } = useSidebar();
   const THREADS_PER_PAGE = 20;
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
@@ -209,7 +210,6 @@ export function ThreadList() {
   const [editingThreadName, setEditingThreadName] = useState("");
   const [originalThreadName, setOriginalThreadName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { state } = useSidebar();
 
   // Flatten all pages into a single array
   const allLoadedThreads = useMemo(() => {
@@ -720,7 +720,7 @@ export function ThreadList() {
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <PlusSignIcon size="sm" />
+                      <PlusIcon size="sm" />
                       New Thread
                     </div>
                   </div>
@@ -817,8 +817,8 @@ export function ThreadList() {
         </DialogContent>
       </Dialog>
 
-      {/* Thread List in Sidebar - Only render when sidebar is expanded */}
-      {state === "collapsed" ? null : (
+      {/* Thread List in Sidebar - Render when sidebar is expanded OR on mobile */}
+      {state === "collapsed" && !isMobile ? null : (
         <SidebarGroup>
           <SidebarGroupLabel>Threads</SidebarGroupLabel>
           <SidebarMenu>

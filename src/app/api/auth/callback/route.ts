@@ -1,20 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse the URL and get the code parameter
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get("code");
-
-    // Get the redirect destination (or default to home)
     const redirectTo = requestUrl.searchParams.get("redirect") || "/";
 
     if (code) {
-      // Get Supabase client
-      const supabase = getSupabaseClient();
+      const cookieStore = await cookies();
 
-      // Exchange the code for a session
+      // Create server-side Supabase client with cookie access
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value;
+            },
+            set(name: string, value: string, options: any) {
+              cookieStore.set({ name, value, ...options });
+            },
+            remove(name: string, options: any) {
+              cookieStore.set({ name, value: "", ...options });
+            },
+          },
+        }
+      );
+
+      // Exchange the code for a session (PKCE code verifier is in cookies)
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
@@ -26,8 +42,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(redirectTo, request.url));
     }
 
-    // No code parameter - this shouldn't happen in normal flow
-    // Redirect to sign-in with from_oauth flag to show loading state
+    // No code parameter - redirect to sign-in
     const signinUrl = new URL("/signin", request.url);
     signinUrl.searchParams.set("from_oauth", "true");
     return NextResponse.redirect(signinUrl);

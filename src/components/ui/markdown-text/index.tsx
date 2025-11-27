@@ -78,13 +78,14 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="text-foreground flex items-center justify-between gap-3 rounded-t-md px-4 pt-2 text-xs leading-tight font-medium">
-      <span className="lowercase opacity-80 [&>span]:text-[0.7rem]">
+    <div className="text-foreground sticky top-0 z-10 flex items-center justify-between gap-3 overflow-hidden rounded-full border border-white/30 bg-white/40 px-4 pt-2 text-xs leading-tight font-medium backdrop-blur-[8px] before:absolute before:top-0 before:right-0 before:left-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent before:content-[''] after:absolute after:top-0 after:left-0 after:h-full after:w-px after:bg-gradient-to-b after:from-white/80 after:via-transparent after:to-white/30 after:content-[''] dark:border-white/10 dark:bg-black/40 dark:shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.05)] dark:before:via-white/30 dark:after:from-white/30 dark:after:to-white/10">
+      <span className="relative z-10 lowercase opacity-80 [&>span]:text-[0.7rem]">
         {language}
       </span>
       <TooltipIconButton
         tooltip="Copy"
         onClick={onCopy}
+        className="relative z-10"
       >
         {!isCopied && <CopyIcon size="xs" />}
         {isCopied && <CheckmarkCircleIcon size="xs" />}
@@ -620,7 +621,7 @@ const defaultComponents: any = {
       return (
         <div
           data-radius="radius2"
-          className="bg-card text-card-foreground relative overflow-hidden border"
+          className="bg-card text-card-foreground relative border"
         >
           <CodeHeader
             language={language}

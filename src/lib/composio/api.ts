@@ -1,7 +1,7 @@
 /**
- * Composio SDK client for Orbit Agent
+ * Composio SDK client for DootAgent
  * Uses Composio SDK directly for all operations
- * 
+ *
  * Docs: https://docs.composio.dev/type-script/models/
  */
 import { Composio } from "@composio/core";

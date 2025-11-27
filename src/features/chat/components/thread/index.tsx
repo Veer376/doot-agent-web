@@ -36,7 +36,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
-import { OrbitIcon } from "@/components/icons";
+import { DootIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
 import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
@@ -465,13 +465,17 @@ export function Thread() {
                         />
                       );
                     } else {
-                      // Find the last AI turn index
-                      const lastAITurnIndex = allTurns
-                        .map((t, i) => (t.type === "ai-turn" ? i : -1))
-                        .filter((i) => i !== -1)
-                        .pop();
-                      const isLastAITurn = turnIndex === lastAITurnIndex;
-                      const turnIsLoading = isLoading && isLastAITurn;
+                      // Find the last human message index to determine which AI turn is actively loading
+                      const lastHumanMessageIndex =
+                        allTurns
+                          .map((t, i) => (t.type === "human" ? t.index : -1))
+                          .filter((i) => i !== -1)
+                          .pop() ?? -1;
+
+                      // This AI turn is loading only if we're loading AND it corresponds to the last human message
+                      const turnIsLoading =
+                        isLoading &&
+                        turn.lastHumanIndex === lastHumanMessageIndex;
 
                       return (
                         <AITurn
@@ -517,14 +521,14 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="to-background sticky bottom-0 flex flex-col items-center gap-3 bg-gradient-to-b from-transparent from-0% to-40%">
+            <div className="to-background sticky bottom-0 z-10 flex flex-col items-center gap-3 bg-gradient-to-b from-transparent from-0% to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
-                  <OrbitIcon />
+                  <DootIcon />
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    Orbit Agent
+                    DootAgent
                   </h1>
                 </div>
               )}
@@ -537,7 +541,7 @@ export function Thread() {
               <div
                 ref={dropRef}
                 className={cn(
-                  "relative z-10 mx-auto w-full max-w-3xl min-w-0 pb-4 transition-all",
+                  "relative z-20 mx-auto w-full max-w-3xl min-w-0 pb-4 transition-all",
                   dragOver ? "border-primary border-2 border-dotted" : "",
                 )}
               >

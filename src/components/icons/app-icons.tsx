@@ -57,6 +57,7 @@ import {
   ArrowUp01Icon,
   PlusSignIcon as PlusSignHugeIcon,
   MultiplicationSignIcon,
+  AlertCircleIcon as AlertCircleHugeIcon,
   File02Icon,
   Image02Icon,
   UserIcon,
@@ -659,13 +660,6 @@ export const PinOffIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
-export const PlusSignIcon: React.FC<AppIconProps> = (props) => (
-  <IconWrapper
-    icon={PlusSignCircleHugeIcon}
-    {...props}
-  />
-);
-
 export const DownloadIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={Download02Icon}
@@ -760,6 +754,28 @@ export const XIcon: React.FC<AppIconProps> = (props) => (
 export const CloseIcon: React.FC<AppIconProps> = XIcon;
 
 /**
+<<<<<<< Updated upstream
+=======
+ * Alert/Warning Icons
+ */
+export const AlertCircleIconHuge: React.FC<AppIconProps> = ({ className, ...props }) => (
+  <IconWrapper
+    icon={AlertCircleHugeIcon}
+    className={cn("text-yellow-600", className)}
+    {...props}
+  />
+);
+
+export const TriangleAlertIcon: React.FC<AppIconProps> = ({ className, ...props }) => (
+  <IconWrapper
+    icon={TriangleIcon}
+    className={cn("text-yellow-600", className)}
+    {...props}
+  />
+);
+
+/**
+>>>>>>> Stashed changes
  * File & Image Icons
  */
 export const FileIcon: React.FC<AppIconProps> = (props) => (
@@ -872,16 +888,6 @@ export const LayersIcon: React.FC<AppIconProps> = (props) => (
 export const CircleIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={CircleHugeIcon}
-    {...props}
-  />
-);
-
-/**
- * TriangleAlert Icon - warning/alert triangle
- */
-export const TriangleAlertIcon: React.FC<AppIconProps> = (props) => (
-  <IconWrapper
-    icon={TriangleIcon}
     {...props}
   />
 );
@@ -1072,10 +1078,6 @@ export const SaveIcon: React.FC<AppIconProps> = (props) => (
  * House Icon - home alternative
  */
 export const HouseIcon: React.FC<AppIconProps> = HomeIcon;
-
-// ============================================
-// EXPORTS
-// ============================================
 
 // Named exports for individual icon components (used with import { IconName })
 export // These are already exported above as component definitions, just listing here for clarity

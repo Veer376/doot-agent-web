@@ -178,13 +178,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   return (
     <AgentContext.Provider value={{ agentId, setSelectedAgent, mode, setMode }}>
       {!session?.accessToken ? (
-        <>
-          {toast.error("Access token must be provided")}
-          {null}
-        </>
+        // Render children without StreamSession for unauthenticated users
+        // This allows them to see the UI and interact with the composer
+        // Auth will be required when they try to submit a message
+        <>{children}</>
       ) : (
         <StreamSession
-          // key={(prevThreadIdRef.current && threadId && prevThreadIdRef.current !== threadId) ? threadId : 'stable'}
+          key={`stream-${session.accessToken.substring(0, 20)}`} // Force re-mount when session changes
           agentId={agentId || "chat_agent"}
           mode={mode}
           accessToken={session.accessToken}
@@ -200,9 +200,22 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 // Create a custom hook to use the context
 export const useStreamContext = (): StreamContextType => {
   const context = useContext(StreamContext);
+
+  // For unauthenticated users, return a default/empty stream context
+  // This allows the UI to render without errors
   if (context === undefined) {
-    throw new Error("useStreamContext must be used within a StreamProvider");
+    return {
+      messages: [],
+      isLoading: false,
+      error: undefined,
+      stop: () => {},
+      submit: () => {},
+      rewind: () => {},
+      next: () => {},
+      mutate: () => {},
+    } as StreamContextType;
   }
+
   return context;
 };
 

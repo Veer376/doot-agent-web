@@ -47,6 +47,8 @@ import {
 } from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
 import { useComposerDraft } from "@/hooks/use-composer-draft";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { usePendingMessage } from "@/hooks/use-pending-message";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -148,6 +150,12 @@ export function Thread() {
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
 
+  // Auth state for pending message flow
+  const { isAuthenticated } = useAuthContext();
+  const { pendingMessage, setPendingMessage, consumePendingMessage } =
+    usePendingMessage();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
   // Auto-save composer drafts to localStorage
   const { clearDraft } = useComposerDraft(threadId, inputValue, setInputValue);
 
@@ -232,6 +240,121 @@ export function Thread() {
     stream.stop();
   }, [stream]);
 
+  // Effect: Auto-submit pending message after authentication
+  // This runs when component mounts after successful login
+  useEffect(() => {
+    // Only proceed if authenticated and there's a pending message from localStorage
+    if (isAuthenticated && session?.accessToken && pendingMessage) {
+      // Wait for StreamProvider to be fully ready
+      const timeoutId = setTimeout(() => {
+        // Consume the pending message (this will clear it from localStorage)
+        const content = consumePendingMessage();
+
+        if (!content || content.trim().length === 0) {
+          return;
+        }
+
+        // In chat mode, agentId can be empty since we use chat_agent
+        // In agent mode, we need an agentId selected
+        if (mode === "agent" && !agentId) {
+          return;
+        }
+
+        const newHumanMessage: Message = {
+          id: uuidv4(),
+          type: "human",
+          content: [
+            { type: "text", text: content },
+            ...contentBlocks,
+          ] as Message["content"],
+        };
+
+        const toolMessages = ensureToolCallsHaveResponses(stream.messages);
+        const { getAgentConfig } = useConfigStore.getState();
+
+        // Determine which agent config to use based on current mode
+        const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
+
+        stream.submit(
+          { messages: [...toolMessages, newHumanMessage] },
+          {
+            streamMode: ["values"],
+            optimisticValues: (prev) => ({
+              ...prev,
+              messages: [
+                ...(prev.messages ?? []),
+                ...toolMessages,
+                newHumanMessage,
+              ],
+            }),
+            config: {
+              configurable: {
+                ...getAgentConfig(effectiveAgentId),
+                apiKeys,
+              },
+            },
+            context: {
+              connection_ids: selectedComposioProfiles,
+            },
+            metadata: {
+              supabaseAccessToken: session?.accessToken,
+            },
+            streamSubgraphs: true,
+            streamResumable: true,
+          },
+        );
+
+        setContentBlocks([]);
+
+        // Save agent/mode to thread metadata after message is sent
+        if (threadId) {
+          const hasChanged =
+            !lastSavedMetadataRef.current ||
+            lastSavedMetadataRef.current.agentId !== agentId ||
+            lastSavedMetadataRef.current.mode !== mode;
+
+          if (hasChanged) {
+            updateThread({
+              threadId,
+              metadata: {
+                assistant_id: agentId,
+                mode: mode,
+              },
+            });
+            lastSavedMetadataRef.current = { agentId, mode };
+          }
+
+          queryClient.invalidateQueries({
+            queryKey: threadKeys.state(threadId),
+          });
+        }
+
+        const api = stickApiRef.current;
+        if (api && !api.isAtBottom) {
+          api.scrollToBottom();
+        }
+      }, 500); // Wait 500ms for StreamProvider to be fully ready
+
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [
+    isAuthenticated,
+    session,
+    pendingMessage,
+    stream,
+    agentId,
+    mode,
+    contentBlocks,
+    selectedComposioProfiles,
+    apiKeys,
+    threadId,
+    updateThread,
+    queryClient,
+    consumePendingMessage,
+  ]);
+
   const lastError = useRef<string | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState("");
   // Bridge to access StickToBottom API from within this component
@@ -267,6 +390,12 @@ export function Thread() {
       // no-op
     }
   }, [stream.error]);
+
+  // Handle auth requirement - store pending message and show dialog
+  const handleAuthRequired = (message: string) => {
+    setPendingMessage(message);
+    setAuthDialogOpen(true);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -548,7 +677,10 @@ export function Thread() {
                 <Composer
                   value={inputValue}
                   onChange={setInputValue}
-                  onSubmit={handleSubmit}
+                  onSubmit={isAuthenticated ? handleSubmit : undefined}
+                  onAuthRequired={
+                    !isAuthenticated ? handleAuthRequired : undefined
+                  }
                   onCancel={handleCancel}
                   onPaste={handlePaste}
                   placeholder="Type your message..."
@@ -566,6 +698,14 @@ export function Thread() {
           }
         />
       </StickToBottom>
+
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        mode="signin"
+        pendingMessage={pendingMessage || undefined}
+      />
     </div>
   );
 }

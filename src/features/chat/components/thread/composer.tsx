@@ -26,6 +26,7 @@ interface ComposerProps {
   value?: string;
   onChange?: (value: string) => void;
   onSubmit?: (e: React.FormEvent) => void;
+  onAuthRequired?: (pendingMessage: string) => void; // NEW: Auth callback
   onCancel?: () => void;
   onPaste?: (e: React.ClipboardEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
@@ -45,6 +46,7 @@ export function Composer({
   value,
   onChange,
   onSubmit,
+  onAuthRequired, // NEW
   onCancel,
   onPaste,
   onKeyDown,
@@ -158,6 +160,13 @@ export function Composer({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // NEW: Check if auth is required before submission
+    if (onAuthRequired && value?.trim()) {
+      onAuthRequired(value.trim());
+      return;
+    }
+
     onSubmit?.(e);
   };
 

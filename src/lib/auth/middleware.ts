@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const NO_AUTH_PATHS = [
+  "/", // Allow unauthenticated access to homepage
   "/debug-auth",
   "/signin",
   "/signup",
@@ -64,16 +65,20 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    // For non-API requests, redirect to the login page
+    // For non-API requests (excluding homepage which is now in NO_AUTH_PATHS),
+    // redirect to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/signin";
     return NextResponse.redirect(url);
   }
 
-  // If the user is authenticated, and they are trying to access an auth page, redirect them to the home page
+  // If the user is authenticated and trying to access auth pages (signin/signup/forgot-password),
+  // redirect them to the home page
   if (
     user &&
-    NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
+    ["/signin", "/signup", "/forgot-password"].some((path) =>
+      request.nextUrl.pathname.startsWith(path)
+    )
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/";

@@ -111,9 +111,9 @@
      ============================================ */
 
   /* Brand Colors */
-  --color-brand-primary: oklch(0.35 0.08 180);
-  --color-brand-primary-hover: oklch(0.30 0.08 180);
-  --color-brand-primary-light: oklch(0.95 0.02 180);
+  --color-brand-primary: oklch(0.20 0 0);
+  --color-brand-primary-hover: oklch(0.30 0 0);
+  --color-brand-primary-light: oklch(0.95 0 0);
   --color-brand-accent: oklch(0.60 0.20 280);
   --color-brand-accent-light: oklch(0.92 0.08 280);
 
@@ -193,9 +193,9 @@
   --sidebar-ring: 217.2 91.2% 59.8%;
 
   /* New design system variables (Dark Mode) */
-  --color-brand-primary: oklch(0.65 0.12 180);
-  --color-brand-primary-hover: oklch(0.70 0.12 180);
-  --color-brand-primary-light: oklch(0.25 0.04 180);
+  --color-brand-primary: oklch(0.85 0 0);
+  --color-brand-primary-hover: oklch(0.90 0 0);
+  --color-brand-primary-light: oklch(0.25 0 0);
   --color-brand-accent: oklch(0.70 0.22 280);
   --color-brand-accent-light: oklch(0.30 0.10 280);
 

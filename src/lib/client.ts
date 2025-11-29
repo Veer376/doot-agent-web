@@ -12,10 +12,7 @@ export function createClient(accessToken?: string) {
 
   const client = new Client({
     apiUrl: process.env.NEXT_PUBLIC_API_URL,
-    defaultHeaders: {
-      Authorization: `Bearer ${accessToken}`,
-      "x-supabase-access-token": accessToken,
-    },
+    defaultHeaders: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
 
   return client;

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { Agent } from "@/types/agent";
-import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { isPrimaryAgent } from "@/lib/agent-utils";
 import _ from "lodash";
 import { AgentCard } from "../agent-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,11 +19,11 @@ export function AgentList({ agents }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const defaultAgent = agents.find(isUserCreatedDefaultAssistant) ?? agents[0];
-  const graphId = defaultAgent.graph_id;
-  // Agent ID in this context is the default assistant ID since it's used
+  const primaryAgent = agents.find(isPrimaryAgent) ?? agents[0];
+  const graphId = primaryAgent.graph_id;
+  // Agent ID in this context is the primary assistant ID since it's used
   // to fetch the config schema for a specific graph
-  const agentId = defaultAgent.assistant_id;
+  const agentId = primaryAgent.assistant_id;
 
   const filteredAgents = agents.filter((agent) =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()),

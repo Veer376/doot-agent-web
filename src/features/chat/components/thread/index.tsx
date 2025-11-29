@@ -152,8 +152,12 @@ export function Thread() {
 
   // Auth state for pending message flow
   const { isAuthenticated } = useAuthContext();
-  const { pendingMessage, setPendingMessage, consumePendingMessage } =
-    usePendingMessage();
+  const {
+    pendingMessage,
+    pendingMode,
+    setPendingMessage,
+    consumePendingMessage,
+  } = usePendingMessage();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   // Auto-save composer drafts to localStorage
@@ -248,17 +252,22 @@ export function Thread() {
       // Wait for StreamProvider to be fully ready
       const timeoutId = setTimeout(() => {
         // Consume the pending message (this will clear it from localStorage)
-        const content = consumePendingMessage();
+        const pendingData = consumePendingMessage();
 
-        if (!content || content.trim().length === 0) {
+        if (!pendingData || pendingData.message.trim().length === 0) {
           return;
         }
 
-        // In chat mode, agentId can be empty since we use chat_agent
+        const { message: content, mode: storedMode } = pendingData;
+
+        // Restore the mode that was active when the message was stored
+        if (storedMode && storedMode !== mode) {
+          setMode(storedMode);
+        }
+
         // In agent mode, we need an agentId selected
-        if (mode === "agent" && !agentId) {
-          return;
-        }
+        // For agent mode without agentId, we'll use the primary agent (handled below)
+        const effectiveMode = storedMode || mode;
 
         const newHumanMessage: Message = {
           id: uuidv4(),
@@ -272,8 +281,15 @@ export function Thread() {
         const toolMessages = ensureToolCallsHaveResponses(stream.messages);
         const { getAgentConfig } = useConfigStore.getState();
 
-        // Determine which agent config to use based on current mode
-        const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
+        // Determine which agent config to use based on stored mode
+        // In agent mode without a selected agent, the primary agent should already be selected by the agent context
+        const effectiveAgentId =
+          effectiveMode === "chat" ? "chat_agent" : agentId;
+
+        // Skip if in agent mode but no agent is selected
+        if (effectiveMode === "agent" && !effectiveAgentId) {
+          return;
+        }
 
         stream.submit(
           { messages: [...toolMessages, newHumanMessage] },
@@ -346,6 +362,7 @@ export function Thread() {
     stream,
     agentId,
     mode,
+    setMode,
     contentBlocks,
     selectedComposioProfiles,
     apiKeys,
@@ -391,9 +408,9 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  // Handle auth requirement - store pending message and show dialog
+  // Handle auth requirement - store pending message and mode, then show dialog
   const handleAuthRequired = (message: string) => {
-    setPendingMessage(message);
+    setPendingMessage(message, mode);
     setAuthDialogOpen(true);
   };
 

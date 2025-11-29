@@ -17,7 +17,7 @@ import {
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
-import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { isPrimaryAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
@@ -156,11 +156,10 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [threadId]);
 
-  // Initialize with default agent on mount
+  // Initialize with primary agent on mount
   useEffect(() => {
     if (!agentId && agents.length > 0) {
-      const defaultAgent =
-        agents.find(isUserSpecifiedDefaultAgent) ?? agents[0];
+      const defaultAgent = agents.find(isPrimaryAgent) ?? agents[0];
       if (defaultAgent) {
         setSelectedAgent(defaultAgent.assistant_id);
       }

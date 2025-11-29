@@ -22,10 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  groupAgentsByGraphs,
-  isUserCreatedDefaultAssistant,
-} from "@/lib/agent-utils";
+import { groupAgentsByGraphs, isPrimaryAgent } from "@/lib/agent-utils";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { Agent } from "@/types/agent";
@@ -111,8 +108,7 @@ function InboxSidebarInternal() {
                             {graphAgents.map((agent) => {
                               const label =
                                 agent.name || prettifyText(agent.graph_id);
-                              const isDefault =
-                                isUserCreatedDefaultAssistant(agent);
+                              const isPrimary = isPrimaryAgent(agent);
                               const isSelected =
                                 agentInboxId === agent.assistant_id;
 
@@ -143,8 +139,8 @@ function InboxSidebarInternal() {
                                                 : "text-gray-600 dark:text-gray-400",
                                             )}
                                           >
-                                            {isDefault
-                                              ? "Default agent"
+                                            {isPrimary
+                                              ? "Primary agent"
                                               : label}
                                           </span>
                                         </SidebarMenuButton>

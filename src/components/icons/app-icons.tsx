@@ -512,7 +512,7 @@ export const ToggleIcon: React.FC<AppIconProps & { isExpanded?: boolean }> = ({
 
 /**
  * Static Doot Logo Icon (for sidebar header)
- * Black planet with black satellite (white stroke creates gap)
+ * Two overlapping circles representing "oo" - theme-aware styling
  */
 export const DootLogoIcon: React.FC<AppIconProps> = ({
   size,
@@ -531,19 +531,21 @@ export const DootLogoIcon: React.FC<AppIconProps> = ({
       className={cn(getSizeClass(size), className)}
       {...props}
     >
+      {/* Left circle - overlapping circle with stroke to create gap */}
       <circle
-        fill="currentColor"
-        cx="60"
+        className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
+        strokeWidth="3"
+        cx="43"
         cy="60"
-        r="24"
+        r="26"
       />
+      {/* Right circle - base circle */}
       <circle
-        fill="currentColor"
-        stroke="white"
-        strokeWidth="5"
-        cx="60"
-        cy="30"
-        r="24"
+        className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
+        strokeWidth="3"
+        cx="78"
+        cy="60"
+        r="26"
       />
     </svg>
   );
@@ -551,7 +553,7 @@ export const DootLogoIcon: React.FC<AppIconProps> = ({
 
 /**
  * Animated Doot Loader Icon (for loading states)
- * Black planet with black satellite (white stroke creates gap) that orbits around
+ * Two overlapping circles with left circle orbiting around the right - theme-aware styling
  */
 export const DootLoaderIcon: React.FC<AppIconProps> = ({
   size,
@@ -576,26 +578,27 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
           100% { transform: rotate(360deg); }
         }
         .doot-satellite-group {
-          transform-origin: 60px 60px;
+          transform-origin: 78px 60px;
           animation: doot-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
         }
       `}</style>
 
-      <circle
-        fill="currentColor"
-        cx="60"
-        cy="60"
-        r="24"
-      />
-
+      {/* Left circle - orbiting satellite with stroke to create separation */}
       <g className="doot-satellite-group">
         <circle
-          fill="currentColor"
-          stroke="white"
-          strokeWidth="5"
-          cx="60"
-          cy="30"
-          r="24"
+          className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
+          strokeWidth="3"
+          cx="43"
+          cy="60"
+          r="26"
+        />
+        {/* Right circle - stationary base circle */}
+        <circle
+          className="fill-foreground dark:fill-foreground"
+          strokeWidth="3"
+          cx="78"
+          cy="60"
+          r="26"
         />
       </g>
     </svg>

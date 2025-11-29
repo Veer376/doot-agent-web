@@ -186,6 +186,30 @@ export function Composer({
   };
 
   const handlePasteEvent = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    // Prevent default paste to avoid rendering HTML in contentEditable
+    event.preventDefault();
+
+    // Get plain text only
+    const text = event.clipboardData.getData("text/plain");
+
+    // Insert plain text at cursor position
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+
+      // Move cursor to end of inserted text
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    // Emit the change
+    if (editorRef.current) {
+      emitChange(editorRef.current.textContent || "");
+    }
+
     onPaste?.(event);
   };
 

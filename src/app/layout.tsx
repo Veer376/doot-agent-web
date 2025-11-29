@@ -8,6 +8,19 @@ import { ThemeProvider } from "@/providers/Theme";
 export const metadata: Metadata = {
   title: "DootAgent",
   description: "Handoff complexity to DootAgent",
+  icons: {
+    icon: [
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+      {
+        url: "/icon-dark.svg",
+        type: "image/svg+xml",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+  },
 };
 
 export default function Layout({

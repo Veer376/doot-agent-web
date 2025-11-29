@@ -6,6 +6,7 @@ import {
   ChevronsUpDownIcon,
   StarIcon,
   LoaderIcon,
+  EditIcon,
 } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
@@ -17,19 +18,20 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Agent } from "@/types/agent";
 import {
-  groupAgentsByGraphs,
-  isUserCreatedDefaultAssistant,
-  sortAgentGroup,
-} from "@/lib/agent-utils";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Agent } from "@/types/agent";
+import { isPrimaryAgent, sortAgentGroup } from "@/lib/agent-utils";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
@@ -64,6 +66,11 @@ export interface AgentsComboboxProps {
   trigger?: React.ReactNode;
   triggerAsChild?: boolean;
   footer?: React.ReactNode;
+  /**
+   * Callback when the edit button is clicked for an agent
+   * If not provided, edit button won't be shown
+   */
+  onEditAgent?: (agent: Agent) => void;
 }
 
 /**
@@ -83,9 +90,6 @@ const getSelectedAgentValue = (
   if (selectedAgent) {
     return (
       <span className="flex w-full items-center gap-2">
-        <span className="text-muted-foreground text-xs">
-          [{selectedAgent.graph_id}]
-        </span>{" "}
         {selectedAgent.name}
       </span>
     );
@@ -128,6 +132,7 @@ export function AgentsCombobox({
   footer,
   style,
   agentsLoading,
+  onEditAgent,
 }: AgentsComboboxProps) {
   // Convert value to array for internal handling
   const selectedValues = React.useMemo(() => {
@@ -211,57 +216,83 @@ export function AgentsCombobox({
                 "No agents found."
               )}
             </CommandEmpty>
-            {(() => {
-              // Group all agents by graph
-              const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
-
-              return agentsGroupedByGraphs.map((group) => {
-                const sortedGroup = sortAgentGroup(group);
-                const graphId = group[0]?.graph_id || "unknown";
+            <CommandGroup>
+              {sortAgentGroup(agents).map((item) => {
+                const itemValue = item.assistant_id;
+                const isSelected = selectedValues.includes(itemValue);
+                const isPrimary = isPrimaryAgent(item);
 
                 return (
-                  <React.Fragment key={graphId}>
-                    <CommandGroup
-                      heading={graphId}
-                      className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium"
-                    >
-                      {sortedGroup.map((item) => {
-                        const itemValue = item.assistant_id;
-                        const isSelected = selectedValues.includes(itemValue);
-
-                        return (
+                  <TooltipProvider
+                    key={itemValue}
+                    delayDuration={300}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="group/agent-item relative">
+                          {onEditAgent && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                onEditAgent(item);
+                              }}
+                              className={cn(
+                                "peer/edit-btn absolute top-1/2 right-2 z-10 -translate-y-1/2",
+                                "text-muted-foreground rounded-sm p-1.5 transition-colors",
+                                "opacity-0 group-hover/agent-item:opacity-100",
+                                "hover:bg-accent hover:text-foreground",
+                                "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
+                              )}
+                              aria-label={`Edit ${item.name}`}
+                            >
+                              <EditIcon size="xs" />
+                            </button>
+                          )}
                           <CommandItem
-                            key={itemValue}
                             value={itemValue}
                             onSelect={handleSelect}
-                            className="flex w-full items-center justify-between"
+                            className={cn(
+                              "flex w-full items-center gap-2 pr-12",
+                              "peer-hover/edit-btn:data-[selected=true]:text-foreground peer-hover/edit-btn:data-[selected=true]:bg-transparent",
+                            )}
                           >
                             <CheckIcon
                               className={cn(
+                                "flex-shrink-0",
                                 isSelected ? "opacity-100" : "opacity-0",
                               )}
                             />
 
-                            <p className="line-clamp-1 flex-1 truncate pr-2">
+                            <p className="line-clamp-1 min-w-0 flex-1 truncate">
                               {item.name}
                             </p>
-                            <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                              {isUserCreatedDefaultAssistant(item) && (
-                                <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                                  <StarIcon />
-                                  <p>Default</p>
+                            {isPrimary && (
+                              <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                                <StarIcon size="xs" />
+                                <span className="hidden sm:inline">
+                                  Primary
                                 </span>
-                              )}
-                            </div>
+                              </span>
+                            )}
                           </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                    <CommandSeparator />
-                  </React.Fragment>
+                        </div>
+                      </TooltipTrigger>
+                      {item.description && (
+                        <TooltipContent
+                          side="right"
+                          align="start"
+                          className="max-w-[250px]"
+                        >
+                          <p className="text-sm">{item.description}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 );
-              });
-            })()}
+              })}
+            </CommandGroup>
 
             {footer}
           </CommandList>

@@ -12,7 +12,8 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <MCPProvider>
         {/* Conditionally render sidebar only when authenticated */}
-        {isAuthenticated && <AppSidebar />}
+        {/* {isAuthenticated && <AppSidebar />} */}
+        <AppSidebar />
         <SidebarInset>{children}</SidebarInset>
       </MCPProvider>
     </SidebarProvider>

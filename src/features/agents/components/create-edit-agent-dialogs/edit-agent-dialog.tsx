@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
+import { agentKeys } from "@/hooks/use-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
 import { FormProvider, useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -32,6 +34,7 @@ function EditAgentDialogContent({
 }) {
   const { mutateAsync: updateAgent } = useUpdateAgent();
   const { mutateAsync: deleteAgent } = useDeleteAgent();
+  const queryClient = useQueryClient();
   const {
     getSchemaAndUpdateConfig,
 
@@ -78,10 +81,56 @@ function EditAgentDialogContent({
 
   const handleDelete = async () => {
     setDeleteSubmitting(true);
+    let undoClicked = false;
+    let deleteTimeout: NodeJS.Timeout | null = null;
+
     try {
-      await deleteAgent(agent.assistant_id);
+      // Optimistically remove from UI (without actually deleting from DB)
+      await deleteAgent({ agentId: agent.assistant_id, skipToast: false });
+
       onClose();
-    } finally {
+
+      // Show toast with undo button
+      toast("Agent deleted", {
+        description: "You can undo this action within 5 seconds",
+        duration: 5000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            undoClicked = true;
+            if (deleteTimeout) {
+              clearTimeout(deleteTimeout);
+            }
+            // Restore the agent in the UI by invalidating queries
+            queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+            toast.success("Agent restored");
+          },
+        },
+      });
+
+      // Set timeout to permanently delete after 5 seconds
+      deleteTimeout = setTimeout(async () => {
+        if (!undoClicked) {
+          try {
+            // Actually delete from database
+            await deleteAgent({ agentId: agent.assistant_id, skipToast: true });
+          } catch (error) {
+            console.error("Failed to permanently delete agent:", error);
+            toast.error("Failed to delete agent", {
+              description:
+                error instanceof Error ? error.message : "Unknown error",
+            });
+            // Restore agent in UI on error
+            queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+          }
+        }
+        setDeleteSubmitting(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Failed to delete agent:", error);
+      toast.error("Failed to delete agent", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
       setDeleteSubmitting(false);
     }
   };

@@ -7,10 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Agent } from "@/types/agent";
-import {
-  groupAgentsByGraphs,
-  isUserCreatedDefaultAssistant,
-} from "@/lib/agent-utils";
+import { groupAgentsByGraphs, isPrimaryAgent } from "@/lib/agent-utils";
 import _ from "lodash";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +24,10 @@ export function GraphSelect({
   agents,
   className,
 }: GraphSelectProps) {
-
-  
   const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
-  
+
   const graphs = agentsGroupedByGraphs.flatMap(
-    (group) => group.find((g) => isUserCreatedDefaultAssistant(g)) ?? [],
+    (group) => group.find((g) => isPrimaryAgent(g)) ?? [],
   );
 
   // const getDeploymentSpan = (deploymentId: string) => {
@@ -43,15 +38,13 @@ export function GraphSelect({
 
   return (
     <Select
-      value={ selectedGraph ? selectedGraph.graph_id : "" }
+      value={selectedGraph ? selectedGraph.graph_id : ""}
       onValueChange={(graphId) => {
         if (!graphId) {
           setSelectedGraph(undefined);
           return;
         }
-        const graph = agents.find(
-          (g) => g.graph_id === graphId
-        );
+        const graph = agents.find((g) => g.graph_id === graphId);
         if (!graph) return;
         setSelectedGraph(graph);
       }}

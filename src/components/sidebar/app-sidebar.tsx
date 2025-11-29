@@ -5,7 +5,7 @@ import { AgentBrainCPU, NewThreadIcon, SearchIcon } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
+import { NavFooter } from "./nav-footer";
 import { ThreadList } from "./thread-list";
 import {
   Sidebar,
@@ -82,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </React.Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavFooter />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

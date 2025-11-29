@@ -14,9 +14,14 @@ export function DefaultStar({ className }: { className?: string }) {
           <StarIcon className={className} />
         </TooltipTrigger>
         <TooltipContent>
-          <p>Default agent</p>
+          <p>Primary agent</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
 }
+
+/**
+ * @deprecated Use DefaultStar instead (which now shows "Primary agent")
+ */
+export const PrimaryStar = DefaultStar;

@@ -1,83 +1,17 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { StreamProvider } from "@/features/chat/providers/Stream";
 import { Thread } from "./components/thread";
-import { ConfigurationSidebar } from "./components/configuration-sidebar";
-import { SidebarButtons } from "./components/sidebar-buttons";
 
 /**
  * The parent component containing the chat interface.
  */
 export default function ChatInterface(): React.ReactNode {
-  const [configOpen, setConfigOpen] = useState(false);
-
-  const configRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node;
-
-      // Check if the click is on a portal element (dialog, select menu, etc.)
-      // Common portal containers have these class names or data attributes
-      const isPortalElement =
-        document.querySelector('[role="dialog"]')?.contains(target) ||
-        document.querySelector('[role="listbox"]')?.contains(target) ||
-        document.querySelector(".cm-tooltip")?.contains(target) ||
-        document.querySelector(".popover")?.contains(target) ||
-        document.querySelector(".dropdown")?.contains(target) ||
-        document
-          .querySelector("[data-radix-popper-content-wrapper]")
-          ?.contains(target) ||
-        // Alert components
-        document.querySelector('[role="alertdialog"]')?.contains(target) ||
-        document.querySelector(".alert")?.contains(target) ||
-        document.querySelector(".alert-dialog")?.contains(target) ||
-        document.querySelector(".alert-dialog-content")?.contains(target) ||
-        Array.from(document.querySelectorAll('[class*="alert"]')).some((el) =>
-          el.contains(target),
-        );
-
-      // If the click is on a portal element, don't close the sidebar
-      if (isPortalElement) {
-        return;
-      }
-
-      // Check if config sidebar is open and the click is outside of it and the buttons
-      if (
-        configOpen &&
-        configRef.current &&
-        !configRef.current.contains(target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(target)
-      ) {
-        setConfigOpen(false);
-      }
-    }
-
-    // Add event listener
-    document.addEventListener("mousedown", handleClickOutside);
-
-    // Clean up
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [configOpen]);
-
   return (
     <StreamProvider>
       <div className="flex h-full overflow-x-hidden">
         <Thread />
-        <SidebarButtons
-          ref={buttonRef}
-          configOpen={configOpen}
-          setConfigOpen={setConfigOpen}
-        />
-        <ConfigurationSidebar
-          ref={configRef}
-          open={configOpen}
-        />
       </div>
     </StreamProvider>
   );

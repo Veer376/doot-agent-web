@@ -1,0 +1,21 @@
+<svg 
+  width="120" 
+  height="120" 
+  viewBox="0 0 120 120" 
+  xmlns="http://www.w3.org/2000/svg"
+  aria-label="Doot Agent"
+>
+  <style>
+    .doot-circle-stroke {
+      fill: #FFFFFF;
+      stroke: #000000;
+      stroke-width: 4px;
+    }
+  </style>
+
+  <!-- Left circle - overlapping circle with stroke to create gap -->
+  <circle class="doot-circle-stroke" cx="38" cy="60" r="33" />
+  
+  <!-- Right circle - base circle -->
+  <circle class="doot-circle-stroke" cx="82" cy="60" r="33" />
+</svg>

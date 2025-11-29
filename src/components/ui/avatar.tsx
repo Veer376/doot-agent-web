@@ -10,10 +10,7 @@ function Avatar({
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
-      className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden",
-        className,
-      )}
+      className={cn("relative flex size-8 shrink-0 overflow-hidden", className)}
       {...props}
     />
   );
@@ -21,12 +18,19 @@ function Avatar({
 
 function AvatarImage({
   className,
+  src,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  // Don't render image element if src is empty to avoid browser re-downloading the page
+  if (!src) {
+    return null;
+  }
+
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn("aspect-square size-full", className)}
+      src={src}
       {...props}
     />
   );

@@ -1,15 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const NO_AUTH_PATHS = [
-  "/", // Allow unauthenticated access to homepage
-  "/debug-auth",
-  "/signin",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/api/auth",
+// Paths that don't require authentication (exact match)
+const NO_AUTH_EXACT_PATHS = [
+  "/", // Allow unauthenticated access to homepage only
 ];
+
+// Paths that don't require authentication (prefix match)
+const NO_AUTH_PREFIX_PATHS = [
+  "/debug-auth",
+  "/api/auth",
+  "/reset-password", // Needs token from email link
+];
+
+// Helper to check if a path is allowed without auth
+function isPublicPath(pathname: string): boolean {
+  // Check exact matches first
+  if (NO_AUTH_EXACT_PATHS.includes(pathname)) {
+    return true;
+  }
+  // Check prefix matches
+  return NO_AUTH_PREFIX_PATHS.some((path) => pathname.startsWith(path));
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -52,12 +64,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    !user &&
-    !NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
-  ) {
+  const pathname = request.nextUrl.pathname;
+
+  if (!user && !isPublicPath(pathname)) {
     // Check if this is an API request
-    if (request.nextUrl.pathname.startsWith("/api/")) {
+    if (pathname.startsWith("/api/")) {
       // Return a JSON response with 401 Unauthorized status for API requests
       return NextResponse.json(
         { error: "Unauthorized", message: "Authentication required" },
@@ -65,23 +76,10 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    // For non-API requests (excluding homepage which is now in NO_AUTH_PATHS),
-    // redirect to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = "/signin";
-    return NextResponse.redirect(url);
-  }
-
-  // If the user is authenticated and trying to access auth pages (signin/signup/forgot-password),
-  // redirect them to the home page
-  if (
-    user &&
-    ["/signin", "/signup", "/forgot-password"].some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    )
-  ) {
+    // For non-API requests, redirect to homepage with auth dialog
     const url = request.nextUrl.clone();
     url.pathname = "/";
+    url.searchParams.set("auth", "signin");
     return NextResponse.redirect(url);
   }
 

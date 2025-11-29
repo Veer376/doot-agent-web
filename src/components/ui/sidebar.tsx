@@ -611,7 +611,7 @@ const sidebarMenuButtonVariants = cva(
       },
       size: {
         // In collapsed icon mode, center icons and remove gaps for default and sm sizes only.
-        // Do NOT apply to lg (NavUser) to preserve its alignment.
+        // Do NOT apply to lg (NavFooter) to preserve its alignment.
         default:
           "h-8 text-sm group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span:last-child]:hidden",
         sm: "h-7 text-xs group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span:last-child]:hidden",

@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Bot,
-  Brain,
-  Edit,
-  User,
-  Wrench,
-} from "lucide-react";
+import { Bot, Brain, Edit, User, Wrench } from "lucide-react";
 import { Comment01Icon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { isPrimaryAgent } from "@/lib/agent-utils";
 
 function SupportedConfigBadge({
   type,
@@ -65,7 +59,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
+  const isPrimary = isPrimaryAgent(agent);
 
   return (
     <>
@@ -112,7 +106,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           </div>
         </CardHeader>
         <CardFooter className="mt-auto flex w-full justify-between pt-2">
-          {!isDefaultAgent && (
+          {!isPrimary && (
             <Button
               variant="outline"
               size="sm"
@@ -127,7 +121,11 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             href={`/?agentId=${agent.assistant_id}`}
             className="ml-auto"
           >
-            <Button size="sm" data-radius="radius2" className="bg-black text-white hover:bg-black/90">
+            <Button
+              size="sm"
+              data-radius="radius2"
+              className="bg-black text-white hover:bg-black/90"
+            >
               <Comment01Icon className="mr-1 h-3.5 w-3.5" />
               Chat
             </Button>

@@ -60,6 +60,8 @@ import {
 import { MessageContent } from "@langchain/core/messages";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { threadKeys } from "@/hooks/use-threads";
 import {
   exportThreadAsMarkdown,
   exportThreadAsJSON,
@@ -187,6 +189,7 @@ export function ThreadList() {
   const router = useRouter();
   const { session } = useAuthContext();
   const { state, isMobile } = useSidebar();
+  const queryClient = useQueryClient();
   const THREADS_PER_PAGE = 20;
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
@@ -475,13 +478,59 @@ export function ThreadList() {
   };
 
   const handleDeleteThread = async (threadIdToDelete: string) => {
+    let undoClicked = false;
+    let deleteTimeout: NodeJS.Timeout | null = null;
+
     try {
-      await deleteThread.mutateAsync(threadIdToDelete);
-      // React Query will automatically refetch and update the cache
+      // Optimistically remove from UI (without actually deleting from DB)
+      await deleteThread.mutateAsync({
+        threadId: threadIdToDelete,
+        skipToast: false,
+      });
+
       // If we're deleting the currently active thread, clear the selection
       if (threadIdToDelete === threadId) {
         setThreadId(null);
       }
+
+      // Show toast with undo button (4.5 seconds)
+      toast("Thread deleted", {
+        description: "You can undo this action within 4.5 seconds",
+        duration: 4500,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            undoClicked = true;
+            if (deleteTimeout) {
+              clearTimeout(deleteTimeout);
+            }
+            // Restore the thread in the UI by invalidating queries
+            queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+            toast.success("Thread restored");
+          },
+        },
+      });
+
+      // Set timeout to permanently delete after 4.5 seconds
+      deleteTimeout = setTimeout(async () => {
+        if (!undoClicked) {
+          try {
+            // Actually delete from database
+            await deleteThread.mutateAsync({
+              threadId: threadIdToDelete,
+              skipToast: true,
+            });
+          } catch (error) {
+            console.error("Failed to permanently delete thread:", error);
+            toast.error("Failed to delete thread", {
+              description:
+                error instanceof Error ? error.message : "Unknown error",
+            });
+            // Restore thread in UI on error
+            queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+          }
+        }
+      }, 5000);
     } catch (error) {
       console.error("Failed to delete thread:", error);
       toast.error("Failed to delete thread", {

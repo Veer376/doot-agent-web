@@ -263,46 +263,55 @@ export function useCopyThread() {
   });
 }
 
-// Hook to delete a thread
+// Hook to delete a thread with undo support
 export function useDeleteThread() {
   const { session } = useAuthContext();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
   return useMutation({
-    mutationFn: async (threadId: string) => {
+    mutationFn: async ({ threadId, skipToast }: { threadId: string; skipToast?: boolean }) => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const client = createClient(accessToken);
-      await client.threads.delete(threadId);
+      // Don't actually delete from DB yet - that happens after timeout
+      // This function will be called again from the timeout if undo isn't clicked
+      if (skipToast) {
+        const client = createClient(accessToken);
+        await client.threads.delete(threadId);
+      }
     },
-    onMutate: async (threadId) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
+    onMutate: async ({ threadId, skipToast }) => {
+      // Only do optimistic update for the initial deletion (skipToast: false)
+      // Don't do it for the actual deletion (skipToast: true)
+      if (!skipToast) {
+        // Cancel outgoing refetches
+        await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
 
-      // Snapshot previous value for all infinite queries
-      const previousInfiniteData = queryClient.getQueriesData({
-        queryKey: threadKeys.lists(),
-      });
+        // Snapshot previous value for all infinite queries
+        const previousInfiniteData = queryClient.getQueriesData({
+          queryKey: threadKeys.lists(),
+        });
 
-      // Optimistically remove thread from InfiniteData structure
-      queryClient.setQueriesData(
-        { queryKey: threadKeys.lists() },
-        (old: any) => {
-          if (!old?.pages) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
-              page.filter((thread) => thread.thread_id !== threadId)
-            ),
-          };
-        }
-      );
+        // Optimistically remove thread from InfiniteData structure
+        queryClient.setQueriesData(
+          { queryKey: threadKeys.lists() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
+                page.filter((thread) => thread.thread_id !== threadId)
+              ),
+            };
+          }
+        );
 
-      return { previousInfiniteData };
+        return { previousInfiniteData };
+      }
+      return {};
     },
-    onError: (err, threadId, context) => {
+    onError: (err, { threadId }, context) => {
       // Rollback on error
       if (context?.previousInfiniteData) {
         context.previousInfiniteData.forEach(([queryKey, data]) => {
@@ -310,9 +319,11 @@ export function useDeleteThread() {
         });
       }
     },
-    onSettled: () => {
-      // Refetch after error or success
-      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+    onSettled: (data, error, { skipToast }) => {
+      // Only refetch when actually deleting (skipToast: true), not during optimistic removal
+      if (skipToast) {
+        queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+      }
     },
   });
 }

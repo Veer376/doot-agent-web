@@ -6,8 +6,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Menu11Icon, DootIcon } from "@/components/icons";
 import { useAuthContext } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { AuthDialog } from "@/components/auth/auth-dialog";
+import { useState, useEffect } from "react";
+import { AuthDialog, type AuthMode } from "@/components/auth/auth-dialog";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 /**
@@ -17,13 +18,29 @@ import React from "react";
 export default function ChatPage(): React.ReactNode {
   const { isAuthenticated } = useAuthContext();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const router = useRouter();
 
-  const handleOpenSignIn = () => {
-    setAuthMode("signin");
-    setAuthDialogOpen(true);
-  };
+  // Handle auth query param to open dialog (e.g., /?auth=signin)
+  useEffect(() => {
+    // Read search params from `window.location` inside the client-only effect
+    // This avoids using `useSearchParams()` which can cause a CSR bailout during pre-render.
+    if (typeof window === "undefined") return;
 
+    const params = new URLSearchParams(window.location.search);
+    const authParam = params.get("auth");
+    if (!isAuthenticated && authParam) {
+      const validModes: AuthMode[] = ["signin", "signup", "forgot-password"];
+      if (validModes.includes(authParam as AuthMode)) {
+        setAuthMode(authParam as AuthMode);
+        setAuthDialogOpen(true);
+      }
+      // Clean up the URL (remove auth param)
+      router.replace("/", { scroll: false });
+    } else if (!isAuthenticated && params.toString()) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
   const handleOpenSignUp = () => {
     setAuthMode("signup");
     setAuthDialogOpen(true);
@@ -57,22 +74,15 @@ export default function ChatPage(): React.ReactNode {
               {/* TODO(thread): thread title */}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pt-2 pr-4">
             {/* Show auth buttons when not authenticated */}
             {!isAuthenticated ? (
               <>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleOpenSignIn}
-                >
-                  Log In
-                </Button>
-                <Button
                   size="sm"
                   onClick={handleOpenSignUp}
                 >
-                  Sign Up
+                  Try Now!
                 </Button>
               </>
             ) : (

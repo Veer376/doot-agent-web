@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { UserIconHuge, LoaderIcon, TriangleAlertIcon } from "@/components/icons";
+import {
+  UserIconHuge,
+  LoaderIcon,
+  TriangleAlertIcon,
+} from "@/components/icons";
 import { useTheme } from "next-themes";
 import {
   ToggleIcon,
@@ -35,7 +39,7 @@ import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 // Default icon size for this file
 const DEFAULT_ICON_SIZE: IconSize = "sm";
 
-export function NavUser() {
+export function NavFooter() {
   const { isMobile } = useSidebar();
   const { user: authUser, signOut, isAuthenticated } = useAuthContext();
   const { theme, setTheme } = useTheme();
@@ -47,7 +51,11 @@ export function NavUser() {
   // Use auth user if available, otherwise use default user
   const displayUser = authUser
     ? {
-        name: authUser.firstName || authUser.displayName?.split(" ")[0] || authUser.email?.split("@")[0] || "User",
+        name:
+          authUser.firstName ||
+          authUser.displayName?.split(" ")[0] ||
+          authUser.email?.split("@")[0] ||
+          "User",
         email: authUser.email || "",
         avatar: authUser.avatarUrl || "",
         firstName: authUser.firstName || "",

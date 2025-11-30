@@ -543,7 +543,7 @@ export const DootLogoIcon: React.FC<AppIconProps> = ({
       <circle
         className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
         strokeWidth="3"
-        cx="78"
+        cx="77"
         cy="60"
         r="26"
       />
@@ -553,7 +553,7 @@ export const DootLogoIcon: React.FC<AppIconProps> = ({
 
 /**
  * Animated Doot Loader Icon (for loading states)
- * Two overlapping circles with left circle orbiting around the right - theme-aware styling
+ * The balls are arranged vertically for the animation perpurposes and must not be changed to match the consitency of the still icon which are placed horizontally.
  */
 export const DootLoaderIcon: React.FC<AppIconProps> = ({
   size,
@@ -578,26 +578,26 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
           100% { transform: rotate(360deg); }
         }
         .doot-satellite-group {
-          transform-origin: 78px 60px;
+          transform-origin: 60px 77px;
           animation: doot-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
         }
       `}</style>
 
+      {/* Right circle - stationary base circle */}
+        <circle
+          className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
+          strokeWidth="3"
+          cx="60"
+          cy="77"
+          r="26"
+        />
       {/* Left circle - orbiting satellite with stroke to create separation */}
       <g className="doot-satellite-group">
         <circle
           className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
           strokeWidth="3"
-          cx="43"
-          cy="60"
-          r="26"
-        />
-        {/* Right circle - stationary base circle */}
-        <circle
-          className="fill-foreground dark:fill-foreground"
-          strokeWidth="3"
-          cx="78"
-          cy="60"
+          cx="60"
+          cy="43"
           r="26"
         />
       </g>

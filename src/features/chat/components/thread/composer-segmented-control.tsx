@@ -5,10 +5,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChatIcon } from "@/components/icons";
 import { IconAgentSelector } from "./icon-agent-selector";
-import {
-  useAgentContext,
-  useStreamContext,
-} from "@/features/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
 import {
   Tooltip,
   TooltipContent,

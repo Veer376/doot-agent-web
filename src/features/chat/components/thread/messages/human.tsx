@@ -1,7 +1,5 @@
-import {
-  useStreamContext,
-  useAgentContext,
-} from "@/features/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
 import { Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { getContentString } from "@/features/chat/utils/content-string";

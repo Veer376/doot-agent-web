@@ -8,10 +8,8 @@ import React, {
   forwardRef,
 } from "react";
 import { cn } from "@/lib/utils";
-import {
-  useStreamContext,
-  useAgentContext,
-} from "@/features/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";

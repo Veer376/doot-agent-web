@@ -17,8 +17,8 @@ import {
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
-import { isPrimaryAgent } from "@/lib/agent-utils";
 import { useAuthContext } from "@/providers/Auth";
+import { useAgentContext } from "@/providers/Agent";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,7 +27,6 @@ import {
   useUpdateThread,
   useFetchThreadState,
 } from "@/hooks/use-threads";
-import { useFetchAgents } from "@/hooks/use-agents";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -44,16 +43,6 @@ const useTypedStream = useStream<
 
 type StreamContextType = ReturnType<typeof useTypedStream>;
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
-
-// Agent Context for accessing agentId and mode
-// Agent selection and mode are stored in local state only (no persistence)
-type AgentContextType = {
-  agentId: string;
-  setSelectedAgent: (agentId: string) => void;
-  mode: "agent" | "chat";
-  setMode: (mode: "agent" | "chat") => void;
-};
-const AgentContext = createContext<AgentContextType | undefined>(undefined);
 
 const StreamSession = ({
   children,
@@ -128,43 +117,33 @@ const StreamSession = ({
   );
 };
 
+/**
+ * StreamProvider: Feature-level stream session management
+ * 
+ * This provider manages the stream session for the chat feature.
+ * Agent selection is now handled by the global AgentProvider.
+ * 
+ * Provider Responsibilities:
+ * - Stream session lifecycle
+ * - Thread synchronization
+ * - API key warnings
+ * - Mode reset on new thread
+ */
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { data: agents = [] } = useFetchAgents();
-  const [threadId] = useQueryState("threadId");
-
+  const { agentId, mode, setMode } = useAgentContext(); // Get from global context
   const { session } = useAuthContext();
+  const [threadId] = useQueryState("threadId");
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");
-
-  // State management - no persistence, local state only
-  const [agentId, setSelectedAgent] = useState<string>("");
-  const [mode, setMode] = useState<"agent" | "chat">("chat"); // Default to chat mode
-
-  // Track previous threadId for key computation
-  const prevThreadIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    prevThreadIdRef.current = threadId;
-  }, [threadId]);
 
   // When threadId changes to null (new thread), reset to chat mode
   useEffect(() => {
     if (threadId === null) {
       setMode("chat");
     }
-  }, [threadId]);
-
-  // Initialize with primary agent on mount
-  useEffect(() => {
-    if (!agentId && agents.length > 0) {
-      const defaultAgent = agents.find(isPrimaryAgent) ?? agents[0];
-      if (defaultAgent) {
-        setSelectedAgent(defaultAgent.assistant_id);
-      }
-    }
-  }, [agents, agentId]);
+  }, [threadId, setMode]);
 
   // API key warning
   useEffect(() => {
@@ -175,7 +154,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   }, [agentId, hasApiKeys]);
 
   return (
-    <AgentContext.Provider value={{ agentId, setSelectedAgent, mode, setMode }}>
+    <>
       {!session?.accessToken ? (
         // Render children without StreamSession for unauthenticated users
         // This allows them to see the UI and interact with the composer
@@ -192,7 +171,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
           {children}
         </StreamSession>
       )}
-    </AgentContext.Provider>
+    </>
   );
 };
 
@@ -218,13 +197,6 @@ export const useStreamContext = (): StreamContextType => {
   return context;
 };
 
-// PHASE 3: Hook to access agentId without URL
-export const useAgentContext = (): AgentContextType => {
-  const context = useContext(AgentContext);
-  if (context === undefined) {
-    throw new Error("useAgentContext must be used within a StreamProvider");
-  }
-  return context;
-};
+
 
 export default StreamContext;

@@ -5,10 +5,8 @@ import { AgentIcon } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
-import {
-  useAgentContext,
-  useStreamContext,
-} from "@/features/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
 import { isPrimaryAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

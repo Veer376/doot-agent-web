@@ -3,13 +3,14 @@ import "../globals.css";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
-import { AuthProvider } from "@/providers/Auth";
-import { ReactQueryProvider } from "@/providers/QueryClient";
 
 export const metadata: Metadata = {
-  title: "DootAgent",
-  description: "Handoff complexity to DootAgent",
+  title: "Orbit Agent",
+  description: "Handoff complexity to Orbit",
 };
+
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({
   children,
@@ -17,30 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // <html lang="en">
-    //   <body className={inter.className}>
-    //     {isDemoApp && (
-    //       <div className="bg-brand-accent-light text-foreground fixed top-0 right-0 left-0 z-10 py-2 text-center shadow-md">
-    //         You're currently using the demo application. To use your own agents,
-    //         and run in production, check out the{" "}
-    //         <a
-    //           className="underline underline-offset-2"
-    //           href={DOCS_LINK}
-    //           target="_blank"
-    //           rel="noopener noreferrer"
-    //         >
-    //           documentation
-    //         </a>
-    //       </div>
-    //     )}
     <NuqsAdapter>
-      <AuthProvider>
-        <ReactQueryProvider>
-          <SidebarLayout>{children}</SidebarLayout>
-        </ReactQueryProvider>
-      </AuthProvider>
+      <SidebarLayout>{children}</SidebarLayout>
     </NuqsAdapter>
-    //   </body>
-    // </html>
   );
 }

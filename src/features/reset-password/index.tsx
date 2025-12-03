@@ -13,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthActions } from "@/providers/Auth";
 import { z } from "zod";
 
 // Form validation schema
@@ -33,7 +33,7 @@ const resetPasswordSchema = z
   });
 
 export default function ResetPasswordInterface() {
-  const { updatePassword } = useAuthContext();
+  const { updatePassword } = useAuthActions();
   const router = useRouter();
 
   const [password, setPassword] = useState("");

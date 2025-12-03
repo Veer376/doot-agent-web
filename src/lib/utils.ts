@@ -1,5 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { config } from "@/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -8,6 +9,6 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * @returns true if google auth is disabled
  */
-export function googleAuthDisabled() {
-  return process.env.NEXT_PUBLIC_GOOGLE_AUTH_DISABLED === "true";
+export function googleAuthDisabled(): boolean {
+  return config.features.googleAuthDisabled;
 }

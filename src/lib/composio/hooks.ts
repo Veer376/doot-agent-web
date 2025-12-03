@@ -3,12 +3,12 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { composioAPI, type ConnectedAccount } from './api';
-import { useAuthContext } from '@/providers/Auth';
+import { useAuthUser } from '@/providers/Auth';
 
 export function useConnectedAccounts() {
-  const { user } = useAuthContext();
+  const { user } = useAuthUser();
   const userId = user?.id || 'anonymous';
-  
+
   return useQuery({
     queryKey: ['composio', 'accounts', userId],
     queryFn: async () => {
@@ -38,7 +38,7 @@ export function useComposioApps() {
 
 export function useCreateConnection() {
   const queryClient = useQueryClient();
-  const { user } = useAuthContext();
+  const { user } = useAuthUser();
   const userId = user?.id || 'anonymous';
 
   return useMutation({
@@ -52,7 +52,7 @@ export function useCreateConnection() {
 
 export function useDisconnectAccount() {
   const queryClient = useQueryClient();
-  const { user } = useAuthContext();
+  const { user } = useAuthUser();
   const userId = user?.id || 'anonymous';
 
   return useMutation({

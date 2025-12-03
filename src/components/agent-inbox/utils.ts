@@ -4,6 +4,7 @@ import { startCase } from "lodash";
 import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
+import { config } from "@/config";
 
 export function prettifyText(action: string) {
   return startCase(action.replace(/_/g, " "));
@@ -110,8 +111,8 @@ export function constructOpenInStudioURL(
     url.searchParams.set("threadId", threadId);
   }
 
-  // Use the API URL from env as baseUrl
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  // Use the API URL from config
+  const apiUrl = config.apiUrl;
   const trimmedApiUrl = apiUrl.replace(/\/$/, "");
   url.searchParams.append("baseUrl", trimmedApiUrl);
 

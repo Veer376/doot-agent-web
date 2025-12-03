@@ -35,6 +35,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { config } from "@/config";
 
 // Default icon size for this file
 const DEFAULT_ICON_SIZE: IconSize = "sm";
@@ -100,7 +101,7 @@ export function NavFooter() {
     });
   };
 
-  const isProdEnv = process.env.NODE_ENV === "production";
+  const isProdEnv = config.isProd;
 
   return (
     <SidebarMenu>

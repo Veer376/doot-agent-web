@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Layout component for pages that don't need the sidebar (auth pages)
@@ -10,7 +10,7 @@ export default function AuthLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isLoading } = useAuthContext();
+  const { isLoading } = useAuthSession();
 
   if (isLoading) {
     return (

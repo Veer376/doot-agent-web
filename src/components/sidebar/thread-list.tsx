@@ -7,7 +7,7 @@ import {
   useCopyThread,
 } from "@/hooks/use-threads";
 import { useFetchAgents } from "@/hooks/use-agents";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import type { Agent } from "@/types/agent";
 import {
   SearchIcon,
@@ -187,7 +187,7 @@ function groupThreadsByDate(threads: Thread[]) {
 export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const { state, isMobile } = useSidebar();
   const queryClient = useQueryClient();
   const THREADS_PER_PAGE = 20;

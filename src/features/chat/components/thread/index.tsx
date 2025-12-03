@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { requiresApiKeysButNotSet } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
@@ -149,7 +149,7 @@ export function Thread() {
   const [inputValue, setInputValue] = useState("");
 
   // Auth state for pending message flow
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthSession();
   const {
     pendingMessage,
     pendingMode,
@@ -178,7 +178,7 @@ export function Thread() {
   const { apiKeys } = useApiKeys();
   const hasApiKeys = useHasApiKeys();
 
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
 
   const stream = useStreamContext();
   const messages = stream.messages;

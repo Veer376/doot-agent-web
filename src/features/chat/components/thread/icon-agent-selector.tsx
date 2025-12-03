@@ -10,7 +10,7 @@ import { useAgentContext } from "@/providers/Agent";
 import { isPrimaryAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import {
   Popover,
   PopoverContent,
@@ -46,7 +46,7 @@ export function IconAgentSelector({
   const [open, setOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthSession();
 
   const { agentId, setSelectedAgent, mode, setMode } = useAgentContext();
   const stream = useStreamContext();

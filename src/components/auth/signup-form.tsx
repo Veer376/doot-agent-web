@@ -7,7 +7,7 @@ import {
   FloatingLabelInput,
   FloatingLabelPasswordInput,
 } from "@/components/ui/floating-label-input";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthActions } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
 import { LoaderIcon } from "@/components/icons";
@@ -32,7 +32,7 @@ interface SignUpFormProps {
 }
 
 export function SignUpForm({ onSuccess, onSwitchToSignIn }: SignUpFormProps) {
-  const { signUp, signInWithGoogle } = useAuthContext();
+  const { signUp, signInWithGoogle } = useAuthActions();
 
   const [formValues, setFormValues] = useState<Partial<SignupFormValues>>({
     fullName: "",

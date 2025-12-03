@@ -5,6 +5,7 @@
  * Docs: https://docs.composio.dev/type-script/models/
  */
 import { Composio } from "@composio/core";
+import { config } from "@/config";
 
 export interface CreateConnectionRequest {
   user_id: string;
@@ -33,7 +34,7 @@ export interface ToolkitInfo {
 }
 
 // Get API key from environment
-const COMPOSIO_API_KEY = process.env.NEXT_PUBLIC_COMPOSIO_API_KEY;
+const COMPOSIO_API_KEY = config.composioApiKey;
 
 if (!COMPOSIO_API_KEY) {
   console.warn('[Composio] NEXT_PUBLIC_COMPOSIO_API_KEY not set - Composio features will not work');
@@ -80,25 +81,25 @@ export class ComposioAPI {
       });
 
       const connections = response.items || [];
-      
+
       const result: ConnectedAccount[] = connections.map((conn: any) => {
         // Try to extract email or account identifier from connection data
         let label: string | undefined;
-        
+
         // Check various possible locations for account info
         label = conn.integrationMetadata?.email ||
-                conn.integrationMetadata?.user_email ||
-                conn.integrationMetadata?.account_email ||
-                conn.connectionParams?.email ||
-                conn.connectionParams?.user_email ||
-                conn.connectionParams?.account_email ||
-                conn.data?.email || 
-                conn.data?.user_email || 
-                conn.data?.account_email ||
-                conn.data?.username ||
-                conn.data?.account_name ||
-                conn.data?.name;
-        
+          conn.integrationMetadata?.user_email ||
+          conn.integrationMetadata?.account_email ||
+          conn.connectionParams?.email ||
+          conn.connectionParams?.user_email ||
+          conn.connectionParams?.account_email ||
+          conn.data?.email ||
+          conn.data?.user_email ||
+          conn.data?.account_email ||
+          conn.data?.username ||
+          conn.data?.account_name ||
+          conn.data?.name;
+
         // If no email found and we have an id_token (OAuth JWT), try to decode it
         if (!label && conn.data?.id_token) {
           try {
@@ -111,7 +112,7 @@ export class ComposioAPI {
             console.warn('[Composio SDK] Failed to decode id_token:', e);
           }
         }
-        
+
         return {
           id: conn.id || '',
           app_name: conn.toolkit?.slug || conn.appName || "Unknown",
@@ -138,14 +139,14 @@ export class ComposioAPI {
       let label: string | undefined;
       if ((conn as any).data) {
         const data = (conn as any).data;
-        label = data.email || 
-                data.user_email || 
-                data.account_email ||
-                data.username ||
-                data.account_name ||
-                data.name;
+        label = data.email ||
+          data.user_email ||
+          data.account_email ||
+          data.username ||
+          data.account_name ||
+          data.name;
       }
-      
+
       return {
         id: conn.id || '',
         app_name: conn.toolkit?.slug || "Unknown",
@@ -164,7 +165,7 @@ export class ComposioAPI {
       // Delete the connected account by nanoid
       // Docs: https://docs.composio.dev/type-script/models/connected-accounts
       await this.client.connectedAccounts.delete(connectionId);
-      
+
     } catch (error: any) {
       console.error('[Composio SDK] Error disconnecting account:', error);
       throw new Error(error.message || 'Failed to disconnect account');
@@ -185,10 +186,10 @@ export class ComposioAPI {
         })
         .map((toolkit: any) => {
           // Try to get logo from multiple possible locations
-          const logo = toolkit.meta?.logo || 
-                      toolkit.logo || 
-                      `https://img.composio.dev/app/${toolkit.slug}/logo`;
-          
+          const logo = toolkit.meta?.logo ||
+            toolkit.logo ||
+            `https://img.composio.dev/app/${toolkit.slug}/logo`;
+
           return {
             key: toolkit.slug || '',
             name: toolkit.name || '',
@@ -209,10 +210,10 @@ export class ComposioAPI {
     try {
       // Fetch toolkit details which includes the logo - pass slug directly as string
       const toolkit = await this.client.toolkits.get(toolkitSlug);
-      
+
       // Extract logo - check both meta.logo and direct logo property
       const logo = toolkit.meta?.logo || (toolkit as any).logo;
-      
+
       // If we have a logo, return it, otherwise use fallback
       if (logo) {
         return {
@@ -220,7 +221,7 @@ export class ComposioAPI {
           icon_url: logo
         };
       }
-      
+
       // Fallback: construct CDN URL
       return {
         success: true,

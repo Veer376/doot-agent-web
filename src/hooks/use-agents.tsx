@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/client";
 import { Agent } from "@/types/agent";
 import { toast } from "sonner";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import {
   groupAgentsByGraphs,
   isTemplateAgent,
@@ -97,7 +97,7 @@ async function fetchAgents(
  * Works for both authenticated and unauthenticated users
  */
 export function useFetchAgents() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   // Helper function for fetching schema (used by fetchAgents)
@@ -130,7 +130,7 @@ export function useFetchAgents() {
  * Hook to fetch a single agent by ID
  */
 export function useFetchAgent(agentId: string) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useQuery({
@@ -158,7 +158,7 @@ export function useFetchAgent(agentId: string) {
  * Hook to create a new agent
  */
 export function useCreateAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -208,7 +208,7 @@ export function useCreateAgent() {
  * Hook to update an existing agent
  */
 export function useUpdateAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -256,7 +256,7 @@ export function useUpdateAgent() {
  * Hook to delete an agent with undo support
  */
 export function useDeleteAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 

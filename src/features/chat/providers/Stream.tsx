@@ -17,11 +17,12 @@ import {
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { useAgentContext } from "@/providers/Agent";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { config } from "@/config";
 import {
   threadKeys,
   useUpdateThread,
@@ -54,12 +55,9 @@ const StreamSession = ({
   children: ReactNode;
   agentId: string;
   mode: "agent" | "chat";
-  accessToken?: string;
+  accessToken: string;
   threadId: string | null;
 }) => {
-  if (!accessToken) {
-    toast.error("Access token must be provided");
-  }
 
   const [threadId, setThreadId] = useQueryState("threadId");
   const queryClient = useQueryClient();
@@ -76,7 +74,7 @@ const StreamSession = ({
   const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
 
   const streamValue = useTypedStream({
-    apiUrl: process.env.NEXT_PUBLIC_API_URL,
+    apiUrl: config.apiUrl,
     assistantId: effectiveAgentId,
     threadId: threadId ?? null,
     fetchStateHistory: { limit: 500 },
@@ -133,7 +131,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { agentId, mode, setMode } = useAgentContext(); // Get from global context
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const [threadId] = useQueryState("threadId");
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");

@@ -6,7 +6,7 @@ import {
   FloatingLabelInput,
   FloatingLabelPasswordInput,
 } from "@/components/ui/floating-label-input";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthActions } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
 import { LoaderIcon } from "@/components/icons";
@@ -22,7 +22,7 @@ export function SignInForm({
   onSwitchToSignUp,
   onSwitchToForgotPassword,
 }: SignInFormProps) {
-  const { signIn, signInWithGoogle } = useAuthContext();
+  const { signIn, signInWithGoogle } = useAuthActions();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

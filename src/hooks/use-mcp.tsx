@@ -2,16 +2,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Tool } from "@/types/tool";
 import { useState } from "react";
-
-function getMCPUrlOrThrow() {
-  if (!process.env.NEXT_PUBLIC_API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL is not defined");
-  }
-
-  const url = new URL(process.env.NEXT_PUBLIC_API_URL);
-  url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
-  return url;
-}
+import { config } from "@/config";
 
 /**
  * Custom hook for interacting with the Model Context Protocol (MCP).
@@ -36,8 +27,7 @@ export default function useMCP({
    * @returns A promise that resolves to the connected MCP client instance.
    */
   const createAndConnectMCPClient = async () => {
-    const url = getMCPUrlOrThrow();
-    const connectionClient = new StreamableHTTPClientTransport(new URL(url));
+    const connectionClient = new StreamableHTTPClientTransport(new URL(config.mcpUrl));
     const mcp = new Client({
       name,
       version,

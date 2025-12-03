@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { composioAPI } from "@/lib/composio/api";
 import { Loader2, Search, Trash2, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthUser } from "@/providers/Auth";
 
 interface ComposioManagerDialogProps {
   open: boolean;
@@ -31,7 +31,7 @@ export function ComposioManagerDialog({
   open,
   onOpenChange,
 }: ComposioManagerDialogProps) {
-  const { user } = useAuthContext();
+  const { user } = useAuthUser();
   const userId = user?.id || "anonymous";
   const [loading, setLoading] = useState(false);
   const [apps, setApps] = useState<any[]>([]);

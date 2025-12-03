@@ -4,7 +4,7 @@ import ChatInterface from "@/features/chat";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Menu11Icon, DootIcon } from "@/components/icons";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { AuthDialog, type AuthMode } from "@/components/auth/auth-dialog";
@@ -16,7 +16,7 @@ import React from "react";
  * Contains the generic chat interface.
  */
 export default function ChatPage(): React.ReactNode {
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthSession();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const router = useRouter();

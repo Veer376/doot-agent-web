@@ -2,6 +2,7 @@ import { Agent } from "@/types/agent";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import React from "react";
+import { config } from "@/config";
 
 /**
  * Determines if an agent is the primary agent.
@@ -120,7 +121,7 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
 export function requiresApiKeysButNotSet(
   hasApiKeys: boolean,
 ): boolean {
-  return process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === "true" && !hasApiKeys;
+  return config.features.requireApiKeys && !hasApiKeys;
 }
 
 /**

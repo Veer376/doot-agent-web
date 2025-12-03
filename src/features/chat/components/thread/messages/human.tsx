@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ChevronDownIcon } from "@/components/icons";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { isBase64ContentBlock } from "@/lib/multimodal-utils";
 
@@ -46,7 +46,7 @@ export function HumanMessage({
   message: Message;
   isLoading: boolean;
 }) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   // PHASE 3: Get agentId from context instead of URL
   const { agentId } = useAgentContext();
 

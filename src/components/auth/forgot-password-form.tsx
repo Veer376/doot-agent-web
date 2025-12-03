@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthActions } from "@/providers/Auth";
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { Loader2 } from "lucide-react";
 
@@ -16,7 +16,7 @@ export function ForgotPasswordForm({
   onSuccess,
   onSwitchToSignIn,
 }: ForgotPasswordFormProps) {
-  const { resetPassword } = useAuthContext();
+  const { resetPassword } = useAuthActions();
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -17,7 +17,7 @@ import {
   processThreadWithoutInterrupts,
 } from "./utils";
 import { logger } from "../utils/logger";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -56,7 +56,7 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const [agentInboxId] = useQueryState("agentInbox");
   const [isPending] = useTransition();
 

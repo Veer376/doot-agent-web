@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Thread } from "@langchain/langgraph-sdk";
+import { config } from "@/config";
 
 // Query key factory for type-safe cache management
 export const threadKeys = {
@@ -26,7 +27,7 @@ export interface ThreadMetadata {
 
 // Hook to fetch all threads (or filtered by agent)
 export function useFetchThreads(agentId?: string, options?: { limit?: number; offset?: number }) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
   const limit = options?.limit || 100;
   const offset = options?.offset || 0;
@@ -56,7 +57,7 @@ export function useFetchThreads(agentId?: string, options?: { limit?: number; of
 
 // Hook to fetch threads with infinite scroll pagination
 export function useFetchThreadsInfinite(agentId?: string, pageSize = 20) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useInfiniteQuery({
@@ -95,7 +96,7 @@ export function useFetchThreadsInfinite(agentId?: string, pageSize = 20) {
 // This enables instant thread loading by showing cached data immediately
 // while the SDK loads fresh data in the background
 export function useFetchThreadState(threadId: string | null) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useQuery({
@@ -126,7 +127,7 @@ export function useFetchThreadState(threadId: string | null) {
 
 // Hook to create a new thread
 export function useCreateThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -150,7 +151,7 @@ export function useCreateThread() {
 
 // Hook to update a thread
 export function useUpdateThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -191,9 +192,9 @@ export function useUpdateThread() {
               page.map((thread) =>
                 thread.thread_id === threadId
                   ? {
-                      ...thread,
-                      metadata: { ...thread.metadata, ...metadata },
-                    }
+                    ...thread,
+                    metadata: { ...thread.metadata, ...metadata },
+                  }
                   : thread
               )
             ),
@@ -220,7 +221,7 @@ export function useUpdateThread() {
 
 // Hook to copy a thread
 export function useCopyThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -229,11 +230,7 @@ export function useCopyThread() {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error("API URL not configured");
-      }
+      const apiUrl = config.apiUrl;
 
       const response = await fetch(`${apiUrl}/threads/${threadId}/copy`, {
         method: "POST",
@@ -265,7 +262,7 @@ export function useCopyThread() {
 
 // Hook to delete a thread with undo support
 export function useDeleteThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -330,7 +327,7 @@ export function useDeleteThread() {
 
 // Hook to delete messages from a checkpoint onwards (rollback)
 export function useDeleteFromCheckpoint() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useMutation({
@@ -344,11 +341,7 @@ export function useDeleteFromCheckpoint() {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error("API URL not configured");
-      }
+      const apiUrl = config.apiUrl;
 
       const response = await fetch(
         `${apiUrl}/threads/${threadId}/checkpoints/${checkpointId}`,

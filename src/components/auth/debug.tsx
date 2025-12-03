@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthUser, useAuthSession, useAuthActions } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,18 +11,20 @@ import {
 } from "@/components/ui/card";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { config } from "@/config";
 
 /**
  * Debug component for authentication state
  * Only use during development
  */
 export function AuthDebug() {
-  const { user, session, isAuthenticated, isLoading, signOut } =
-    useAuthContext();
+  const { user } = useAuthUser();
+  const { session, isAuthenticated, isLoading } = useAuthSession();
+  const { signOut } = useAuthActions();
   const [showDetails, setShowDetails] = useState(false);
 
   // Only enable in development mode
-  if (process.env.NODE_ENV === "production") {
+  if (config.isProd) {
     return null;
   }
 

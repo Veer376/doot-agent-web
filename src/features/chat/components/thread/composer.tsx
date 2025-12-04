@@ -33,7 +33,7 @@ interface ComposerProps {
   placeholder?: string;
   disabled?: boolean;
   isLoading?: boolean;
-  contentBlocks?: any[];
+  contentBlocks?: import("@/types/multimodal").Base64ContentBlock[];
   onRemoveBlock?: (index: number) => void;
   onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
@@ -149,7 +149,7 @@ export function Composer({
         dataTransfer.items.add(files[i]);
       }
       input.files = dataTransfer.files;
-      const event = new Event("change", { bubbles: true }) as any;
+      const event = new Event("change", { bubbles: true }) as unknown as React.ChangeEvent<HTMLInputElement>;
       Object.defineProperty(event, "target", {
         writable: false,
         value: input,

@@ -26,7 +26,7 @@ function TabsList({
       data-slot="tabs-list"
       data-radius="radius2"
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-[3px]",
+        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-0.5",
         className,
       )}
       {...props}

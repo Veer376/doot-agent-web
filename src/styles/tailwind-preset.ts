@@ -28,10 +28,10 @@ import { designTokens } from './tokens';
  */
 function _createColorScale(colorObject: any, prefix: string = '') {
   const colors: Record<string, string> = {};
-  
+
   for (const [key, value] of Object.entries(colorObject)) {
     const colorKey = prefix ? `${prefix}-${key}` : key;
-    
+
     if (typeof value === 'object' && value !== null) {
       if ('light' in value && 'dark' in value) {
         // This is a theme-aware color, use CSS variable
@@ -42,7 +42,7 @@ function _createColorScale(colorObject: any, prefix: string = '') {
       }
     }
   }
-  
+
   return colors;
 }
 
@@ -76,7 +76,7 @@ export const designSystemPreset: Partial<Config> = {
           accent: 'var(--color-brand-accent)',
           'accent-light': 'var(--color-brand-accent-light)',
         },
-        
+
         // Semantic colors - Meaning-based colors
         semantic: {
           success: 'var(--color-semantic-success)',
@@ -87,8 +87,12 @@ export const designSystemPreset: Partial<Config> = {
           'error-light': 'var(--color-semantic-error-light)',
           info: 'var(--color-semantic-info)',
           'info-light': 'var(--color-semantic-info-light)',
+          pending: 'var(--color-semantic-pending)',
+          'pending-light': 'var(--color-semantic-pending-light)',
+          processing: 'var(--color-semantic-processing)',
+          'processing-light': 'var(--color-semantic-processing-light)',
         },
-        
+
         // Neutral scale - Grays for everything else
         neutral: {
           50: 'var(--color-neutral-50)',
@@ -102,6 +106,14 @@ export const designSystemPreset: Partial<Config> = {
           800: 'var(--color-neutral-800)',
           900: 'var(--color-neutral-900)',
           950: 'var(--color-neutral-950)',
+        },
+
+        // Interactive state colors
+        interactive: {
+          hover: 'var(--color-interactive-hover)',
+          active: 'var(--color-interactive-active)',
+          disabled: 'var(--color-interactive-disabled)',
+          focus: 'var(--color-interactive-focus)',
         },
 
         // Keep existing shadcn/ui colors for compatibility
@@ -147,14 +159,14 @@ export const designSystemPreset: Partial<Config> = {
           5: 'hsl(var(--chart-5))',
         },
         sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
+          DEFAULT: 'var(--sidebar)',
+          foreground: 'var(--sidebar-foreground)',
+          primary: 'var(--sidebar-primary)',
+          'primary-foreground': 'var(--sidebar-primary-foreground)',
+          accent: 'var(--sidebar-accent)',
+          'accent-foreground': 'var(--sidebar-accent-foreground)',
+          border: 'var(--sidebar-border)',
+          ring: 'var(--sidebar-ring)',
         },
       },
 
@@ -176,6 +188,7 @@ export const designSystemPreset: Partial<Config> = {
       fontFamily: designTokens.typography.fontFamily as any,
       fontSize: designTokens.typography.fontSize as any,
       fontWeight: designTokens.typography.fontWeight,
+      lineHeight: designTokens.typography.lineHeight,
 
       /**
        * BORDER RADIUS
@@ -190,6 +203,14 @@ export const designSystemPreset: Partial<Config> = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+
+      /**
+       * BORDER WIDTH
+       * 
+       * Available as: border, border-2, border-1.5, etc.
+       * Creates consistent border weights
+       */
+      borderWidth: designTokens.borderWidth,
 
       /**
        * BOX SHADOW (Elevation)
@@ -272,6 +293,16 @@ export const designSystemPreset: Partial<Config> = {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
+        // Subtle pulse for loading states
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
+        },
+        // Shimmer effect for skeleton loaders
+        'shimmer': {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 250ms ease-out',
@@ -279,6 +310,8 @@ export const designSystemPreset: Partial<Config> = {
         'slide-in-bottom': 'slide-in-bottom 250ms ease-out',
         'slide-in-top': 'slide-in-top 250ms ease-out',
         'scale-in': 'scale-in 200ms ease-out',
+        'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'shimmer': 'shimmer 2s linear infinite',
       },
     },
   },

@@ -26,7 +26,7 @@ export function InboxItemStatuses({
     return (
       <div
         className={cn(
-          "flex w-fit items-center justify-center rounded-full border-[1.5px] px-2 py-[2px] font-medium text-nowrap",
+          "flex w-fit items-center justify-center rounded-full border-1.5 px-2 py-0.5 font-medium text-nowrap",
           "transition-colors ease-in-out hover:bg-gray-50/90",
           isOnlyIgnoreAllowed
             ? "border-gray-600 text-gray-600"
@@ -48,7 +48,7 @@ export function InboxItemStatuses({
     return (
       <div
         className={cn(
-          "flex w-fit items-center justify-center rounded-full border-[2px] px-2 py-[2px] font-medium text-nowrap",
+          "flex w-fit items-center justify-center rounded-full border-2 px-2 py-0.5 font-medium text-nowrap",
           status === "idle" && "border-gray-600 text-gray-600",
           status === "busy" && "border-yellow-600 text-yellow-600",
           status === "error" && "border-red-600 text-red-600",

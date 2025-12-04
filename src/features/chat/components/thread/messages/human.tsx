@@ -123,7 +123,7 @@ export function HumanMessage({
                       acc.push(
                         <MultimodalPreview
                           key={idx}
-                          block={block as any}
+                          block={block as import("@/types/multimodal").Base64ContentBlock}
                           size="xl"
                         />,
                       );

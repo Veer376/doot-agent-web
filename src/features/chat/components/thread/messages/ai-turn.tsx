@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
-import { extractChainOfThought } from "@/features/chat/utils/extract-chain-of-thought";
+import { extractChainOfThought, type ChainStep } from "@/features/chat/utils/extract-chain-of-thought";
 import {
   ChainOfThought,
   ChainOfThoughtHeader,
@@ -59,7 +59,7 @@ export const AITurn = React.memo(function AITurn({
   // Combine all content for the command bar
   const combinedContent = chainData.renderBlocks
     .filter((block) => block.type === "content")
-    .map((block) => (block as any).content)
+    .map((block) => block.type === "content" ? block.content : "")
     .join("\n\n");
 
   // Parse citations once from combined content
@@ -119,7 +119,7 @@ export const AITurn = React.memo(function AITurn({
   };
 
   // Render a single step (thinking or tool)
-  const renderStep = (step: any, idx: number, isPreview: boolean = false) => {
+  const renderStep = (step: ChainStep, idx: number, isPreview: boolean = false) => {
     if (step.type === "thinking") {
       return (
         <ChainOfThoughtStep
@@ -280,7 +280,8 @@ export const AITurn = React.memo(function AITurn({
                     )}
                   </ChainOfThoughtHeader>
 
-                  {/* Preview: Show last step when actively streaming and no content after */}
+                  {/* Preview: Show last step when collapsed (actively streaming and no content after) */}
+                  {/* ChainOfThoughtPreview automatically hides when isOpen=true, preventing duplication */}
                   <ChainOfThoughtPreview
                     showPreview={shouldShowPreview}
                     contentKey={
@@ -294,6 +295,7 @@ export const AITurn = React.memo(function AITurn({
                   </ChainOfThoughtPreview>
 
                   {/* Full content: Show all steps when expanded */}
+                  {/* Preview is automatically hidden when expanded, so no duplication occurs */}
                   <ChainOfThoughtContent>
                     {block.steps.map((step, stepIdx) =>
                       renderStep(step, stepIdx, false),

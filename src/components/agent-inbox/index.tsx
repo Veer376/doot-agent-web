@@ -62,34 +62,58 @@ function AgentInboxWithProvider<
   const navigationSignature = `${pathname}?${nextSearchParams}`;
   const prevNavigationSignature = React.useRef("");
 
-  // Effect to update parameters when selectedAgentId changes
+  // Effect to update parameters when agentInboxId changes
   React.useEffect(() => {
-    // Skip if no selectedAgentId or if we've already processed this agent ID
+    // Skip if no agentInboxId or if we've already processed this agent ID
     if (
       !agentInboxId ||
       agentInboxId === processedAgentIdRef.current ||
       updateInProgress.current
-    )
+    ) {
       return;
+    }
 
     // Update ref to prevent processing the same agent multiple times
     processedAgentIdRef.current = agentInboxId;
     updateInProgress.current = true;
 
-    // Use setTimeout to break potential render cycles
-    setTimeout(async () => {
-      try {
-        // When agent selection changes, update relevant query params
-        await setSelectedInbox("interrupted");
-        await setPaginationParams({
-          [OFFSET_PARAM]: 0,
-          [LIMIT_PARAM]: 10,
-        });
-      } finally {
-        // Always reset the update flag
+    // Track if this effect has been cleaned up
+    let isCancelled = false;
+
+    // Use startTransition to mark these updates as non-urgent
+    // This prevents render cycles while keeping updates in React's control
+    React.startTransition(() => {
+      // Check if effect was cleaned up before transition runs
+      if (isCancelled) {
         updateInProgress.current = false;
+        return;
       }
-    }, 0);
+
+      // When agent selection changes, update relevant query params
+      // These are batched automatically by React 18+
+      const updateParams = async () => {
+        try {
+          await setSelectedInbox("interrupted");
+          await setPaginationParams({
+            [OFFSET_PARAM]: 0,
+            [LIMIT_PARAM]: 10,
+          });
+        } finally {
+          // Always reset the update flag (only if not cancelled)
+          if (!isCancelled) {
+            updateInProgress.current = false;
+          }
+        }
+      };
+
+      updateParams();
+    });
+
+    // Cleanup function: prevents stale updates if effect re-runs or component unmounts
+    return () => {
+      isCancelled = true;
+      updateInProgress.current = false;
+    };
   }, [agentInboxId, setSelectedInbox, setPaginationParams]);
 
   // Effect to handle transitions between list and thread views

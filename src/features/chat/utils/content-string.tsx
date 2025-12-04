@@ -1,4 +1,5 @@
 import type { Message } from "@langchain/langgraph-sdk";
+import { isTextContent } from "@/types/messages";
 
 /**
  * Returns the content of a message as a string.
@@ -9,17 +10,18 @@ import type { Message } from "@langchain/langgraph-sdk";
 export function getContentString(content: Message["content"]): string {
   if (typeof content === "string") return content;
   const texts = content
-    .filter((c: any) => {
+    .filter((c) => {
       // Handle plain strings in the array
       if (typeof c === "string") return true;
       // Handle objects with type: "text"
-      return typeof c === "object" && c !== null && c.type === "text";
+      return isTextContent(c);
     })
-    .map((c: any) => {
+    .map((c) => {
       // If it's a string, return it directly
       if (typeof c === "string") return c;
       // If it's an object, extract the text property
-      return c.text || "";
+      if (isTextContent(c)) return c.text || "";
+      return "";
     });
   return texts.join(" ");
 }
@@ -38,10 +40,13 @@ export function getThinkingBlocks(
   const blocks: Array<{ heading: string; content: string }> = [];
 
   content
-    .filter(
-      (c: any) => typeof c === "object" && c !== null && c.type === "thinking",
-    )
-    .forEach((c: any) => {
+    .filter((c: unknown): c is { type: "thinking"; thinking?: string; text?: string } => {
+      // Check if c is an object with type: "thinking"
+      if (typeof c !== "object" || c === null) return false;
+      if (!("type" in c)) return false;
+      return (c as { type?: unknown }).type === "thinking";
+    })
+    .forEach((c) => {
       // The thinking content might be in 'thinking' or 'text' property
       const thinkingText = c.thinking || c.text || "";
 

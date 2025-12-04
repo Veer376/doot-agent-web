@@ -29,18 +29,21 @@ export default function ChatPage(): React.ReactNode {
 
     const params = new URLSearchParams(window.location.search);
     const authParam = params.get("auth");
+
     if (!isAuthenticated && authParam) {
       const validModes: AuthMode[] = ["signin", "signup", "forgot-password"];
       if (validModes.includes(authParam as AuthMode)) {
         setAuthMode(authParam as AuthMode);
         setAuthDialogOpen(true);
       }
-      // Clean up the URL (remove auth param)
-      router.replace("/", { scroll: false });
-    } else if (!isAuthenticated && params.toString()) {
-      router.replace("/");
+
+      // Remove ONLY the auth param, preserve all other params (threadId, etc.)
+      params.delete("auth");
+      const newUrl = params.toString() ? `/?${params.toString()}` : "/";
+      router.replace(newUrl, { scroll: false });
     }
   }, [isAuthenticated, router]);
+
   const handleOpenSignUp = () => {
     setAuthMode("signup");
     setAuthDialogOpen(true);

@@ -14,7 +14,7 @@ interface ThinkingStep {
 
 interface ThinkingBlockProps {
   thinkingBlocks: ThinkingStep[];
-  usageMetadata?: any; // For showing token count
+  usageMetadata?: unknown; // For showing token count
 }
 
 export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {

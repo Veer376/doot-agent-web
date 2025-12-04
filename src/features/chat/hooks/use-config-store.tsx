@@ -9,10 +9,18 @@ import {
   ConfigurableFieldAgentsMetadata,
 } from "@/types/configurable";
 
+// Union type for all possible configuration values
+export type ConfigValue = string | number | boolean | object | undefined;
+
+// Agent configuration record with type safety
+export type AgentConfig = Record<string, ConfigValue> & {
+  __defaultValues?: Record<string, ConfigValue>;
+};
+
 interface ConfigState {
-  configsByAgentId: Record<string, Record<string, any>>;
-  getAgentConfig: (agentId: string) => Record<string, any>;
-  updateConfig: (agentId: string, key: string, value: any) => void;
+  configsByAgentId: Record<string, AgentConfig>;
+  getAgentConfig: (agentId: string) => AgentConfig;
+  updateConfig: (agentId: string, key: string, value: ConfigValue) => void;
   resetConfig: (agentId: string) => void;
   setDefaultConfig: (
     agentId: string,
@@ -75,7 +83,7 @@ export const useConfigStore = create<ConfigState>()(
       },
 
       setDefaultConfig: (agentId, configurations) => {
-        const defaultConfig: Record<string, any> = {};
+        const defaultConfig: AgentConfig = {};
         configurations.forEach((config) => {
           if (config.default !== undefined) {
             defaultConfig[config.label] = config.default;

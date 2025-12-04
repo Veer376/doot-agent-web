@@ -1,5 +1,6 @@
 import { Message, AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { getThinkingBlocks, getContentString } from "./content-string";
+import type { ToolCallArguments } from "@/types/tools";
 
 export type ChainStep =
   | {
@@ -13,7 +14,7 @@ export type ChainStep =
     toolCall: {
       id: string;
       name: string;
-      args: Record<string, any>;
+      args: ToolCallArguments;
     };
     toolResponse?: ToolMessage;
     status: "pending" | "success" | "error";
@@ -159,7 +160,7 @@ export function extractChainOfThought(
             toolCall: {
               id: toolCall.id || "",
               name: toolCall.name || "unknown",
-              args: (toolCall.args as Record<string, any>) || {},
+              args: (toolCall.args as ToolCallArguments) || {},
             },
             toolResponse: response,
             status,
@@ -172,7 +173,7 @@ export function extractChainOfThought(
           const existingToolIds = new Set(
             currentGroupSteps
               .filter((s) => s.type === "tool")
-              .map((s: any) => s.toolCall.id)
+              .map((s) => (s as Extract<ChainStep, { type: "tool" }>).toolCall.id)
           );
 
           toolSteps.forEach((toolStep) => {

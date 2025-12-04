@@ -2,8 +2,9 @@ import { AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToolContainer } from "@/components/ai-elements/tool-container";
+import type { ToolCallArguments } from "@/types/tools";
 
-function isComplexValue(value: any): boolean {
+function isComplexValue(value: unknown): boolean {
   return Array.isArray(value) || (typeof value === "object" && value !== null);
 }
 
@@ -17,7 +18,7 @@ export function ToolCalls({
   return (
     <div className="w-full max-w-4xl space-y-4">
       {toolCalls.map((tc, idx) => {
-        const args = tc.args as Record<string, any>;
+        const args = tc.args as ToolCallArguments;
         const hasArgs = Object.keys(args).length > 0;
         return (
           <ToolContainer
@@ -59,7 +60,7 @@ export function ToolCalls({
 export function ToolResult({ message }: { message: ToolMessage }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  let parsedContent: any;
+  let parsedContent: unknown;
   let isJsonContent = false;
 
   try {

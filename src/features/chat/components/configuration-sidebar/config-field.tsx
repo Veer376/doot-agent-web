@@ -25,6 +25,7 @@ import {
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
+import type { ConfigValue } from "@/features/chat/hooks/use-config-store";
 
 interface Option {
   label: string;
@@ -50,8 +51,8 @@ interface ConfigFieldProps {
   step?: number;
   className?: string;
   // Optional props for external state management
-  value?: any;
-  setValue?: (value: any) => void;
+  value?: ConfigValue;
+  setValue?: (value: ConfigValue) => void;
   agentId: string;
 }
 
@@ -80,8 +81,8 @@ export function ConfigField({
     ? externalValue
     : store.configsByAgentId[agentId][id];
 
-  const handleChange = (newValue: any) => {
-    setJsonError(null); // Clear JSON error on any change
+  const handleChange = (newValue: ConfigValue) => {
+    setJsonError(null); // Clear JSON error on change
     if (isExternallyManaged && externalSetValue) {
       externalSetValue(newValue); // Use non-null assertion as we checked existence
     } else {

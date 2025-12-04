@@ -34,7 +34,7 @@ export const designTokens = {
         light: 'oklch(0.95 0.02 180)',      // Very light teal background
         dark: 'oklch(0.25 0.04 180)',       // Dark teal background
       },
-      
+
       // Accent color (replacing hardcoded #CFC8FE)
       accent: {
         light: 'oklch(0.60 0.20 280)',      // Purple accent
@@ -56,7 +56,7 @@ export const designTokens = {
         light: 'oklch(0.93 0.06 145)',
         dark: 'oklch(0.28 0.08 145)',
       },
-      
+
       warning: {
         light: 'oklch(0.65 0.18 65)',       // Orange
         dark: 'oklch(0.70 0.20 65)',
@@ -65,7 +65,7 @@ export const designTokens = {
         light: 'oklch(0.95 0.08 65)',
         dark: 'oklch(0.30 0.10 65)',
       },
-      
+
       error: {
         light: 'oklch(0.55 0.22 25)',       // Red
         dark: 'oklch(0.65 0.24 25)',
@@ -74,7 +74,7 @@ export const designTokens = {
         light: 'oklch(0.95 0.10 25)',
         dark: 'oklch(0.30 0.12 25)',
       },
-      
+
       info: {
         light: 'oklch(0.55 0.18 250)',      // Blue
         dark: 'oklch(0.65 0.20 250)',
@@ -82,6 +82,44 @@ export const designTokens = {
       infoLight: {
         light: 'oklch(0.93 0.08 250)',
         dark: 'oklch(0.28 0.10 250)',
+      },
+
+      pending: {
+        light: 'oklch(0.60 0.15 280)',      // Purple for pending
+        dark: 'oklch(0.70 0.18 280)',
+      },
+      pendingLight: {
+        light: 'oklch(0.93 0.06 280)',
+        dark: 'oklch(0.28 0.08 280)',
+      },
+
+      processing: {
+        light: 'oklch(0.60 0.18 220)',      // Cyan for processing
+        dark: 'oklch(0.70 0.20 220)',
+      },
+      processingLight: {
+        light: 'oklch(0.93 0.08 220)',
+        dark: 'oklch(0.28 0.10 220)',
+      },
+    },
+
+    // Interactive state colors - For hover, active, disabled, focus states
+    interactive: {
+      hover: {
+        light: 'oklch(0.95 0.02 280)',      // Subtle hover background
+        dark: 'oklch(0.25 0.04 280)',
+      },
+      active: {
+        light: 'oklch(0.90 0.04 280)',      // Pressed/active state
+        dark: 'oklch(0.30 0.06 280)',
+      },
+      disabled: {
+        light: 'oklch(0.85 0 0)',           // Disabled gray
+        dark: 'oklch(0.30 0 0)',
+      },
+      focus: {
+        light: 'oklch(0.60 0.20 250)',      // Focus ring color (blue)
+        dark: 'oklch(0.70 0.22 250)',
       },
     },
 
@@ -189,7 +227,7 @@ export const designTokens = {
       sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'monospace'],
     },
-    
+
     fontSize: {
       xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.025em' }],      // 12px
       sm: ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0' }],        // 14px
@@ -203,7 +241,7 @@ export const designTokens = {
       '6xl': ['3.75rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],    // 60px
       '7xl': ['4.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],     // 72px
     },
-    
+
     fontWeight: {
       thin: '100',
       extralight: '200',
@@ -214,6 +252,15 @@ export const designTokens = {
       bold: '700',
       extrabold: '800',
       black: '900',
+    },
+
+    lineHeight: {
+      none: '1',
+      tight: '1.25',
+      snug: '1.375',
+      normal: '1.5',
+      relaxed: '1.625',
+      loose: '2',
     },
   },
 
@@ -235,6 +282,21 @@ export const designTokens = {
   },
 
   /**
+   * BORDER WIDTH TOKENS
+   * 
+   * Consistent border widths for UI elements.
+   */
+  borderWidth: {
+    DEFAULT: '1px',
+    0: '0px',
+    2: '2px',
+    3: '3px',
+    4: '4px',
+    8: '8px',
+    1.5: '1.5px',  // For intermediate border weights
+  },
+
+  /**
    * ELEVATION (BOX SHADOW) TOKENS
    * 
    * Consistent depth and layering through shadows.
@@ -248,7 +310,7 @@ export const designTokens = {
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
     '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
     inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-    
+
     // Dark mode shadows (slightly lighter for visibility)
     dark: {
       xs: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
@@ -258,6 +320,19 @@ export const designTokens = {
       xl: '0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5)',
       '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.6)',
     },
+  },
+
+  /**
+   * SEMANTIC ELEVATION TOKENS
+   * 
+   * Named shadows for specific use cases.
+   */
+  semanticElevation: {
+    card: 'shadow-sm',
+    dropdown: 'shadow-md',
+    modal: 'shadow-xl',
+    tooltip: 'shadow-lg',
+    overlay: 'shadow-2xl',
   },
 
   /**
@@ -347,6 +422,7 @@ export type SpacingToken = keyof typeof designTokens.spacing;
 export type FontSizeToken = keyof typeof designTokens.typography.fontSize;
 export type FontWeightToken = keyof typeof designTokens.typography.fontWeight;
 export type BorderRadiusToken = keyof typeof designTokens.borderRadius;
+export type BorderWidthToken = keyof typeof designTokens.borderWidth;
 export type ElevationToken = keyof typeof designTokens.elevation;
 export type ZIndexToken = keyof typeof designTokens.zIndex;
 
@@ -361,14 +437,14 @@ export function getThemeColor(
 ): string {
   const keys = colorPath.split('.');
   let value: any = designTokens.colors;
-  
+
   for (const key of keys) {
     value = value?.[key];
   }
-  
+
   if (typeof value === 'object' && 'light' in value && 'dark' in value) {
     return value[theme];
   }
-  
+
   return value || '';
 }

@@ -21,6 +21,7 @@ import { composioAPI } from "@/lib/composio/api";
 import { Loader2, Search, Trash2, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthUser } from "@/providers/Auth";
+import type { ComposioApp, ComposioAccount } from "@/types/composio";
 
 interface ComposioManagerDialogProps {
   open: boolean;
@@ -34,8 +35,8 @@ export function ComposioManagerDialog({
   const { user } = useAuthUser();
   const userId = user?.id || "anonymous";
   const [loading, setLoading] = useState(false);
-  const [apps, setApps] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [apps, setApps] = useState<ComposioApp[]>([]);
+  const [accounts, setAccounts] = useState<ComposioAccount[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -43,6 +44,18 @@ export function ComposioManagerDialog({
       loadData();
     }
   }, [open]);
+
+  // Cleanup polling interval when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any active polling interval
+      const pollInterval = (window as Window & { __composioPollingInterval?: NodeJS.Timeout }).__composioPollingInterval;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        delete (window as Window & { __composioPollingInterval?: NodeJS.Timeout }).__composioPollingInterval;
+      }
+    };
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -84,18 +97,43 @@ export function ComposioManagerDialog({
 
         if (popup) {
           toast.success(`Opening ${appSlug} connection...`);
-          // Poll for connection status
+          
+          // Set up polling with proper cleanup
+          let attempts = 0;
+          const MAX_ATTEMPTS = 30; // 30 attempts × 2s = 60 seconds max
+          
           const pollInterval = setInterval(async () => {
-            const updatedAccounts =
-              await composioAPI.getConnectedAccounts(userId);
-            setAccounts(updatedAccounts);
+            attempts++;
+            
+            // Check if max attempts reached
+            if (attempts > MAX_ATTEMPTS) {
+              clearInterval(pollInterval);
+              toast.warning(`Connection timeout. Please try again.`);
+              loadData(); // Refresh to show any partial success
+              return;
+            }
 
-            // Check if popup is closed
+            // Check if popup is closed first (avoid unnecessary API call)
             if (popup.closed) {
               clearInterval(pollInterval);
               loadData();
+              return;
+            }
+
+            try {
+              // Poll for connection status
+              const updatedAccounts = await composioAPI.getConnectedAccounts(userId);
+              setAccounts(updatedAccounts);
+            } catch (error) {
+              // Log error but continue polling (transient network issues)
+              console.warn('Polling error:', error);
+              // Only stop on popup close or max attempts
             }
           }, 2000);
+
+          // Store interval ID so it can be cleared if dialog closes
+          // This is handled by component unmount in the useEffect below
+          (window as Window & { __composioPollingInterval?: NodeJS.Timeout }).__composioPollingInterval = pollInterval;
         } else {
           toast.error("Popup blocked. Please allow popups for this site.");
         }
@@ -103,9 +141,9 @@ export function ComposioManagerDialog({
         toast.success(`Connected to ${appSlug}!`);
         loadData();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to connect:", error);
-      toast.error(error.message || "Failed to connect app");
+      toast.error(error instanceof Error ? error.message : "Failed to connect app");
     } finally {
       setLoading(false);
     }
@@ -116,9 +154,9 @@ export function ComposioManagerDialog({
       await composioAPI.disconnectAccount(userId, accountId);
       toast.success(`Disconnected ${appName}`);
       loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to disconnect:", error);
-      toast.error(error.message || "Failed to disconnect");
+      toast.error(error instanceof Error ? error.message : "Failed to disconnect");
     }
   };
 

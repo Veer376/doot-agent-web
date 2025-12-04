@@ -132,7 +132,7 @@ function ResponseComponent({
         <ArgsRenderer args={interruptValue.action_request.args} />
       )}
 
-      <div className="flex w-full flex-col items-start gap-[6px]">
+      <div className="flex w-full flex-col items-start gap-1.5">
         <p className="min-w-fit text-sm font-medium">Response</p>
         <Textarea
           disabled={streaming}
@@ -292,10 +292,10 @@ function EditAndOrAcceptComponent({
 
         return (
           <div
-            className="flex h-full w-full flex-col items-start gap-1 px-[1px]"
+            className="flex h-full w-full flex-col items-start gap-1 px-px"
             key={`allow-edit-args--${k}-${idx}`}
           >
-            <div className="flex w-full flex-col items-start gap-[6px]">
+            <div className="flex w-full flex-col items-start gap-1.5">
               <p className="min-w-fit text-sm font-medium">{prettifyText(k)}</p>
               <Textarea
                 disabled={streaming}

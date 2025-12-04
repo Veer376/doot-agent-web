@@ -37,3 +37,4 @@ apps/docs/component_tree.md
 release
 .yarn
 image.png
+.env.production

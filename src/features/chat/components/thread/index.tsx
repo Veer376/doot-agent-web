@@ -198,13 +198,21 @@ export function Thread() {
   const lastSavedMetadataRef = useRef<{ agentId: string; mode: string } | null>(
     null,
   );
+  // Track which thread has been initialized to prevent race conditions
+  const threadInitializedRef = useRef<string | null>(null);
 
   // Restore agent/mode from thread metadata when thread changes
   // Only restore on threadId change, not when user changes agent/mode
   useEffect(() => {
     if (!threadId || !threads.length) {
       // Reset tracking when no thread
+      threadInitializedRef.current = null;
       lastSavedMetadataRef.current = null;
+      return;
+    }
+
+    // Prevent race condition: only restore metadata once per thread
+    if (threadInitializedRef.current === threadId) {
       return;
     }
 
@@ -234,6 +242,9 @@ export function Thread() {
     if (threadMode && (threadMode === "agent" || threadMode === "chat")) {
       setMode(threadMode);
     }
+
+    // Mark this thread as initialized to prevent re-running restoration
+    threadInitializedRef.current = threadId;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId, threads]);
 
@@ -383,7 +394,7 @@ export function Thread() {
       return;
     }
     try {
-      const message = (stream.error as any).message;
+      const message = stream.error instanceof Error ? stream.error.message : "Stream error occurred";
       if (!message || lastError.current === message) {
         // Message has already been logged. do not modify ref, return early.
         return;

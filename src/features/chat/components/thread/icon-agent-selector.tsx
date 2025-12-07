@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { AgentIcon } from "@/components/icons";
+import { getAgentIcon } from "@/lib/agent-icon-registry";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
@@ -173,6 +173,9 @@ export function IconAgentSelector({
     (agent) => agent.assistant_id === agentValue,
   );
 
+  // Resolve agent icon from metadata with fallback
+  const AgentIconComponent = getAgentIcon(selectedAgent?.metadata?.icon);
+
   // PHASE 4: Use mode from context instead of checking agentId
   // isAgentMode is true when Agent segment should appear selected
   const isAgentMode = mode === "agent";
@@ -198,10 +201,10 @@ export function IconAgentSelector({
           loading && "opacity-60",
           className,
         )}
-        data-radius="radius2"
+        data-radius="radius3"
         disabled={loading}
       >
-        <AgentIcon className={isAgentMode ? "text-background" : ""} />
+        <AgentIconComponent className={isAgentMode ? "text-background" : ""} />
         <span className="hidden max-w-[160px] truncate md:inline-block">
           {loading ? "Loading…" : (selectedAgent?.name ?? "Agent")}
         </span>
@@ -219,7 +222,7 @@ export function IconAgentSelector({
         className={cn(loading && "opacity-60", className)}
         disabled={loading}
       >
-        <AgentIcon />
+        <AgentIconComponent />
         <span className="sr-only">Select Agent</span>
       </TooltipIconButton>
     );

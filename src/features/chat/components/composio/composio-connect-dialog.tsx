@@ -120,7 +120,8 @@ export function ComposioConnectDialog({
                     {accounts.map((account) => (
                       <div
                         key={account.id}
-                        className="hover:bg-accent flex items-center justify-between rounded-md p-2"
+                        data-radius="radius1"
+                        className="hover:bg-accent flex items-center justify-between p-2"
                       >
                         <div className="flex-1">
                           <p className="text-sm font-medium">
@@ -174,7 +175,8 @@ export function ComposioConnectDialog({
                       <button
                         key={app.key}
                         onClick={() => handleAppSelect(app.key)}
-                        className="hover:bg-accent flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors"
+                        data-radius="radius1"
+                        className="hover:bg-accent flex flex-col items-start gap-2 border p-3 text-left transition-colors"
                       >
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-md">
                           {app.logo ? (

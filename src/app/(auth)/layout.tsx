@@ -6,8 +6,8 @@ import { DOCS_LINK } from "@/constants";
 import { config } from "@/config";
 
 export const metadata: Metadata = {
-  title: "DootAgent - Auth",
-  description: "Handoff complexity to DootAgent",
+  title: "DootAgent - Browser Automation Agent",
+  description: "Let the Doot Agent handle your boring tasks.",
 };
 
 export default function Layout({

@@ -4,10 +4,10 @@ import * as React from "react";
 import {
   CheckIcon,
   ChevronsUpDownIcon,
-  StarIcon,
   LoaderIcon,
   EditIcon,
 } from "@/components/icons";
+import { getAgentIcon } from "@/lib/agent-icon-registry";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Agent } from "@/types/agent";
-import { isPrimaryAgent, sortAgentGroup } from "@/lib/agent-utils";
+import { sortAgentGroup } from "@/lib/agent-utils";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
@@ -220,7 +220,9 @@ export function AgentsCombobox({
               {sortAgentGroup(agents).map((item) => {
                 const itemValue = item.assistant_id;
                 const isSelected = selectedValues.includes(itemValue);
-                const isPrimary = isPrimaryAgent(item);
+
+                // Resolve agent icon from metadata with fallback
+                const AgentIconComponent = getAgentIcon(item.metadata?.icon);
 
                 return (
                   <TooltipProvider
@@ -230,6 +232,7 @@ export function AgentsCombobox({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="group/agent-item relative">
+                          {/* Edit button - shows on hover in right area */}
                           {onEditAgent && (
                             <button
                               type="button"
@@ -238,11 +241,14 @@ export function AgentsCombobox({
                                 e.preventDefault();
                                 onEditAgent(item);
                               }}
+                              data-radius="radius1"
                               className={cn(
                                 "peer/edit-btn absolute top-1/2 right-2 z-10 -translate-y-1/2",
-                                "text-muted-foreground rounded-sm p-1.5 transition-colors",
+                                "text-muted-foreground p-1.5 transition-all",
+                                // Hide by default, show on group hover
                                 "opacity-0 group-hover/agent-item:opacity-100",
-                                "hover:bg-accent hover:text-foreground",
+                                // Separate hover state for edit button
+                                "hover:bg-accent hover:text-foreground hover:scale-105",
                                 "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
                               )}
                               aria-label={`Edit ${item.name}`}
@@ -250,32 +256,47 @@ export function AgentsCombobox({
                               <EditIcon size="xs" />
                             </button>
                           )}
+                          
+
+
                           <CommandItem
                             value={itemValue}
                             onSelect={handleSelect}
                             className={cn(
-                              "flex w-full items-center gap-2 pr-12",
+                              "flex w-full items-center gap-2",
+                              // Extra padding on right for icon area
+                              onEditAgent ? "pr-10" : "pr-2",
+                              // Reset background on edit button hover to maintain clean look
                               "peer-hover/edit-btn:data-[selected=true]:text-foreground peer-hover/edit-btn:data-[selected=true]:bg-transparent",
                             )}
                           >
-                            <CheckIcon
-                              className={cn(
-                                "flex-shrink-0",
-                                isSelected ? "opacity-100" : "opacity-0",
-                              )}
-                            />
+                            {/* Left: Checkmark (selected) OR Icon (not selected / hovered) */}
+                            <div className="relative flex-shrink-0">
+                              {/* Checkmark - visible when selected AND not hovered */}
+                              <CheckIcon
+                                size="xs"
+                                className={cn(
+                                  isSelected
+                                    ? "block group-hover/agent-item:hidden"
+                                    : "hidden"
+                                )}
+                              />
+                              
+                              {/* Icon - visible when NOT selected OR when selected+hovered */}
+                              <AgentIconComponent
+                                size="xs"
+                                className={cn(
+                                  !isSelected
+                                    ? "block"
+                                    : "hidden group-hover/agent-item:block"
+                                )}
+                              />
+                            </div>
 
+                            {/* Center: Agent Name */}
                             <p className="line-clamp-1 min-w-0 flex-1 truncate">
                               {item.name}
                             </p>
-                            {isPrimary && (
-                              <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                                <StarIcon size="xs" />
-                                <span className="hidden sm:inline">
-                                  Primary
-                                </span>
-                              </span>
-                            )}
                           </CommandItem>
                         </div>
                       </TooltipTrigger>

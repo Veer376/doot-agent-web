@@ -126,7 +126,8 @@ export function ComposioAppSelector({
           {selectedApps.map((app) => (
             <div
               key={app.id}
-              className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors"
+              data-radius="radius1"
+              className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 flex items-center gap-2 border px-3 py-1.5 text-sm transition-colors"
             >
               <AppIcon
                 appSlug={app.app_name}
@@ -136,7 +137,8 @@ export function ComposioAppSelector({
               <button
                 type="button"
                 onClick={() => toggleApp(app.id)}
-                className="hover:bg-primary/30 ml-1 rounded p-0.5 transition-colors"
+                data-radius="radius1"
+                className="hover:bg-primary/30 ml-1 p-0.5 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -247,8 +249,9 @@ export function ComposioAppSelector({
                       key={app.id}
                       type="button"
                       onClick={() => toggleApp(app.id)}
+                      data-radius="radius1"
                       className={cn(
-                        "hover:bg-accent flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors",
+                        "hover:bg-accent flex w-full items-start gap-3 p-3 text-left transition-colors",
                         selectedProfileIds.includes(app.id) && "bg-accent",
                       )}
                     >

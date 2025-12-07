@@ -29,12 +29,17 @@ dist-ssr
 .next/
 next-env.d.ts
 yarn.lock
-.gitignore
 package-lock.json
 pnpm-lock.yaml
 apps/docs/component_tree.md
-*.md
 release
 .yarn
 image.png
 .env.production
+
+# Temporary files
+.gemini-temp-*
+*.gemini-temp.*
+
+# Secret files
+.webui_secret_key

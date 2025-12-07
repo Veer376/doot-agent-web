@@ -162,7 +162,8 @@ export function HumanMessage({
                   <button
                     type="button"
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="hover:bg-muted-foreground/10 group absolute right-4 bottom-2 cursor-pointer rounded-md p-1 transition-colors"
+                    data-radius="radius1"
+                    className="hover:bg-muted-foreground/10 group absolute right-4 bottom-2 cursor-pointer p-1 transition-colors"
                     aria-label={
                       isExpanded ? "Collapse message" : "Expand message"
                     }

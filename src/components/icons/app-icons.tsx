@@ -33,7 +33,6 @@ import {
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
   AiChat01Icon as Chat01HugeIcon,
-  Orbit01Icon as Doot01Icon,
   Note02Icon as Note02HugeIcon,
   Alert02Icon as Alert02HugeIcon,
   TipsIcon as TipsHugeIcon,
@@ -578,7 +577,7 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
           100% { transform: rotate(360deg); }
         }
         .doot-satellite-group {
-          transform-origin: 60px 77px;
+          transform-origin: 60px 60px;
           animation: doot-rotation 1.2s cubic-bezier(0.85, 0.07, 0.15, 0.93) infinite;
         }
       `}</style>
@@ -588,7 +587,7 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
           className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
           strokeWidth="3"
           cx="60"
-          cy="77"
+          cy="60" // Right will be centered.
           r="26"
         />
       {/* Left circle - orbiting satellite with stroke to create separation */}
@@ -597,21 +596,13 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
           className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
           strokeWidth="3"
           cx="60"
-          cy="43"
+          cy="26" // 60 - 17 - 17 = 26
           r="26"
         />
       </g>
     </svg>
   );
 };
-
-// Keep the HugeIcons orbit icon for backwards compatibility
-export const DootIcon: React.FC<AppIconProps> = (props) => (
-  <IconWrapper
-    icon={Doot01Icon}
-    {...props}
-  />
-);
 
 // ============================================
 // CALLOUT ICONS
@@ -757,8 +748,6 @@ export const XIcon: React.FC<AppIconProps> = (props) => (
 export const CloseIcon: React.FC<AppIconProps> = XIcon;
 
 /**
-<<<<<<< Updated upstream
-=======
  * Alert/Warning Icons
  */
 export const AlertCircleIconHuge: React.FC<AppIconProps> = ({
@@ -784,7 +773,6 @@ export const TriangleAlertIcon: React.FC<AppIconProps> = ({
 );
 
 /**
->>>>>>> Stashed changes
  * File & Image Icons
  */
 export const FileIcon: React.FC<AppIconProps> = (props) => (
@@ -1125,7 +1113,6 @@ export default {
   SidebarRight01: SidebarRight01Icon,
   Menu11: Menu11Icon,
   Chat: ChatIcon,
-  Orbit: DootIcon,
   OrbitLogo: DootLogoIcon,
   OrbitLoader: DootLoaderIcon,
   Note02: Note02Icon,

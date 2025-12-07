@@ -34,7 +34,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
-import { DootIcon } from "@/components/icons";
+import { DootLogoIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
 import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
@@ -47,6 +47,44 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useComposerDraft } from "@/hooks/use-composer-draft";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
+import { useThreadModel } from "@/hooks/use-thread-model";
+import { PromptGallery } from "@/components/ui/prompt-gallery";
+import type { PromptTemplate } from "@/components/ui/prompt-card";
+
+// Dummy prompt templates
+const DUMMY_PROMPTS: PromptTemplate[] = [
+  {
+    id: "1",
+    title: "Code Review Assistant",
+    prompt: "Review this code and suggest improvements for readability, performance, and best practices.",
+    imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
+  },
+  {
+    id: "2",
+    title: "Email Draft Generator",
+    prompt: "Help me draft a professional email for client communication with a friendly yet formal tone.",
+    imageUrl: "https://images.unsplash.com/photo-1557200515-a350fb961fcf?w=400&h=300&fit=crop",
+  },
+  {
+    id: "3",
+    title: "Data Analysis Expert",
+    prompt: "Analyze this dataset and provide insights, trends, and actionable recommendations.",
+    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+  },
+  {
+    id: "4",
+    title: "Creative Writing Helper",
+    prompt: "Generate creative story ideas and help me develop compelling narratives with rich characters.",
+    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
+  },
+  {
+    id: "5",
+    title: "Technical Documentation",
+    prompt: "Create clear and comprehensive technical documentation for this feature or API.",
+    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
+  },
+];
+
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -171,14 +209,15 @@ export function Thread() {
     handlePaste,
   } = useFileUpload();
 
-  const [selectedComposioProfiles, setSelectedComposioProfiles] = useState<
-    string[]
-  >([]);
+
 
   const { apiKeys } = useApiKeys();
   const hasApiKeys = useHasApiKeys();
 
   const { session } = useAuthSession();
+  
+  // Model selection for this thread
+  const { selectedModel, selectModel } = useThreadModel();
 
   const stream = useStreamContext();
   const messages = stream.messages;
@@ -319,7 +358,7 @@ export function Thread() {
               },
             },
             context: {
-              connection_ids: selectedComposioProfiles,
+
             },
             metadata: {
               supabaseAccessToken: session?.accessToken,
@@ -373,7 +412,7 @@ export function Thread() {
     mode,
     setMode,
     contentBlocks,
-    selectedComposioProfiles,
+
     apiKeys,
     threadId,
     updateThread,
@@ -472,7 +511,7 @@ export function Thread() {
           },
         },
         context: {
-          connection_ids: selectedComposioProfiles,
+
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
@@ -547,7 +586,7 @@ export function Thread() {
       },
       optimisticValues,
       context: {
-        connection_ids: selectedComposioProfiles,
+
       },
       metadata: {
         supabaseAccessToken: session?.accessToken,
@@ -676,49 +715,66 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="to-background sticky bottom-0 z-10 flex flex-col items-center gap-3 bg-gradient-to-b from-transparent from-0% to-40%">
+            <div className="to-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-b from-transparent from-0% to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
+              
+              {/* Title section with independent spacing */}
               {!hasMessages && !threadId && (
-                <div className="flex items-center gap-3">
-                  <DootIcon />
+                <div className="mb-10 flex items-center gap-3">
+                  <DootLogoIcon size={32} />
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    DootAgent
+                    What's your boring task for today ?
                   </h1>
                 </div>
               )}
 
-              <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute right-[calc(50%-24rem)] bottom-full mb-4" />
+              {/* Components group with larger gap */}
+              <div className="flex w-full flex-col items-center gap-3">
+                <ScrollToBottom className="absolute right-4 bottom-full mb-4" />
 
-              {/* Browser Preview Panel - Floating above Composer */}
-              <PreviewPanel />
+                {/* Browser Preview Panel - Floating above Composer */}
+                <PreviewPanel />
 
-              <div
-                ref={dropRef}
-                className={cn(
-                  "relative z-20 mx-auto w-full max-w-3xl min-w-0 pb-4 transition-all",
-                  dragOver ? "border-primary border-2 border-dotted" : "",
-                )}
-              >
-                <Composer
-                  value={inputValue}
-                  onChange={setInputValue}
-                  onSubmit={isAuthenticated ? handleSubmit : undefined}
-                  onAuthRequired={
-                    !isAuthenticated ? handleAuthRequired : undefined
-                  }
-                  onCancel={handleCancel}
-                  onPaste={handlePaste}
-                  placeholder="Type your message..."
-                  disabled={isLoading || requiresApiKeysButNotSet(hasApiKeys)}
-                  isLoading={stream.isLoading}
-                  contentBlocks={contentBlocks}
-                  onRemoveBlock={removeBlock}
-                  onFileUpload={handleFileUpload}
-                  focusKey={threadId}
-                  selectedComposioProfiles={selectedComposioProfiles}
-                  onComposioSelectionChange={setSelectedComposioProfiles}
-                />
+                <div
+                  ref={dropRef}
+                  className={cn(
+                    "relative z-20 mx-auto w-full max-w-2xl min-w-0 pb-4 transition-all",
+                    dragOver ? "border-primary border-2 border-dotted" : "",
+                  )}
+                >
+                  <Composer
+                    value={inputValue}
+                    onChange={setInputValue}
+                    onSubmit={isAuthenticated ? handleSubmit : undefined}
+                    onAuthRequired={
+                      !isAuthenticated ? handleAuthRequired : undefined
+                    }
+                    onCancel={handleCancel}
+                    onPaste={handlePaste}
+                    placeholder="Type your message..."
+                    disabled={isLoading || requiresApiKeysButNotSet(hasApiKeys)}
+                    isLoading={stream.isLoading}
+                    contentBlocks={contentBlocks}
+                    onRemoveBlock={removeBlock}
+                    onFileUpload={handleFileUpload}
+                    focusKey={threadId}
+                    selectedModel={selectedModel}
+                    onModelSelect={selectModel}
+                  />
+
+                  {/* Prompt Template Gallery - only show when no thread */}
+                  {!threadId && messages.length === 0 && (
+                    <div className="mx-auto mt-6" style={{ width: "85%" }}>
+                      <PromptGallery
+                        templates={DUMMY_PROMPTS}
+                        onPromptClick={(template) => {
+                          setInputValue(template.prompt);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           }

@@ -42,7 +42,7 @@ export function SiteHeader() {
                 <SidebarRight01Icon size="sm" />
               )
             ) : (
-              <DootLogoIcon size={38} />
+              <DootLogoIcon size={32} />
             )}
             {/* Keep brand name visible only when not collapsed */}
             <div className="grid flex-1 pl-0 text-left text-sm leading-none transition-all group-data-[collapsible=icon]:opacity-0">

@@ -232,7 +232,8 @@ export function ComposioManagerDialog({
                   {accounts.map((account) => (
                     <div
                       key={account.id}
-                      className="hover:bg-accent/50 flex items-center justify-between rounded-lg border p-4"
+                      data-radius="radius1"
+                      className="hover:bg-accent/50 flex items-center justify-between border p-4"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">

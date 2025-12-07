@@ -3,7 +3,7 @@
 import ChatInterface from "@/features/chat";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootIcon } from "@/components/icons";
+import { Menu11Icon, DootLogoIcon } from "@/components/icons";
 import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -16,7 +16,7 @@ import React from "react";
  * Contains the generic chat interface.
  */
 export default function ChatPage(): React.ReactNode {
-  const { isAuthenticated } = useAuthSession();
+  const { isAuthenticated, isLoading } = useAuthSession();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const router = useRouter();
@@ -49,17 +49,30 @@ export default function ChatPage(): React.ReactNode {
     setAuthDialogOpen(true);
   };
 
+  // // Show loading state while auth initializes
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex h-full w-full items-center justify-center">
+  //       <DootLogoIcon
+  //         className="animate-pulse"
+  //         size={48}
+  //       />
+  //     </div>
+  //   );
+  // }
+
   return (
-    <React.Suspense
+    <>
+    {/* <React.Suspense
       fallback={
         <div className="flex h-full w-full items-center justify-center">
-          <DootIcon
+          <DootLogoIcon
             className="animate-pulse"
             size={48}
           />
         </div>
       }
-    >
+    > */}
       <Toaster />
       {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints) */}
       <header className="flex shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear">
@@ -79,7 +92,7 @@ export default function ChatPage(): React.ReactNode {
           </div>
           <div className="flex items-center gap-2 pt-2 pr-4">
             {/* Show auth buttons when not authenticated */}
-            {!isAuthenticated ? (
+            {!isAuthenticated && !isLoading ? (
               <>
                 <Button
                   size="sm"
@@ -94,6 +107,7 @@ export default function ChatPage(): React.ReactNode {
           </div>
         </div>
       </header>
+
       <ChatInterface />
 
       {/* Auth Dialog */}
@@ -102,6 +116,7 @@ export default function ChatPage(): React.ReactNode {
         onOpenChange={setAuthDialogOpen}
         mode={authMode}
       />
-    </React.Suspense>
+    {/* </React.Suspense> */}
+    </>
   );
 }

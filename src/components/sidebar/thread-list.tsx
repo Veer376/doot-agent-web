@@ -652,7 +652,7 @@ export function ThreadList() {
           isSelected && "bg-accent",
           !isSelected && "hover:bg-accent/50",
         )}
-        data-radius="radius2"
+        data-radius="radius1"
       >
         <div className="flex flex-col gap-1.5">
           {/* Thread Title */}
@@ -765,7 +765,7 @@ export function ThreadList() {
                 <button
                   onClick={handleCreateNewThread}
                   className="hover:bg-accent/50 mb-4 w-full px-3 py-2.5 text-left transition-colors"
-                  data-radius="radius2"
+                  data-radius="radius1"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-medium">

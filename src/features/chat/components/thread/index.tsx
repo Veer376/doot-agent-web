@@ -48,6 +48,7 @@ import { useComposerDraft } from "@/hooks/use-composer-draft";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
+import { AVAILABLE_MODELS, type Model } from "@/types/model";
 import { PromptGallery } from "@/components/ui/prompt-gallery";
 import type { PromptTemplate } from "@/components/ui/prompt-card";
 
@@ -233,8 +234,8 @@ export function Thread() {
   // Fetch all threads to access thread metadata
   const { data: threads = [] } = useFetchThreads();
 
-  // Track the last saved agent/mode to avoid redundant updates
-  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string } | null>(
+  // Track the last saved agent/mode/model to avoid redundant updates
+  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string; modelId?: string | null } | null>(
     null,
   );
   // Track which thread has been initialized to prevent race conditions
@@ -258,7 +259,7 @@ export function Thread() {
     const currentThread = threads.find((t) => t.thread_id === threadId);
     if (!currentThread?.metadata) return;
 
-    const { assistant_id, mode: threadMode } = currentThread.metadata;
+    const { assistant_id, mode: threadMode, model_id } = currentThread.metadata;
 
     // Track what's saved in this thread
     if (
@@ -269,6 +270,7 @@ export function Thread() {
       lastSavedMetadataRef.current = {
         agentId: assistant_id,
         mode: threadMode,
+        modelId: typeof model_id === "string" ? model_id : null,
       };
     }
 
@@ -280,6 +282,17 @@ export function Thread() {
     // Restore mode if saved in metadata
     if (threadMode && (threadMode === "agent" || threadMode === "chat")) {
       setMode(threadMode);
+    }
+
+    // Restore model if saved in metadata
+    if (typeof model_id === "string" && model_id) {
+      const modelToRestore = AVAILABLE_MODELS.find((m) => m.id === model_id);
+      if (modelToRestore) {
+        selectModel(modelToRestore);
+      }
+    } else {
+      // Clear model selection if not saved in thread
+      selectModel(null as unknown as Model);
     }
 
     // Mark this thread as initialized to prevent re-running restoration
@@ -375,7 +388,8 @@ export function Thread() {
           const hasChanged =
             !lastSavedMetadataRef.current ||
             lastSavedMetadataRef.current.agentId !== agentId ||
-            lastSavedMetadataRef.current.mode !== mode;
+            lastSavedMetadataRef.current.mode !== mode ||
+            lastSavedMetadataRef.current.modelId !== selectedModel?.id;
 
           if (hasChanged) {
             updateThread({
@@ -383,9 +397,10 @@ export function Thread() {
               metadata: {
                 assistant_id: agentId,
                 mode: mode,
+                ...(selectedModel?.id && { model_id: selectedModel.id }),
               },
             });
-            lastSavedMetadataRef.current = { agentId, mode };
+            lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
           }
 
           queryClient.invalidateQueries({
@@ -530,7 +545,8 @@ export function Thread() {
       const hasChanged =
         !lastSavedMetadataRef.current ||
         lastSavedMetadataRef.current.agentId !== agentId ||
-        lastSavedMetadataRef.current.mode !== mode;
+        lastSavedMetadataRef.current.mode !== mode ||
+        lastSavedMetadataRef.current.modelId !== selectedModel?.id;
 
       if (hasChanged) {
         // For existing threads, update metadata only if changed
@@ -539,10 +555,11 @@ export function Thread() {
           metadata: {
             assistant_id: agentId,
             mode: mode,
+            ...(selectedModel?.id && { model_id: selectedModel.id }),
           },
         });
         // Update tracking
-        lastSavedMetadataRef.current = { agentId, mode };
+        lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
       }
 
       // Invalidate thread state cache after message send

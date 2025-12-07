@@ -8,7 +8,8 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { useStream } from "@langchain/langgraph-sdk/react";
+import { useStream } from "@/hooks/stream";
+// import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
 import {
   uiMessageReducer,

@@ -33,8 +33,40 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   const [agentId, setSelectedAgent] = useState<string>("");
   const [mode, setMode] = useState<"agent" | "chat">("chat");
 
-  // Initialize with primary agent on mount
+  // Agent Resolution Priority:
+  // 1. URL Parameter (?agentId=xxx) - For marketing/sharing links
+  // 2. Thread Metadata (handled in Thread component when loading thread)
+  // 3. User Preference - TODO: Add localStorage/DB lookup for user's preferred agent
+  // 4. Primary Agent - Fallback to system's primary agent
   useEffect(() => {
+    // Priority 1: URL param (for marketing/sharing)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlAgentId = params.get('agentId');
+      
+      if (urlAgentId && agents.some((a) => a.assistant_id === urlAgentId)) {
+        setSelectedAgent(urlAgentId);
+        setMode('agent');
+        
+        // Clean URL param after applying to avoid sticky state on refresh
+        params.delete('agentId');
+        const newUrl = params.toString() 
+          ? `${window.location.pathname}?${params.toString()}` 
+          : window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+        return; // Skip fallback logic
+      }
+    }
+
+    // Priority 3: User Preference
+    // TODO: Add localStorage/DB lookup for user's preferred default agent
+    // const savedAgentId = localStorage.getItem('preferredAgentId');
+    // if (savedAgentId && agents.some(a => a.assistant_id === savedAgentId)) {
+    //   setSelectedAgent(savedAgentId);
+    //   return;
+    // }
+
+    // Priority 4: Primary agent fallback (existing logic)
     if (!agentId && agents.length > 0) {
       const defaultAgent = agents.find(isPrimaryAgent) ?? agents[0];
       if (defaultAgent) {

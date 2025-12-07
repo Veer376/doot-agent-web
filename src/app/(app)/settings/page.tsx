@@ -3,7 +3,7 @@
 import Settings from "@/features/settings";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootIcon } from "@/components/icons";
+import { Menu11Icon, DootLogoIcon } from "@/components/icons";
 import React from "react";
 
 // Force dynamic rendering for this page
@@ -18,7 +18,7 @@ export default function SettingsPage(): React.ReactNode {
     <React.Suspense
       fallback={
         <div className="flex h-full w-full items-center justify-center">
-          <DootIcon
+          <DootLogoIcon
             className="animate-pulse"
             size={48}
           />

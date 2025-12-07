@@ -4,7 +4,7 @@ import { AgentInbox } from "@/components/agent-inbox";
 import React from "react";
 import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootIcon } from "@/components/icons";
+import { Menu11Icon, DootLogoIcon } from "@/components/icons";
 import { Toaster } from "@/components/ui/sonner";
 import { InboxSidebar, InboxSidebarTrigger } from "@/components/inbox-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,7 +15,7 @@ export default function InboxPage(): React.ReactNode {
     <React.Suspense
       fallback={
         <div className="flex h-full w-full items-center justify-center">
-          <DootIcon
+          <DootLogoIcon
             className="animate-pulse"
             size={48}
           />

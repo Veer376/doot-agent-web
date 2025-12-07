@@ -583,13 +583,13 @@ export const DootLoaderIcon: React.FC<AppIconProps> = ({
       `}</style>
 
       {/* Right circle - stationary base circle */}
-        <circle
-          className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
-          strokeWidth="3"
-          cx="60"
-          cy="60" // Right will be centered.
-          r="26"
-        />
+      <circle
+        className="fill-foreground dark:fill-foreground stroke-background dark:stroke-background"
+        strokeWidth="3"
+        cx="60"
+        cy="60" // Right will be centered.
+        r="26"
+      />
       {/* Left circle - orbiting satellite with stroke to create separation */}
       <g className="doot-satellite-group">
         <circle
@@ -1046,9 +1046,6 @@ export const ZapOffIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
-/**
- * Undo Icon
- */
 export const Undo2Icon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={RepeatIcon}
@@ -1056,14 +1053,8 @@ export const Undo2Icon: React.FC<AppIconProps> = (props) => (
   />
 );
 
-/**
- * Trash2 Icon - alternative trash
- */
 export const Trash2Icon: React.FC<AppIconProps> = TrashIcon;
 
-/**
- * Save Icon - uses Sent/Check icon
- */
 export const SaveIcon: React.FC<AppIconProps> = (props) => (
   <IconWrapper
     icon={SentIcon}
@@ -1071,18 +1062,7 @@ export const SaveIcon: React.FC<AppIconProps> = (props) => (
   />
 );
 
-/**
- * House Icon - home alternative
- */
 export const HouseIcon: React.FC<AppIconProps> = HomeIcon;
-
-// Named exports for individual icon components (used with import { IconName })
-export // These are already exported above as component definitions, just listing here for clarity
-// LoaderIcon, ChevronUpIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon,
-// PlusIcon, PlusCircleIcon, XIcon, CloseIcon, AlertCircleIconHuge, TriangleAlertIcon,
-// FileIcon, FileTextIcon, ImageIcon, UserIconHuge, TrashIcon, EyeIcon, EyeOffIcon,
-// StarIcon, HomeIcon, ExternalLinkIcon, MessageSquareIcon, LayersIcon, CircleIcon
- {};
 
 // Default export object for convenient access
 export default {

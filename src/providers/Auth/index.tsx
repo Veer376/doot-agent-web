@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { SupabaseAuthProvider } from "@/lib/auth/supabase";
 import {
   AuthProvider as CustomAuthProvider,
@@ -8,15 +8,27 @@ import {
   User,
 } from "@/lib/auth/types";
 import { config } from "@/config";
-import { AuthUserProvider, useAuthUser, type AuthUserContextType } from "./AuthUser";
-import { AuthSessionProvider, useAuthSession, type AuthSessionContextType } from "./AuthSession";
-import { AuthActionsProvider, useAuthActions, type AuthActionsContextType } from "./AuthActions";
+import {
+  AuthUserProvider,
+  useAuthUser,
+  type AuthUserContextType,
+} from "./AuthUser";
+import {
+  AuthSessionProvider,
+  useAuthSession,
+  type AuthSessionContextType,
+} from "./AuthSession";
+import {
+  AuthActionsProvider,
+  useAuthActions,
+  type AuthActionsContextType,
+} from "./AuthActions";
 
 // Create default authentication provider (Supabase in this case)
 // Use NEXT_PUBLIC_SITE_URL if set, otherwise fallback to window.location.origin
 const getRedirectUrl = () => {
   const siteUrl = config.siteUrl;
-  
+
   if (siteUrl) {
     return siteUrl;
   }
@@ -32,12 +44,12 @@ const authProvider = new SupabaseAuthProvider({
 
 /**
  * AuthProvider: Composed authentication provider
- * 
+ *
  * This provider composes three focused sub-providers for optimal re-rendering:
  * - AuthUserProvider: user profile data (rarely changes)
- * - AuthSessionProvider: session state (moderately changes)  
+ * - AuthSessionProvider: session state (moderately changes)
  * - AuthActionsProvider: auth methods (never changes)
- * 
+ *
  * Components should use the granular hooks for best performance:
  * - useAuthUser() - for user data
  * - useAuthSession() - for session/loading/isAuthenticated
@@ -97,7 +109,7 @@ export function AuthProvider({
       user,
       updateUser: provider.updateUser.bind(provider),
     }),
-    [user, provider]
+    [user, provider],
   );
 
   // Memoize session context value (changes moderately)
@@ -107,7 +119,7 @@ export function AuthProvider({
       isLoading,
       isAuthenticated: !!session?.user,
     }),
-    [session, isLoading]
+    [session, isLoading],
   );
 
   // Memoize actions context value (stable, never changes)
@@ -120,7 +132,7 @@ export function AuthProvider({
       resetPassword: provider.resetPassword.bind(provider),
       updatePassword: provider.updatePassword.bind(provider),
     }),
-    [provider]
+    [provider],
   );
 
   return (
@@ -136,7 +148,7 @@ export function AuthProvider({
 
 /**
  * @deprecated Use useAuthUser(), useAuthSession(), or useAuthActions() instead
- * 
+ *
  * This convenience hook combines all three auth contexts.
  * It should only be used during migration or when you truly need all three.
  * Using granular hooks prevents unnecessary re-renders.
@@ -157,4 +169,8 @@ export function useAuthContext() {
 export { useAuthUser, useAuthSession, useAuthActions };
 
 // Re-export types
-export type { AuthUserContextType, AuthSessionContextType, AuthActionsContextType };
+export type {
+  AuthUserContextType,
+  AuthSessionContextType,
+  AuthActionsContextType,
+};

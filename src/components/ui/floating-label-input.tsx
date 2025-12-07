@@ -16,7 +16,8 @@ export const FloatingLabelInput = React.forwardRef<
 >(({ className, label, type, id, ...props }, ref) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const [hasValue, setHasValue] = React.useState(false);
-  const inputId = id || `floating-input-${React.useId()}`;
+  const generatedId = React.useId();
+  const inputId = id || `floating-input-${generatedId}`;
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
@@ -93,7 +94,8 @@ export const FloatingLabelPasswordInput = React.forwardRef<
   const [showPassword, setShowPassword] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
   const [hasValue, setHasValue] = React.useState(false);
-  const inputId = id || `floating-password-${React.useId()}`;
+  const generatedId = React.useId();
+  const inputId = id || `floating-password-${generatedId}`;
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);

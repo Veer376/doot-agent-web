@@ -10,6 +10,8 @@ const nextConfig = {
 		// This is temporary to unblock the build; please address type errors later.
 		ignoreBuildErrors: true,
 	},
+	output: 'standalone',
+	outputFileTracingRoot: process.cwd(),
 };
 
 export default nextConfig;

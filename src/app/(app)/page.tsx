@@ -3,7 +3,7 @@
 import ChatInterface from "@/features/chat";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootLogoIcon } from "@/components/icons";
+import { Menu11Icon } from "@/components/icons";
 import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -63,7 +63,7 @@ export default function ChatPage(): React.ReactNode {
 
   return (
     <>
-    {/* <React.Suspense
+      {/* <React.Suspense
       fallback={
         <div className="flex h-full w-full items-center justify-center">
           <DootLogoIcon
@@ -116,7 +116,7 @@ export default function ChatPage(): React.ReactNode {
         onOpenChange={setAuthDialogOpen}
         mode={authMode}
       />
-    {/* </React.Suspense> */}
+      {/* </React.Suspense> */}
     </>
   );
 }

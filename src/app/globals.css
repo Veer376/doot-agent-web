@@ -414,7 +414,7 @@ html {
 
   /* Avatar: apply tokenized radius by default and inherit on children */
   [data-slot="avatar"] {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius2);
   }
 
   [data-slot="avatar-image"],

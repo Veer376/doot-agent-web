@@ -174,6 +174,11 @@ export class SupabaseAuthProvider implements AuthProvider {
         provider: "github",
         options: {
           redirectTo: this.options.redirectUrl,
+          queryParams: {
+            // Force GitHub to show the login/authorization screen
+            // This allows users to choose a different account
+            allow_signup: "true",
+          },
         },
       });
 

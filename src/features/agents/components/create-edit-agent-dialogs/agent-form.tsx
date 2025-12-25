@@ -149,7 +149,7 @@ export function AgentFieldsForm({
                 placeholder="Search tools..."
                 className="w-full"
               />
-              <div className="relative w-full flex-1 basis-[500px] rounded-md border-[1px] border-slate-200 px-4">
+              <div data-radius="radius1" className="relative w-full flex-1 basis-[500px] border-[1px] border-slate-200 px-4">
                 <div className="absolute inset-0 overflow-y-auto px-4">
                   {toolConfigurations[0]?.label
                     ? displayTools.map((c) => (

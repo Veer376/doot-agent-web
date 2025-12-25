@@ -51,7 +51,7 @@ export function AgentList({ agents }: AgentListProps) {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg p-6 py-12">
+        <div data-radius="radius2" className="flex flex-col items-center justify-center p-6 py-12">
           {searchQuery ? (
             <EmptyState
               icon={SearchIcon}

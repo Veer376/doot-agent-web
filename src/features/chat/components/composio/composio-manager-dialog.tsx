@@ -317,7 +317,7 @@ export function ComposioManagerDialog({
                       >
                         <div className="p-4">
                           <div className="mb-3 flex items-center gap-3">
-                            <div className="bg-muted border-border/50 relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border">
+                            <div data-radius="radius2" className="bg-muted border-border/50 relative h-10 w-10 flex-shrink-0 overflow-hidden border">
                               {app.logo ? (
                                 <img
                                   src={app.logo}

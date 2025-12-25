@@ -23,7 +23,7 @@ export function ToolContainer({
   children,
 }: ToolContainerProps) {
   return (
-    <div data-radius="radius2" className={cn("overflow-hidden rounded-lg border border-gray-200", className)}>
+    <div data-radius="radius2" className={cn("overflow-hidden border border-gray-200", className)}>
       <div className={cn("border-b border-gray-200 bg-gray-50 px-4 py-2", headerClassName)}>
         {header ? (
           header

@@ -118,9 +118,10 @@ function InboxSidebarInternal() {
                                   className={cn(
                                     "flex w-full items-center justify-between",
                                     isSelected
-                                      ? "rounded-md bg-gray-100 dark:bg-gray-800"
+                                      ? "bg-gray-100 dark:bg-gray-800"
                                       : "",
                                   )}
+                                  data-radius="radius1"
                                 >
                                   <TooltipProvider>
                                     <Tooltip delayDuration={200}>

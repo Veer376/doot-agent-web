@@ -20,6 +20,17 @@
  */
 
 /* ============================================
+   VIEWPORT-RESPONSIVE SCALING
+   Scales all rem-based values proportionally based on viewport width.
+   - Min: 16px (at ~1024px viewport)
+   - Max: 20px (at ~1920px+ viewport)
+   - Scales smoothly in between
+   ============================================ */
+html {
+  font-size: clamp(16px, calc(14px + 0.25vw), 20px);
+}
+
+/* ============================================
    FONT FAMILIES
    ============================================ */
 :root {

@@ -88,7 +88,7 @@ export function AuthDialog({
 
         {/* Show pending message hint if provided */}
         {pendingMessage && (
-          <div className="mt-2 rounded-md bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+          <div data-radius="radius1" className="mt-2 bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
             <p className="font-medium">Prompt queued:</p>
             <p className="mt-1 truncate text-xs">{pendingMessage}</p>
           </div>

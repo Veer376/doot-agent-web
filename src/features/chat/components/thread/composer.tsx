@@ -404,7 +404,7 @@ export function Composer({
                           className="hover:bg-accent flex w-full items-center gap-3 p-2 text-sm transition-colors"
                           type="button"
                         >
-                          <div className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                          <div data-radius="radius2" className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center">
                             <Paperclip className="h-4 w-4" />
                           </div>
                           <div className="flex flex-1 flex-col items-start">
@@ -437,7 +437,7 @@ export function Composer({
                               }}
                               type="button"
                             >
-                              <div className="bg-card border-border flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+                              <div data-radius="radius2" className="bg-card border-border flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden border">
                                 {integrationIcons[
                                   integration.id as keyof typeof integrationIcons
                                 ] ? (
@@ -473,7 +473,7 @@ export function Composer({
                           }}
                           type="button"
                         >
-                          <div className="bg-muted/50 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                          <div data-radius="radius2" className="bg-muted/50 flex h-8 w-8 flex-shrink-0 items-center justify-center">
                             <Plug2 className="text-muted-foreground h-4 w-4" />
                           </div>
                           <span className="text-muted-foreground flex-1 text-left font-medium">

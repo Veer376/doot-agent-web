@@ -126,7 +126,7 @@ export function AgentDashboard() {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+        <div data-radius="radius2" className="animate-in fade-in-50 flex flex-col items-center justify-center border border-dashed p-8 text-center">
           <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
             <Search className="text-muted-foreground h-10 w-10" />
           </div>

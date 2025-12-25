@@ -27,13 +27,14 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     block.mime_type.startsWith("image/")
   ) {
     const url = `data:${block.mime_type};base64,${block.data}`;
-    let imgClass: string = "rounded-lg object-cover h-16 w-16 text-lg";
-    if (size === "sm") imgClass = "rounded-lg object-cover h-10 w-10 text-base";
-    if (size === "lg") imgClass = "rounded-lg object-cover h-24 w-24 text-xl";
-    if (size === "xl") imgClass = "rounded-lg object-cover h-32 w-32 text-2xl";
+    let imgClass: string = "object-cover h-16 w-16 text-lg";
+    if (size === "sm") imgClass = "object-cover h-10 w-10 text-base";
+    if (size === "lg") imgClass = "object-cover h-24 w-24 text-xl";
+    if (size === "xl") imgClass = "object-cover h-32 w-32 text-2xl";
     return (
       <div className={cn("relative inline-block", className)}>
         <Image
+          data-radius="radius2"
           src={url}
           alt={String(block.metadata?.name || "uploaded image")}
           className={imgClass}
@@ -68,12 +69,13 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
       block.metadata?.filename || block.metadata?.name || "PDF file";
     return (
       <div
+        data-radius="radius2"
         className={cn(
-          "relative flex items-center gap-3 rounded-lg border border-border bg-accent/30 p-1.5 transition-colors",
+          "relative flex items-center gap-3 border border-border bg-accent/30 p-1.5 transition-colors",
           className,
         )}
       >
-        <div className="flex items-center justify-center size-9 rounded-md bg-primary/10 flex-shrink-0">
+        <div data-radius="radius1" className="flex items-center justify-center size-9 bg-primary/10 flex-shrink-0">
           <Pdf01Icon
             className={cn(
               "text-primary",
@@ -103,12 +105,13 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
   // Fallback for unknown types
   return (
     <div
+      data-radius="radius2"
       className={cn(
-        "relative flex items-center gap-3 rounded-lg border border-border bg-accent/30 px-4 py-3 text-muted-foreground transition-colors",
+        "relative flex items-center gap-3 border border-border bg-accent/30 px-4 py-3 text-muted-foreground transition-colors",
         className,
       )}
     >
-      <div className="flex items-center justify-center size-9 rounded-md bg-muted flex-shrink-0">
+      <div data-radius="radius1" className="flex items-center justify-center size-9 bg-muted flex-shrink-0">
         <DocumentCodeIcon className="size-5" />
       </div>
       <span className="truncate text-sm pr-6">Unsupported file type</span>

@@ -53,7 +53,7 @@ function AppIcon({ appSlug, appName }: { appSlug: string; appName: string }) {
   const { data: iconData } = useComposioToolkitIcon(appSlug);
 
   return (
-    <div className="border-border/50 bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border">
+    <div data-radius="radius1" className="border-border/50 bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden border">
       {iconData?.icon_url ? (
         <img
           src={iconData.icon_url}
@@ -406,9 +406,10 @@ export function ComposioAppSelector({
                     type="button"
                     onClick={() => toggleApp(app.id)}
                     className={cn(
-                      "hover:bg-accent flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors",
+                      "hover:bg-accent flex w-full items-start gap-3 p-3 text-left transition-colors",
                       selectedProfileIds.includes(app.id) && "bg-accent",
                     )}
+                    data-radius="radius2"
                   >
                     <AppIcon
                       appSlug={app.app_name}

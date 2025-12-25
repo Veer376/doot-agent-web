@@ -133,7 +133,7 @@ export function GenericInterruptValue({
   const displayEntries = complex ? processEntries() : [];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div data-radius="radius2" className="overflow-hidden border border-gray-200">
       {/* Header */}
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">

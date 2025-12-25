@@ -115,7 +115,7 @@ export function ComposioConnectDialog({
                 <h3 className="mb-2 text-sm font-medium">
                   Your Connected Accounts
                 </h3>
-                <ScrollArea className="h-[150px] rounded-md border p-2">
+                <ScrollArea data-radius="radius1" className="h-[150px] border p-2">
                   <div className="space-y-2">
                     {accounts.map((account) => (
                       <div
@@ -169,7 +169,7 @@ export function ComposioConnectDialog({
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : (
-                <ScrollArea className="h-[300px] rounded-md border p-2">
+                <ScrollArea data-radius="radius1" className="h-[300px] border p-2">
                   <div className="grid grid-cols-2 gap-2">
                     {apps?.slice(0, 20).map((app) => (
                       <button
@@ -178,7 +178,7 @@ export function ComposioConnectDialog({
                         data-radius="radius1"
                         className="hover:bg-accent flex flex-col items-start gap-2 border p-3 text-left transition-colors"
                       >
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-md">
+                        <div data-radius="radius1" className="bg-primary/10 flex h-10 w-10 items-center justify-center">
                           {app.logo ? (
                             <img
                               src={app.logo}
@@ -217,7 +217,7 @@ export function ComposioConnectDialog({
 
         {step === "success" && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
+            <div data-radius="radius2" className="border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
               <p className="text-sm">✅ Connection initiated successfully!</p>
               {redirectUrl && (
                 <div className="mt-3">

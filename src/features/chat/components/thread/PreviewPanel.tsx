@@ -151,7 +151,7 @@ export function PreviewPanel() {
 
                 {/* DOM Text */}
                 {browserSnapshot.dom_text && (
-                  <div className="flex-1 overflow-hidden rounded-lg border bg-muted/50 p-4">
+                  <div data-radius="radius2" className="flex-1 overflow-hidden border bg-muted/50 p-4">
                     <h4 className="mb-2 text-sm font-semibold">DOM Content</h4>
                     <pre className="h-[calc(100%-2rem)] overflow-auto text-xs">
                       {browserSnapshot.dom_text}

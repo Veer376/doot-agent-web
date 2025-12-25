@@ -57,6 +57,12 @@ export interface AuthProvider {
     error: AuthError | null;
   }>;
 
+  signInWithGithub: () => Promise<{
+    user: User | null;
+    session: Session | null;
+    error: AuthError | null;
+  }>;
+
   signOut: () => Promise<{ error: AuthError | null }>;
 
   // Session management

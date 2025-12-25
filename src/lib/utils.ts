@@ -12,3 +12,10 @@ export function cn(...inputs: ClassValue[]) {
 export function googleAuthDisabled(): boolean {
   return config.features.googleAuthDisabled;
 }
+
+/**
+ * @returns true if github auth is disabled
+ */
+export function githubAuthDisabled(): boolean {
+  return config.features.githubAuthDisabled;
+}

@@ -168,6 +168,37 @@ export class SupabaseAuthProvider implements AuthProvider {
     }
   }
 
+  async signInWithGithub() {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: this.options.redirectUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      // For browser environments, handle the redirect
+      if (typeof window !== "undefined" && data?.url) {
+        window.location.href = data.url;
+      }
+
+      // OAuth returns data.url - handled above in browser environments
+      return {
+        user: null,
+        session: null,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        user: null,
+        session: null,
+        error: this.formatError(error),
+      };
+    }
+  }
+
   async signOut() {
     try {
       const { error } = await this.supabase.auth.signOut();

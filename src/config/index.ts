@@ -28,6 +28,7 @@ interface AppConfig {
     // Feature Flags
     features: {
         googleAuthDisabled: boolean;
+        githubAuthDisabled: boolean;
         requireApiKeys: boolean;
         mcpAuthRequired: boolean;
         isDemoApp: boolean;
@@ -87,6 +88,7 @@ function getConfig(): AppConfig {
         // Feature Flags
         features: {
             googleAuthDisabled: process.env.NEXT_PUBLIC_GOOGLE_AUTH_DISABLED === 'true',
+            githubAuthDisabled: process.env.NEXT_PUBLIC_GITHUB_AUTH_DISABLED === 'true',
             requireApiKeys: process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === 'true',
             mcpAuthRequired: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === 'true',
             isDemoApp: process.env.NEXT_PUBLIC_DEMO_APP === 'true',

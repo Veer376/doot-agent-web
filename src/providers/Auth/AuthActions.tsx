@@ -32,6 +32,11 @@ export interface AuthActionsContextType {
     session: Session | null;
     error: AuthError | null;
   }>;
+  signInWithGithub: () => Promise<{
+    user: User | null;
+    session: Session | null;
+    error: AuthError | null;
+  }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;

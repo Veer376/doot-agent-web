@@ -128,6 +128,7 @@ export function AuthProvider({
       signIn: provider.signIn.bind(provider),
       signUp: provider.signUp.bind(provider),
       signInWithGoogle: provider.signInWithGoogle.bind(provider),
+      signInWithGithub: provider.signInWithGithub.bind(provider),
       signOut: provider.signOut.bind(provider),
       resetPassword: provider.resetPassword.bind(provider),
       updatePassword: provider.updatePassword.bind(provider),

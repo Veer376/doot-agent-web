@@ -478,8 +478,15 @@ export function ThreadList() {
   };
 
   const handleDeleteThread = async (threadIdToDelete: string) => {
-    let undoClicked = false;
+    // Track state with object to ensure consistent reference in closures
+    const deleteState = {
+      undoClicked: false,
+      deleteCompleted: false,
+    };
     let deleteTimeout: NodeJS.Timeout | null = null;
+    
+    // Use a consistent grace period for both toast and delete timeout
+    const UNDO_GRACE_PERIOD_MS = 5000;
 
     try {
       // Optimistically remove from UI (without actually deleting from DB)
@@ -493,17 +500,28 @@ export function ThreadList() {
         setThreadId(null);
       }
 
-      // Show toast with undo button (4.5 seconds)
+      // Show toast with undo button
       toast("Thread deleted", {
-        description: "You can undo this action within 4.5 seconds",
-        duration: 4500,
+        description: `You can undo this action within ${UNDO_GRACE_PERIOD_MS / 1000} seconds`,
+        duration: UNDO_GRACE_PERIOD_MS,
         action: {
           label: "Undo",
           onClick: () => {
-            undoClicked = true;
+            // Check if deletion has already completed
+            if (deleteState.deleteCompleted) {
+              toast.error("Cannot undo", {
+                description: "The thread has already been permanently deleted",
+              });
+              return;
+            }
+            
+            // Mark undo as clicked and cancel the pending deletion
+            deleteState.undoClicked = true;
             if (deleteTimeout) {
               clearTimeout(deleteTimeout);
+              deleteTimeout = null;
             }
+            
             // Restore the thread in the UI by invalidating queries
             queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
             toast.success("Thread restored");
@@ -511,16 +529,24 @@ export function ThreadList() {
         },
       });
 
-      // Set timeout to permanently delete after 4.5 seconds
+      // Set timeout to permanently delete after grace period
       deleteTimeout = setTimeout(async () => {
-        if (!undoClicked) {
+        // Only proceed if undo wasn't clicked
+        if (!deleteState.undoClicked) {
           try {
+            // Mark deletion as completed before making the API call
+            // This prevents race condition where undo is clicked during API call
+            deleteState.deleteCompleted = true;
+            
             // Actually delete from database
             await deleteThread.mutateAsync({
               threadId: threadIdToDelete,
               skipToast: true,
             });
           } catch (error) {
+            // Reset completion flag on error since deletion failed
+            deleteState.deleteCompleted = false;
+            
             console.error("Failed to permanently delete thread:", error);
             toast.error("Failed to delete thread", {
               description:
@@ -530,7 +556,7 @@ export function ThreadList() {
             queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
           }
         }
-      }, 5000);
+      }, UNDO_GRACE_PERIOD_MS);
     } catch (error) {
       console.error("Failed to delete thread:", error);
       toast.error("Failed to delete thread", {

@@ -112,6 +112,7 @@ export function SignInForm({
             label="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            data-radius="radius2"
             required
           />
         </div>

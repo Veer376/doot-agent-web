@@ -146,11 +146,13 @@ export function ComposerSegmentedControl({
         />
 
         {/* Left segment: Agent (no background, indicator handles it) */}
-        <IconAgentSelector
-          variant="segment"
-          className="relative z-10 h-8"
-          buttonRef={agentButtonRef}
-        />
+        <div id="agent-selector-segment">
+          <IconAgentSelector
+            variant="segment"
+            className="relative z-10 h-8"
+            buttonRef={agentButtonRef}
+          />
+        </div>
 
         {/* Right segment: Chat (tooltip + hover background on inactive only) */}
         <TooltipProvider>

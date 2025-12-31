@@ -64,7 +64,7 @@ export function NavFooter() {
       }
     : {
         name: "Guest",
-        email: "Not signed in",
+        email: "@guest",
         avatar: "",
         firstName: "",
         lastName: "",
@@ -91,7 +91,8 @@ export function NavFooter() {
   };
 
   const handleSignIn = () => {
-    router.push("/signin");
+    // Use auth param to open dialog instead of navigating to separate page
+    router.push("/?auth=signin");
   };
 
   const handleClearLocalData = () => {

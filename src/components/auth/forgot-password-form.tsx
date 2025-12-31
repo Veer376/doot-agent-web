@@ -79,7 +79,7 @@ export function ForgotPasswordForm({
           <Button
             type="button"
             variant="outline"
-            data-radius="full"
+            data-radius="radius2"
             className="h-11 w-full"
             onClick={onSwitchToSignIn}
           >
@@ -111,7 +111,7 @@ export function ForgotPasswordForm({
 
           <Button
             type="submit"
-            data-radius="full"
+            data-radius="radius2"
             className="h-11 w-full bg-black text-white hover:bg-black/90"
             disabled={isLoading}
           >

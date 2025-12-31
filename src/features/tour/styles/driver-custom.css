@@ -1,0 +1,204 @@
+/**
+ * Custom styles for driver.js tour popover
+ * Matches DootAgent's design system
+ * 
+ * DESIGN TOKENS REFERENCE:
+ * - --radius1: 0.5rem (small elements like buttons)
+ * - --radius2: 1.1rem (containers, popovers)
+ * - --radius3: 1.7rem (prominent elements)
+ * - --font-sans: Geist Sans font family
+ */
+
+/* ============================================
+   POPOVER CONTAINER
+   ============================================ */
+.driver-popover {
+    /* Use app's font family */
+    font-family: var(--font-sans) !important;
+
+    /* Colors from theme */
+    background: var(--popover) !important;
+    color: var(--popover-foreground) !important;
+    border: 1px solid var(--border) !important;
+
+    /* Use radius2 for popovers (1.1rem) */
+    border-radius: var(--radius2) !important;
+
+    /* Subtle shadow */
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.15) !important;
+
+    /* Padding and sizing */
+    padding: 1rem 1.25rem !important;
+    max-width: 320px !important;
+
+    /* Remove any text effects */
+    text-shadow: none !important;
+}
+
+/* ============================================
+   TITLE STYLING
+   ============================================ */
+.driver-popover-title {
+    font-family: var(--font-sans) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: var(--foreground) !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.4 !important;
+    text-shadow: none !important;
+}
+
+/* ============================================
+   DESCRIPTION STYLING
+   ============================================ */
+.driver-popover-description {
+    font-family: var(--font-sans) !important;
+    font-size: 0.875rem !important;
+    color: var(--muted-foreground) !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1rem !important;
+    text-shadow: none !important;
+}
+
+/* ============================================
+   FOOTER & BUTTONS
+   ============================================ */
+.driver-popover-footer {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Button base styles - use radius1 (0.5rem) for buttons */
+.driver-popover-footer button {
+    font-family: var(--font-sans) !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    border-radius: var(--radius1) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1.25 !important;
+    /* Remove all text effects */
+    text-shadow: none !important;
+    text-decoration: none !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Close/Skip button (X icon) - ghost style, no border */
+.driver-popover-close-btn {
+    background: transparent !important;
+    border: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: var(--muted-foreground) !important;
+    text-shadow: none !important;
+    border-radius: var(--radius2) !important;
+}
+
+.driver-popover-close-btn:hover {
+    background: var(--accent) !important;
+    color: var(--foreground) !important;
+    border-radius: var(--radius2) !important;
+}
+
+/* Next/Done button - primary style */
+.driver-popover-next-btn,
+.driver-popover-done-btn {
+    background: var(--primary) !important;
+    border: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: var(--primary-foreground) !important;
+    text-shadow: none !important;
+}
+
+.driver-popover-next-btn:hover,
+.driver-popover-done-btn:hover {
+    opacity: 0.9 !important;
+}
+
+/* ============================================
+   ARROW/POINTER
+   ============================================ */
+.driver-popover-arrow {
+    border-color: transparent !important;
+}
+
+.driver-popover-arrow-side-bottom {
+    border-bottom-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-top {
+    border-top-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-left {
+    border-left-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-right {
+    border-right-color: var(--popover) !important;
+}
+
+/* ============================================
+   OVERLAY/BACKDROP - MINIMAL BLUR
+   ============================================ */
+.driver-overlay {
+    /* Very subtle backdrop - reduced opacity */
+    background: rgba(0, 0, 0, 0.3) !important;
+    /* No blur effect */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* ============================================
+   HIGHLIGHT ELEMENT
+   ============================================ */
+.driver-highlighted-element {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 4px !important;
+    border-radius: var(--radius2) !important;
+}
+
+/* ============================================
+   HIDDEN ELEMENTS
+   ============================================ */
+/* Hide prev button since we only have one step */
+.driver-popover-prev-btn {
+    display: none !important;
+}
+
+/* Hide progress indicator since we have single step */
+.driver-popover-progress-text {
+    display: none !important;
+}
+
+/* ============================================
+   DARK MODE ADJUSTMENTS
+   ============================================ */
+.dark .driver-popover {
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .driver-overlay {
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ============================================
+   POINTER EVENTS
+   ============================================ */
+.driver-active-element {
+    pointer-events: auto !important;
+}
+
+/* Reset any default driver.js animation/transition effects that might cause issues */
+.driver-popover * {
+    text-shadow: none !important;
+}

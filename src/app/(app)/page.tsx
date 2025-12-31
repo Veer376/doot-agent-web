@@ -8,8 +8,9 @@ import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { AuthDialog, type AuthMode } from "@/components/auth/auth-dialog";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
+import { AgentTour } from "@/features/tour/components/AgentTour";
 
 /**
  * The default page (/).
@@ -20,15 +21,12 @@ export default function ChatPage(): React.ReactNode {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Handle auth query param to open dialog (e.g., /?auth=signin)
+  // Uses useSearchParams to react to client-side URL changes
   useEffect(() => {
-    // Read search params from `window.location` inside the client-only effect
-    // This avoids using `useSearchParams()` which can cause a CSR bailout during pre-render.
-    if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    const authParam = params.get("auth");
+    const authParam = searchParams.get("auth");
 
     if (!isAuthenticated && authParam) {
       const validModes: AuthMode[] = ["signin", "signup", "forgot-password"];
@@ -38,11 +36,12 @@ export default function ChatPage(): React.ReactNode {
       }
 
       // Remove ONLY the auth param, preserve all other params (threadId, etc.)
+      const params = new URLSearchParams(searchParams.toString());
       params.delete("auth");
       const newUrl = params.toString() ? `/?${params.toString()}` : "/";
       router.replace(newUrl, { scroll: false });
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, searchParams, router]);
 
   const handleOpenSignUp = () => {
     setAuthMode("signup");
@@ -116,6 +115,9 @@ export default function ChatPage(): React.ReactNode {
         onOpenChange={setAuthDialogOpen}
         mode={authMode}
       />
+
+      {/* Tour for unauthenticated users */}
+      <AgentTour />
       {/* </React.Suspense> */}
     </>
   );

@@ -3,7 +3,7 @@
 import ChatInterface from "@/features/chat";
 import { Toaster } from "@/components/ui/sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon } from "@/components/icons";
+import { Menu11Icon, GithubIcon } from "@/components/icons";
 import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ import { AuthDialog, type AuthMode } from "@/components/auth/auth-dialog";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { AgentTour } from "@/features/tour/components/AgentTour";
+import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 
 /**
  * The default page (/).
@@ -20,6 +21,13 @@ export default function ChatPage(): React.ReactNode {
   const { isAuthenticated, isLoading } = useAuthSession();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const [welcomeDone, setWelcomeDone] = useState(() => {
+    // Check if welcome was already seen on initial render
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("dootagent-demo-seen") === "true";
+    }
+    return false;
+  });
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -48,30 +56,12 @@ export default function ChatPage(): React.ReactNode {
     setAuthDialogOpen(true);
   };
 
-  // // Show loading state while auth initializes
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex h-full w-full items-center justify-center">
-  //       <DootLogoIcon
-  //         className="animate-pulse"
-  //         size={48}
-  //       />
-  //     </div>
-  //   );
-  // }
+  const handleWelcomeClose = () => {
+    setWelcomeDone(true);
+  };
 
   return (
     <>
-      {/* <React.Suspense
-      fallback={
-        <div className="flex h-full w-full items-center justify-center">
-          <DootLogoIcon
-            className="animate-pulse"
-            size={48}
-          />
-        </div>
-      }
-    > */}
       <Toaster />
       {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints) */}
       <header className="flex shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear">
@@ -90,6 +80,16 @@ export default function ChatPage(): React.ReactNode {
             </div>
           </div>
           <div className="flex items-center gap-2 pt-2 pr-4">
+            {/* GitHub link - always visible */}
+            <a
+              href="https://github.com/Veer376/doot-agent-lab"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              title="View on GitHub"
+            >
+              <GithubIcon className="size-5" />
+            </a>
             {/* Show auth buttons when not authenticated */}
             {!isAuthenticated && !isLoading ? (
               <>
@@ -116,9 +116,11 @@ export default function ChatPage(): React.ReactNode {
         mode={authMode}
       />
 
-      {/* Tour for unauthenticated users */}
-      <AgentTour />
-      {/* </React.Suspense> */}
+      {/* Welcome video modal - shows first */}
+      <WelcomeModal onClose={handleWelcomeClose} />
+
+      {/* Tour for unauthenticated users - only after welcome is done */}
+      {welcomeDone && <AgentTour />}
     </>
   );
 }

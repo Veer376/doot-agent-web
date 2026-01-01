@@ -100,7 +100,7 @@ export function SignInForm({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex-1 w-full overflow-y-auto p-4 content-mask">
-        <div className="mb-4 flex flex-col items-center gap-3">
+        <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
               <LoginIcon className="size-4 text-blue-600 dark:text-blue-400" />

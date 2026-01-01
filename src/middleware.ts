@@ -15,7 +15,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - api/auth (auth API routes)
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm|ogg)$).*)",
 
     /*
      * Match all API routes except for auth-related ones

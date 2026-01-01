@@ -13,6 +13,7 @@ interface AuthDialogProps {
   onOpenChange: (open: boolean) => void;
   mode?: AuthMode;
   pendingMessage?: string;
+  onClearPendingMessage?: () => void;
 }
 
 export function AuthDialog({
@@ -20,6 +21,7 @@ export function AuthDialog({
   onOpenChange,
   mode: initialMode = "signin",
   pendingMessage,
+  onClearPendingMessage,
 }: AuthDialogProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
 
@@ -56,6 +58,8 @@ export function AuthDialog({
             onSuccess={handleSuccess}
             onSwitchToSignUp={() => setMode("signup")}
             onSwitchToForgotPassword={() => setMode("forgot-password")}
+            pendingMessage={pendingMessage}
+            onClearPendingMessage={onClearPendingMessage}
           />
         );
       case "signup":
@@ -63,6 +67,8 @@ export function AuthDialog({
           <SignUpForm
             onSuccess={handleSuccess}
             onSwitchToSignIn={() => setMode("signin")}
+            pendingMessage={pendingMessage}
+            onClearPendingMessage={onClearPendingMessage}
           />
         );
       case "forgot-password":
@@ -82,17 +88,11 @@ export function AuthDialog({
       <DialogContent
         style={{ maxWidth: "23rem" }}
         data-radius="radius2"
+        className="flex flex-col gap-0 overflow-hidden p-0"
       >
         <DialogTitle className="sr-only">{getDialogTitle()}</DialogTitle>
-        {renderForm()}
 
-        {/* Show pending message hint if provided */}
-        {pendingMessage && (
-          <div data-radius="radius1" className="mt-2 bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
-            <p className="font-medium">Prompt queued:</p>
-            <p className="mt-1 truncate text-xs">{pendingMessage}</p>
-          </div>
-        )}
+        {renderForm()}
       </DialogContent>
     </Dialog>
   );

@@ -7,6 +7,8 @@ import { useAuthActions } from "@/providers/Auth";
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
 import { Loader2 } from "lucide-react";
 
+import { ForgotPassIcon } from "@/components/icons";
+
 interface ForgotPasswordFormProps {
   onSuccess?: () => void;
   onSwitchToSignIn?: () => void;
@@ -55,90 +57,99 @@ export function ForgotPasswordForm({
   };
 
   return (
-    <div className="w-full">
-      <div className="mb-6 flex flex-col items-center gap-2">
-        <h1 className="text-foreground text-center text-xl leading-tight font-semibold">
-          Reset your password
-        </h1>
-        <p className="text-muted-foreground text-center text-sm">
-          Enter your email and we'll send you a reset link
-        </p>
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex-1 w-full overflow-y-auto p-4 content-mask">
+        <div className="mb-4 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
+              <ForgotPassIcon className="size-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h1 className="text-foreground text-center text-xl leading-tight font-semibold">
+              Reset your password
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-center text-sm">
+            Enter your email and we&apos;ll send you a reset link
+          </p>
+        </div>
+
+        {success ? (
+          <div className="space-y-4">
+            <Alert
+              data-radius="radius2"
+              className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
+            >
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                Check your email for a link to reset your password. If it doesn&apos;t
+                appear within a few minutes, check your spam folder.
+              </AlertDescription>
+            </Alert>
+            <Button
+              type="button"
+              variant="outline"
+              data-radius="radius2"
+              className="h-11 w-full"
+              onClick={onSwitchToSignIn}
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3"
+          >
+            <FloatingLabelInput
+              id="email"
+              type="email"
+              label="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            {error && (
+              <Alert
+                variant="destructive"
+                data-radius="radius2"
+              >
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              data-radius="radius2"
+              className="h-11 w-full bg-black text-white hover:bg-black/90"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send reset link"
+              )}
+            </Button>
+          </form>
+        )}
       </div>
 
-      {success ? (
-        <div className="space-y-4">
-          <Alert
-            data-radius="radius2"
-            className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
-          >
-            <AlertDescription className="text-green-800 dark:text-green-200">
-              Check your email for a link to reset your password. If it doesn't
-              appear within a few minutes, check your spam folder.
-            </AlertDescription>
-          </Alert>
-          <Button
+      {!success && (
+        <div className="shrink-0 relative bg-background/80 p-3 pt-0 backdrop-blur-md z-10 text-center text-xs">
+          <div className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent" />
+          <button
             type="button"
-            variant="outline"
-            data-radius="radius2"
-            className="h-11 w-full"
             onClick={onSwitchToSignIn}
+            className="group text-muted-foreground hover:text-foreground transition-colors"
           >
-            Back to Sign In
-          </Button>
+            Remember your password?{" "}
+            <span className="group-hover:text-blue-600 transition-colors">Sign in</span>
+          </button>
         </div>
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
-          <FloatingLabelInput
-            id="email"
-            type="email"
-            label="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          {error && (
-            <Alert
-              variant="destructive"
-              data-radius="radius2"
-            >
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button
-            type="submit"
-            data-radius="radius2"
-            className="h-11 w-full bg-black text-white hover:bg-black/90"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              "Send reset link"
-            )}
-          </Button>
-
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">
-              Remember your password?{" "}
-            </span>
-            <button
-              type="button"
-              onClick={onSwitchToSignIn}
-              className="text-primary font-medium hover:underline"
-            >
-              Sign in
-            </button>
-          </div>
-        </form>
       )}
     </div>
   );
+
 }

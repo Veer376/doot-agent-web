@@ -79,7 +79,39 @@ import {
   InboxIcon as InboxHugeIcon,
   ZapIcon,
   Clock01Icon,
+  Queue01Icon,
+  ForgotPasswordIcon,
+  Login02Icon,
+  Login01Icon,
 } from "hugeicons-react";
+
+export const QueueIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Queue01Icon}
+    {...props}
+  />
+);
+
+export const ForgotPassIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ForgotPasswordIcon}
+    {...props}
+  />
+);
+
+export const LoginIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Login02Icon}
+    {...props}
+  />
+);
+
+export const SignUpIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Login01Icon}
+    {...props}
+  />
+);
 
 import { cn } from "@/lib/utils";
 // Additional icons

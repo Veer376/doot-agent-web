@@ -6,6 +6,14 @@ import {
   LoaderIcon,
   TriangleAlertIcon,
 } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useTheme } from "next-themes";
 import {
   ToggleIcon,
@@ -46,6 +54,7 @@ export function NavFooter() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { resetStore } = useConfigStore();
 
@@ -70,21 +79,22 @@ export function NavFooter() {
         lastName: "",
       };
 
-  const handleSignOut = async () => {
+  const performSignOut = async () => {
     try {
       setIsSigningOut(true);
       const { error } = await signOut();
 
       if (error) {
-        console.error("Error signing out:", error);
-        toast.error("Error signing out", { richColors: true });
+        toast.error("Error signing out");
         return;
       }
 
-      router.push("/signin");
-    } catch (err) {
-      console.error("Error during sign out:", err);
-      toast.error("Error signing out", { richColors: true });
+      resetStore();
+      toast.success("Signed out successfully");
+      setShowLogoutDialog(false);
+      router.push("/");
+    } catch (error) {
+      toast.error("Something went wrong");
     } finally {
       setIsSigningOut(false);
     }
@@ -201,20 +211,10 @@ export function NavFooter() {
 
             {isAuthenticated ? (
               <DropdownMenuItem
-                onClick={handleSignOut}
-                disabled={isSigningOut}
+                onClick={() => setShowLogoutDialog(true)}
               >
-                {isSigningOut ? (
-                  <>
-                    <LoaderIcon className="mr-2 h-4 w-4" />
-                    Logging out...
-                  </>
-                ) : (
-                  <>
-                    <LogOutIcon size={DEFAULT_ICON_SIZE} />
-                    Log out
-                  </>
-                )}
+                <LogOutIcon size={DEFAULT_ICON_SIZE} />
+                Log out
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={handleSignIn}>
@@ -231,6 +231,45 @@ export function NavFooter() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-[22rem] gap-6 p-6" data-radius="radius2">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-center text-xl font-semibold">
+              Are you sure you want to log out?
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm text-muted-foreground">
+              Log out as {displayUser.email}?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={performSignOut}
+              data-radius="radius2"
+              className="h-11 bg-black text-white hover:bg-black/90"
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? (
+                <>
+                  <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                "Log out"
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+              data-radius="radius2"
+              className="h-11 w-full border-gray-200"
+              disabled={isSigningOut}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarMenu>
   );
 }

@@ -804,6 +804,7 @@ export function Thread() {
         onOpenChange={setAuthDialogOpen}
         mode="signin"
         pendingMessage={pendingMessage || undefined}
+        onClearPendingMessage={() => setPendingMessage(null)}
       />
     </div>
   );

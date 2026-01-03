@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDown01Icon } from "hugeicons-react";
 import { NeuralNetworkIcon } from "hugeicons-react";
-import { CheckmarkCircleIcon } from "@/components/icons"
+import { CheckmarkCircleIcon } from "@/components/icons";
 import { ToolContainer } from "@/components/ai-elements/tool-container";
 
 interface ThinkingStep {
@@ -14,16 +14,17 @@ interface ThinkingStep {
 
 interface ThinkingBlockProps {
   thinkingBlocks: ThinkingStep[];
-  usageMetadata?: any; // For showing token count
+  usageMetadata?: unknown; // For showing token count
 }
 
-export function ThinkingBlock({ thinkingBlocks, usageMetadata }: ThinkingBlockProps) {
+export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Get summary from last thinking block heading
-  const summary = thinkingBlocks.length > 0 
-    ? thinkingBlocks[thinkingBlocks.length - 1].heading 
-    : "Thinking...";
+  const summary =
+    thinkingBlocks.length > 0
+      ? thinkingBlocks[thinkingBlocks.length - 1].heading
+      : "Thinking...";
 
   return (
     <div className="w-full pb-2">
@@ -31,7 +32,7 @@ export function ThinkingBlock({ thinkingBlocks, usageMetadata }: ThinkingBlockPr
         header={
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="group flex w-full items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+            className="group text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-sm transition-colors focus:outline-none"
           >
             {/* Icon */}
             <NeuralNetworkIcon className="h-5 w-5 flex-shrink-0" />
@@ -67,53 +68,56 @@ export function ThinkingBlock({ thinkingBlocks, usageMetadata }: ThinkingBlockPr
               <div className="mt-1 ml-2">
                 {/* Chain of thoughts timeline */}
                 <div className="relative">
-                {thinkingBlocks.map((block, index) => {
-                  const isLast = index === thinkingBlocks.length - 1;
-                  
-                  return (
-                    <div key={index} className="relative flex gap-3 pb-2">
-                      {/* Vertical line and dot */}
-                      <div className="relative flex flex-col items-center">
-                        {/* Unicode dot character */}
-                        <div className="relative z-10 flex items-center justify-center text-muted-foreground leading-none">
-                          •
-                        </div>
-                        
-                        {/* Vertical line (only if not last) */}
-                        {!isLast && (
-                          <div className="absolute top-3 h-full w-px bg-border" />
-                        )}
-                      </div>
+                  {thinkingBlocks.map((block, index) => {
+                    const isLast = index === thinkingBlocks.length - 1;
 
-                      {/* Content */}
-                      <div className="flex-1 -mt-0.5">
-                        {/* Heading and Content together without gap */}
-                        <div className="font-normal text-xs text-muted-foreground">
-                          {block.heading}
-                        </div>
-                        {block.content && block.content.length > 0 && (
-                          <div className="text-xs text-muted-foreground/70 leading-relaxed whitespace-pre-wrap">
-                            {block.content}
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex gap-3 pb-1"
+                      >
+                        {/* Vertical line and dot */}
+                        <div className="relative flex flex-col items-center">
+                          {/* Unicode dot character */}
+                          <div className="text-muted-foreground relative z-10 flex items-center justify-center leading-none">
+                            •
                           </div>
-                        )}
+
+                          {/* Vertical line (only if not last) */}
+                          {!isLast && (
+                            <div className="bg-border absolute top-3 h-full w-px" />
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="-mt-0.5 flex-1">
+                          {/* Heading and Content together without gap */}
+                          <div className="text-muted-foreground text-xs font-normal">
+                            {block.heading}
+                          </div>
+                          {block.content && block.content.length > 0 && (
+                            <div className="text-muted-foreground/70 text-xs leading-relaxed whitespace-pre-wrap">
+                              {block.content}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Final "Done" indicator */}
+                  <div className="relative flex gap-3">
+                    <div className="relative flex flex-col items-center">
+                      {/* Unicode checkmark */}
+                      <CheckmarkCircleIcon className="h-3 w-3" />
+                    </div>
+
+                    <div className="-mt-0.5 flex-1">
+                      <div className="text-muted-foreground/70 text-xs font-normal">
+                        Done
                       </div>
                     </div>
-                  );
-                })}
-
-                {/* Final "Done" indicator */}
-                <div className="relative flex gap-3">
-                  <div className="relative flex flex-col items-center">
-                    {/* Unicode checkmark */}
-                    <CheckmarkCircleIcon className="h-3 w-3" />
                   </div>
-                  
-                  <div className="flex-1 -mt-0.5">
-                    <div className="font-normal text-xs text-muted-foreground/70">
-                      Done
-                    </div>
-                  </div>
-                </div>
                 </div>
               </div>
             </motion.div>

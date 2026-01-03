@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { OrbitIcon } from "@/components/icons/app-icons";
+import { DootLogoIcon } from "@/components/icons/app-icons";
 import {
   Menu11Icon,
   SidebarLeft01Icon,
@@ -42,11 +42,11 @@ export function SiteHeader() {
                 <SidebarRight01Icon size="sm" />
               )
             ) : (
-              <OrbitIcon />
+              <DootLogoIcon size={32} />
             )}
             {/* Keep brand name visible only when not collapsed */}
             <div className="grid flex-1 pl-0 text-left text-sm leading-none transition-all group-data-[collapsible=icon]:opacity-0">
-              <span className="truncate font-semibold">Orbit Agent</span>
+              <span className="truncate font-semibold">DootAgent</span>
             </div>
           </SidebarMenuButton>
 

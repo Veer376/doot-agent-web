@@ -4,11 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/client";
 import { Agent } from "@/types/agent";
 import { toast } from "sonner";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import {
   groupAgentsByGraphs,
-  isSystemCreatedDefaultAssistant,
-  isUserCreatedDefaultAssistant,
+  isTemplateAgent,
+  isPrimaryAgent,
 } from "@/lib/agent-utils";
 import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 
@@ -27,7 +27,7 @@ export const agentKeys = {
 // ============================================================================
 
 async function fetchAgents(
-  accessToken: string,
+  accessToken: string | undefined,
   getSchemaFn: (agentId: string) => Promise<Record<string, any> | undefined>,
 ): Promise<Agent[]> {
   const client = createClient(accessToken);
@@ -43,12 +43,11 @@ async function fetchAgents(
   // OPTIMIZATION: Fetch all schemas in parallel instead of sequential
   // This reduces fetch time from ~1.8s to much faster
   const schemaPromises = assistantsGroupedByGraphs.map(async (group) => {
-    const defaultAssistant =
-      group.find((a) => isUserCreatedDefaultAssistant(a)) ?? group[0];
+    const primaryAssistant = group.find((a) => isPrimaryAgent(a)) ?? group[0];
     return {
       group,
-      defaultAssistant,
-      schema: await getSchemaFn(defaultAssistant.assistant_id),
+      defaultAssistant: primaryAssistant,
+      schema: await getSchemaFn(primaryAssistant.assistant_id),
     };
   });
 
@@ -76,14 +75,16 @@ async function fetchAgents(
     }
 
     // Return all agents in the group with the same supportedConfigs
-    return group.map((assistant) => ({
-      ...assistant,
-      supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
-    }));
+    // Filter out template agents (they should not be shown in the list)
+    return group
+      .filter((assistant) => !isTemplateAgent(assistant))
+      .map((assistant) => ({
+        ...assistant,
+        supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
+      }));
   });
 
-  // Filter out system created default assistants
-  return processedAgents.filter((a) => !isSystemCreatedDefaultAssistant(a));
+  return processedAgents;
 }
 
 // ============================================================================
@@ -93,9 +94,10 @@ async function fetchAgents(
 /**
  * Hook to fetch all agents with React Query
  * This replaces the manual state management in Agents.tsx
+ * Works for both authenticated and unauthenticated users
  */
 export function useFetchAgents() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   // Helper function for fetching schema (used by fetchAgents)
@@ -114,13 +116,11 @@ export function useFetchAgents() {
   return useQuery({
     queryKey: agentKeys.lists(),
     queryFn: async () => {
-      if (!accessToken) {
-        throw new Error("Not authenticated");
-      }
-      
+      // Pass accessToken (can be undefined for unauthenticated users)
       return fetchAgents(accessToken, getSchemaFn);
     },
-    enabled: !!accessToken,
+    // Always enabled - unauthenticated users get system agents only
+    enabled: true,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
   });
@@ -130,7 +130,7 @@ export function useFetchAgents() {
  * Hook to fetch a single agent by ID
  */
 export function useFetchAgent(agentId: string) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useQuery({
@@ -142,8 +142,8 @@ export function useFetchAgent(agentId: string) {
       const client = createClient(accessToken);
       const agent = await client.assistants.get(agentId);
 
-      // Never expose the system created default assistants to the user
-      if (isSystemCreatedDefaultAssistant(agent)) {
+      // Never expose template agents to the user
+      if (isTemplateAgent(agent)) {
         return undefined;
       }
 
@@ -158,7 +158,7 @@ export function useFetchAgent(agentId: string) {
  * Hook to create a new agent
  */
 export function useCreateAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -208,7 +208,7 @@ export function useCreateAgent() {
  * Hook to update an existing agent
  */
 export function useUpdateAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -253,33 +253,74 @@ export function useUpdateAgent() {
 }
 
 /**
- * Hook to delete an agent
+ * Hook to delete an agent with undo support
  */
 export function useDeleteAgent() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
   return useMutation({
-    mutationFn: async (agentId: string) => {
+    mutationFn: async ({
+      agentId,
+      skipToast,
+    }: {
+      agentId: string;
+      skipToast?: boolean;
+    }) => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const client = createClient(accessToken);
-      await client.assistants.delete(agentId);
+      // Don't actually delete from DB yet - that happens after timeout
+      // This function will be called again from the timeout if undo isn't clicked
+      if (skipToast) {
+        const client = createClient(accessToken);
+        await client.assistants.delete(agentId);
+      }
     },
-    onSuccess: (_, agentId) => {
-      // Invalidate agents list
-      queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
-      // Remove the specific agent from cache
-      queryClient.removeQueries({ queryKey: agentKeys.detail(agentId) });
-      toast.success("Agent deleted successfully");
+    onMutate: async ({ agentId, skipToast }) => {
+      // Only do optimistic update for the initial deletion (skipToast: false)
+      if (!skipToast) {
+        // Cancel outgoing refetches
+        await queryClient.cancelQueries({ queryKey: agentKeys.lists() });
+
+        // Snapshot previous value
+        const previousAgents = queryClient.getQueriesData({
+          queryKey: agentKeys.lists(),
+        });
+
+        // Optimistically remove agent from lists
+        queryClient.setQueriesData(
+          { queryKey: agentKeys.lists() },
+          (old: any) => {
+            if (Array.isArray(old)) {
+              return old.filter((agent: any) => agent.assistant_id !== agentId);
+            }
+            return old;
+          },
+        );
+
+        return { previousAgents };
+      }
+      return {};
     },
-    onError: (error) => {
+    onSuccess: (_, { agentId, skipToast }) => {
+      // Only invalidate and show toast when actually deleting (skipToast: true)
+      if (skipToast) {
+        queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+        queryClient.removeQueries({ queryKey: agentKeys.detail(agentId) });
+        toast.success("Agent deleted successfully");
+      }
+    },
+    onError: (error, variables, context) => {
       console.error("Failed to delete agent", error);
+      // Rollback on error
+      if (context?.previousAgents) {
+        context.previousAgents.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast.error("Failed to delete agent");
     },
   });
 }
-
-

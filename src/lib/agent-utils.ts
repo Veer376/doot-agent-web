@@ -2,83 +2,87 @@ import { Agent } from "@/types/agent";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import React from "react";
+import { config } from "@/config";
 
 /**
- * Determines if an agent is the user's default agent.
+ * Determines if an agent is the primary agent.
  *
- * Each user gets their own default agent in a deployment since they cannot
- * access the system-created default agent. This function checks if the given
- * agent has been marked as a user's default. This is NOT the primary agent
- * for the entire OAP deployment, but rather the default agent for a given graph.
+ * The primary agent is the main agent shown in agent mode. Only one agent
+ * should have is_primary: true in metadata. This is the agent that will be
+ * used by default when the user switches to agent mode.
  *
  * @param agent The agent to check
- * @returns True if the agent is a user's default agent
+ * @returns True if the agent is the primary agent
+ */
+export function isPrimaryAgent(agent: Agent | Assistant): boolean {
+  return agent.metadata?.is_primary === true;
+}
+
+/**
+ * Determines if an agent is a template agent.
+ *
+ * Template agents are system-created agents that serve as templates
+ * and should NOT be shown in the agent selection list. They are used
+ * internally for creating new agents based on them.
+ *
+ * @param agent The agent to check
+ * @returns True if the agent is a template (should be hidden from selection)
+ */
+export function isTemplateAgent(agent: Agent | Assistant): boolean {
+  return agent.metadata?.is_template === true;
+}
+
+/**
+ * @deprecated Use isPrimaryAgent instead
  */
 export function isUserCreatedDefaultAssistant(
   agent: Agent | Assistant,
 ): boolean {
-  return agent.metadata?.is_default === true;
+  return isPrimaryAgent(agent);
 }
 
 /**
- * Determines if an agent is a system-created default assistant.
- *
- * System-created default assistants are created by the platform itself
- * rather than by users. Each graph on a deployment will always have a single
- * default assistant, created by the platform. This function checks the agent's
- * metadata to determine its origin. These agents will only be accessible if using
- * admin auth (NEXT_PUBLIC_USE_LANGSMITH_AUTH="true").
- *
- * @param agent The agent to check
- * @returns True if the agent was created by the system
+ * @deprecated Use isTemplateAgent instead
  */
 export function isSystemCreatedDefaultAssistant(
   agent: Agent | Assistant,
 ): boolean {
-  return agent.metadata?.created_by === "system";
+  return isTemplateAgent(agent);
 }
 
 /**
- * Determines if an agent is the primary assistant for a graph.
- *
- * A primary assistant is the default assistant for all graphs provided
- * to OAP. This can only be one agent, across all graphs & deployments,
- * and is specified by setting `isDefault: true` and `defaultGraphId`
- * on a deployment in the `NEXT_PUBLIC_DEPLOYMENTS` environment variable.
- *
- * @param agent The agent to check
- * @returns True if the agent is the primary assistant for a graph
+ * @deprecated Use isPrimaryAgent instead
  */
 export function isPrimaryAssistant(agent: Agent | Assistant): boolean {
-  return agent.metadata?.is_primary === true;
+  return isPrimaryAgent(agent);
 }
 
+/**
+ * @deprecated Use isPrimaryAgent instead
+ */
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
-  return (
-    isUserCreatedDefaultAssistant(agent) &&
-      agent.metadata?.is_primary === true
-  );
+  return isPrimaryAgent(agent);
 }
 
 /**
  * Sorts an array of agents within a group.
- * The default agent comes first, followed by others sorted by `updated_at` descending.
+ * The primary agent comes first, followed by others sorted by `updated_at` descending.
  * @param agentGroup An array of agents belonging to the same group.
  * @returns A new array with the sorted agents.
  */
 export function sortAgentGroup(agentGroup: Agent[]): Agent[] {
   return [...agentGroup].sort((a, b) => {
-    const aIsDefault = isUserCreatedDefaultAssistant(a);
-    const bIsDefault = isUserCreatedDefaultAssistant(b);
+    const aIsPrimary = isPrimaryAgent(a);
+    const bIsPrimary = isPrimaryAgent(b);
 
-    if (aIsDefault && !bIsDefault) {
+    if (aIsPrimary && !bIsPrimary) {
       return -1; // a comes first
     }
-    if (!aIsDefault && bIsDefault) {
+    if (!aIsPrimary && bIsPrimary) {
       return 1; // b comes first
     }
 
-    // If both are default or both are not, sort by updated_at descending
+    // If both are primary or both are not, sort by updated_at descending
     // Handle potential missing or invalid dates gracefully
     const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
     const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
@@ -110,15 +114,14 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
 }
 
 /**
- * Checks if API keys are required but not set for a deployment.
- * @param deploymentId The deployment ID to check
+ * Checks if API keys are required but not set.
  * @param hasApiKeys Whether the user has API keys set
- * @returns True if the deployment requires API keys but user doesn't have them
+ * @returns True if API keys are required but user doesn't have them
  */
 export function requiresApiKeysButNotSet(
   hasApiKeys: boolean,
 ): boolean {
-  return process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === "true" && !hasApiKeys;
+  return config.features.requireApiKeys && !hasApiKeys;
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -60,9 +60,9 @@ export function TemplateCard({
                   }}
                 >
                   {isOpen ? (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDownIcon className="h-4 w-4" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRightIcon className="h-4 w-4" />
                   )}
                   <span className="sr-only">Toggle</span>
                 </Button>
@@ -91,9 +91,7 @@ export function TemplateCard({
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="pt-6">
-            <AgentList
-              agents={agents}
-            />
+            <AgentList agents={agents} />
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

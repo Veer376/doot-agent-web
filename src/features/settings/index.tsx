@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { SettingsIcon } from "@/components/icons";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 /**
@@ -33,7 +33,7 @@ export default function SettingsInterface(): React.ReactNode {
     <div className="flex w-full flex-col gap-4 p-6">
       <div className="flex w-full items-center justify-start gap-6">
         <div className="flex items-center justify-start gap-2">
-          <Settings className="size-6" />
+          <SettingsIcon className="size-6" />
           <p className="text-lg font-semibold tracking-tight">Settings</p>
         </div>
       </div>

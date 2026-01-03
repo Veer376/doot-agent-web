@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { AgentBrainCPU, NewThreadIcon, SearchIcon } from "@/components/icons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
+import { NavFooter } from "./nav-footer";
 import { ThreadList } from "./thread-list";
 import {
   Sidebar,
@@ -44,14 +45,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={data.navMain} onSearchClick={() => {
-          const event = new CustomEvent('openThreadSearch');
-          window.dispatchEvent(event);
-        }} />
-        <ThreadList />
+        <NavMain
+          items={data.navMain}
+          onSearchClick={() => {
+            const event = new CustomEvent("openThreadSearch");
+            window.dispatchEvent(event);
+          }}
+        />
+        <React.Suspense
+          fallback={
+            <div className="space-y-2 px-3 py-4">
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius2"
+              />
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius2"
+              />
+            </div>
+          }
+        >
+          <ThreadList />
+        </React.Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavFooter />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

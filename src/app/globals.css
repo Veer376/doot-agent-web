@@ -20,6 +20,17 @@
  */
 
 /* ============================================
+   VIEWPORT-RESPONSIVE SCALING
+   Scales all rem-based values proportionally based on viewport width.
+   - Min: 16px (at ~1024px viewport)
+   - Max: 20px (at ~1920px+ viewport)
+   - Scales smoothly in between
+   ============================================ */
+html {
+  font-size: clamp(16px, calc(14px + 0.25vw), 20px);
+}
+
+/* ============================================
    FONT FAMILIES
    ============================================ */
 :root {
@@ -78,13 +89,12 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Border Radius */
-  --radius: 0.7rem;
-  /* Base radius - Consistent rectangular rounded radius */
-  --radius1: 0.7rem;
-  /* Radius 1 for main UI elements */
+  --radius1: 0.5rem;
+  /* Radius 1 for hover state */
   --radius2: 1.1rem;
-  /* Radius 2 for special containers like messages and tools */
+  /* Radius 2 for containers */
+  --radius3: 1.7rem;
+  /* Radius 3 for prominent elements (composer, primary actions) */
 
   /* Sidebar (HSL format for compatibility) */
   --sidebar-background: 0 0% 98%;
@@ -111,9 +121,9 @@
      ============================================ */
 
   /* Brand Colors */
-  --color-brand-primary: oklch(0.35 0.08 180);
-  --color-brand-primary-hover: oklch(0.30 0.08 180);
-  --color-brand-primary-light: oklch(0.95 0.02 180);
+  --color-brand-primary: oklch(0.20 0 0);
+  --color-brand-primary-hover: oklch(0.30 0 0);
+  --color-brand-primary-light: oklch(0.95 0 0);
   --color-brand-accent: oklch(0.60 0.20 280);
   --color-brand-accent-light: oklch(0.92 0.08 280);
 
@@ -193,9 +203,9 @@
   --sidebar-ring: 217.2 91.2% 59.8%;
 
   /* New design system variables (Dark Mode) */
-  --color-brand-primary: oklch(0.65 0.12 180);
-  --color-brand-primary-hover: oklch(0.70 0.12 180);
-  --color-brand-primary-light: oklch(0.25 0.04 180);
+  --color-brand-primary: oklch(0.85 0 0);
+  --color-brand-primary-hover: oklch(0.90 0 0);
+  --color-brand-primary-light: oklch(0.25 0 0);
   --color-brand-accent: oklch(0.70 0.22 280);
   --color-brand-accent-light: oklch(0.30 0.10 280);
 
@@ -404,7 +414,7 @@
 
   /* Avatar: apply tokenized radius by default and inherit on children */
   [data-slot="avatar"] {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius2);
   }
 
   [data-slot="avatar-image"],
@@ -421,6 +431,10 @@
     border-radius: var(--radius2);
   }
 
+  [data-radius="radius3"] {
+    border-radius: var(--radius3);
+  }
+
   [data-radius="sm"] {
     border-radius: var(--radius-sm);
   }
@@ -429,19 +443,18 @@
     border-radius: var(--radius-md);
   }
 
-  [data-radius="lg"] {
-    border-radius: var(--radius-lg);
-  }
-
-  [data-radius="xl"] {
-    border-radius: var(--radius-xl);
+  /* Fix browser autofill background to respect border-radius */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: inherit;
+    transition: background-color 5000s ease-in-out 0s;
+    box-shadow: inset 0 0 20px 20px transparent;
   }
 }
 
-/* ============================================
-   UTILITY CLASSES
-   Custom utilities specific to this project
-   ============================================ */
 @layer utilities {
 
   /* Custom shadow utilities for inner shadows */

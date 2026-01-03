@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChatIcon } from "@/components/icons";
 import { IconAgentSelector } from "./icon-agent-selector";
-import { useAgentContext, useStreamContext } from "@/features/chat/providers/Stream";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
 import {
   Tooltip,
   TooltipContent,
@@ -39,6 +40,7 @@ export function ComposerSegmentedControl({
   const { mode, setMode, agentId } = useAgentContext();
   const stream = useStreamContext();
   const isStreaming = stream.isLoading;
+  const hasMessages = stream.messages.length > 0;
 
   const handleChatClick = () => {
     // Prevent mode switching during streaming
@@ -46,15 +48,24 @@ export function ComposerSegmentedControl({
       toast.info("Please wait for the current response to complete");
       return;
     }
+
+    // Show warning if there are existing messages in the conversation
+    if (hasMessages && mode === "agent") {
+      toast.info("Switching modes mid-conversation", {
+        description:
+          "Current agent will have previous agent context, so be sure to do this intelligently.",
+        duration: 4000,
+      });
+    }
+
     setMode("chat");
   };
 
   // Update indicator position on mode change, agent changes, size changes, and font load
   useEffect(() => {
     const compute = () => {
-      const activeButton = mode === "chat"
-        ? chatButtonRef.current
-        : agentButtonRef.current;
+      const activeButton =
+        mode === "chat" ? chatButtonRef.current : agentButtonRef.current;
       const containerEl = containerRef.current;
       if (!activeButton || !containerEl) return;
 
@@ -135,11 +146,13 @@ export function ComposerSegmentedControl({
         />
 
         {/* Left segment: Agent (no background, indicator handles it) */}
-        <IconAgentSelector
-          variant="segment"
-          className="relative z-10 h-8"
-          buttonRef={agentButtonRef}
-        />
+        <div id="agent-selector-segment">
+          <IconAgentSelector
+            variant="segment"
+            className="relative z-10 h-8"
+            buttonRef={agentButtonRef}
+          />
+        </div>
 
         {/* Right segment: Chat (tooltip + hover background on inactive only) */}
         <TooltipProvider>

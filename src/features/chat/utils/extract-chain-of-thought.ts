@@ -1,5 +1,6 @@
 import { Message, AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { getThinkingBlocks, getContentString } from "./content-string";
+import type { ToolCallArguments } from "@/types/tools";
 
 export type ChainStep =
   | {
@@ -13,7 +14,7 @@ export type ChainStep =
     toolCall: {
       id: string;
       name: string;
-      args: Record<string, any>;
+      args: ToolCallArguments;
     };
     toolResponse?: ToolMessage;
     status: "pending" | "success" | "error";
@@ -114,24 +115,23 @@ export function extractChainOfThought(
       if (hasThinkingInMessage) {
         // Add thinking steps (with deduplication)
         thinkingBlocks.forEach((block) => {
-          if (block.content.trim().length > 0) {
-            // Check if this exact thinking block already exists in the current group
-            const isDuplicate = currentGroupSteps.some(
-              (step) =>
-                step.type === "thinking" &&
-                step.heading === block.heading &&
-                step.content === block.content
-            );
+          // Always add thinking steps, even if empty (to show "Thinking..." immediately)
+          // Check if this exact thinking block already exists in the current group
+          const isDuplicate = currentGroupSteps.some(
+            (step) =>
+              step.type === "thinking" &&
+              step.heading === block.heading &&
+              step.content === block.content
+          );
 
-            // Only add if not a duplicate
-            if (!isDuplicate) {
-              currentGroupSteps.push({
-                type: "thinking",
-                heading: block.heading,
-                content: block.content,
-                status: "complete",
-              });
-            }
+          // Only add if not a duplicate
+          if (!isDuplicate) {
+            currentGroupSteps.push({
+              type: "thinking",
+              heading: block.heading,
+              content: block.content,
+              status: "complete",
+            });
           }
         });
       }
@@ -160,7 +160,7 @@ export function extractChainOfThought(
             toolCall: {
               id: toolCall.id || "",
               name: toolCall.name || "unknown",
-              args: (toolCall.args as Record<string, any>) || {},
+              args: (toolCall.args as ToolCallArguments) || {},
             },
             toolResponse: response,
             status,
@@ -173,7 +173,7 @@ export function extractChainOfThought(
           const existingToolIds = new Set(
             currentGroupSteps
               .filter((s) => s.type === "tool")
-              .map((s: any) => s.toolCall.id)
+              .map((s) => (s as Extract<ChainStep, { type: "tool" }>).toolCall.id)
           );
 
           toolSteps.forEach((toolStep) => {

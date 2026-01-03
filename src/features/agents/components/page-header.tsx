@@ -1,6 +1,6 @@
 import type React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircleIcon } from "@/components/icons";
 import { CreateAgentDialog } from "./create-edit-agent-dialogs/create-agent-dialog";
 import { useState } from "react";
 
@@ -26,7 +26,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
           data-radius="radius2"
           className="h-10 bg-black text-white hover:bg-black/90"
         >
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <PlusCircleIcon className="mr-2 h-4 w-4" />
           Create Agent
         </Button>
       )}

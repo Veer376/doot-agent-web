@@ -1,15 +1,16 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthContext } from "@/providers/Auth";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthSession } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Thread } from "@langchain/langgraph-sdk";
+import { config } from "@/config";
 
 // Query key factory for type-safe cache management
 export const threadKeys = {
   all: ["threads"] as const,
   lists: () => [...threadKeys.all, "list"] as const,
-  list: (filters?: { agentId?: string }) =>
+  list: (filters?: { agentId?: string; limit?: number; offset?: number }) =>
     [...threadKeys.lists(), filters] as const,
   detail: (id: string) => [...threadKeys.all, "detail", id] as const,
   state: (id: string | null) => [...threadKeys.all, "state", id] as const,
@@ -25,19 +26,22 @@ export interface ThreadMetadata {
 }
 
 // Hook to fetch all threads (or filtered by agent)
-export function useFetchThreads(agentId?: string) {
-  const { session } = useAuthContext();
+export function useFetchThreads(agentId?: string, options?: { limit?: number; offset?: number }) {
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
+  const limit = options?.limit || 100;
+  const offset = options?.offset || 0;
 
   return useQuery({
-    queryKey: threadKeys.list({ agentId }),
+    queryKey: threadKeys.list({ agentId, limit, offset }),
     queryFn: async () => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
       const client = createClient(accessToken);
       const response = await client.threads.search({
-        limit: 100,
+        limit,
+        offset,
         ...(agentId && {
           metadata: {
             assistant_id: agentId,
@@ -51,11 +55,48 @@ export function useFetchThreads(agentId?: string) {
   });
 }
 
+// Hook to fetch threads with infinite scroll pagination
+export function useFetchThreadsInfinite(agentId?: string, pageSize = 20) {
+  const { session } = useAuthSession();
+  const accessToken = session?.accessToken;
+
+  return useInfiniteQuery({
+    queryKey: [...threadKeys.lists(), { agentId, pageSize }] as const,
+    queryFn: async ({ pageParam = 0 }) => {
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const client = createClient(accessToken);
+      const response = await client.threads.search({
+        limit: pageSize,
+        offset: pageParam,
+        ...(agentId && {
+          metadata: {
+            assistant_id: agentId,
+          },
+        }),
+      });
+      return response as Thread<ThreadMetadata>[];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // If the last page has fewer items than pageSize, we've reached the end
+      if (lastPage.length < pageSize) {
+        return undefined;
+      }
+      // Otherwise, return the offset for the next page
+      return allPages.length * pageSize;
+    },
+    initialPageParam: 0,
+    enabled: !!accessToken,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
 // Hook to fetch thread state for cached display with initialValues
 // This enables instant thread loading by showing cached data immediately
 // while the SDK loads fresh data in the background
 export function useFetchThreadState(threadId: string | null) {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useQuery({
@@ -86,7 +127,7 @@ export function useFetchThreadState(threadId: string | null) {
 
 // Hook to create a new thread
 export function useCreateThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -110,7 +151,7 @@ export function useCreateThread() {
 
 // Hook to update a thread
 export function useUpdateThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -135,29 +176,40 @@ export function useUpdateThread() {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
 
-      // Snapshot previous value
-      const previousThreads = queryClient.getQueryData(threadKeys.lists());
+      // Snapshot previous value for all infinite queries
+      const previousInfiniteData = queryClient.getQueriesData({
+        queryKey: threadKeys.lists(),
+      });
 
-      // Optimistically update thread metadata
+      // Optimistically update thread metadata in InfiniteData structure
       queryClient.setQueriesData(
         { queryKey: threadKeys.lists() },
-        (old: Thread<ThreadMetadata>[] | undefined) =>
-          old?.map((thread) =>
-            thread.thread_id === threadId
-              ? {
-                ...thread,
-                metadata: { ...thread.metadata, ...metadata },
-              }
-              : thread
-          ) ?? []
+        (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
+              page.map((thread) =>
+                thread.thread_id === threadId
+                  ? {
+                    ...thread,
+                    metadata: { ...thread.metadata, ...metadata },
+                  }
+                  : thread
+              )
+            ),
+          };
+        }
       );
 
-      return { previousThreads };
+      return { previousInfiniteData };
     },
     onError: (err, { threadId }, context) => {
       // Rollback on error
-      if (context?.previousThreads) {
-        queryClient.setQueryData(threadKeys.lists(), context.previousThreads);
+      if (context?.previousInfiniteData) {
+        context.previousInfiniteData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
     },
     onSettled: () => {
@@ -169,7 +221,7 @@ export function useUpdateThread() {
 
 // Hook to copy a thread
 export function useCopyThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
@@ -178,11 +230,7 @@ export function useCopyThread() {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error("API URL not configured");
-      }
+      const apiUrl = config.apiUrl;
 
       const response = await fetch(`${apiUrl}/threads/${threadId}/copy`, {
         method: "POST",
@@ -212,52 +260,74 @@ export function useCopyThread() {
   });
 }
 
-// Hook to delete a thread
+// Hook to delete a thread with undo support
 export function useDeleteThread() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
 
   return useMutation({
-    mutationFn: async (threadId: string) => {
+    mutationFn: async ({ threadId, skipToast }: { threadId: string; skipToast?: boolean }) => {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const client = createClient(accessToken);
-      await client.threads.delete(threadId);
-    },
-    onMutate: async (threadId) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
-
-      // Snapshot previous value
-      const previousThreads = queryClient.getQueryData(threadKeys.lists());
-
-      // Optimistically update to remove thread
-      queryClient.setQueriesData(
-        { queryKey: threadKeys.lists() },
-        (old: Thread<ThreadMetadata>[] | undefined) =>
-          old?.filter((thread) => thread.thread_id !== threadId) ?? []
-      );
-
-      return { previousThreads };
-    },
-    onError: (err, threadId, context) => {
-      // Rollback on error
-      if (context?.previousThreads) {
-        queryClient.setQueryData(threadKeys.lists(), context.previousThreads);
+      // Don't actually delete from DB yet - that happens after timeout
+      // This function will be called again from the timeout if undo isn't clicked
+      if (skipToast) {
+        const client = createClient(accessToken);
+        await client.threads.delete(threadId);
       }
     },
-    onSettled: () => {
-      // Refetch after error or success
-      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+    onMutate: async ({ threadId, skipToast }) => {
+      // Only do optimistic update for the initial deletion (skipToast: false)
+      // Don't do it for the actual deletion (skipToast: true)
+      if (!skipToast) {
+        // Cancel outgoing refetches
+        await queryClient.cancelQueries({ queryKey: threadKeys.lists() });
+
+        // Snapshot previous value for all infinite queries
+        const previousInfiniteData = queryClient.getQueriesData({
+          queryKey: threadKeys.lists(),
+        });
+
+        // Optimistically remove thread from InfiniteData structure
+        queryClient.setQueriesData(
+          { queryKey: threadKeys.lists() },
+          (old: any) => {
+            if (!old?.pages) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: Thread<ThreadMetadata>[]) =>
+                page.filter((thread) => thread.thread_id !== threadId)
+              ),
+            };
+          }
+        );
+
+        return { previousInfiniteData };
+      }
+      return {};
+    },
+    onError: (err, { threadId }, context) => {
+      // Rollback on error
+      if (context?.previousInfiniteData) {
+        context.previousInfiniteData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: (data, error, { skipToast }) => {
+      // Only refetch when actually deleting (skipToast: true), not during optimistic removal
+      if (skipToast) {
+        queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+      }
     },
   });
 }
 
 // Hook to delete messages from a checkpoint onwards (rollback)
 export function useDeleteFromCheckpoint() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useMutation({
@@ -271,11 +341,7 @@ export function useDeleteFromCheckpoint() {
       if (!accessToken) {
         throw new Error("Not authenticated");
       }
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error("API URL not configured");
-      }
+      const apiUrl = config.apiUrl;
 
       const response = await fetch(
         `${apiUrl}/threads/${threadId}/checkpoints/${checkpointId}`,

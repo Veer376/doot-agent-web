@@ -1,17 +1,25 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { AgentIcon } from "@/components/icons";
+import { getAgentIcon } from "@/lib/agent-icon-registry";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useFetchAgents } from "@/hooks/use-agents";
-import {
-  useAgentContext,
-  useStreamContext,
-} from "@/features/chat/providers/Stream";
-import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { useStreamContext } from "@/features/chat/providers/Stream";
+import { useAgentContext } from "@/providers/Agent";
+import { isPrimaryAgent } from "@/lib/agent-utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuthSession } from "@/providers/Auth";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { EditConfigurationDialog } from "@/features/chat/components/edit-configuration-dialog";
+import { Agent } from "@/types/agent";
 
 interface IconAgentSelectorProps {
   className?: string;
@@ -36,10 +44,14 @@ export function IconAgentSelector({
 }: IconAgentSelectorProps) {
   const { data: agents = [], isLoading: loading } = useFetchAgents();
   const [open, setOpen] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { isAuthenticated } = useAuthSession();
 
   const { agentId, setSelectedAgent, mode, setMode } = useAgentContext();
   const stream = useStreamContext();
   const isStreaming = stream.isLoading;
+  const hasMessages = stream.messages.length > 0;
 
   const onAgentChange = useCallback(
     async (v: string | string[] | undefined) => {
@@ -50,6 +62,18 @@ export function IconAgentSelector({
       if (isStreaming) {
         toast.info("Please wait for the current response to complete");
         return;
+      }
+
+      // Show warning if there are existing messages and we're changing agents
+      if (
+        hasMessages &&
+        ((mode === "agent" && agentId !== nextValue) || mode === "chat")
+      ) {
+        toast.info("Switching agents mid-conversation", {
+          description:
+            "Current agent will have previous agent context, so be sure to do this intelligently.",
+          duration: 4000,
+        });
       }
 
       // Update agent selection and switch to agent mode
@@ -90,7 +114,21 @@ export function IconAgentSelector({
         }
       }
     },
-    [setSelectedAgent, setMode, isStreaming],
+    [setSelectedAgent, setMode, isStreaming, hasMessages, mode, agentId],
+  );
+
+  // Handler for editing an agent - selects the agent and opens the edit dialog
+  const handleEditAgent = useCallback(
+    (agent: Agent) => {
+      // Select the agent first
+      setSelectedAgent(agent.assistant_id);
+      setMode("agent");
+      // Close the combobox
+      setOpen(false);
+      // Open the edit dialog
+      setEditDialogOpen(true);
+    },
+    [setSelectedAgent, setMode],
   );
 
   const agentValue = agentId || undefined;
@@ -100,9 +138,10 @@ export function IconAgentSelector({
     if (loading || agentValue || !agents.length) {
       return;
     }
-    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
-    if (defaultAgent) {
-      onAgentChange(defaultAgent.assistant_id);
+    // Select the primary agent by default
+    const primaryAgent = agents.find(isPrimaryAgent);
+    if (primaryAgent) {
+      onAgentChange(primaryAgent.assistant_id);
     }
   }, [agents, agentValue, onAgentChange, loading]);
 
@@ -146,6 +185,15 @@ export function IconAgentSelector({
         // Prevent the popover from opening
         e.preventDefault();
         e.stopPropagation();
+
+        if (hasMessages) {
+          toast.info("Switching modes mid-conversation", {
+            description:
+              "Current agent will have previous agent context, so be sure to do this intelligently.",
+            duration: 4000,
+          });
+        }
+
         setMode("agent");
       }
       // When already in agent mode, let the normal popover behavior handle it
@@ -158,6 +206,9 @@ export function IconAgentSelector({
   const selectedAgent = agents.find(
     (agent) => agent.assistant_id === agentValue,
   );
+
+  // Resolve agent icon from metadata with fallback
+  const AgentIconComponent = getAgentIcon(selectedAgent?.metadata?.icon);
 
   // PHASE 4: Use mode from context instead of checking agentId
   // isAgentMode is true when Agent segment should appear selected
@@ -184,10 +235,10 @@ export function IconAgentSelector({
           loading && "opacity-60",
           className,
         )}
-        data-radius="radius2"
+        data-radius="radius3"
         disabled={loading}
       >
-        <AgentIcon className={isAgentMode ? "text-background" : ""} />
+        <AgentIconComponent className={isAgentMode ? "text-background" : ""} />
         <span className="hidden max-w-[160px] truncate md:inline-block">
           {loading ? "Loading…" : (selectedAgent?.name ?? "Agent")}
         </span>
@@ -205,22 +256,72 @@ export function IconAgentSelector({
         className={cn(loading && "opacity-60", className)}
         disabled={loading}
       >
-        <AgentIcon />
+        <AgentIconComponent />
         <span className="sr-only">Select Agent</span>
       </TooltipIconButton>
     );
 
+  // For unauthenticated users, show a "Sign in to access more agents" popover
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Popover
+          open={open}
+          onOpenChange={handleOpenChange}
+        >
+          <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-50 p-4"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Want more agents?</p>
+                <p className="text-muted-foreground text-xs">
+                  Sign in to create custom agents and access your personalized
+                  assistants.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  setOpen(false);
+                  setAuthDialogOpen(true);
+                }}
+              >
+                Sign in
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <AuthDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+          mode="signin"
+        />
+      </>
+    );
+  }
+
   return (
-    <AgentsCombobox
-      agents={agents}
-      agentsLoading={loading}
-      value={agentValue}
-      setValue={onAgentChange}
-      open={open}
-      setOpen={handleOpenChange}
-      triggerAsChild
-      className="min-w-auto"
-      trigger={trigger}
-    />
+    <>
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        value={agentValue}
+        setValue={onAgentChange}
+        open={open}
+        setOpen={handleOpenChange}
+        triggerAsChild
+        className="min-w-auto"
+        trigger={trigger}
+        onEditAgent={handleEditAgent}
+      />
+      <EditConfigurationDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+    </>
   );
 }

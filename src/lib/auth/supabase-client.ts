@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createBrowserClient } from "@supabase/ssr";
+import { config } from "@/config";
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
@@ -11,14 +12,7 @@ let supabaseInstance: ReturnType<typeof createClient> | null = null;
 export function getSupabaseClient() {
   if (supabaseInstance) return supabaseInstance;
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error(
-      "Missing Supabase configuration: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    );
-  }
+  const { url: supabaseUrl, anonKey: supabaseKey } = config.supabase;
 
   // Use the browser client when in browser environment
   if (typeof window !== "undefined") {

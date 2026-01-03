@@ -148,15 +148,6 @@ export interface AgentInbox {
    */
   graphId: string;
   /**
-   * The ID of the deployment.
-   */
-  deploymentId: string;
-  /**
-   * The URL of the deployment. Either a localhost URL, or a deployment URL.
-   * @deprecated Use deploymentId instead.
-   */
-  deploymentUrl?: string;
-  /**
    * Optional name for the inbox, used in the UI to label the inbox.
    */
   name?: string;

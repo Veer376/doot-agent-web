@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { PlusIcon, SearchIcon, AgentIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { Agent } from "@/types/agent";
-import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { isPrimaryAgent } from "@/lib/agent-utils";
 import _ from "lodash";
 import { AgentCard } from "../agent-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface AgentListProps {
   agents: Agent[];
@@ -18,11 +19,11 @@ export function AgentList({ agents }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const defaultAgent = agents.find(isUserCreatedDefaultAssistant) ?? agents[0];
-  const graphId = defaultAgent.graph_id;
-  // Agent ID in this context is the default assistant ID since it's used
+  const primaryAgent = agents.find(isPrimaryAgent) ?? agents[0];
+  const graphId = primaryAgent.graph_id;
+  // Agent ID in this context is the primary assistant ID since it's used
   // to fetch the config schema for a specific graph
-  const agentId = defaultAgent.assistant_id;
+  const agentId = primaryAgent.assistant_id;
 
   const filteredAgents = agents.filter((agent) =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -32,7 +33,7 @@ export function AgentList({ agents }: AgentListProps) {
     <div className="space-y-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="relative w-full max-w-sm">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
           <Input
             placeholder="Search agents..."
             className="pl-8"
@@ -44,26 +45,30 @@ export function AgentList({ agents }: AgentListProps) {
           size="sm"
           onClick={() => setShowCreateDialog(true)}
         >
-          <Plus className="mr-2 h-4 w-4" />
+          <PlusIcon className="mr-2 h-4 w-4" />
           New Agent
         </Button>
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-          <h3 className="text-lg font-medium">No agents found</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Create a new agent or try a different search.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Agent
-          </Button>
+        <div data-radius="radius2" className="flex flex-col items-center justify-center p-6 py-12">
+          {searchQuery ? (
+            <EmptyState
+              icon={SearchIcon}
+              title="No agents found"
+              description="No agents match your search criteria. Try adjusting your search."
+            />
+          ) : (
+            <EmptyState
+              icon={AgentIcon}
+              title="No agents configured"
+              description="Create your first agent to get started with AI assistance"
+              action={{
+                label: "Create Agent",
+                onClick: () => setShowCreateDialog(true),
+              }}
+            />
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

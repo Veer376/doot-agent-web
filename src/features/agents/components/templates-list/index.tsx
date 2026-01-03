@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search } from "lucide-react";
+import { SearchIcon } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { TemplateCard } from "./templates-card";
@@ -25,16 +25,16 @@ export function TemplatesList() {
     if (agentsLoading) return [];
     const groups: GraphGroup[] = [];
 
-      const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
-      agentsGroupedByGraphs.forEach((agentGroup) => {
-        if (agentGroup.length > 0) {
-          const graphId = agentGroup[0].graph_id;
-          groups.push({
-            agents: agentGroup,
-            graphId,
-          });
-        }
-      });
+    const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
+    agentsGroupedByGraphs.forEach((agentGroup) => {
+      if (agentGroup.length > 0) {
+        const graphId = agentGroup[0].graph_id;
+        groups.push({
+          agents: agentGroup,
+          graphId,
+        });
+      }
+    });
 
     return groups;
   }, [agents, agentsLoading]);
@@ -67,7 +67,7 @@ export function TemplatesList() {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
+          <SearchIcon className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search by graph or agent name..."
             className="pl-8"
@@ -78,9 +78,9 @@ export function TemplatesList() {
       </div>
 
       {filteredGraphGroupsState.length === 0 ? (
-        <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+        <div data-radius="radius2" className="animate-in fade-in-50 flex flex-col items-center justify-center border border-dashed p-8 text-center">
           <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <Search className="text-muted-foreground h-10 w-10" />
+            <SearchIcon className="text-muted-foreground h-10 w-10" />
           </div>
           <h2 className="mt-6 text-xl font-semibold">No graphs found</h2>
           <p className="text-muted-foreground mt-2 mb-8 text-center">
@@ -91,19 +91,17 @@ export function TemplatesList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {filteredGraphGroupsState.map(
-            ({ agents: agentGroup, graphId }) => {
-              const uniqueGraphKey = graphId;
-              return (
-                <TemplateCard
-                  key={uniqueGraphKey}
-                  agents={agentGroup}
-                  toggleGraph={() => toggleGraphState(graphId)}
-                  isOpen={openTemplatesState.includes(uniqueGraphKey)}
-                />
-              );
-            },
-          )}
+          {filteredGraphGroupsState.map(({ agents: agentGroup, graphId }) => {
+            const uniqueGraphKey = graphId;
+            return (
+              <TemplateCard
+                key={uniqueGraphKey}
+                agents={agentGroup}
+                toggleGraph={() => toggleGraphState(graphId)}
+                isOpen={openTemplatesState.includes(uniqueGraphKey)}
+              />
+            );
+          })}
         </div>
       )}
 

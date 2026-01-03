@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { roobert } from "./fonts/roobert";
 import { roobertMono } from "./fonts/roobert-mono";
-import { ThemeProvider } from "@/providers/Theme";
+import { AppProviders } from "@/providers";
 
 export const metadata: Metadata = {
   title: "Orbit Agent",
@@ -22,9 +22,9 @@ export default function Layout({
       suppressHydrationWarning
     >
       <body className={roobert.className} suppressHydrationWarning>
-        <ThemeProvider>
+        <AppProviders>
           <main>{children}</main>
-        </ThemeProvider>
+        </AppProviders>
       </body>
     </html>
   );

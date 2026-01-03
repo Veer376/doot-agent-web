@@ -3,6 +3,8 @@
 import { AuthDebug } from "@/components/auth/debug";
 import { AuthProvider } from "@/providers/Auth";
 
+export const dynamic = "force-dynamic";
+
 export default function DebugAuthPage() {
   return (
     <AuthProvider>
@@ -15,7 +17,10 @@ export default function DebugAuthPage() {
 
         <AuthDebug />
 
-        <div data-radius="radius2" className="bg-muted/30 mt-8 border p-4">
+        <div
+          data-radius="radius2"
+          className="bg-muted/30 mt-8 border p-4"
+        >
           <h2 className="mb-2 text-lg font-medium">Testing Tips</h2>
           <ul className="list-inside list-disc space-y-1">
             <li>Use the Sign Out button to clear your current session</li>

@@ -3,10 +3,12 @@
   "author": "LangChain",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@9.15.4",
   "type": "module",
   "main": "dist/electron/main.cjs",
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "node dev-prod.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -21,9 +23,10 @@
     "electron:build:linux": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --linux"
   },
   "dependencies": {
+    "@composio/core": "^0.2.4",
     "@langchain/core": "^1.0.1",
     "@langchain/langgraph-sdk": "^1.0.0",
-    "@modelcontextprotocol/sdk": "^1.11.4",
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-avatar": "^1.1.4",
     "@radix-ui/react-checkbox": "1.1.2",
@@ -53,9 +56,12 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "4.1.0",
+    "driver.js": "^1.4.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.7.3",
     "geist": "^1.5.1",
     "hugeicons-react": "^0.3.0",
+    "jspdf": "^3.0.4",
     "katex": "latest",
     "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
@@ -77,9 +83,10 @@
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "unist-util-visit": "^5.0.0",
     "use-stick-to-bottom": "^1.1.0",
     "uuid": "^11.1.0",
-    "zod": "3.23.8",
+    "zod": "4.1.12",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -98,11 +105,11 @@
     "electron": "^34.0.0",
     "electron-builder": "^26.0.12",
     "eslint": "^9.19.0",
-    "eslint-config-next": "15.2.2",
+    "eslint-config-next": "15.5.7",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
-    "next": "^15.3.1",
+    "next": "^15.5.7",
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
@@ -113,7 +120,10 @@
     "wait-on": "^8.0.4"
   },
   "overrides": {
-    "react-is": "^19.0.0-rc-69d4b800-20241021"
+    "react-is": "^19.0.0-rc-69d4b800-20241021",
+    "tailwind-scrollbar": {
+      "tailwindcss": "^4.0.13"
+    }
   },
   "build": {
     "appId": "com.orbitagent.app",

@@ -144,11 +144,10 @@ export function ThreadActionsView<
   });
 
   const handleOpenInStudio = (id: string) => {
-    const [assistantId, deploymentId] = id.split(":");
+    const assistantId = id.split(":")[0];
 
     const studioUrl = constructOpenInStudioURL(
       assistantId,
-      deploymentId,
       threadData.thread.thread_id,
     );
 
@@ -296,7 +295,7 @@ export function ThreadActionsView<
           <InterruptDetailsView threadData={threadData} />
 
           {/* Invalid schema message */}
-          <div className="w-full rounded-md border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
+          <div data-radius="radius1" className="w-full border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
             This thread is interrupted, but the required action data is missing
             or invalid. Standard interrupt actions cannot be performed.
           </div>
@@ -392,7 +391,7 @@ export function ThreadActionsView<
           )}
 
           {isErrorThread(threadData) && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4">
+            <div data-radius="radius1" className="border border-red-200 bg-red-50 p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 text-red-500" />
                 <div>
@@ -407,7 +406,7 @@ export function ThreadActionsView<
           )}
 
           {/* Thread information summary */}
-          <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+          <div data-radius="radius1" className="flex flex-col gap-3 border border-gray-200 bg-gray-50 p-4">
             <h3 className="font-medium">Thread Details</h3>
 
             <div className="grid grid-cols-2 gap-2 text-sm">

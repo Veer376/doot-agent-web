@@ -1,10 +1,10 @@
 import { AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { ToolContainer } from "@/components/ai-elements/tool-container";
+import type { ToolCallArguments } from "@/types/tools";
 
-function isComplexValue(value: any): boolean {
+function isComplexValue(value: unknown): boolean {
   return Array.isArray(value) || (typeof value === "object" && value !== null);
 }
 
@@ -18,10 +18,14 @@ export function ToolCalls({
   return (
     <div className="w-full max-w-4xl space-y-4">
       {toolCalls.map((tc, idx) => {
-        const args = tc.args as Record<string, any>;
+        const args = tc.args as ToolCallArguments;
         const hasArgs = Object.keys(args).length > 0;
         return (
-          <ToolContainer key={idx} title={tc.name} code={tc.id}>
+          <ToolContainer
+            key={idx}
+            title={tc.name}
+            code={tc.id}
+          >
             {hasArgs ? (
               <table className="min-w-full divide-y divide-gray-200">
                 <tbody className="divide-y divide-gray-200">
@@ -56,7 +60,7 @@ export function ToolCalls({
 export function ToolResult({ message }: { message: ToolMessage }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  let parsedContent: any;
+  let parsedContent: unknown;
   let isJsonContent = false;
 
   try {
@@ -95,13 +99,17 @@ export function ToolResult({ message }: { message: ToolMessage }) {
           {message.name ? (
             <h3 className="font-medium text-gray-900">
               Tool Result:{" "}
-              <code className="rounded bg-gray-100 px-2 py-1">{message.name}</code>
+              <code className="rounded bg-gray-100 px-2 py-1">
+                {message.name}
+              </code>
             </h3>
           ) : (
             <h3 className="font-medium text-gray-900">Tool Result</h3>
           )}
           {message.tool_call_id && (
-            <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">{message.tool_call_id}</code>
+            <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">
+              {message.tool_call_id}
+            </code>
           )}
         </div>
       }

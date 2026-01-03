@@ -12,7 +12,7 @@ import {
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
 import { useQueryState } from "nuqs";
-import { useAuthContext } from "@/providers/Auth";
+import { useAuthSession } from "@/providers/Auth";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 
@@ -21,7 +21,7 @@ import { createClient } from "@/lib/client";
  * fields on an agent.
  */
 export function useAgentConfig() {
-  const { session } = useAuthContext();
+  const { session } = useAuthSession();
   const [chatWithCollectionId, setChatWithCollectionId] = useQueryState(
     "chatWithCollectionId",
   );

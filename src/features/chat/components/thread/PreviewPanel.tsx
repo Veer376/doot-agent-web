@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChevronDown } from "lucide-react";
+import { ImageIcon, FileTextIcon } from "@/components/icons";
 import { SquareArrowExpand01Icon } from "hugeicons-react";
 
 type BrowserSnapshot = {
@@ -18,13 +18,15 @@ type BrowserSnapshot = {
   dom_text?: string;
 };
 
+type TabType = "screenshot" | "text";
+
 export function PreviewPanel() {
   const stream = useStreamContext();
   const browserSnapshot = (stream.values as Record<string, unknown> | undefined)
     ?.browser_snapshot as BrowserSnapshot | undefined;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showDomText, setShowDomText] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("screenshot");
 
   if (!browserSnapshot?.screenshot) {
     return null;
@@ -79,56 +81,83 @@ export function PreviewPanel() {
 
       {/* Full Browser Snapshot Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden">
-          <DialogHeader>
+        <DialogContent className="flex h-[90vh] max-w-4xl flex-col overflow-hidden">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Browser Snapshot</DialogTitle>
-            {browserSnapshot.dom_text && (
+            
+            {/* Tab Buttons */}
+            <div className="mt-4 flex gap-1 border-b border-border">
               <button
                 type="button"
+                onClick={() => setActiveTab("screenshot")}
                 className={cn(
-                  "text-muted-foreground mt-2 flex items-center gap-2 text-sm font-normal transition-colors hover:text-foreground",
+                  "inline-flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+                  activeTab === "screenshot"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
-                onClick={() => setShowDomText((prev) => !prev)}
-                aria-expanded={showDomText}
-                aria-label="Toggle DOM text"
               >
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 transition-transform",
-                    showDomText ? "rotate-180" : "rotate-0",
-                  )}
-                />
-                <span>DOM Text</span>
+                <ImageIcon className="h-4 w-4" />
+                Screenshot
               </button>
-            )}
+              {browserSnapshot.dom_text && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("text")}
+                  className={cn(
+                    "inline-flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+                    activeTab === "text"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <FileTextIcon className="h-4 w-4" />
+                  Text
+                </button>
+              )}
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4 overflow-y-auto">
-            {/* URL Bar */}
-            {browserSnapshot.url && (
-              <div data-radius="radius2" className="border rounded-full bg-background px-3 py-2">
-                <span className="text-sm">{browserSnapshot.url}</span>
-              </div>
-            )}
+          {/* Tab Content - Fixed height container */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === "screenshot" ? (
+              <div className="flex h-full flex-col space-y-4 overflow-y-auto">
+                {/* URL Bar */}
+                {browserSnapshot.url && (
+                  <div data-radius="radius2" className="flex-shrink-0 rounded-full border bg-background px-3 py-2">
+                    <span className="text-sm">{browserSnapshot.url}</span>
+                  </div>
+                )}
 
-            {/* Screenshot */}
-            {browserSnapshot.screenshot && (
-              <div data-radius="radius2" className="overflow-hidden border">
-                <img
-                  src={getImageSrc(browserSnapshot.screenshot)}
-                  alt="Browser screenshot"
-                  className="w-full"
-                />
+                {/* Screenshot */}
+                {browserSnapshot.screenshot && (
+                  <div data-radius="radius2" className="flex-shrink-0 overflow-hidden border">
+                    <img
+                      src={getImageSrc(browserSnapshot.screenshot)}
+                      alt="Browser screenshot"
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            ) : (
+              <div className="flex h-full flex-col space-y-4 overflow-y-auto">
+                {/* URL Bar */}
+                {browserSnapshot.url && (
+                  <div data-radius="radius2" className="flex-shrink-0 rounded-full border bg-background px-3 py-2">
+                    <span className="text-sm">{browserSnapshot.url}</span>
+                  </div>
+                )}
 
-            {/* DOM Text (Collapsible) */}
-            {browserSnapshot.dom_text && showDomText && (
-              <div className="rounded-lg border bg-muted/50 p-4">
-                <h4 className="mb-2 text-sm font-semibold">DOM Content</h4>
-                <pre className="max-h-96 overflow-auto text-xs">
-                  {browserSnapshot.dom_text}
-                </pre>
+                {/* DOM Text */}
+                {browserSnapshot.dom_text && (
+                  <div data-radius="radius2" className="flex-1 overflow-hidden border bg-muted/50 p-4">
+                    <h4 className="mb-2 text-sm font-semibold">DOM Content</h4>
+                    <pre className="h-[calc(100%-2rem)] overflow-auto text-xs">
+                      {browserSnapshot.dom_text}
+                    </pre>
+                  </div>
+                )}
               </div>
             )}
           </div>

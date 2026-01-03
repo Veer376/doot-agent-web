@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { House } from "lucide-react";
+import { HouseIcon } from "@/components/icons";
 import React from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -22,10 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  groupAgentsByGraphs,
-  isUserCreatedDefaultAssistant,
-} from "@/lib/agent-utils";
+import { groupAgentsByGraphs, isPrimaryAgent } from "@/lib/agent-utils";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { Agent } from "@/types/agent";
@@ -100,59 +97,69 @@ function InboxSidebarInternal() {
                 ) : (
                   <>
                     {/* Group agents by graph */}
-                    {groupAgentsByGraphs(agents).map((graphAgents, groupIdx) => {
-                      if (graphAgents.length === 0) return null;
+                    {groupAgentsByGraphs(agents).map(
+                      (graphAgents, groupIdx) => {
+                        if (graphAgents.length === 0) return null;
 
-                      const graphId = graphAgents[0].graph_id;
+                        const graphId = graphAgents[0].graph_id;
 
-                      return (
-                        <React.Fragment key={`graph-${graphId}-${groupIdx}`}>
-                          {graphAgents.map((agent) => {
-                            const label = agent.name || prettifyText(agent.graph_id);
-                            const isDefault = isUserCreatedDefaultAssistant(agent);
-                            const isSelected = agentInboxId === agent.assistant_id;
+                        return (
+                          <React.Fragment key={`graph-${graphId}-${groupIdx}`}>
+                            {graphAgents.map((agent) => {
+                              const label =
+                                agent.name || prettifyText(agent.graph_id);
+                              const isPrimary = isPrimaryAgent(agent);
+                              const isSelected =
+                                agentInboxId === agent.assistant_id;
 
-                            return (
-                              <SidebarMenuItem
-                                key={`agent-${agent.assistant_id}`}
-                                className={cn(
-                                  "flex w-full items-center justify-between",
-                                  isSelected ? "rounded-md bg-gray-100 dark:bg-gray-800" : "",
-                                )}
-                              >
-                                <TooltipProvider>
-                                  <Tooltip delayDuration={200}>
-                                    <TooltipTrigger asChild>
-                                      <SidebarMenuButton
-                                        onClick={() => handleAgentSelect(agent)}
-                                      >
-                                        <House className="h-5 w-5 text-green-500" />
-                                        <span
-                                          className={cn(
-                                            "min-w-0 truncate font-medium",
-                                            isSelected
-                                              ? "text-black dark:text-white"
-                                              : "text-gray-600 dark:text-gray-400",
-                                          )}
+                              return (
+                                <SidebarMenuItem
+                                  key={`agent-${agent.assistant_id}`}
+                                  className={cn(
+                                    "flex w-full items-center justify-between",
+                                    isSelected
+                                      ? "bg-gray-100 dark:bg-gray-800"
+                                      : "",
+                                  )}
+                                  data-radius="radius1"
+                                >
+                                  <TooltipProvider>
+                                    <Tooltip delayDuration={200}>
+                                      <TooltipTrigger asChild>
+                                        <SidebarMenuButton
+                                          onClick={() =>
+                                            handleAgentSelect(agent)
+                                          }
                                         >
-                                          {isDefault ? "Default agent" : label}
-                                        </span>
-                                      </SidebarMenuButton>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      {label}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </SidebarMenuItem>
-                            );
-                          })}
-                          {groupIdx < groupAgentsByGraphs(agents).length - 1 && (
-                            <div className="my-2 h-px bg-gray-200 dark:bg-gray-700" />
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
+                                          <HouseIcon className="h-5 w-5 text-green-500" />
+                                          <span
+                                            className={cn(
+                                              "min-w-0 truncate font-medium",
+                                              isSelected
+                                                ? "text-black dark:text-white"
+                                                : "text-gray-600 dark:text-gray-400",
+                                            )}
+                                          >
+                                            {isPrimary
+                                              ? "Primary agent"
+                                              : label}
+                                          </span>
+                                        </SidebarMenuButton>
+                                      </TooltipTrigger>
+                                      <TooltipContent>{label}</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </SidebarMenuItem>
+                              );
+                            })}
+                            {groupIdx <
+                              groupAgentsByGraphs(agents).length - 1 && (
+                              <div className="my-2 h-px bg-gray-200 dark:bg-gray-700" />
+                            )}
+                          </React.Fragment>
+                        );
+                      },
+                    )}
                   </>
                 )}
               </div>

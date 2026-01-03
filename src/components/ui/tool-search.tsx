@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
+import { SearchIcon } from "@/components/icons";
 import { Input } from "./input";
 import { cn } from "@/lib/utils";
 
@@ -24,9 +24,10 @@ export function Search({
 
   return (
     <div
+      data-radius="radius2"
       className={cn(
         className,
-        "flex items-center rounded-lg border-[1px] border-slate-200 px-2",
+        "flex items-center border-[1px] border-slate-200 px-2",
       )}
     >
       <SearchIcon className="size-4 text-slate-400" />

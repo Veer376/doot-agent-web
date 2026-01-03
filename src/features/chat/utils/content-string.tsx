@@ -1,4 +1,5 @@
 import type { Message } from "@langchain/langgraph-sdk";
+import { isTextContent } from "@/types/messages";
 
 /**
  * Returns the content of a message as a string.
@@ -9,17 +10,18 @@ import type { Message } from "@langchain/langgraph-sdk";
 export function getContentString(content: Message["content"]): string {
   if (typeof content === "string") return content;
   const texts = content
-    .filter((c: any) => {
+    .filter((c) => {
       // Handle plain strings in the array
       if (typeof c === "string") return true;
       // Handle objects with type: "text"
-      return typeof c === "object" && c !== null && c.type === "text";
+      return isTextContent(c);
     })
-    .map((c: any) => {
+    .map((c) => {
       // If it's a string, return it directly
       if (typeof c === "string") return c;
       // If it's an object, extract the text property
-      return c.text || "";
+      if (isTextContent(c)) return c.text || "";
+      return "";
     });
   return texts.join(" ");
 }
@@ -35,40 +37,63 @@ export function getThinkingBlocks(
 ): Array<{ heading: string; content: string }> {
   if (typeof content === "string") return [];
 
-  return content
-    .filter(
-      (c: any) => typeof c === "object" && c !== null && c.type === "thinking",
-    )
-    .map((c: any) => {
+  const blocks: Array<{ heading: string; content: string }> = [];
+
+  content
+    .filter((c: unknown): c is { type: "thinking"; thinking?: string; text?: string } => {
+      // Check if c is an object with type: "thinking"
+      if (typeof c !== "object" || c === null) return false;
+      if (!("type" in c)) return false;
+      return (c as { type?: unknown }).type === "thinking";
+    })
+    .forEach((c) => {
       // The thinking content might be in 'thinking' or 'text' property
       const thinkingText = c.thinking || c.text || "";
 
       if (!thinkingText || thinkingText.trim().length === 0) {
-        return null;
+        return;
       }
 
-      // Split into lines and find heading
-      const lines = thinkingText.trim().split("\n");
-      let heading = "Thinking";
-      let content = thinkingText.trim();
+      // Match pattern: **Heading**\n\nContent (with multiple newlines before next heading)
+      // Use regex to find all **heading** patterns
+      const headingRegex = /\*\*([^*]+)\*\*/g;
+      const matches = [...thinkingText.matchAll(headingRegex)];
 
-      // Check if first line is a bold heading **...**
-      const firstLine = lines[0]?.trim();
-      if (firstLine) {
-        const boldMatch = firstLine.match(/^\*\*(.+?)\*\*$/);
-        if (boldMatch) {
-          // Extract heading and remove it from content
-          heading = boldMatch[1].trim();
-          content = lines.slice(1).join("\n").trim();
+      if (matches.length === 0) {
+        // No headings found at all
+        blocks.push({
+          heading: "Thinking",
+          content: thinkingText.trim().replace(/\n{3,}/g, "\n\n"),
+        });
+        return;
+      }
+
+      // Extract each section with its heading
+      matches.forEach((match, idx) => {
+        const heading = match[1].trim();
+        const headingEndPos = match.index! + match[0].length;
+
+        // Find content between this heading and the next (or end of text)
+        const nextMatch = matches[idx + 1];
+        const contentEndPos = nextMatch
+          ? nextMatch.index!
+          : thinkingText.length;
+
+        let content = thinkingText
+          .substring(headingEndPos, contentEndPos)
+          .trim();
+
+        // Clean up content: remove leading/trailing newlines, normalize multiple newlines
+        content = content
+          .replace(/^\n+/, "")
+          .replace(/\n+$/, "")
+          .replace(/\n{3,}/g, "\n\n");
+
+        if (heading) {
+          blocks.push({ heading, content });
         }
-      }
+      });
+    });
 
-      // Remove extra newlines (replace multiple newlines with double newline)
-      content = content.replace(/\n{3,}/g, "\n\n").trim();
-
-      return { heading, content };
-    })
-    .filter(
-      (block): block is { heading: string; content: string } => block !== null,
-    );
+  return blocks;
 }

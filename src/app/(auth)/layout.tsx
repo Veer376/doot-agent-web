@@ -3,10 +3,11 @@ import AuthLayout from "./auth-layout";
 import { AuthProvider } from "@/providers/Auth";
 import type { Metadata } from "next";
 import { DOCS_LINK } from "@/constants";
+import { config } from "@/config";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent - Auth",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent - Browser Automation Agent",
+  description: "Let the Doot Agent handle your boring tasks.",
 };
 
 export default function Layout({
@@ -14,7 +15,7 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isDemoApp = process.env.NEXT_PUBLIC_DEMO_APP === "true";
+  const isDemoApp = config.features.isDemoApp;
   return (
     <>
       {isDemoApp && (

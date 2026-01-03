@@ -4,6 +4,7 @@ import { startCase } from "lodash";
 import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { logger } from "./utils/logger";
 import { validate } from "uuid";
+import { config } from "@/config";
 
 export function prettifyText(action: string) {
   return startCase(action.replace(/_/g, " "));
@@ -56,10 +57,10 @@ export function baseMessageObject(item: unknown): string {
     if ("tool_calls" in item) {
       toolCallText = JSON.stringify(item.tool_calls, null);
     }
-    if ("_getType" in item && typeof item._getType === "function") {
-      return `${item._getType()}:${contentText ? ` ${contentText}` : ""}${toolCallText ? ` - Tool calls: ${toolCallText}` : ""}`;
-    } else if ("type" in item) {
+    if ("type" in item && typeof item.type === "string") {
       return `${item.type}:${contentText ? ` ${contentText}` : ""}${toolCallText ? ` - Tool calls: ${toolCallText}` : ""}`;
+    } else if ("_getType" in item && typeof item._getType === "function") {
+      return `${(item as any)._getType()}:${contentText ? ` ${contentText}` : ""}${toolCallText ? ` - Tool calls: ${toolCallText}` : ""}`;
     }
   } else if (
     typeof item === "object" &&
@@ -101,7 +102,6 @@ export function unknownToPrettyDate(input: unknown): string | undefined {
 
 export function constructOpenInStudioURL(
   agentId: string,
-  deploymentId: string,
   threadId?: string,
 ): string {
   const smithStudioBaseUrl = "https://smith.langchain.com/studio/thread";
@@ -111,8 +111,8 @@ export function constructOpenInStudioURL(
     url.searchParams.set("threadId", threadId);
   }
 
-  // Use the API URL from env as baseUrl
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  // Use the API URL from config
+  const apiUrl = config.apiUrl;
   const trimmedApiUrl = apiUrl.replace(/\/$/, "");
   url.searchParams.append("baseUrl", trimmedApiUrl);
 

@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Star, Loader2 } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronsUpDownIcon,
+  LoaderIcon,
+  EditIcon,
+} from "@/components/icons";
+import { getAgentIcon } from "@/lib/agent-icon-registry";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,19 +18,20 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Agent } from "@/types/agent";
 import {
-  groupAgentsByGraphs,
-  isUserCreatedDefaultAssistant,
-  sortAgentGroup,
-} from "@/lib/agent-utils";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Agent } from "@/types/agent";
+import { sortAgentGroup } from "@/lib/agent-utils";
 
 export interface AgentsComboboxProps {
   agents: Agent[];
@@ -59,6 +66,11 @@ export interface AgentsComboboxProps {
   trigger?: React.ReactNode;
   triggerAsChild?: boolean;
   footer?: React.ReactNode;
+  /**
+   * Callback when the edit button is clicked for an agent
+   * If not provided, edit button won't be shown
+   */
+  onEditAgent?: (agent: Agent) => void;
 }
 
 /**
@@ -78,9 +90,6 @@ const getSelectedAgentValue = (
   if (selectedAgent) {
     return (
       <span className="flex w-full items-center gap-2">
-        <span className="text-muted-foreground text-xs">
-          [{selectedAgent.graph_id}]
-        </span>{" "}
         {selectedAgent.name}
       </span>
     );
@@ -123,6 +132,7 @@ export function AgentsCombobox({
   footer,
   style,
   agentsLoading,
+  onEditAgent,
 }: AgentsComboboxProps) {
   // Convert value to array for internal handling
   const selectedValues = React.useMemo(() => {
@@ -176,7 +186,7 @@ export function AgentsCombobox({
                 ? getMultipleSelectedAgentValues(selectedValues, agents)
                 : getSelectedAgentValue(selectedValues[0], agents)
               : placeholder}
-            <ChevronsUpDown className="opacity-50" />
+            <ChevronsUpDownIcon className="opacity-50" />
           </Button>
         )}
       </PopoverTrigger>
@@ -199,64 +209,111 @@ export function AgentsCombobox({
             <CommandEmpty>
               {agentsLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
+                  <LoaderIcon className="size-4" />
                   Loading agents...
                 </span>
               ) : (
                 "No agents found."
               )}
             </CommandEmpty>
-            {(() => {
-              // Group all agents by graph
-              const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
+            <CommandGroup>
+              {sortAgentGroup(agents).map((item) => {
+                const itemValue = item.assistant_id;
+                const isSelected = selectedValues.includes(itemValue);
 
-              return agentsGroupedByGraphs.map((group) => {
-                const sortedGroup = sortAgentGroup(group);
-                const graphId = group[0]?.graph_id || "unknown";
+                // Resolve agent icon from metadata with fallback
+                const AgentIconComponent = getAgentIcon(item.metadata?.icon);
 
                 return (
-                  <React.Fragment key={graphId}>
-                    <CommandGroup
-                      heading={graphId}
-                      className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium"
-                    >
-                      {sortedGroup.map((item) => {
-                        const itemValue = item.assistant_id;
-                        const isSelected = selectedValues.includes(itemValue);
+                  <TooltipProvider
+                    key={itemValue}
+                    delayDuration={300}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="group/agent-item relative">
+                          {/* Edit button - shows on hover in right area */}
+                          {onEditAgent && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                onEditAgent(item);
+                              }}
+                              data-radius="radius1"
+                              className={cn(
+                                "peer/edit-btn absolute top-1/2 right-2 z-10 -translate-y-1/2",
+                                "text-muted-foreground p-1.5 transition-all",
+                                // Hide by default, show on group hover
+                                "opacity-0 group-hover/agent-item:opacity-100",
+                                // Separate hover state for edit button
+                                "hover:bg-accent hover:text-foreground hover:scale-105",
+                                "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
+                              )}
+                              aria-label={`Edit ${item.name}`}
+                            >
+                              <EditIcon size="xs" />
+                            </button>
+                          )}
+                          
 
-                        return (
+
                           <CommandItem
-                            key={itemValue}
                             value={itemValue}
                             onSelect={handleSelect}
-                            className="flex w-full items-center justify-between"
+                            className={cn(
+                              "flex w-full items-center gap-2",
+                              // Extra padding on right for icon area
+                              onEditAgent ? "pr-10" : "pr-2",
+                              // Reset background on edit button hover to maintain clean look
+                              "peer-hover/edit-btn:data-[selected=true]:text-foreground peer-hover/edit-btn:data-[selected=true]:bg-transparent",
+                            )}
                           >
-                            <Check
-                              className={cn(
-                                isSelected ? "opacity-100" : "opacity-0",
-                              )}
-                            />
+                            {/* Left: Checkmark (selected) OR Icon (not selected / hovered) */}
+                            <div className="relative flex-shrink-0">
+                              {/* Checkmark - visible when selected AND not hovered */}
+                              <CheckIcon
+                                size="xs"
+                                className={cn(
+                                  isSelected
+                                    ? "block group-hover/agent-item:hidden"
+                                    : "hidden"
+                                )}
+                              />
+                              
+                              {/* Icon - visible when NOT selected OR when selected+hovered */}
+                              <AgentIconComponent
+                                size="xs"
+                                className={cn(
+                                  !isSelected
+                                    ? "block"
+                                    : "hidden group-hover/agent-item:block"
+                                )}
+                              />
+                            </div>
 
-                            <p className="line-clamp-1 flex-1 truncate pr-2">
+                            {/* Center: Agent Name */}
+                            <p className="line-clamp-1 min-w-0 flex-1 truncate">
                               {item.name}
                             </p>
-                            <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                              {isUserCreatedDefaultAssistant(item) && (
-                                <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                                  <Star />
-                                  <p>Default</p>
-                                </span>
-                              )}
-                            </div>
                           </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                    <CommandSeparator />
-                  </React.Fragment>
+                        </div>
+                      </TooltipTrigger>
+                      {item.description && (
+                        <TooltipContent
+                          side="right"
+                          align="start"
+                          className="max-w-[250px]"
+                        >
+                          <p className="text-sm">{item.description}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 );
-              });
-            })()}
+              })}
+            </CommandGroup>
 
             {footer}
           </CommandList>

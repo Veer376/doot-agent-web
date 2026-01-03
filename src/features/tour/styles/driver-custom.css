@@ -1,0 +1,170 @@
+/**
+ * Custom styles for driver.js tour popover
+ * Matches DootAgent's design system (Shadcn UI style)
+ */
+
+/* ============================================
+   POPOVER CONTAINER
+   ============================================ */
+.driver-popover {
+    font-family: var(--font-sans) !important;
+    background: var(--popover) !important;
+    color: var(--popover-foreground) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius2) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    padding: 1rem !important;
+    max-width: 300px !important;
+    text-shadow: none !important;
+}
+
+/* ============================================
+   TITLE STYLING
+   ============================================ */
+.driver-popover-title {
+    font-family: var(--font-sans) !important;
+    font-size: 0.875rem !important;
+    /* text-sm */
+    font-weight: 600 !important;
+    color: var(--foreground) !important;
+    margin-bottom: 0.25rem !important;
+    /* tight spacing */
+    line-height: 1.25 !important;
+    text-shadow: none !important;
+}
+
+/* ============================================
+   DESCRIPTION STYLING
+   ============================================ */
+.driver-popover-description {
+    font-family: var(--font-sans) !important;
+    font-size: 0.875rem !important;
+    /* text-sm */
+    color: var(--muted-foreground) !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.75rem !important;
+    /* tighter spacing */
+    text-shadow: none !important;
+}
+
+/* ============================================
+   FOOTER & BUTTONS
+   ============================================ */
+.driver-popover-footer {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.5rem !important;
+    margin-top: 0 !important;
+}
+
+/* Base button styles matching Shadcn 'h-8 px-3 text-xs' or 'h-9 px-4 py-2 text-sm' */
+.driver-popover-footer button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: var(--font-sans) !important;
+    font-size: 0.875rem !important;
+    /* text-sm */
+    font-weight: 500 !important;
+    height: 2rem !important;
+    /* h-8 */
+    padding: 0 0.75rem !important;
+    /* px-3 */
+    border-radius: var(--radius1) !important;
+    /* rounded-md */
+    transition: background-color 0.15s ease !important;
+    text-shadow: none !important;
+    border: 1px solid transparent !important;
+    cursor: pointer !important;
+    outline: none !important;
+}
+
+/* Close/Skip button (Ghost variant) */
+.driver-popover-close-btn {
+    background: transparent !important;
+    color: var(--muted-foreground) !important;
+}
+
+.driver-popover-close-btn:hover {
+    background: var(--accent) !important;
+    /* hover:bg-accent */
+    color: var(--accent-foreground) !important;
+    /* hover:text-accent-foreground */
+}
+
+/* Next/Done button (Primary variant) */
+.driver-popover-next-btn,
+.driver-popover-done-btn {
+    background: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    border: none !important;
+}
+
+.driver-popover-next-btn:hover,
+.driver-popover-done-btn:hover {
+    background: var(--primary) !important;
+    opacity: 0.9 !important;
+}
+
+/* ============================================
+   ARROW/POINTER
+   ============================================ */
+.driver-popover-arrow {
+    border-color: transparent !important;
+}
+
+.driver-popover-arrow-side-bottom {
+    border-bottom-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-top {
+    border-top-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-left {
+    border-left-color: var(--popover) !important;
+}
+
+.driver-popover-arrow-side-right {
+    border-right-color: var(--popover) !important;
+}
+
+/* ============================================
+   OVERLAY/BACKDROP
+   ============================================ */
+.driver-overlay {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* ============================================
+   HIGHLIGHT ELEMENT
+   ============================================ */
+.driver-highlighted-element {
+    /* Ring effect */
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring) !important;
+    outline: none !important;
+    border-radius: var(--radius2) !important;
+}
+
+/* ============================================
+   HIDDEN ELEMENTS
+   ============================================ */
+.driver-popover-prev-btn,
+.driver-popover-progress-text {
+    display: none !important;
+}
+
+/* ============================================
+   CURSOR & INTERACTION
+   ============================================ */
+.driver-active-element {
+    pointer-events: auto !important;
+}
+
+/* Reset default styles */
+.driver-popover * {
+    text-shadow: none !important;
+    box-sizing: border-box !important;
+}

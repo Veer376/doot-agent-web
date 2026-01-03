@@ -28,10 +28,10 @@ interface StateViewRecursiveProps {
 
 const messageTypeToLabel = (message: BaseMessage) => {
   let type = "";
-  if ("_getType" in message && typeof message._getType === "function") {
-    type = message._getType();
-  } else if ("type" in message) {
-    type = message.type as string;
+  if ("type" in message && typeof message.type === "string") {
+    type = message.type;
+  } else if ("_getType" in message && typeof message._getType === "function") {
+    type = (message as any)._getType();
   }
 
   switch (type) {
@@ -60,7 +60,7 @@ function MessagesRenderer({ messages }: { messages: BaseMessage[] }) {
         return (
           <div
             key={msg.id || `message-${idx}`}
-            className="ml-2 flex w-full flex-col gap-[2px]"
+            className="ml-2 flex w-full flex-col gap-0.5"
           >
             <p className="font-medium text-gray-700">{messageTypeLabel}:</p>
             {content && (
@@ -170,11 +170,12 @@ function HasContentsEllipsis({ onClick }: { onClick?: () => void }) {
     <span
       onClick={onClick}
       className={cn(
-        "rounded-md p-[2px] font-mono text-[10px] leading-3",
+        "p-0.5 font-mono text-[10px] leading-3",
         "bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800",
         "cursor-pointer transition-colors ease-in-out",
         "inline-block -translate-y-[2px]",
       )}
+      data-radius="radius1"
     >
       {"{...}"}
     </span>
@@ -209,7 +210,8 @@ export function StateViewObject(props: StateViewProps) {
       >
         <div
           onClick={() => setExpanded((prev) => !prev)}
-          className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-gray-500 transition-colors ease-in-out hover:bg-gray-100 hover:text-black"
+          className="flex h-5 w-5 cursor-pointer items-center justify-center text-gray-500 transition-colors ease-in-out hover:bg-gray-100 hover:text-black"
+          data-radius="radius1"
         >
           <ChevronRight className="h-4 w-4" />
         </div>

@@ -48,11 +48,11 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
         {removable && (
           <button
             type="button"
-            className="absolute top-1 right-1 z-10 transition-all hover:opacity-80 cursor-pointer"
+            className="absolute top-1 right-1 z-10 cursor-pointer transition-all hover:opacity-80"
             onClick={onRemove}
             aria-label="Remove image"
           >
-            <CancelCircleIcon className="size-5 text-foreground" />
+            <CancelCircleIcon className="text-foreground size-5" />
           </button>
         )}
       </div>
@@ -71,31 +71,33 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
       <div
         data-radius="radius2"
         className={cn(
-          "relative flex items-center gap-3 border border-border bg-accent/30 p-1.5 transition-colors",
+          "border-border bg-accent/30 relative flex items-center gap-3 border p-1.5 transition-colors",
           className,
         )}
       >
-        <div data-radius="radius1" className="flex items-center justify-center size-9 bg-primary/10 flex-shrink-0">
+        <div
+          data-radius="radius1"
+          className="bg-primary/10 flex size-9 flex-shrink-0 items-center justify-center"
+        >
           <Pdf01Icon
-            className={cn(
-              "text-primary",
-              size === "sm" ? "size-4" : "size-5",
-            )}
+            className={cn("text-primary", size === "sm" ? "size-4" : "size-5")}
           />
         </div>
         <span
-          className={cn("min-w-0 flex-1 text-sm text-foreground truncate pr-10")}
+          className={cn(
+            "text-foreground min-w-0 flex-1 truncate pr-10 text-sm",
+          )}
         >
           {String(filename)}
         </span>
         {removable && (
           <button
             type="button"
-            className="absolute top-2 right-2 transition-all hover:opacity-80 cursor-pointer"
+            className="absolute top-2 right-2 cursor-pointer transition-all hover:opacity-80"
             onClick={onRemove}
             aria-label="Remove PDF"
           >
-            <CancelCircleIcon className="size-5 text-foreground" />
+            <CancelCircleIcon className="text-foreground size-5" />
           </button>
         )}
       </div>
@@ -107,22 +109,25 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     <div
       data-radius="radius2"
       className={cn(
-        "relative flex items-center gap-3 border border-border bg-accent/30 px-4 py-3 text-muted-foreground transition-colors",
+        "border-border bg-accent/30 text-muted-foreground relative flex items-center gap-3 border px-4 py-3 transition-colors",
         className,
       )}
     >
-      <div data-radius="radius1" className="flex items-center justify-center size-9 bg-muted flex-shrink-0">
+      <div
+        data-radius="radius1"
+        className="bg-muted flex size-9 flex-shrink-0 items-center justify-center"
+      >
         <DocumentCodeIcon className="size-5" />
       </div>
-      <span className="truncate text-sm pr-6">Unsupported file type</span>
+      <span className="truncate pr-6 text-sm">Unsupported file type</span>
       {removable && (
         <button
           type="button"
-          className="absolute top-2 right-2 transition-all hover:opacity-80 cursor-pointer"
+          className="absolute top-2 right-2 cursor-pointer transition-all hover:opacity-80"
           onClick={onRemove}
           aria-label="Remove file"
         >
-          <CancelCircleIcon className="size-5 text-foreground" />
+          <CancelCircleIcon className="text-foreground size-5" />
         </button>
       )}
     </div>

@@ -59,7 +59,6 @@ const StreamSession = ({
   accessToken: string;
   threadId: string | null;
 }) => {
-
   const [threadId, setThreadId] = useQueryState("threadId");
   const queryClient = useQueryClient();
   const { mutate: updateThread } = useUpdateThread();
@@ -118,10 +117,10 @@ const StreamSession = ({
 
 /**
  * StreamProvider: Feature-level stream session management
- * 
+ *
  * This provider manages the stream session for the chat feature.
  * Agent selection is now handled by the global AgentProvider.
- * 
+ *
  * Provider Responsibilities:
  * - Stream session lifecycle
  * - Thread synchronization
@@ -195,7 +194,5 @@ export const useStreamContext = (): StreamContextType => {
 
   return context;
 };
-
-
 
 export default StreamContext;

@@ -4,7 +4,10 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
-import { extractChainOfThought, type ChainStep } from "@/features/chat/utils/extract-chain-of-thought";
+import {
+  extractChainOfThought,
+  type ChainStep,
+} from "@/features/chat/utils/extract-chain-of-thought";
 import {
   ChainOfThought,
   ChainOfThoughtHeader,
@@ -59,7 +62,7 @@ export const AITurn = React.memo(function AITurn({
   // Combine all content for the command bar
   const combinedContent = chainData.renderBlocks
     .filter((block) => block.type === "content")
-    .map((block) => block.type === "content" ? block.content : "")
+    .map((block) => (block.type === "content" ? block.content : ""))
     .join("\n\n");
 
   // Parse citations once from combined content
@@ -119,7 +122,11 @@ export const AITurn = React.memo(function AITurn({
   };
 
   // Render a single step (thinking or tool)
-  const renderStep = (step: ChainStep, idx: number, isPreview: boolean = false) => {
+  const renderStep = (
+    step: ChainStep,
+    idx: number,
+    isPreview: boolean = false,
+  ) => {
     if (step.type === "thinking") {
       return (
         <ChainOfThoughtStep

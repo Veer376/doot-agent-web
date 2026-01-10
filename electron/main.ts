@@ -2,6 +2,148 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { join } from 'path';
 import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
+import { existsSync, mkdirSync } from 'fs';
+import { tmpdir } from 'os';
+
+// Playwright browser server types
+import type { BrowserServer } from 'playwright';
+
+// ============================================
+// Playwright Browser Server (Inlined)
+// ============================================
+
+// Browser server instance (singleton)
+let playwrightBrowserServer: BrowserServer | null = null;
+
+// User data directory for persistent sessions
+const PLAYWRIGHT_USER_DATA_DIR = join(tmpdir(), 'orbit-agent-playwright-profile');
+
+/**
+ * Configuration options for the Playwright browser server
+ */
+interface PlaywrightServerOptions {
+    headless?: boolean;
+    port?: number;
+    windowSize?: { width: number; height: number };
+}
+
+/**
+ * Default configuration
+ */
+const DEFAULT_PLAYWRIGHT_OPTIONS: PlaywrightServerOptions = {
+    headless: false,
+    port: 0, // Let Playwright choose an available port
+    windowSize: { width: 1920, height: 1080 },
+};
+
+/**
+ * Launch Playwright browser server
+ * 
+ * @param options - Configuration options
+ * @returns WebSocket endpoint URL with authentication token
+ */
+async function launchPlaywrightServer(
+    options: PlaywrightServerOptions = {}
+): Promise<string> {
+    // Return existing server if already running
+    if (playwrightBrowserServer) {
+        const wsEndpoint = playwrightBrowserServer.wsEndpoint();
+        console.log('[Playwright] Server already running:', wsEndpoint);
+        return wsEndpoint;
+    }
+
+    const config = { ...DEFAULT_PLAYWRIGHT_OPTIONS, ...options };
+    console.log('[Playwright] Launching browser server with config:', config);
+
+    // Ensure user data directory exists
+    if (!existsSync(PLAYWRIGHT_USER_DATA_DIR)) {
+        mkdirSync(PLAYWRIGHT_USER_DATA_DIR, { recursive: true });
+        console.log('[Playwright] Created user data directory:', PLAYWRIGHT_USER_DATA_DIR);
+    }
+
+    try {
+        // Dynamic import of Playwright (ESM module)
+        const { chromium } = await import('playwright');
+        
+        // Launch Playwright browser server using the system Chrome
+        // This avoids requiring users to run 'playwright install'
+        playwrightBrowserServer = await chromium.launchServer({
+            channel: 'chrome', // Use system-installed Chrome instead of Playwright's bundled Chromium
+            headless: config.headless,
+            port: config.port,
+            args: [
+                `--window-size=${config.windowSize?.width},${config.windowSize?.height}`,
+                '--disable-blink-features=AutomationControlled',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+            ],
+            chromiumSandbox: false,
+        });
+
+        const wsEndpoint = playwrightBrowserServer.wsEndpoint();
+        console.log('[Playwright] Browser server started successfully');
+        console.log('[Playwright] WebSocket endpoint:', wsEndpoint);
+        
+        playwrightBrowserServer.on('close', () => {
+            console.log('[Playwright] Browser server closed');
+            playwrightBrowserServer = null;
+        });
+
+        return wsEndpoint;
+    } catch (error) {
+        console.error('[Playwright] Failed to launch browser server:', error);
+        throw error;
+    }
+}
+
+/**
+ * Check if Playwright browser server is running
+ */
+function isPlaywrightServerRunning(): boolean {
+    return playwrightBrowserServer !== null;
+}
+
+/**
+ * Get Playwright server status
+ */
+function getPlaywrightServerStatus(): {
+    running: boolean;
+    wsEndpoint: string | null;
+    port: number | null;
+} {
+    if (!playwrightBrowserServer) {
+        return { running: false, wsEndpoint: null, port: null };
+    }
+    
+    const wsEndpoint = playwrightBrowserServer.wsEndpoint();
+    const port = parseInt(new URL(wsEndpoint).port, 10);
+    
+    return { running: true, wsEndpoint, port };
+}
+
+/**
+ * Close Playwright browser server
+ */
+async function closePlaywrightServer(): Promise<void> {
+    if (playwrightBrowserServer) {
+        console.log('[Playwright] Closing browser server...');
+        try {
+            await playwrightBrowserServer.close();
+            console.log('[Playwright] Browser server closed');
+        } catch (error) {
+            console.error('[Playwright] Error closing browser server:', error);
+        } finally {
+            playwrightBrowserServer = null;
+        }
+    }
+}
+
+// ============================================
+// End Playwright Browser Server
+// ============================================
 
 // Keep a global reference to prevent garbage collection
 let mainWindow: BrowserWindow | null = null;
@@ -84,8 +226,8 @@ function launchAutomationBrowser(): Promise<string> {
             `--remote-debugging-port=${AUTOMATION_CDP_PORT}`,
             '--no-first-run',
             '--no-default-browser-check',
-            '--user-data-dir=' + require('os').tmpdir() + '\\orbit-automation-profile',
-            '--disable-web-security',
+            '--user-data-dir=' + require('os').tmpdir() + '\\doot-automation-profile',
+            // '--disable-web-security',
             '--disable-features=VizDisplayCompositor'
         ], {
             detached: true,
@@ -197,64 +339,64 @@ async function createWindow() {
     // Handle new window requests (OAuth popups)
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         console.log('[Electron] Window open request:', url);
-        
+
         // Allow OAuth provider URLs to open in the same window
-        if (url.includes('supabase.co/auth') || 
-            url.includes('accounts.google.com') || 
+        if (url.includes('supabase.co/auth') ||
+            url.includes('accounts.google.com') ||
             url.includes('github.com/login') ||
             url.includes('oauth')) {
             console.log('[Electron] OAuth navigation - loading in main window');
             mainWindow?.loadURL(url);
             return { action: 'deny' };
         }
-        
+
         // Allow OAuth callbacks to navigate in current window
         if (url.includes('?code=') || url.includes('&code=')) {
             console.log('[Electron] OAuth callback - loading in current window');
             mainWindow?.loadURL(url);
             return { action: 'deny' };
         }
-        
+
         // Allow same-app URLs
         if (url.startsWith(appUrl)) {
             return { action: 'allow' };
         }
-        
+
         // Open other external links in default browser
         if (url.startsWith('http://') || url.startsWith('https://')) {
             console.log('[Electron] Opening external URL in browser:', url);
             shell.openExternal(url);
             return { action: 'deny' };
         }
-        
+
         return { action: 'allow' };
     });
 
     // Handle navigation in the main window
     mainWindow.webContents.on('will-navigate', (event, url) => {
         console.log('[Electron] Navigation request:', url);
-        
+
         const appHost = new URL(appUrl).host;
-        
+
         try {
             const urlObj = new URL(url);
             const urlHost = urlObj.host;
-            
+
             // Allow OAuth callbacks (contains code parameter)
             const hasAuthCode = urlObj.searchParams.has('code');
-            
+
             // Allow Supabase OAuth URLs
             const isSupabaseAuth = url.includes('supabase.co/auth');
-            
+
             // Allow Google OAuth URLs
             const isGoogleAuth = url.includes('accounts.google.com');
-            
+
             // Allow same-host navigation, OAuth callbacks, and OAuth providers
             if (urlHost === appHost || hasAuthCode || isSupabaseAuth || isGoogleAuth) {
                 console.log('[Electron] Allowing navigation to:', url);
                 return; // Allow navigation
             }
-            
+
             // Only prevent navigation to truly external sites
             console.log('[Electron] Preventing external navigation');
             event.preventDefault();
@@ -313,8 +455,11 @@ app.on('window-all-closed', () => {
 /**
  * App lifecycle: before quit
  */
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
     console.log('[Electron] App quitting...');
+
+    // Close Playwright browser server
+    await closePlaywrightServer();
 
     // Kill Next.js server
     if (nextProcess) {
@@ -366,6 +511,49 @@ ipcMain.handle('is-electron', () => {
 // Open external URL
 ipcMain.handle('open-external', (_event, url: string) => {
     shell.openExternal(url);
+});
+
+/**
+ * Playwright Browser Server IPC Handlers
+ * These provide secure browser automation via Playwright WSS protocol
+ */
+
+// Launch Playwright browser server and get WSS URL (with auth token)
+ipcMain.handle('get-playwright-browser-ws-url', async () => {
+    try {
+        console.log('[Electron] Launching Playwright browser server...');
+        const wsUrl = await launchPlaywrightServer({
+            headless: false,
+            windowSize: { width: 1920, height: 1080 },
+        });
+        console.log('[Electron] Playwright browser server ready:', wsUrl);
+        return wsUrl; // URL includes auth token: ws://127.0.0.1:PORT/GUID
+    } catch (error) {
+        console.error('[Electron] Failed to launch Playwright browser server:', error);
+        throw error;
+    }
+});
+
+// Get Playwright server status
+ipcMain.handle('get-playwright-server-status', () => {
+    return getPlaywrightServerStatus();
+});
+
+// Check if Playwright server is running
+ipcMain.handle('is-playwright-server-running', () => {
+    return isPlaywrightServerRunning();
+});
+
+// Close Playwright browser server
+ipcMain.handle('close-playwright-browser', async () => {
+    try {
+        await closePlaywrightServer();
+        console.log('[Electron] Playwright browser server closed');
+        return { success: true };
+    } catch (error) {
+        console.error('[Electron] Failed to close Playwright browser server:', error);
+        throw error;
+    }
 });
 
 console.log('[Electron] Main process loaded');

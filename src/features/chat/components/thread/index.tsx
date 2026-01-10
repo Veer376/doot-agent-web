@@ -57,35 +57,44 @@ const DUMMY_PROMPTS: PromptTemplate[] = [
   {
     id: "1",
     title: "Code Review Assistant",
-    prompt: "Review this code and suggest improvements for readability, performance, and best practices.",
-    imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
+    prompt:
+      "Review this code and suggest improvements for readability, performance, and best practices.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
   },
   {
     id: "2",
     title: "Email Draft Generator",
-    prompt: "Help me draft a professional email for client communication with a friendly yet formal tone.",
-    imageUrl: "https://images.unsplash.com/photo-1557200515-a350fb961fcf?w=400&h=300&fit=crop",
+    prompt:
+      "Help me draft a professional email for client communication with a friendly yet formal tone.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1557200515-a350fb961fcf?w=400&h=300&fit=crop",
   },
   {
     id: "3",
     title: "Data Analysis Expert",
-    prompt: "Analyze this dataset and provide insights, trends, and actionable recommendations.",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+    prompt:
+      "Analyze this dataset and provide insights, trends, and actionable recommendations.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
   },
   {
     id: "4",
     title: "Creative Writing Helper",
-    prompt: "Generate creative story ideas and help me develop compelling narratives with rich characters.",
-    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
+    prompt:
+      "Generate creative story ideas and help me develop compelling narratives with rich characters.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
   },
   {
     id: "5",
     title: "Technical Documentation",
-    prompt: "Create clear and comprehensive technical documentation for this feature or API.",
-    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
+    prompt:
+      "Create clear and comprehensive technical documentation for this feature or API.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
   },
 ];
-
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -210,13 +219,11 @@ export function Thread() {
     handlePaste,
   } = useFileUpload();
 
-
-
   const { apiKeys } = useApiKeys();
   const hasApiKeys = useHasApiKeys();
 
   const { session } = useAuthSession();
-  
+
   // Model selection for this thread
   const { selectedModel, selectModel } = useThreadModel();
 
@@ -235,9 +242,11 @@ export function Thread() {
   const { data: threads = [] } = useFetchThreads();
 
   // Track the last saved agent/mode/model to avoid redundant updates
-  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string; modelId?: string | null } | null>(
-    null,
-  );
+  const lastSavedMetadataRef = useRef<{
+    agentId: string;
+    mode: string;
+    modelId?: string | null;
+  } | null>(null);
   // Track which thread has been initialized to prevent race conditions
   const threadInitializedRef = useRef<string | null>(null);
 
@@ -370,9 +379,7 @@ export function Thread() {
                 apiKeys,
               },
             },
-            context: {
-
-            },
+            context: {},
             metadata: {
               supabaseAccessToken: session?.accessToken,
             },
@@ -400,7 +407,11 @@ export function Thread() {
                 ...(selectedModel?.id && { model_id: selectedModel.id }),
               },
             });
-            lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
+            lastSavedMetadataRef.current = {
+              agentId,
+              mode,
+              modelId: selectedModel?.id || null,
+            };
           }
 
           queryClient.invalidateQueries({
@@ -448,7 +459,10 @@ export function Thread() {
       return;
     }
     try {
-      const message = stream.error instanceof Error ? stream.error.message : "Stream error occurred";
+      const message =
+        stream.error instanceof Error
+          ? stream.error.message
+          : "Stream error occurred";
       if (!message || lastError.current === message) {
         // Message has already been logged. do not modify ref, return early.
         return;
@@ -477,7 +491,7 @@ export function Thread() {
     setAuthDialogOpen(true);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const content = inputValue.trim();
@@ -507,20 +521,42 @@ export function Thread() {
     // to ensure the submit goes to the same assistant the stream is connected to
     const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
 
-    // Get CDP WebSocket URL if using browser agent
+    // Get Playwright Browser WSS URL if using browser_agent
+    // This launches a secure Playwright browser server in Electron
+    // The WSS URL includes an authentication token for security
     let browserContext = undefined;
     if (effectiveAgentId === "browser_agent") {
       try {
-        if (window.electron?.getAutomationBrowserWsUrl) {
+        // Try Playwright first (secure, recommended)
+        if (window.electron?.getPlaywrightBrowserWsUrl) {
+          console.log(
+            "[Thread] Launching Playwright browser server for browser_agent...",
+          );
+          const wsUrl = await window.electron.getPlaywrightBrowserWsUrl();
+          console.log("[Thread] Playwright browser server ready:", wsUrl);
+          browserContext = {
+            browser_config: {
+              wss_url: wsUrl,
+              type: "playwright", // Indicate Playwright protocol
+            },
+          };
+        }
+        // Fallback to legacy CDP method (less secure, kept for compatibility)
+        else if (window.electron?.getAutomationBrowserWsUrl) {
+          console.log("[Thread] Falling back to legacy CDP browser...");
           const wsUrl = await window.electron.getAutomationBrowserWsUrl();
           browserContext = {
             browser_config: {
               wss_url: wsUrl,
+              type: "cdp", // Indicate CDP protocol
             },
           };
         }
       } catch (error) {
-        console.error("Error getting automation browser WebSocket URL:", error);
+        console.error(
+          "[Thread] Error launching browser for browser_agent:",
+          error,
+        );
       }
     }
 
@@ -540,10 +576,11 @@ export function Thread() {
           configurable: {
             ...getAgentConfig(effectiveAgentId),
             apiKeys,
+            // Pass browser config in configurable so backend can access it
+            ...(browserContext && {
+              browser_config: browserContext.browser_config,
+            }),
           },
-        },
-        context: {
-
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
@@ -577,7 +614,11 @@ export function Thread() {
           },
         });
         // Update tracking
-        lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
+        lastSavedMetadataRef.current = {
+          agentId,
+          mode,
+          modelId: selectedModel?.id || null,
+        };
       }
 
       // Invalidate thread state cache after message send
@@ -620,9 +661,7 @@ export function Thread() {
         },
       },
       optimisticValues,
-      context: {
-
-      },
+      context: {},
       metadata: {
         supabaseAccessToken: session?.accessToken,
       },
@@ -753,7 +792,7 @@ export function Thread() {
             <div className="to-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-b from-transparent from-0% to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
-              
+
               {/* Title section with independent spacing */}
               {!hasMessages && !threadId && (
                 <div className="mb-10 flex items-center gap-3">
@@ -800,7 +839,10 @@ export function Thread() {
 
                   {/* Prompt Template Gallery - only show when no thread */}
                   {!threadId && messages.length === 0 && (
-                    <div className="mx-auto mt-6" style={{ width: "85%" }}>
+                    <div
+                      className="mx-auto mt-6"
+                      style={{ width: "85%" }}
+                    >
                       <PromptGallery
                         templates={DUMMY_PROMPTS}
                         onPromptClick={(template) => {

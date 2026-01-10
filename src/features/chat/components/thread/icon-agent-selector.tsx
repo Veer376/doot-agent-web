@@ -94,7 +94,7 @@ export function IconAgentSelector({
             // Find the main app page
             const mainAppTarget = targets.find(
               (target: any) =>
-                target.title === "Orbit Agent" &&
+                target.title === "Doot Agent" &&
                 target.url === "http://localhost:3000/",
             );
 

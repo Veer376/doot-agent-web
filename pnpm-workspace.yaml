@@ -1,3 +1,6 @@
+packages:
+  - 'apps/*'
+
 ignoredBuiltDependencies:
   - '@tailwindcss/oxide'
   - electron

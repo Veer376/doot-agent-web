@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-const PENDING_MESSAGE_KEY = "orbit-pending-message";
+const PENDING_MESSAGE_KEY = "doot-pending-message";
 
 export type PendingMessageMode = "chat" | "agent";
 
@@ -41,9 +41,9 @@ export function usePendingMessage() {
     } else {
       setPendingDataState(null);
     }
-    
+
     if (typeof window === "undefined") return;
-    
+
     if (message) {
       const data: PendingMessageData = { message, mode, timestamp: Date.now() };
       localStorage.setItem(PENDING_MESSAGE_KEY, JSON.stringify(data));
@@ -55,13 +55,13 @@ export function usePendingMessage() {
   // Consume and clear the pending message, returning both message and mode
   const consumePendingMessage = useCallback((): { message: string; mode: PendingMessageMode } | null => {
     const data = pendingData;
-    
+
     // Clear from both state and storage
     setPendingDataState(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(PENDING_MESSAGE_KEY);
     }
-    
+
     return data;
   }, [pendingData]);
 

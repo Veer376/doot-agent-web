@@ -25,7 +25,7 @@ import {
  * 2. Add to this registry with a unique key
  */
 export const FEATURED_AGENT_ICONS = {
-    // Custom Orbit brand icon
+    // Custom Doot brand icon
     "doot": DootLogoIcon,
 
     // Default fallback icon

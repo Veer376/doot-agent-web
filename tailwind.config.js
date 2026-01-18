@@ -19,7 +19,7 @@
  * - Scalability: Can easily add more presets or configurations
  */
 
-const { designSystemPreset } = require('./src/styles/tailwind-preset.ts');
+const { designSystemPreset } = require('./src/renderer/src/styles/tailwind-preset.ts');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -41,9 +41,8 @@ module.exports = {
    * This keeps the final CSS bundle small.
    */
   content: [
-    "./index.html",
-    "./src/**/*.{ts,tsx,js,jsx}",
-    "./agent/**/*.{ts,tsx,js,jsx}",
+    "./src/renderer/index.html",
+    "./src/renderer/src/**/*.{ts,tsx,js,jsx}",
   ],
 
   /**

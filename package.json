@@ -1,27 +1,17 @@
 {
-  "name": "open-agent-platform",
+  "name": "orbit-agent-frontend",
   "author": "LangChain",
   "private": true,
-  "version": "0.0.0",
-  "packageManager": "pnpm@9.15.4",
+  "version": "0.1.0",
   "type": "module",
-  "main": "dist/electron/main.cjs",
+  "main": "./out/main/index.js",
   "scripts": {
-    "dev": "next dev",
-    "dev:prod": "node dev-prod.js",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "electron:dev": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:dev:prod": "cross-env NODE_ENV=development concurrently \"npm run dev:prod\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder",
-    "electron:build:win": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --win portable",
-    "electron:build:win:installer": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --win nsis",
-    "electron:build:mac": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --mac",
-    "electron:build:linux": "npm run build && tsc -p electron/tsconfig.json && node -e \"require('fs').renameSync('dist/electron/main.js', 'dist/electron/main.cjs')\" && electron-builder --linux"
+    "lint": "eslint .",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@composio/core": "^0.2.4",
@@ -64,7 +54,6 @@
     "hugeicons-react": "^0.3.0",
     "jspdf": "^3.0.4",
     "katex": "latest",
-    "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.546.0",
     "mermaid": "^11.12.0",
@@ -77,6 +66,7 @@
     "react-hook-form": "^7.56.3",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.2",
+    "react-router-dom": "^7.1.3",
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "7.0.0",
@@ -88,111 +78,40 @@
     "unist-util-visit": "^5.0.0",
     "use-stick-to-bottom": "^1.1.0",
     "uuid": "^11.1.0",
-    "zod": "4.1.12",
+    "zod": "^3.23.8",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.19.0",
-    "@tailwindcss/postcss": "^4.0.13",
+    "@electron-toolkit/eslint-config-prettier": "^2.0.0",
+    "@electron-toolkit/eslint-config-ts": "^2.0.0",
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@electron-toolkit/utils": "^3.0.0",
     "@types/lodash": "^4.17.16",
     "@types/node": "22.15.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.1.2",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "10.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.2",
     "cross-env": "^10.1.0",
     "dotenv": "^16.5.0",
     "electron": "^34.0.0",
     "electron-builder": "^26.0.12",
-    "eslint": "^9.19.0",
-    "eslint-config-next": "15.5.7",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.4.18",
+    "electron-vite": "^2.3.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
     "globals": "^15.14.0",
-    "next": "^15.5.7",
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwind-scrollbar": "3.1.0",
-    "tailwindcss": "^4.0.13",
-    "typescript": "~5.7.2",
-    "typescript-eslint": "^8.22.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.12",
     "wait-on": "^8.0.4"
-  },
-  "overrides": {
-    "react-is": "^19.0.0-rc-69d4b800-20241021",
-    "tailwind-scrollbar": {
-      "tailwindcss": "^4.0.13"
-    }
-  },
-  "build": {
-    "appId": "com.dootagent.app",
-    "productName": "Doot Agent",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      ".next/standalone/**/*",
-      ".next/static/**/*",
-      "public/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": ".next/standalone",
-        "to": "app",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": ".next/static",
-        "to": "app/.next/static"
-      },
-      {
-        "from": "public",
-        "to": "app/public"
-      }
-    ],
-    "win": {
-      "target": [
-        "portable"
-      ],
-      "icon": "build/icon.ico",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "verifyUpdateCodeSignature": false
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "build/icon.icns",
-      "category": "public.app-category.productivity",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "build/icon.png",
-      "category": "Utility",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
   }
 }

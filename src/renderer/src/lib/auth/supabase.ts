@@ -15,12 +15,27 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   constructor(options: AuthProviderOptions = {}) {
     this.supabase = getSupabaseClient();
+    
+    // Determine redirect URL based on environment
+    let redirectUrl: string | undefined;
+    if (typeof window !== "undefined") {
+      // Check if running in Electron
+      const isElectron = !!(window as any).electron;
+      
+      if (isElectron) {
+        // For Electron, use localhost URL for OAuth redirect
+        redirectUrl = import.meta.env.DEV 
+          ? 'http://localhost:5173'
+          : 'http://localhost:5173'; // You can change this for production Electron
+      } else {
+        // For web, use current origin
+        redirectUrl = window.location.origin;
+      }
+    }
+    
     this.options = {
       shouldPersistSession: true,
-      redirectUrl:
-        typeof window !== "undefined"
-          ? `${window.location.origin}`
-          : undefined,
+      redirectUrl,
       ...options,
     };
   }
@@ -140,13 +155,16 @@ export class SupabaseAuthProvider implements AuthProvider {
         provider: "google",
         options: {
           redirectTo: this.options.redirectUrl,
+          skipBrowserRedirect: false,
           queryParams: {
             prompt: "select_account",
           },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // For browser environments, handle the redirect
       if (typeof window !== "undefined" && data?.url) {
@@ -160,6 +178,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         error: null,
       };
     } catch (error) {
+      console.error('[Auth] signInWithGoogle failed:', error);
       return {
         user: null,
         session: null,

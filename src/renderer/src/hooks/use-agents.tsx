@@ -11,6 +11,8 @@ import {
   isPrimaryAgent,
 } from "@/lib/agent-utils";
 import { extractConfigurationsFromAgent } from "@/lib/ui-config";
+import { isElectron, invoke } from "@/lib/electron";
+import { ConsoleIcon } from "hugeicons-react";
 
 // ============================================================================
 // Query Key Factory (for type-safe cache management)
@@ -30,59 +32,68 @@ async function fetchAgents(
   accessToken: string | undefined,
   getSchemaFn: (agentId: string) => Promise<Record<string, any> | undefined>,
 ): Promise<Agent[]> {
-  const client = createClient(accessToken);
+  let processedAgents: Agent[] = [];
 
-  // Fetch all assistants (system, default, and user created)
-  const assistants = await client.assistants.search({
-    limit: 100,
-  });
+  try {
+    const client = createClient(accessToken);
 
-  // Group agents by their graph_id
-  const assistantsGroupedByGraphs = groupAgentsByGraphs(assistants);
+    // Fetch all assistants (system, default, and user created)
+    const assistants = await client.assistants.search({
+      limit: 100,
+    });
 
-  // OPTIMIZATION: Fetch all schemas in parallel instead of sequential
-  // This reduces fetch time from ~1.8s to much faster
-  const schemaPromises = assistantsGroupedByGraphs.map(async (group) => {
-    const primaryAssistant = group.find((a) => isPrimaryAgent(a)) ?? group[0];
-    return {
-      group,
-      defaultAssistant: primaryAssistant,
-      schema: await getSchemaFn(primaryAssistant.assistant_id),
-    };
-  });
+    // Group agents by their graph_id
+    const assistantsGroupedByGraphs = groupAgentsByGraphs(assistants);
 
-  const groupsWithSchemas = await Promise.all(schemaPromises);
+    // OPTIMIZATION: Fetch all schemas in parallel instead of sequential
+    const schemaPromises = assistantsGroupedByGraphs.map(async (group) => {
+      const primaryAssistant = group.find((a) => isPrimaryAgent(a)) ?? group[0];
+      return {
+        group,
+        defaultAssistant: primaryAssistant,
+        schema: await getSchemaFn(primaryAssistant.assistant_id),
+      };
+    });
 
-  // Process each group with its fetched schema
-  const processedAgents = groupsWithSchemas.flatMap(({ group, schema }) => {
-    // Determine supported configurations based on schema
-    const supportedConfigs: string[] = [];
-    if (schema) {
-      const { toolConfig, ragConfig, agentsConfig } =
-        extractConfigurationsFromAgent({
-          agent: group[0],
-          schema,
-        });
-      if (toolConfig.length) {
-        supportedConfigs.push("tools");
+    const groupsWithSchemas = await Promise.all(schemaPromises);
+
+    // Process each group with its fetched schema
+    processedAgents = groupsWithSchemas.flatMap(({ group, schema }) => {
+      // Determine supported configurations based on schema
+      const supportedConfigs: string[] = [];
+      if (schema) {
+        const { toolConfig, ragConfig, agentsConfig } =
+          extractConfigurationsFromAgent({
+            agent: group[0],
+            schema,
+          });
+        if (toolConfig.length) {
+          supportedConfigs.push("tools");
+        }
+        if (ragConfig.length) {
+          supportedConfigs.push("rag");
+        }
+        if (agentsConfig.length) {
+          supportedConfigs.push("supervisor");
+        }
       }
-      if (ragConfig.length) {
-        supportedConfigs.push("rag");
-      }
-      if (agentsConfig.length) {
-        supportedConfigs.push("supervisor");
-      }
-    }
 
-    // Return all agents in the group with the same supportedConfigs
-    // Filter out template agents (they should not be shown in the list)
-    return group
-      .filter((assistant) => !isTemplateAgent(assistant))
-      .map((assistant) => ({
-        ...assistant,
-        supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
-      }));
-  });
+      // Return all agents in the group with the same supportedConfigs
+      // Filter out template agents (they should not be shown in the list)
+      return group
+        .filter((assistant) => !isTemplateAgent(assistant))
+        .map((assistant) => ({
+          ...assistant,
+          // Explicit cast to satisfy Agent type requirements (metadata compatibility)
+          metadata: assistant.metadata as any,
+          supportedConfigs: supportedConfigs as [
+            "tools" | "rag" | "supervisor",
+          ],
+        }));
+    }) as Agent[];
+  } catch (error) {
+    return [];
+  }
 
   return processedAgents;
 }
@@ -98,7 +109,7 @@ async function fetchAgents(
  */
 export function useFetchAgents() {
   const { session } = useAuthSession();
-  const accessToken = session?.accessToken;
+  const accessToken = session?.accessToken || undefined; // Ensure undefined instead of null
 
   // Helper function for fetching schema (used by fetchAgents)
   const getSchemaFn = async (agentId: string) => {

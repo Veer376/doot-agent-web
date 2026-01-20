@@ -67,7 +67,7 @@ export class ComposioAPI {
 
       return result;
     } catch (error: any) {
-      console.error('[Composio SDK] Error creating connection:', error);
+      // console.error('[Composio SDK] Error creating connection:', error);
       throw new Error(error.message || 'Failed to create connection');
     }
   }
@@ -109,7 +109,7 @@ export class ComposioAPI {
             const decoded = JSON.parse(atob(payload));
             label = decoded.email || decoded.preferred_username || decoded.sub;
           } catch (e) {
-            console.warn('[Composio SDK] Failed to decode id_token:', e);
+            // console.warn('[Composio SDK] Failed to decode id_token:', e);
           }
         }
 
@@ -124,7 +124,7 @@ export class ComposioAPI {
 
       return result;
     } catch (error: any) {
-      console.error('[Composio SDK] Error fetching connected accounts:', error);
+      // console.error('[Composio SDK] Error fetching connected accounts:', error);
       throw new Error(error.message || 'Failed to fetch connected accounts');
     }
   }
@@ -155,7 +155,7 @@ export class ComposioAPI {
         label: label
       };
     } catch (error: any) {
-      console.error('[Composio SDK] Error fetching connection info:', error);
+      // console.error('[Composio SDK] Error fetching connection info:', error);
       throw new Error(error.message || 'Failed to fetch connection info');
     }
   }
@@ -167,7 +167,7 @@ export class ComposioAPI {
       await this.client.connectedAccounts.delete(connectionId);
 
     } catch (error: any) {
-      console.error('[Composio SDK] Error disconnecting account:', error);
+      // console.error('[Composio SDK] Error disconnecting account:', error);
       throw new Error(error.message || 'Failed to disconnect account');
     }
   }
@@ -201,7 +201,7 @@ export class ComposioAPI {
 
       return result;
     } catch (error: any) {
-      console.error('[Composio SDK] Error fetching apps:', error);
+      // console.error('[Composio SDK] Error fetching apps:', error);
       throw new Error(error.message || 'Failed to fetch apps');
     }
   }
@@ -228,7 +228,7 @@ export class ComposioAPI {
         icon_url: `https://img.composio.dev/app/${toolkitSlug}/logo`
       };
     } catch (error: any) {
-      console.error('[Composio SDK] Error fetching toolkit icon:', error);
+      // console.error('[Composio SDK] Error fetching toolkit icon:', error);
       // Return fallback CDN URL on error
       return {
         success: false,

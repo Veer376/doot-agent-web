@@ -38,3 +38,4 @@ release
 .yarn
 image.png
 .env.production
+out

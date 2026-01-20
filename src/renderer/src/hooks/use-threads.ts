@@ -5,6 +5,7 @@ import { useAuthSession } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Thread } from "@langchain/langgraph-sdk";
 import { config } from "@/config";
+import { useLocalThreads, useLocalThreadState, useUpdateLocalThread } from "./use-local-threads";
 
 // Query key factory for type-safe cache management
 export const threadKeys = {
@@ -35,9 +36,16 @@ export function useFetchThreads(agentId?: string, options?: { limit?: number; of
   return useQuery({
     queryKey: threadKeys.list({ agentId, limit, offset }),
     queryFn: async () => {
+      console.log('[useFetchThreads] queryFn called');
+      console.log('[useFetchThreads]   agentId:', agentId);
+      console.log('[useFetchThreads]   hasAccessToken:', !!accessToken);
+      
       if (!accessToken) {
+        console.log('[useFetchThreads] No access token, throwing error');
         throw new Error("Not authenticated");
       }
+      
+      console.log('[useFetchThreads] Creating client and fetching threads');
       const client = createClient(accessToken);
       const response = await client.threads.search({
         limit,
@@ -48,6 +56,8 @@ export function useFetchThreads(agentId?: string, options?: { limit?: number; of
           },
         }),
       });
+      console.log('[useFetchThreads] Received threads count:', response?.length || 0);
+      console.log('[useFetchThreads] Threads:', response?.map((t: Thread) => ({ id: t.thread_id, source: t.metadata?.source })));
       return response as Thread<ThreadMetadata>[];
     },
     enabled: !!accessToken,
@@ -122,6 +132,108 @@ export function useFetchThreadState(threadId: string | null) {
     staleTime: 1000 * 60 * 5, // 5 minutes - match agents cache time for consistency
     gcTime: 1000 * 60 * 10, // 10 minutes - keep in cache for 10 mins after component unmount
     retry: false, // Don't retry on failure (thread might not exist yet)
+  });
+}
+
+/**
+ * Unified hook to fetch thread state - routes to IPC or HTTP based on thread source
+ * This is the hook that components should use to automatically route to the correct backend
+ * Follows OpenWork's pattern of checking thread metadata to determine routing
+ */
+export function useThreadState(threadId: string | null) {
+  const { data: localThreads } = useLocalThreads();
+  const { data: cloudThreads } = useFetchThreads();
+  
+  // Check if this thread is local or cloud by examining metadata
+  const allThreads = [...(localThreads || []), ...(cloudThreads || [])];
+  const thread = allThreads.find(t => t.thread_id === threadId);
+  const isLocal = thread?.metadata?.source === 'local';
+  
+  // Use local IPC for local threads
+  const localState = useLocalThreadState(isLocal ? threadId : null);
+  
+  // Use HTTP for cloud threads
+  const cloudState = useFetchThreadState(!isLocal ? threadId : null);
+  
+  // Return the appropriate state based on thread source
+  return isLocal ? localState : cloudState;
+}
+
+/**
+ * Unified hook to update thread - routes to IPC or HTTP based on thread source
+ * Components should use this instead of useUpdateThread directly
+ */
+export function useThreadUpdate() {
+  const { data: localThreads } = useLocalThreads();
+  const { data: cloudThreads } = useFetchThreads();
+  const { mutate: updateLocalThread } = useUpdateLocalThread();
+  const { mutate: updateCloudThread } = useUpdateThread();
+
+  return useMutation({
+    mutationFn: async ({
+      threadId,
+      metadata,
+    }: {
+      threadId: string;
+      metadata: ThreadMetadata;
+    }) => {
+      console.log('[useThreadUpdate] ========================================');
+      console.log('[useThreadUpdate] mutationFn called');
+      console.log('[useThreadUpdate]   threadId:', threadId);
+      console.log('[useThreadUpdate]   metadata:', metadata);
+      console.log('[useThreadUpdate]   localThreads count:', localThreads?.length || 0);
+      console.log('[useThreadUpdate]   cloudThreads count:', cloudThreads?.length || 0);
+
+      // Check if this thread is local or cloud
+      const allThreads = [...(localThreads || []), ...(cloudThreads || [])];
+      console.log('[useThreadUpdate]   allThreads count:', allThreads.length);
+      console.log('[useThreadUpdate]   allThreads:', allThreads.map(t => ({ id: t.thread_id, source: t.metadata?.source })));
+      
+      const thread = allThreads.find(t => t.thread_id === threadId);
+      console.log('[useThreadUpdate]   thread found:', !!thread);
+      console.log('[useThreadUpdate]   thread.metadata?.source:', thread?.metadata?.source);
+      
+      const isLocal = thread?.metadata?.source === 'local';
+      console.log('[useThreadUpdate]   isLocal:', isLocal);
+
+      if (isLocal) {
+        console.log('[useThreadUpdate] Using IPC (local thread)');
+        // Use IPC for local threads
+        return new Promise((resolve, reject) => {
+          updateLocalThread(
+            { threadId, updates: { metadata } },
+            {
+              onSuccess: (data) => {
+                console.log('[useThreadUpdate] IPC update success');
+                resolve(data as any);
+              },
+              onError: (err) => {
+                console.error('[useThreadUpdate] IPC update error:', err);
+                reject(err);
+              },
+            }
+          );
+        });
+      } else {
+        console.log('[useThreadUpdate] Using HTTP (cloud thread or not found)');
+        // Use HTTP for cloud threads
+        return new Promise((resolve, reject) => {
+          updateCloudThread(
+            { threadId, metadata },
+            {
+              onSuccess: (data) => {
+                console.log('[useThreadUpdate] HTTP update success');
+                resolve(data);
+              },
+              onError: (err) => {
+                console.error('[useThreadUpdate] HTTP update error:', err);
+                reject(err);
+              },
+            }
+          );
+        });
+      }
+    },
   });
 }
 

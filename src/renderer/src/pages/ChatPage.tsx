@@ -76,7 +76,7 @@ export default function ChatPage(): React.ReactNode {
               {/* TODO(thread): thread title */}
             </div>
           </div>
-          <div className="flex items-center gap-2 pt-2 pr-4">
+          <div className="flex items-center gap-2 pr-4 pt-2">
             {/* GitHub link - always visible */}
 
             {/* Show auth buttons when not authenticated */}

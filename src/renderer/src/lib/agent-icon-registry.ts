@@ -97,11 +97,6 @@ export function getAgentIcon(iconName?: string | null): React.FC<AppIconProps> {
      * - Consistent AppIconProps interface
      * - No performance penalty
      */
-
-    // Fallback to default if icon not found
-    console.warn(
-        `Agent icon "${iconName}" not found in registry. Using default icon.`
-    );
     return FEATURED_AGENT_ICONS.default;
 }
 

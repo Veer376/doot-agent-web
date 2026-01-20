@@ -9,7 +9,11 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 import React, { Dispatch, SetStateAction, useTransition } from "react";
-import { parseAsInteger, parseAsString, useQueryState } from "@/hooks/use-query-state";
+import {
+  parseAsInteger,
+  parseAsString,
+  useQueryState,
+} from "@/hooks/use-query-state";
 import { IMPROPER_SCHEMA } from "../constants";
 import {
   getInterruptFromThread,
@@ -18,6 +22,7 @@ import {
 } from "./utils";
 import { logger } from "../utils/logger";
 import { useAuthSession } from "@/providers/Auth";
+import { isElectron, invoke } from "@/lib/electron";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -130,7 +135,25 @@ function ThreadsProviderInternal<
           },
         };
 
-        const threads = await client.threads.search(threadSearchArgs);
+        // Check if this is a local agent - use IPC instead of HTTP
+        // This follows OpenWork's pattern of routing based on agent type
+        const isLocalAgent = agentId === "local-agent";
+        let threads: Thread[];
+
+        if (isLocalAgent && isElectron()) {
+          // Use IPC for local agent threads
+          const localThreads = await invoke<any[]>("threads:list");
+          // Filter by status if needed
+          threads = localThreads.filter((t) => {
+            if (statusInput.status) {
+              return t.status === statusInput.status;
+            }
+            return true;
+          });
+        } else {
+          // Use HTTP for cloud agent threads
+          threads = await client.threads.search(threadSearchArgs);
+        }
 
         const processedData: ThreadData<ThreadValues>[] = [];
 
@@ -168,9 +191,17 @@ function ThreadsProviderInternal<
                 // Attempt to get interrupts from state only if necessary
                 const threadInterrupts = getInterruptFromThread(currentThread);
                 if (!threadInterrupts || threadInterrupts.length === 0) {
-                  const state = await client.threads.getState<ThreadValues>(
-                    currentThread.thread_id,
-                  );
+                  // Route based on thread source (OpenWork pattern)
+                  const isLocal = currentThread.metadata?.source === "local";
+                  const state =
+                    isLocal && isElectron()
+                      ? await invoke<any>(
+                          "threads:getState",
+                          currentThread.thread_id,
+                        )
+                      : await client.threads.getState<ThreadValues>(
+                          currentThread.thread_id,
+                        );
 
                   return processThreadWithoutInterrupts(currentThread, {
                     thread_id: currentThread.thread_id,
@@ -274,14 +305,35 @@ function ThreadsProviderInternal<
       const client = createClient(session.accessToken);
 
       try {
-        const thread = await client.threads.get(threadId);
-        const currentThread = thread as Thread<ThreadValues>;
+        // Check if this is a local thread by trying IPC first
+        let thread: Thread;
+        let currentThread: Thread<ThreadValues>;
+
+        if (isElectron()) {
+          const localThread = await invoke<any>("threads:get", threadId);
+          if (localThread) {
+            thread = localThread;
+            currentThread = thread as Thread<ThreadValues>;
+          } else {
+            // Fall back to HTTP if not found locally
+            thread = await client.threads.get(threadId);
+            currentThread = thread as Thread<ThreadValues>;
+          }
+        } else {
+          thread = await client.threads.get(threadId);
+          currentThread = thread as Thread<ThreadValues>;
+        }
 
         if (thread.status === "interrupted") {
           const threadInterrupts = getInterruptFromThread(currentThread);
 
           if (!threadInterrupts || !threadInterrupts.length) {
-            const state = await client.threads.getState(threadId);
+            // Route based on thread source (OpenWork pattern)
+            const isLocal = currentThread.metadata?.source === "local";
+            const state =
+              isLocal && isElectron()
+                ? await invoke<any>("threads:getState", threadId)
+                : await client.threads.getState(threadId);
             const processedThread = processThreadWithoutInterrupts(
               currentThread,
               {

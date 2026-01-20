@@ -34,7 +34,7 @@ function EditableContent({
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
       data-radius="radius2"
-      className="bg-card/50 dark:bg-card/30 border-border focus-visible:border-primary/30 min-h-11 resize-none px-4 py-3 shadow-sm backdrop-blur-sm transition-[color,box-shadow,border-color] focus-visible:ring-0"
+      className="bg-card/50 dark:bg-card/30 focus-visible:border-primary/30 min-h-11 resize-none border-border px-4 py-3 shadow-sm backdrop-blur-sm transition-[color,box-shadow,border-color] focus-visible:ring-0"
     />
   );
 }
@@ -51,7 +51,10 @@ export function HumanMessage({
   const { agentId } = useAgentContext();
 
   const thread = useStreamContext();
-  const meta = thread.getMessagesMetadata(message);
+  // getMessagesMetadata only exists on cloud streams, not local streams
+  const meta = thread.getMessagesMetadata
+    ? thread.getMessagesMetadata(message)
+    : null;
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -123,7 +126,9 @@ export function HumanMessage({
                       acc.push(
                         <MultimodalPreview
                           key={idx}
-                          block={block as import("@/types/multimodal").Base64ContentBlock}
+                          block={
+                            block as import("@/types/multimodal").Base64ContentBlock
+                          }
                           size="xl"
                         />,
                       );
@@ -140,7 +145,7 @@ export function HumanMessage({
                 <p
                   data-radius="radius2"
                   className={cn(
-                    "bg-muted px-4 py-2 text-left whitespace-pre-wrap transition-all duration-200",
+                    "whitespace-pre-wrap bg-muted px-4 py-2 text-left transition-all duration-200",
                     !isExpanded &&
                       needsExpansion &&
                       "max-h-[120px] overflow-hidden",
@@ -152,7 +157,7 @@ export function HumanMessage({
                 {!isExpanded && needsExpansion && (
                   <div
                     data-radius="radius2"
-                    className="from-muted pointer-events-none absolute right-0 bottom-0 left-0 h-12 rounded-b-[var(--radius-2)] bg-gradient-to-t to-transparent"
+                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 rounded-b-[var(--radius-2)] bg-gradient-to-t from-muted to-transparent"
                   />
                 )}
                 {!isExpanded && needsExpansion && (
@@ -163,7 +168,7 @@ export function HumanMessage({
                     type="button"
                     onClick={() => setIsExpanded(!isExpanded)}
                     data-radius="radius1"
-                    className="hover:bg-muted-foreground/10 group absolute right-4 bottom-2 cursor-pointer p-1 transition-colors"
+                    className="hover:bg-muted-foreground/10 group absolute bottom-2 right-4 cursor-pointer p-1 transition-colors"
                     aria-label={
                       isExpanded ? "Collapse message" : "Expand message"
                     }
@@ -171,7 +176,7 @@ export function HumanMessage({
                     <ChevronDownIcon
                       size={16}
                       className={cn(
-                        "text-muted-foreground group-hover:text-foreground transition-all",
+                        "text-muted-foreground transition-all group-hover:text-foreground",
                         isExpanded && "rotate-180",
                       )}
                     />
@@ -187,7 +192,7 @@ export function HumanMessage({
             "ml-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
             // Show instantly on hover/focus, delay hiding when leaving hover
             // Always visible on mobile (below md), hidden on desktop until hover
-            "opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0 md:delay-[600ms]",
+            "md:delay-[600ms] opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0",
             isEditing && "opacity-100 delay-0",
           )}
         >

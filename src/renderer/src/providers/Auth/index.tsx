@@ -73,7 +73,7 @@ export function AuthProvider({
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Get the current session
+        // Get the current session (this will check localStorage and URL)
         const currentSession = await provider.getSession();
         setSession(currentSession);
 
@@ -82,7 +82,6 @@ export function AuthProvider({
           setUser(currentSession.user);
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
       } finally {
         setIsLoading(false);
       }

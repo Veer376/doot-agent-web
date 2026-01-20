@@ -6,6 +6,8 @@ import {
   useDeleteThread,
   useCopyThread,
 } from "@/hooks/use-threads";
+import { useUnifiedThreads } from "@/hooks/use-unified-threads";
+import { useLocalThreads } from "@/hooks/use-local-threads";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { useAuthSession } from "@/providers/Auth";
 import type { Agent } from "@/types/agent";
@@ -41,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
@@ -83,16 +86,22 @@ const getMessageStringContent = (
 // Utility: Get first human message from thread as title
 function getFirstHumanMessageContent(thread: Thread) {
   try {
-    if (
-      Array.isArray(thread.values) ||
-      !("messages" in thread.values) ||
-      !thread.values.messages ||
-      !Array.isArray(thread.values.messages) ||
-      !thread.values.messages.length
-    )
+    // Check if thread.values exists and is not an array
+    if (!thread.values || Array.isArray(thread.values)) {
       return "";
+    }
+    
+    // Check if messages exist in values
+    if (!("messages" in thread.values) || !thread.values.messages) {
+      return "";
+    }
+    
+    // Check if messages is an array with length
+    if (!Array.isArray(thread.values.messages) || !thread.values.messages.length) {
+      return "";
+    }
+    
     const castMessages = thread.values.messages as Message[];
-
     const firstHumanMsg = castMessages.find((msg) => msg.type === "human");
     return getMessageStringContent(firstHumanMsg?.content);
   } catch (e) {
@@ -106,9 +115,14 @@ function getFirstHumanMessageContent(thread: Thread) {
 
 // Utility: Get thread title with fallback
 function getThreadTitle(thread: Thread): string {
+  // First check for title property (used by local threads)
+  if (thread.title) return thread.title;
+  
+  // Then check metadata.name
   const customName = thread.metadata?.name as string | undefined;
   if (customName) return customName;
 
+  // Try to get first message content
   const firstMessage = getFirstHumanMessageContent(thread);
   if (firstMessage) return firstMessage;
 
@@ -191,8 +205,14 @@ export function ThreadList() {
   const { state, isMobile } = useSidebar();
   const queryClient = useQueryClient();
   const THREADS_PER_PAGE = 20;
+  
+  // Use unified threads to get both local and cloud threads
+  const { threads: unifiedThreads, isLoading: unifiedLoading, refetch: refetchUnified } = useUnifiedThreads({ limit: 100 });
+  
+  // Keep infinite scroll for cloud threads in search (fallback)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
+  
   const { data: agents = [] } = useFetchAgents();
   const updateThread = useUpdateThread();
   const deleteThread = useDeleteThread();
@@ -214,10 +234,17 @@ export function ThreadList() {
   const [originalThreadName, setOriginalThreadName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Flatten all pages into a single array
-  const allLoadedThreads = useMemo(() => {
+  // Flatten all pages into a single array (for search fallback)
+  const cloudThreads = useMemo(() => {
     return data?.pages.flat() ?? [];
   }, [data]);
+
+  // Use unified threads as primary source
+  const allLoadedThreads = useMemo(() => {
+    console.log('[ThreadList] unifiedThreads count:', unifiedThreads.length);
+    console.log('[ThreadList] unifiedThreads sources:', unifiedThreads.map(t => ({ id: t.thread_id.slice(0,8), source: t.metadata?.source })));
+    return unifiedThreads;
+  }, [unifiedThreads]);
 
   // Sync isFetchingNextPage state to ref to avoid stale closures in observer callback
   useEffect(() => {
@@ -897,7 +924,7 @@ export function ThreadList() {
         <SidebarGroup>
           <SidebarGroupLabel>Threads</SidebarGroupLabel>
           <SidebarMenu>
-            {isLoading && (
+            {unifiedLoading && (
               <>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <SidebarMenuItem key={`skeleton-${index}`}>
@@ -907,7 +934,7 @@ export function ThreadList() {
               </>
             )}
 
-            {!isLoading && sortedThreads.length === 0 && (
+            {!unifiedLoading && sortedThreads.length === 0 && (
               <EmptyState
                 icon={MessageSquareIcon}
                 title="No threads yet"
@@ -916,7 +943,7 @@ export function ThreadList() {
               />
             )}
 
-            {!isLoading &&
+            {!unifiedLoading &&
               sortedThreads.map((thread) => {
                 const title = getThreadTitle(thread);
                 const isActive = thread.thread_id === threadId;
@@ -946,10 +973,20 @@ export function ThreadList() {
                           isActive={isActive}
                           className="!h-auto px-3 !py-2"
                         >
-                          <div className="gap-0.3 flex min-w-0 flex-col">
-                            <span className="truncate text-sm leading-tight">
-                              {title}
-                            </span>
+                          <div className="gap-0.3 flex min-w-0 flex-col flex-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="truncate text-sm leading-tight flex-1">
+                                {title}
+                              </span>
+                              {thread.metadata?.source === 'local' && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] h-4 px-1.5 py-0 shrink-0"
+                                >
+                                  Local
+                                </Badge>
+                              )}
+                            </div>
                             {agentName && (
                               <span className="text-muted-foreground truncate text-xs leading-tight">
                                 {agentName}

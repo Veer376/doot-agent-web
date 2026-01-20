@@ -36,11 +36,12 @@ import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
 import { DootLogoIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
+import { WorkspaceSelect } from "./workspace-select";
 import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
-  useUpdateThread,
+  useThreadUpdate,
   useFetchThreads,
-  useFetchThreadState,
+  useThreadState,
   threadKeys,
 } from "@/hooks/use-threads";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,51 +51,6 @@ import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
 import { AVAILABLE_MODELS, type Model } from "@/types/model";
 import { PromptGallery } from "@/components/ui/prompt-gallery";
-import type { PromptTemplate } from "@/components/ui/prompt-card";
-
-// Dummy prompt templates
-const DUMMY_PROMPTS: PromptTemplate[] = [
-  {
-    id: "1",
-    title: "Code Review Assistant",
-    prompt:
-      "Review this code and suggest improvements for readability, performance, and best practices.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Email Draft Generator",
-    prompt:
-      "Help me draft a professional email for client communication with a friendly yet formal tone.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1557200515-a350fb961fcf?w=400&h=300&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Data Analysis Expert",
-    prompt:
-      "Analyze this dataset and provide insights, trends, and actionable recommendations.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Creative Writing Helper",
-    prompt:
-      "Generate creative story ideas and help me develop compelling narratives with rich characters.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
-  },
-  {
-    id: "5",
-    title: "Technical Documentation",
-    prompt:
-      "Create clear and comprehensive technical documentation for this feature or API.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
-  },
-];
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -130,7 +86,7 @@ function ScrollToBottom(props: { className?: string }) {
       variant="secondary"
       size="icon"
       data-radius="radius2"
-      className={cn("hover:bg-secondary cursor-pointer", props.className)}
+      className={cn("cursor-pointer hover:bg-secondary", props.className)}
       onClick={() => scrollToBottom()}
     >
       <ArrowDownIcon />
@@ -191,19 +147,16 @@ function groupMessagesIntoTurns(messages: Message[]): MessageTurn[] {
 }
 
 export function Thread() {
-  // PHASE 3: Get agentId from context instead of URL
-  const { agentId, mode, setSelectedAgent, setMode } = useAgentContext();
+  const { agentId, agentSource, setSelectedAgent } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
+  // Temporary workspace path for new threads
+  const [tempWorkspace, setTempWorkspace] = useState<string | null>(null);
 
   // Auth state for pending message flow
   const { isAuthenticated } = useAuthSession();
-  const {
-    pendingMessage,
-    pendingMode,
-    setPendingMessage,
-    consumePendingMessage,
-  } = usePendingMessage();
+  const { pendingMessage, setPendingMessage, consumePendingMessage } =
+    usePendingMessage();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   // Auto-save composer drafts to localStorage
@@ -231,27 +184,32 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  const { isLoading: isLoadingThreadState } = useFetchThreadState(threadId);
+  console.log('[Thread] Stream state:', {
+    messagesCount: messages?.length || 0,
+    isLoading,
+    messages: messages?.map(m => ({ type: m.type, id: m.id?.slice(0, 8) }))
+  });
+
+  const { isLoading: isLoadingThreadState } = useThreadState(threadId);
 
   const queryClient = useQueryClient();
 
   // Hook for updating thread metadata
-  const { mutate: updateThread } = useUpdateThread();
+  const { mutate: updateThread } = useThreadUpdate();
 
   // Fetch all threads to access thread metadata
   const { data: threads = [] } = useFetchThreads();
 
-  // Track the last saved agent/mode/model to avoid redundant updates
+  // Track the last saved agent to avoid redundant updates
   const lastSavedMetadataRef = useRef<{
     agentId: string;
-    mode: string;
     modelId?: string | null;
   } | null>(null);
   // Track which thread has been initialized to prevent race conditions
   const threadInitializedRef = useRef<string | null>(null);
 
-  // Restore agent/mode from thread metadata when thread changes
-  // Only restore on threadId change, not when user changes agent/mode
+  // Restore agent from thread metadata when thread changes
+  // Only restore on threadId change, not when user changes agent
   useEffect(() => {
     if (!threadId || !threads.length) {
       // Reset tracking when no thread
@@ -268,17 +226,12 @@ export function Thread() {
     const currentThread = threads.find((t) => t.thread_id === threadId);
     if (!currentThread?.metadata) return;
 
-    const { assistant_id, mode: threadMode, model_id } = currentThread.metadata;
+    const { assistant_id, model_id } = currentThread.metadata;
 
     // Track what's saved in this thread
-    if (
-      typeof assistant_id === "string" &&
-      typeof threadMode === "string" &&
-      (threadMode === "agent" || threadMode === "chat")
-    ) {
+    if (typeof assistant_id === "string") {
       lastSavedMetadataRef.current = {
         agentId: assistant_id,
-        mode: threadMode,
         modelId: typeof model_id === "string" ? model_id : null,
       };
     }
@@ -286,11 +239,6 @@ export function Thread() {
     // Restore agent if saved in metadata
     if (typeof assistant_id === "string") {
       setSelectedAgent(assistant_id);
-    }
-
-    // Restore mode if saved in metadata
-    if (threadMode && (threadMode === "agent" || threadMode === "chat")) {
-      setMode(threadMode);
     }
 
     // Restore model if saved in metadata
@@ -322,22 +270,11 @@ export function Thread() {
       // Wait for StreamProvider to be fully ready
       const timeoutId = setTimeout(() => {
         // Consume the pending message (this will clear it from localStorage)
-        const pendingData = consumePendingMessage();
+        const content = consumePendingMessage();
 
-        if (!pendingData || pendingData.message.trim().length === 0) {
+        if (!content || content.trim().length === 0) {
           return;
         }
-
-        const { message: content, mode: storedMode } = pendingData;
-
-        // Restore the mode that was active when the message was stored
-        if (storedMode && storedMode !== mode) {
-          setMode(storedMode);
-        }
-
-        // In agent mode, we need an agentId selected
-        // For agent mode without agentId, we'll use the primary agent (handled below)
-        const effectiveMode = storedMode || mode;
 
         const newHumanMessage: Message = {
           id: uuidv4(),
@@ -351,13 +288,11 @@ export function Thread() {
         const toolMessages = ensureToolCallsHaveResponses(stream.messages);
         const { getAgentConfig } = useConfigStore.getState();
 
-        // Determine which agent config to use based on stored mode
-        // In agent mode without a selected agent, the primary agent should already be selected by the agent context
-        const effectiveAgentId =
-          effectiveMode === "chat" ? "chat_agent" : agentId;
+        // Use the selected agent ID
+        const effectiveAgentId = agentId;
 
-        // Skip if in agent mode but no agent is selected
-        if (effectiveMode === "agent" && !effectiveAgentId) {
+        // Skip if no agent is selected
+        if (!effectiveAgentId) {
           return;
         }
 
@@ -365,7 +300,7 @@ export function Thread() {
           { messages: [...toolMessages, newHumanMessage] },
           {
             streamMode: ["values"],
-            optimisticValues: (prev) => ({
+            optimisticValues: (prev: any) => ({
               ...prev,
               messages: [
                 ...(prev.messages ?? []),
@@ -382,6 +317,7 @@ export function Thread() {
             context: {},
             metadata: {
               supabaseAccessToken: session?.accessToken,
+              workspacePath: tempWorkspace,
             },
             streamSubgraphs: true,
             streamResumable: true,
@@ -390,12 +326,11 @@ export function Thread() {
 
         setContentBlocks([]);
 
-        // Save agent/mode to thread metadata after message is sent
+        // Save agent to thread metadata after message is sent
         if (threadId) {
           const hasChanged =
             !lastSavedMetadataRef.current ||
             lastSavedMetadataRef.current.agentId !== agentId ||
-            lastSavedMetadataRef.current.mode !== mode ||
             lastSavedMetadataRef.current.modelId !== selectedModel?.id;
 
           if (hasChanged) {
@@ -403,13 +338,11 @@ export function Thread() {
               threadId,
               metadata: {
                 assistant_id: agentId,
-                mode: mode,
                 ...(selectedModel?.id && { model_id: selectedModel.id }),
               },
             });
             lastSavedMetadataRef.current = {
               agentId,
-              mode,
               modelId: selectedModel?.id || null,
             };
           }
@@ -435,10 +368,7 @@ export function Thread() {
     pendingMessage,
     stream,
     agentId,
-    mode,
-    setMode,
     contentBlocks,
-
     apiKeys,
     threadId,
     updateThread,
@@ -485,30 +415,39 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  // Handle auth requirement - store pending message and mode, then show dialog
+  // Handle auth requirement - store pending message, then show dialog
   const handleAuthRequired = (message: string) => {
-    setPendingMessage(message, mode);
+    setPendingMessage(message);
     setAuthDialogOpen(true);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    console.log('[Thread] ========================================');
+    console.log('[Thread] handleSubmit called');
+    console.log('[Thread]   agentId:', agentId);
+    console.log('[Thread]   agentSource:', agentSource);
+    console.log('[Thread]   threadId:', threadId);
 
     const content = inputValue.trim();
+    console.log('[Thread]   input content length:', content.length);
 
-    setInputValue(""); // Clear the input after submission
-    clearDraft(threadId); // Clear the saved draft
-    // In chat mode, agentId can be empty since we use chat_agent
-    // In agent mode, we need an agentId selected
-    if (mode === "agent" && !agentId) return;
-    if ((content.length === 0 && contentBlocks.length === 0) || isLoading)
+    setInputValue("");
+    clearDraft(threadId);
+    if (!agentId) {
+      console.error('[Thread] No agentId - returning');
       return;
+    }
+    if ((content.length === 0 && contentBlocks.length === 0) || isLoading) {
+      console.log('[Thread] Empty content or already loading - returning');
+      return;
+    }
 
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
       content: [
-        ...(content.trim().length > 0 ? [{ type: "text", text: content }] : []),
+        { type: "text", text: content },
         ...contentBlocks,
       ] as Message["content"],
     };
@@ -516,55 +455,32 @@ export function Thread() {
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     const { getAgentConfig } = useConfigStore.getState();
 
-    // Determine which agent config to use based on current mode
-    // This MUST match the effectiveAgentId used in the stream connection
-    // to ensure the submit goes to the same assistant the stream is connected to
-    const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
-
-    // Get Playwright Browser WSS URL if using browser_agent
-    // This launches a secure Playwright browser server in Electron
-    // The WSS URL includes an authentication token for security
     let browserContext = undefined;
-    if (effectiveAgentId === "browser_agent") {
+    if (agentId === "browser_agent") {
       try {
-        // Try Playwright first (secure, recommended)
-        if (window.electron?.getPlaywrightBrowserWsUrl) {
-          console.log(
-            "[Thread] Launching Playwright browser server for browser_agent...",
-          );
-          const wsUrl = await window.electron.getPlaywrightBrowserWsUrl();
-          console.log("[Thread] Playwright browser server ready:", wsUrl);
-          browserContext = {
-            browser_config: {
-              wss_url: wsUrl,
-              type: "playwright", // Indicate Playwright protocol
-            },
-          };
-        }
-        // Fallback to legacy CDP method (less secure, kept for compatibility)
-        else if (window.electron?.getAutomationBrowserWsUrl) {
-          console.log("[Thread] Falling back to legacy CDP browser...");
+        if (window.electron?.getAutomationBrowserWsUrl) {
           const wsUrl = await window.electron.getAutomationBrowserWsUrl();
           browserContext = {
             browser_config: {
               wss_url: wsUrl,
-              type: "cdp", // Indicate CDP protocol
+              type: "cdp",
             },
           };
         }
       } catch (error) {
-        console.error(
-          "[Thread] Error launching browser for browser_agent:",
-          error,
-        );
+        // Silent fail
       }
     }
+
+    console.log('[Thread] About to call stream.submit');
+    console.log('[Thread]   toolMessages length:', toolMessages.length);
+    console.log('[Thread]   newHumanMessage:', newHumanMessage);
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
         streamMode: ["values"],
-        optimisticValues: (prev) => ({
+        optimisticValues: (prev: any) => ({
           ...prev,
           messages: [
             ...(prev.messages ?? []),
@@ -574,7 +490,7 @@ export function Thread() {
         }),
         config: {
           configurable: {
-            ...getAgentConfig(effectiveAgentId),
+            ...getAgentConfig(agentId),
             apiKeys,
             // Pass browser config in configurable so backend can access it
             ...(browserContext && {
@@ -584,6 +500,7 @@ export function Thread() {
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
+          workspacePath: tempWorkspace,
         },
         context: browserContext,
         streamSubgraphs: true,
@@ -593,36 +510,28 @@ export function Thread() {
 
     setContentBlocks([]);
 
-    // Save agent/mode to thread metadata after message is sent
-    // This captures the agent and mode used for this conversation
-    // Only update if metadata has changed to avoid redundant API calls
+    // Save agent to thread metadata after message is sent
     if (threadId) {
       const hasChanged =
         !lastSavedMetadataRef.current ||
         lastSavedMetadataRef.current.agentId !== agentId ||
-        lastSavedMetadataRef.current.mode !== mode ||
         lastSavedMetadataRef.current.modelId !== selectedModel?.id;
 
       if (hasChanged) {
-        // For existing threads, update metadata only if changed
         updateThread({
           threadId,
           metadata: {
             assistant_id: agentId,
-            mode: mode,
             ...(selectedModel?.id && { model_id: selectedModel.id }),
           },
         });
-        // Update tracking
         lastSavedMetadataRef.current = {
           agentId,
-          mode,
           modelId: selectedModel?.id || null,
         };
       }
 
-      // Invalidate thread state cache after message send
-      // This ensures the next thread load will fetch fresh data
+      // Invalidate thread state queries to ensure the next thread load will fetch fresh data
       // The cache will be repopulated when the thread is revisited
       queryClient.invalidateQueries({
         queryKey: threadKeys.state(threadId),
@@ -647,16 +556,12 @@ export function Thread() {
     if (!agentId) return;
     const { getAgentConfig } = useConfigStore.getState();
 
-    // Determine which agent config to use based on current mode
-    // This MUST match the effectiveAgentId used in the stream connection
-    const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
-
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
       config: {
         configurable: {
-          ...getAgentConfig(effectiveAgentId),
+          ...getAgentConfig(agentId),
           apiKeys,
         },
       },
@@ -700,7 +605,7 @@ export function Thread() {
             <>
               {!hasMessages && threadId && isLoadingThreadState ? (
                 <div className="flex items-center justify-center py-16">
-                  <div className="text-muted-foreground flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <LoaderIcon className="h-4 w-4" />
                     <span>Loading thread...</span>
                   </div>
@@ -789,7 +694,7 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="to-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-b from-transparent from-0% to-40%">
+            <div className="sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-b from-transparent from-0% to-background to-40%">
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
 
@@ -805,16 +710,27 @@ export function Thread() {
 
               {/* Components group with larger gap */}
               <div className="flex w-full flex-col items-center gap-3">
-                <ScrollToBottom className="absolute right-4 bottom-full mb-4" />
+                <ScrollToBottom className="absolute bottom-full right-4 mb-4" />
 
                 {/* Browser Preview Panel - Floating above Composer */}
                 <PreviewPanel />
 
+                {/* Workspace Selection - Only for Local Agent */}
+                {agentId === "local-agent" && (
+                  <div className="w-full max-w-2xl px-1 pb-1">
+                    <WorkspaceSelect
+                      threadId={threadId}
+                      className="justify-start"
+                      onWorkspaceSelect={setTempWorkspace}
+                    />
+                  </div>
+                )}
+
                 <div
                   ref={dropRef}
                   className={cn(
-                    "relative z-20 mx-auto w-full max-w-2xl min-w-0 pb-4 transition-all",
-                    dragOver ? "border-primary border-2 border-dotted" : "",
+                    "relative z-20 mx-auto w-full min-w-0 max-w-2xl pb-4 transition-all",
+                    dragOver ? "border-2 border-dotted border-primary" : "",
                   )}
                 >
                   <Composer
@@ -838,7 +754,7 @@ export function Thread() {
                   />
 
                   {/* Prompt Template Gallery - only show when no thread */}
-                  {!threadId && messages.length === 0 && (
+                  {/* {!threadId && messages.length === 0 && (
                     <div
                       className="mx-auto mt-6"
                       style={{ width: "85%" }}
@@ -850,7 +766,7 @@ export function Thread() {
                         }}
                       />
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

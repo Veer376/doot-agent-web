@@ -69,9 +69,7 @@ export function useLocalThreads(options?: { limit?: number }) {
             console.log('[useLocalThreads] Invoking threads:list via IPC');
             const threads = await invoke<LocalThreadRow[]>('threads:list');
             console.log('[useLocalThreads] Received threads count:', threads?.length || 0);
-            console.log('[useLocalThreads] Raw threads:', threads);
             const transformed = threads.map(transformThread);
-            console.log('[useLocalThreads] Transformed threads:', transformed.map(t => ({ id: t.thread_id, source: t.metadata?.source })));
             return transformed;
         },
         enabled: isElectronEnv,

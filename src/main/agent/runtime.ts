@@ -153,7 +153,15 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
         if (!apiKey) {
             throw new Error('Google API key not configured. Set GOOGLE_API_KEY environment variable or configure in settings.');
         }
-        return new ChatGoogleGenerativeAI({ model, apiKey });
+        return new ChatGoogleGenerativeAI({
+            model,
+            apiKey,
+            temperature: 1,
+            maxRetries: 2,
+            // Enable thinking blocks (matches Python chat_agent.py)
+            includeThoughts: true,
+            thinkingBudget: -1, // -1 = unlimited thinking
+        });
     }
 
     // Return as string for deepagents to handle

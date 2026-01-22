@@ -23,6 +23,9 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
   const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchAgents();
   const { data: localAgents = [], isLoading: loadingLocal } = useLocalAgents();
 
+  // Combine cloud and local agents
+  // Cloud agents get 'cloud' source if not already set
+  // Local agents already have 'local' source from transformLocalAgentToAgent
   const agents = useMemo(() => {
     const cloudAgentsWithSource = cloudAgents.map((agent) => ({
       ...agent,
@@ -31,6 +34,7 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
         source: agent.metadata?.source || ("cloud" as const),
       },
     }));
+    // Local agents already have proper metadata.source = 'local'
     return [...cloudAgentsWithSource, ...localAgents];
   }, [cloudAgents, localAgents]);
 
@@ -139,7 +143,6 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
         <EditConfigurationDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-          // agent={editingAgent}
         />
       )}
     </>

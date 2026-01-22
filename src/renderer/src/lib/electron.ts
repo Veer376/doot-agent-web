@@ -123,16 +123,16 @@ export function onIpcEvent(channel: string, callback: (data: unknown) => void): 
  * @param channel - The IPC channel name
  * @param args - Arguments to send
  */
-export function send(channel: string, args?: unknown): void {
+export function send(channel: string, ...args: unknown[]): void {
     if (!isElectron()) {
         console.warn('[Electron] send() can only be called in Electron environment');
         return;
     }
     const electron = (window as any).electron;
     if (typeof electron.send === 'function') {
-        electron.send(channel, args);
+        electron.send(channel, ...args);
     } else if (electron.ipcRenderer) {
-        electron.ipcRenderer.send(channel, args);
+        electron.ipcRenderer.send(channel, ...args);
     }
 }
 

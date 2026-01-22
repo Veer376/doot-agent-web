@@ -198,10 +198,23 @@ export function useThreadUpdate() {
 
       if (isLocal) {
         console.log('[useThreadUpdate] Using IPC (local thread)');
+        // For local threads, map metadata.name to title
+        const updates: any = {};
+        if (metadata.name !== undefined) {
+          updates.title = metadata.name;
+        }
+        // Keep other metadata as-is
+        const { name, ...otherMetadata } = metadata;
+        if (Object.keys(otherMetadata).length > 0) {
+          updates.metadata = otherMetadata;
+        }
+        
+        console.log('[useThreadUpdate] Mapped updates for local thread:', updates);
+        
         // Use IPC for local threads
         return new Promise((resolve, reject) => {
           updateLocalThread(
-            { threadId, updates: { metadata } },
+            { threadId, updates },
             {
               onSuccess: (data) => {
                 console.log('[useThreadUpdate] IPC update success');

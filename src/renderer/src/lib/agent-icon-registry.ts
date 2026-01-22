@@ -31,9 +31,11 @@ export const FEATURED_AGENT_ICONS = {
     // Default fallback icon
     "default": AgentIcon,
 
+    // Local agent icon
+    "robot": AgentIcon,
+
     // TODO: Add more featured icons as needed
     // "ai-brain": AgentBrainCPU,
-    // "robot": AgentIcon5,
     // "copilot": AgentIcon7,
     // "neural-network": AgentIcon8,
 } as const satisfies Record<string, React.FC<AppIconProps>>;

@@ -3,12 +3,14 @@
 /**
  * Local Agents Hook
  * 
- * Fetches local agents from Electron IPC.
- * Local agents are defined in agents-config.ts in the main process.
+ * Provides React Query hooks for managing local agents via Electron IPC.
+ * Local agents are defined and run entirely within the Electron app.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isElectron, invoke } from "@/lib/electron";
+import type { LocalAgentConfig } from "@/lib/agent-source";
+import { transformLocalAgentToAgent } from "@/lib/agent-source";
 import type { Agent } from "@/types/agent";
 
 // Query key factory for local agents
@@ -19,24 +21,21 @@ export const localAgentKeys = {
     models: () => [...localAgentKeys.all, "models"] as const,
 };
 
-interface LocalAssistant {
-    id: string;
-    name: string;
-    description: string;
-    graph_id: string;
-    config: Record<string, unknown>;
-    metadata: {
-        source: 'local';
-        icon?: string;
-        is_primary?: boolean;
-        [key: string]: unknown;
-    };
-    created_at: string;
-    updated_at: string;
-}
+/**
+ * Default local agent configuration (built-in)
+ * This represents the deepagents-based local coding agent
+ */
+const DEFAULT_LOCAL_AGENT_CONFIG: LocalAgentConfig = {
+    id: 'local-agent',
+    name: 'Local Agent',
+    description: 'AI coding assistant running locally on your machine',
+    icon: 'robot',
+    modelId: undefined, // Uses default model from settings
+};
 
 /**
- * Hook to fetch all local agents from Electron
+ * Hook to fetch all local agents
+ * Returns the built-in local agent plus any custom agents as full Agent objects
  */
 export function useLocalAgents() {
     const isElectronEnv = isElectron();
@@ -45,34 +44,26 @@ export function useLocalAgents() {
         queryKey: localAgentKeys.lists(),
         queryFn: async (): Promise<Agent[]> => {
             if (!isElectronEnv) {
+                console.log('[useLocalAgents] Not in Electron environment, returning empty array');
                 return [];
             }
 
+            // Try to fetch agents from IPC
             try {
-                const assistants = await invoke<LocalAssistant[]>('agents:list');
-                
-                // Transform to Agent type
-                const agents = assistants.map(assistant => ({
-                    assistant_id: assistant.id,
-                    graph_id: assistant.graph_id,
-                    name: assistant.name,
-                    description: assistant.description,
-                    created_at: assistant.created_at,
-                    updated_at: assistant.updated_at,
-                    config: assistant.config,
-                    version: 1,
-                    context: null,
-                    metadata: assistant.metadata,
-                    supportedConfigs: ["tools"] as ["tools" | "rag" | "supervisor"],
-                }));
+                const customAgents = await invoke<LocalAgentConfig[]>('agents:list');
+                // Transform agents from IPC to full Agent objects
+                const agents = customAgents.map(transformLocalAgentToAgent);
+                console.log('[useLocalAgents] Successfully loaded local agents:', agents);
                 return agents;
             } catch (error) {
-                console.error('Local agents error:', error);
-                return [];
+                // If IPC fails, return just the default local agent as fallback
+                console.warn('[useLocalAgents] Failed to fetch local agents from IPC:', error);
+                console.log('[useLocalAgents] Returning default local agent as fallback');
+                return [transformLocalAgentToAgent(DEFAULT_LOCAL_AGENT_CONFIG)];
             }
         },
         enabled: isElectronEnv,
-        staleTime: 30000,
+        staleTime: 30000, // Cache for 30 seconds
     });
 }
 
@@ -101,5 +92,62 @@ export function useLocalModels() {
         },
         enabled: isElectronEnv,
         staleTime: 60000, // Cache for 1 minute
+    });
+}
+
+/**
+ * Hook to create a custom local agent
+ */
+export function useCreateLocalAgent() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (config: Omit<LocalAgentConfig, 'id'>): Promise<Agent> => {
+            const agent = await invoke<LocalAgentConfig>('agents:create', config);
+            return transformLocalAgentToAgent(agent);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: localAgentKeys.lists() });
+        },
+    });
+}
+
+/**
+ * Hook to update a local agent
+ */
+export function useUpdateLocalAgent() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            agentId,
+            updates,
+        }: {
+            agentId: string;
+            updates: Partial<LocalAgentConfig>;
+        }): Promise<Agent> => {
+            const agent = await invoke<LocalAgentConfig>('agents:update', { agentId, updates });
+            return transformLocalAgentToAgent(agent);
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: localAgentKeys.detail(variables.agentId) });
+            queryClient.invalidateQueries({ queryKey: localAgentKeys.lists() });
+        },
+    });
+}
+
+/**
+ * Hook to delete a local agent
+ */
+export function useDeleteLocalAgent() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (agentId: string): Promise<void> => {
+            await invoke('agents:delete', agentId);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: localAgentKeys.lists() });
+        },
     });
 }

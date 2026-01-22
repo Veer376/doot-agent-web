@@ -55,6 +55,17 @@ interface Thread {
     title?: string;
     status: 'idle' | 'busy' | 'interrupted' | 'error';
     metadata: ThreadMetadata;
+    thread_values?: {
+        messages?: Array<{
+            id?: string;
+            type?: string;
+            role?: string;
+            content?: string | unknown;
+            created_at?: string;
+            [key: string]: unknown;
+        }>;
+        [key: string]: unknown;
+    };
 }
 
 // ============================================================================
@@ -191,6 +202,11 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
         console.log('[IPC] threads:create called with metadata:', metadata);
         const thread = createThread(metadata);
         console.log('[IPC] threads:create created thread:', thread.thread_id);
+        console.log('[DEBUG2] ============================================');
+        console.log('[DEBUG2] Local thread created with source: local');
+        console.log('[DEBUG2] Thread ID:', thread.thread_id);
+        console.log('[DEBUG2] Metadata:', JSON.stringify(thread.metadata, null, 2));
+        console.log('[DEBUG2] ============================================');
         return thread;
     });
 
@@ -218,6 +234,15 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
         }
 
         console.log('[IPC] threads:getState returning state with', thread.thread_values?.messages?.length || 0, 'messages');
+        console.log('[DEBUG2] ============================================');
+        console.log('[DEBUG2] Thread state retrieved');
+        console.log('[DEBUG2] Thread ID:', threadId);
+        console.log('[DEBUG2] Messages count:', thread.thread_values?.messages?.length || 0);
+        if (thread.thread_values?.messages && Array.isArray(thread.thread_values.messages)) {
+            console.log('[DEBUG2] Message types:', thread.thread_values.messages.map((m: any) => m.type).join(', '));
+        }
+        console.log('[DEBUG2] Thread status:', thread.status);
+        console.log('[DEBUG2] ============================================');
         return {
             values: thread.thread_values || { messages: [] },
             next: [],
@@ -336,6 +361,11 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
         console.log('[IPC]   workspacePath:', workspacePath);
         console.log('[IPC]   modelId:', modelId);
         console.log('[IPC] ========================================');
+        console.log('[DEBUG2] ============================================');
+        console.log('[DEBUG2] Human message received');
+        console.log('[DEBUG2] Thread ID:', threadId);
+        console.log('[DEBUG2] Message:', message);
+        console.log('[DEBUG2] ============================================');
 
         const channel = `agent:stream:${threadId}`;
         const window = BrowserWindow.fromWebContents(event.sender);
@@ -421,6 +451,22 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                         
                         try {
                             const serializedData = JSON.parse(JSON.stringify(data));
+                            
+                            // Log AI message if present
+                            const messages = (serializedData as any).messages;
+                            if (messages && Array.isArray(messages)) {
+                                const lastMessage = messages[messages.length - 1];
+                                if (lastMessage && lastMessage.type === 'ai') {
+                                    console.log('[DEBUG2] ============================================');
+                                    console.log('[DEBUG2] AI message received');
+                                    console.log('[DEBUG2] Thread ID:', threadId);
+                                    console.log('[DEBUG2] Message type:', lastMessage.type);
+                                    console.log('[DEBUG2] Message content:', typeof lastMessage.content === 'string' ? lastMessage.content : JSON.stringify(lastMessage.content).substring(0, 200));
+                                    console.log('[DEBUG2] Total messages in thread:', messages.length);
+                                    console.log('[DEBUG2] ============================================');
+                                }
+                            }
+                            
                             window.webContents.send(channel, {
                                 type: 'stream',
                                 mode: 'values',
@@ -450,6 +496,23 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 }
 
                 console.log('[IPC] Agent stream completed. Total events:', eventCount);
+                
+                // Save final state to thread
+                if (finalState) {
+                    console.log('[DEBUG2] ============================================');
+                    console.log('[DEBUG2] Saving final state to thread');
+                    console.log('[DEBUG2] Thread ID:', threadId);
+                    console.log('[DEBUG2] Messages in final state:', (finalState as any).messages?.length || 0);
+                    console.log('[DEBUG2] ============================================');
+                    
+                    updateThread(threadId, { 
+                        thread_values: finalState as any 
+                    });
+                    console.log('[IPC] Final state saved to thread');
+                } else {
+                    console.warn('[IPC] No final state captured - messages may not persist');
+                }
+                
                 response = 'Agent completed successfully';
 
             } catch (runtimeError) {
@@ -477,6 +540,18 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                         { id: uuid(), role: 'assistant', content: response, created_at: new Date().toISOString() },
                     ],
                 };
+                console.log('[DEBUG2] ============================================');
+                console.log('[DEBUG2] AI placeholder message (runtime error)');
+                console.log('[DEBUG2] Thread ID:', threadId);
+                console.log('[DEBUG2] Error message:', response.substring(0, 200));
+                console.log('[DEBUG2] ============================================');
+                
+                // Save placeholder messages to thread
+                updateThread(threadId, { 
+                    thread_values: placeholderData as any 
+                });
+                console.log('[DEBUG2] Placeholder messages saved to thread');
+                
                 window.webContents.send(channel, {
                     type: 'stream',
                     mode: 'values',

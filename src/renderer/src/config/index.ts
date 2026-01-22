@@ -53,13 +53,20 @@ function getConfig(): AppConfig {
         console.warn('VITE_SUPABASE_ANON_KEY is missing.');
     }
 
+    // Derive MCP URL from API URL (fallback if apiUrl is missing)
+    let mcpUrl = "";
+    if (apiUrl) {
+        const url = new URL(apiUrl);
+        mcpUrl = `${url.origin}${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
+    }
+
     // Determine environment
     const environment = import.meta.env.PROD ? 'production' : 'development';
 
     return {
         // API URLs
         apiUrl: apiUrl || "",
-        mcpUrl: "",
+        mcpUrl,
         mcpServerUrl: import.meta.env.VITE_MCP_SERVER_URL || null,
         ragApiUrl: import.meta.env.VITE_RAG_API_URL || null,
         composioApiKey: import.meta.env.VITE_COMPOSIO_API_KEY || null,

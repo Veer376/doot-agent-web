@@ -11,6 +11,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { isElectron, send, onIpcEvent } from "@/lib/electron";
 import type { Message } from "@langchain/langgraph-sdk";
+import { useLocalThreadState } from "@/hooks/use-local-threads";
 
 /**
  * LangChain serialized message format from the agent runtime
@@ -201,11 +202,47 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
 
     // Track the current stream channel
     const channelRef = useRef<string>(`agent:stream:${threadId}`);
+    
+    // Fetch existing thread state to load previous messages
+    const { data: threadState } = useLocalThreadState(threadId);
 
     // Update channel when threadId changes
     useEffect(() => {
         channelRef.current = `agent:stream:${threadId}`;
     }, [threadId]);
+    
+    // Load existing messages from thread state when thread changes
+    useEffect(() => {
+        console.log('[useLocalStream] ========================================');
+        console.log('[useLocalStream] Thread state changed');
+        console.log('[useLocalStream]   threadId:', threadId);
+        console.log('[useLocalStream]   threadState:', threadState);
+        
+        if (!threadId) {
+            console.log('[useLocalStream] No threadId - resetting to empty messages');
+            setValues({ messages: [] });
+            return;
+        }
+        
+        if (threadState?.values?.messages) {
+            console.log('[useLocalStream] Loading existing messages from thread state');
+            console.log('[useLocalStream]   raw messages count:', threadState.values.messages.length);
+            
+            // Transform the messages from storage format
+            const transformedMessages = transformMessages(threadState.values.messages);
+            console.log('[useLocalStream]   transformed messages count:', transformedMessages.length);
+            console.log('[useLocalStream]   message types:', transformedMessages.map(m => m.type).join(', '));
+            
+            setValues({
+                ...threadState.values,
+                messages: transformedMessages,
+            });
+        } else {
+            console.log('[useLocalStream] No existing messages in thread state');
+            setValues({ messages: [] });
+        }
+        console.log('[useLocalStream] ========================================');
+    }, [threadId, threadState]);
 
     // Subscribe to stream events
     useEffect(() => {

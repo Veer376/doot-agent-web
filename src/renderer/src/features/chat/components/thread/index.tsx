@@ -184,10 +184,10 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  console.log('[Thread] Stream state:', {
+  console.log("[Thread] Stream state:", {
     messagesCount: messages?.length || 0,
     isLoading,
-    messages: messages?.map(m => ({ type: m.type, id: m.id?.slice(0, 8) }))
+    messages: messages?.map((m) => ({ type: m.type, id: m.id?.slice(0, 8) })),
   });
 
   const { isLoading: isLoadingThreadState } = useThreadState(threadId);
@@ -423,23 +423,23 @@ export function Thread() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log('[Thread] ========================================');
-    console.log('[Thread] handleSubmit called');
-    console.log('[Thread]   agentId:', agentId);
-    console.log('[Thread]   agentSource:', agentSource);
-    console.log('[Thread]   threadId:', threadId);
+    console.log("[Thread] ========================================");
+    console.log("[Thread] handleSubmit called");
+    console.log("[Thread]   agentId:", agentId);
+    console.log("[Thread]   agentSource:", agentSource);
+    console.log("[Thread]   threadId:", threadId);
 
     const content = inputValue.trim();
-    console.log('[Thread]   input content length:', content.length);
+    console.log("[Thread]   input content length:", content.length);
 
     setInputValue("");
     clearDraft(threadId);
     if (!agentId) {
-      console.error('[Thread] No agentId - returning');
+      console.error("[Thread] No agentId - returning");
       return;
     }
     if ((content.length === 0 && contentBlocks.length === 0) || isLoading) {
-      console.log('[Thread] Empty content or already loading - returning');
+      console.log("[Thread] Empty content or already loading - returning");
       return;
     }
 
@@ -472,9 +472,9 @@ export function Thread() {
       }
     }
 
-    console.log('[Thread] About to call stream.submit');
-    console.log('[Thread]   toolMessages length:', toolMessages.length);
-    console.log('[Thread]   newHumanMessage:', newHumanMessage);
+    console.log("[Thread] About to call stream.submit");
+    console.log("[Thread]   toolMessages length:", toolMessages.length);
+    console.log("[Thread]   newHumanMessage:", newHumanMessage);
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },

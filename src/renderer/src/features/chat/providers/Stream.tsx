@@ -190,13 +190,13 @@ const LocalStreamSession = ({
       error: localStream.error,
       stop: localStream.stop,
       submit: async (values: unknown) => {
-        console.log('[Stream] ========================================');
-        console.log('[Stream] LocalStreamSession submit called');
-        console.log('[Stream]   values type:', typeof values);
-        console.log('[Stream]   threadId before:', threadId);
+        console.log("[Stream] ========================================");
+        console.log("[Stream] LocalStreamSession submit called");
+        console.log("[Stream]   values type:", typeof values);
+        console.log("[Stream]   threadId before:", threadId);
 
         if (typeof values === "string") {
-          console.log('[Stream] Simple string submission');
+          console.log("[Stream] Simple string submission");
           localStream.submit(values);
         } else if (
           values &&
@@ -204,42 +204,46 @@ const LocalStreamSession = ({
           "messages" in values
         ) {
           const msgs = (values as { messages?: Message[] | string }).messages;
-          
+
           let msgContent = "";
           if (Array.isArray(msgs) && msgs.length > 0) {
             const lastMsg = msgs[msgs.length - 1];
             const content = lastMsg.content;
-            
+
             // Handle content that could be string or array of content blocks
             if (typeof content === "string") {
               msgContent = content;
             } else if (Array.isArray(content)) {
               // Extract text from content blocks: [{type: 'text', text: '...'}, ...]
               msgContent = content
-                .filter((block): block is { type: string; text: string } => 
-                  typeof block === 'object' && block !== null && 'type' in block && block.type === 'text'
+                .filter(
+                  (block): block is { type: string; text: string } =>
+                    typeof block === "object" &&
+                    block !== null &&
+                    "type" in block &&
+                    block.type === "text",
                 )
-                .map(block => block.text)
-                .join(' ');
+                .map((block) => block.text)
+                .join(" ");
             }
           } else if (typeof msgs === "string") {
             msgContent = msgs;
           }
 
-          console.log('[Stream]   extracted msgContent:', msgContent);
+          console.log("[Stream]   extracted msgContent:", msgContent);
 
           let currentThreadId = threadId;
 
           // Handle new thread creation for local agent
           if (!currentThreadId) {
-            console.log('[Stream] No threadId - creating new thread');
+            console.log("[Stream] No threadId - creating new thread");
             const metadata = (values as any).metadata || {};
             const requestedWorkspace = metadata.workspacePath || workspacePath;
-            console.log('[Stream]   metadata:', metadata);
-            console.log('[Stream]   requestedWorkspace:', requestedWorkspace);
+            console.log("[Stream]   metadata:", metadata);
+            console.log("[Stream]   requestedWorkspace:", requestedWorkspace);
 
             try {
-              console.log('[Stream] Calling createThread...');
+              console.log("[Stream] Calling createThread...");
               const newThread = await createThread({
                 metadata: {
                   assistant_id: "local-agent", // specific to local agent
@@ -247,26 +251,32 @@ const LocalStreamSession = ({
                   workspacePath: requestedWorkspace,
                 },
               });
-              console.log('[Stream] Thread created successfully:', newThread.thread_id);
-              console.log('[Stream] Thread data:', JSON.stringify(newThread, null, 2));
+              console.log(
+                "[Stream] Thread created successfully:",
+                newThread.thread_id,
+              );
+              console.log(
+                "[Stream] Thread data:",
+                JSON.stringify(newThread, null, 2),
+              );
               currentThreadId = newThread.thread_id;
               setThreadId(currentThreadId);
-              console.log('[Stream] ThreadId set in URL:', currentThreadId);
+              console.log("[Stream] ThreadId set in URL:", currentThreadId);
 
               // Safety delay to ensure useLocalStream effect has subscribed to the new threadId
               // before we trigger the agent which sends events.
               await new Promise((resolve) => setTimeout(resolve, 100));
             } catch (err) {
-              console.error('[Stream] Failed to create thread:', err);
+              console.error("[Stream] Failed to create thread:", err);
               return;
             }
           }
 
-          console.log('[Stream] About to send agent:invoke');
-          console.log('[Stream]   currentThreadId:', currentThreadId);
-          console.log('[Stream]   msgContent:', msgContent);
-          console.log('[Stream]   workspacePath:', workspacePath);
-          console.log('[Stream]   modelId:', modelId);
+          console.log("[Stream] About to send agent:invoke");
+          console.log("[Stream]   currentThreadId:", currentThreadId);
+          console.log("[Stream]   msgContent:", msgContent);
+          console.log("[Stream]   workspacePath:", workspacePath);
+          console.log("[Stream]   modelId:", modelId);
 
           // If we just created the thread, we MUST use direct send because localStream.submit
           // is bound to the old null threadId and won't update until next render.
@@ -279,12 +289,15 @@ const LocalStreamSession = ({
                 (values as any).metadata?.workspacePath || workspacePath,
               modelId,
             });
-            console.log('[Stream] agent:invoke sent successfully');
+            console.log("[Stream] agent:invoke sent successfully");
           } else {
-            console.error('[Stream] Cannot send - missing threadId or content:', {
-              hasThreadId: !!currentThreadId,
-              hasContent: !!msgContent
-            });
+            console.error(
+              "[Stream] Cannot send - missing threadId or content:",
+              {
+                hasThreadId: !!currentThreadId,
+                hasContent: !!msgContent,
+              },
+            );
           }
         }
       },

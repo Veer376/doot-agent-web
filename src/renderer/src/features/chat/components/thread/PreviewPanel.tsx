@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Component, type ReactNode } from "react";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { cn } from "@/lib/utils";
 import {
@@ -21,12 +21,53 @@ type BrowserSnapshot = {
 
 type TabType = "screenshot" | "text";
 
-export function PreviewPanel() {
+// Error Boundary Component
+class PreviewPanelErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[PreviewPanel] Error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="mx-auto w-full max-w-3xl">
+          <div
+            data-radius="radius2"
+            className="border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400"
+          >
+            <p className="font-semibold">Preview Panel Error</p>
+            <p className="mt-1 text-xs opacity-80">
+              {this.state.error?.message || "Failed to render preview"}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function PreviewPanelContent() {
   const stream = useStreamContext();
   const values = stream.values as Record<string, unknown> | undefined;
-  
+
   // Extract state from both local and cloud agent formats
-  const browserSnapshot = values?.browser_snapshot as BrowserSnapshot | undefined;
+  const browserSnapshot = values?.browser_snapshot as
+    | BrowserSnapshot
+    | undefined;
   const todos = values?.todos as Todo[] | undefined;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,7 +103,10 @@ export function PreviewPanel() {
                 className="group relative"
               >
                 {/* Thumbnail Container */}
-                <div data-radius="radius2" className="border-border relative h-20 w-32 overflow-hidden border shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:border-primary/30 group-hover:shadow-lg">
+                <div
+                  data-radius="radius2"
+                  className="group-hover:border-primary/30 relative h-20 w-32 overflow-hidden border border-border shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg"
+                >
                   <img
                     src={getImageSrc(browserSnapshot.screenshot)}
                     alt="Browser preview"
@@ -72,7 +116,10 @@ export function PreviewPanel() {
                   <div className="absolute inset-0 bg-black/0 transition-colors duration-200" />
                   {/* Expand Icon - Bottom Right */}
                   <div className="absolute bottom-1 right-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                    <div data-radius="radius1" className="bg-background/80 p-1.5 shadow-sm backdrop-blur-sm">
+                    <div
+                      data-radius="radius1"
+                      className="bg-background/80 p-1.5 shadow-sm backdrop-blur-sm"
+                    >
                       <SquareArrowExpand01Icon className="h-5 w-5 text-foreground" />
                     </div>
                   </div>
@@ -83,8 +130,14 @@ export function PreviewPanel() {
 
           {/* Todos Section */}
           {hasTodos && todos && (
-            <div data-radius="radius2" className="flex-1 max-w-xs border border-border bg-card p-3 shadow-sm">
-              <TodoList todos={todos} maxVisible={4} />
+            <div
+              data-radius="radius2"
+              className="max-w-xs flex-1 border border-border bg-card p-3 shadow-sm"
+            >
+              <TodoList
+                todos={todos}
+                maxVisible={4}
+              />
             </div>
           )}
         </div>
@@ -92,11 +145,14 @@ export function PreviewPanel() {
 
       {/* Full Browser Snapshot Modal */}
       {hasBrowserSnapshot && browserSnapshot && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Dialog
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+        >
           <DialogContent className="flex h-[90vh] max-w-4xl flex-col overflow-hidden">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>Browser Snapshot</DialogTitle>
-              
+
               {/* Tab Buttons */}
               <div className="mt-4 flex gap-1 border-b border-border">
                 <button
@@ -106,7 +162,7 @@ export function PreviewPanel() {
                     "inline-flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
                     activeTab === "screenshot"
                       ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <ImageIcon className="h-4 w-4" />
@@ -120,7 +176,7 @@ export function PreviewPanel() {
                       "inline-flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
                       activeTab === "text"
                         ? "border-primary text-primary"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <FileTextIcon className="h-4 w-4" />
@@ -136,14 +192,20 @@ export function PreviewPanel() {
                 <div className="flex h-full flex-col space-y-4 overflow-y-auto">
                   {/* URL Bar */}
                   {browserSnapshot.url && (
-                    <div data-radius="radius2" className="flex-shrink-0 rounded-full border bg-background px-3 py-2">
+                    <div
+                      data-radius="radius2"
+                      className="flex-shrink-0 rounded-full border bg-background px-3 py-2"
+                    >
                       <span className="text-sm">{browserSnapshot.url}</span>
                     </div>
                   )}
 
                   {/* Screenshot */}
                   {browserSnapshot.screenshot && (
-                    <div data-radius="radius2" className="flex-shrink-0 overflow-hidden border">
+                    <div
+                      data-radius="radius2"
+                      className="flex-shrink-0 overflow-hidden border"
+                    >
                       <img
                         src={getImageSrc(browserSnapshot.screenshot)}
                         alt="Browser screenshot"
@@ -156,15 +218,23 @@ export function PreviewPanel() {
                 <div className="flex h-full flex-col space-y-4 overflow-y-auto">
                   {/* URL Bar */}
                   {browserSnapshot.url && (
-                    <div data-radius="radius2" className="flex-shrink-0 rounded-full border bg-background px-3 py-2">
+                    <div
+                      data-radius="radius2"
+                      className="flex-shrink-0 rounded-full border bg-background px-3 py-2"
+                    >
                       <span className="text-sm">{browserSnapshot.url}</span>
                     </div>
                   )}
 
                   {/* DOM Text */}
                   {browserSnapshot.dom_text && (
-                    <div data-radius="radius2" className="flex-1 overflow-hidden border bg-muted/50 p-4">
-                      <h4 className="mb-2 text-sm font-semibold">DOM Content</h4>
+                    <div
+                      data-radius="radius2"
+                      className="bg-muted/50 flex-1 overflow-hidden border p-4"
+                    >
+                      <h4 className="mb-2 text-sm font-semibold">
+                        DOM Content
+                      </h4>
                       <pre className="h-[calc(100%-2rem)] overflow-auto text-xs">
                         {browserSnapshot.dom_text}
                       </pre>
@@ -180,3 +250,11 @@ export function PreviewPanel() {
   );
 }
 
+// Export with Error Boundary wrapper
+export function PreviewPanel() {
+  return (
+    <PreviewPanelErrorBoundary>
+      <PreviewPanelContent />
+    </PreviewPanelErrorBoundary>
+  );
+}

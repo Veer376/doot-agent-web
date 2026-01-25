@@ -19,9 +19,115 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { CheckmarkCircleIcon, CopyIcon, ToolsIcon } from "@/components/icons";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+
+// Helper function to format tool responses
+function formatToolResponse(response: ToolMessage): string {
+  if (typeof response.content === "string") {
+    return response.content;
+  }
+
+  if (Array.isArray(response.content)) {
+    return response.content
+      .map((block) =>
+        typeof block === "string" ? block : JSON.stringify(block, null, 2),
+      )
+      .join("\n");
+  }
+
+  return JSON.stringify(response.content, null, 2);
+}
+
+// Separate component for tool items to avoid hooks in map
+interface ToolItemProps {
+  step: Extract<ChainStep, { type: "tool" }>;
+  stepIdx: number;
+}
+
+const ToolItem = React.memo(function ToolItem({ step, stepIdx }: ToolItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleCopy = () => {
+    const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ""}`;
+    navigator.clipboard.writeText(copyContent);
+    toast.success("Copied to clipboard");
+  };
+
+  const handleToggle = () => {
+    if (step.toolResponse) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  return (
+    <div
+      key={`tool-standalone-${stepIdx}`}
+      className="group/toolwrapper inline-block"
+    >
+      {/* Wrap both tool name and response in a common group for hover persistence */}
+      <div
+        data-radius="radius2"
+        className={cn(
+          "group/tool bg-muted/30 inline-flex items-center gap-2 border p-1.5 px-2 transition-colors",
+          step.toolResponse && "hover:bg-muted/50 cursor-pointer",
+        )}
+        onClick={handleToggle}
+      >
+        {/* Processing Icon / Tick */}
+        {step.status === "pending" && (
+          <LoaderCircle className="text-muted-foreground h-4 w-4 flex-shrink-0 animate-spin" />
+        )}
+        {step.status === "success" && (
+          <CheckmarkCircleIcon
+            size="xs"
+            className="flex-shrink-0 text-green-600"
+          />
+        )}
+        {step.status === "error" && (
+          <XCircleIcon className="h-4 w-4 flex-shrink-0 text-red-600" />
+        )}
+        <span className="text-sm font-medium">{step.toolCall.name}</span>
+        {step.toolResponse && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy();
+            }}
+            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100 md:opacity-0 md:group-hover/tool:opacity-100"
+            aria-label="Copy tool and response"
+          >
+            <CopyIcon
+              size="xs"
+              className="text-muted-foreground hover:text-foreground"
+            />
+          </button>
+        )}
+      </div>
+      {step.toolResponse && (
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
+        >
+          <div className="overflow-hidden">
+            <div
+              data-radius="radius2"
+              className="bg-muted/50 mt-2 inline-block w-fit max-w-[70ch] border px-3 py-2"
+            >
+              <div className="max-h-[400px] overflow-y-auto font-mono text-xs whitespace-pre-wrap">
+                {formatToolResponse(step.toolResponse)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
 
 interface AITurnProps {
   turnMessages: Message[];
@@ -108,14 +214,6 @@ export const AITurn = React.memo(function AITurn({
         messages: allMessages.slice(0, lastHumanIndex + 1),
       };
     });
-  };
-
-  // Helper to format tool response content
-  const formatToolResponse = (response: ToolMessage) => {
-    if (typeof response.content === "string") {
-      return response.content;
-    }
-    return JSON.stringify(response.content, null, 2);
   };
 
   // Render a single step (thinking or tool)
@@ -352,88 +450,12 @@ export const AITurn = React.memo(function AITurn({
                     { type: "tool" }
                   >;
 
-                  const [isExpanded, setIsExpanded] = React.useState(false);
-
-                  const handleCopy = () => {
-                    const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ""}`;
-                    navigator.clipboard.writeText(copyContent);
-                    toast.success("Copied to clipboard");
-                  };
-
-                  const handleToggle = () => {
-                    if (step.toolResponse) {
-                      setIsExpanded(!isExpanded);
-                    }
-                  };
-
                   return (
-                    <div
+                    <ToolItem
                       key={`tool-standalone-${stepIdx}`}
-                      className="group/toolwrapper inline-block"
-                    >
-                      {/* Wrap both tool name and response in a common group for hover persistence */}
-                      <div
-                        data-radius="radius2"
-                        className={cn(
-                          "group/tool bg-muted/30 inline-flex items-center gap-2 border p-1.5 px-2 transition-colors",
-                          step.toolResponse &&
-                            "hover:bg-muted/50 cursor-pointer",
-                        )}
-                        onClick={handleToggle}
-                      >
-                        {/* Processing Icon / Tick */}
-                        {step.status === "pending" && (
-                          <LoaderCircle className="text-muted-foreground h-4 w-4 flex-shrink-0 animate-spin" />
-                        )}
-                        {step.status === "success" && (
-                          <CheckmarkCircleIcon
-                            size="xs"
-                            className="flex-shrink-0 text-green-600"
-                          />
-                        )}
-                        {step.status === "error" && (
-                          <XCircleIcon className="h-4 w-4 flex-shrink-0 text-red-600" />
-                        )}
-                        <span className="text-sm font-medium">
-                          {step.toolCall.name}
-                        </span>
-                        {step.toolResponse && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopy();
-                            }}
-                            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100 md:opacity-0 md:group-hover/tool:opacity-100"
-                            aria-label="Copy tool and response"
-                          >
-                            <CopyIcon
-                              size="xs"
-                              className="text-muted-foreground hover:text-foreground"
-                            />
-                          </button>
-                        )}
-                      </div>
-                      {step.toolResponse && (
-                        <div
-                          className={cn(
-                            "grid transition-all duration-300 ease-in-out",
-                            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-                          )}
-                        >
-                          <div className="overflow-hidden">
-                            <div
-                              data-radius="radius2"
-                              className="bg-muted/50 mt-2 inline-block w-fit max-w-[70ch] border px-3 py-2"
-                            >
-                              <div className="max-h-[400px] overflow-y-auto font-mono text-xs whitespace-pre-wrap">
-                                {formatToolResponse(step.toolResponse)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      step={step}
+                      stepIdx={stepIdx}
+                    />
                   );
                 })}
               </div>

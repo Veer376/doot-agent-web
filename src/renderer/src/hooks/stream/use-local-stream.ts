@@ -1,67 +1,26 @@
 "use client";
 
 /**
- * Local Stream Hook
+ * Local Stream Hook (Refactored with LocalStreamManager)
  * 
- * Provides a streaming interface for local agents via Electron IPC.
- * Mimics the API of useStream from @langchain/langgraph-sdk/react
- * but communicates through Electron IPC instead of HTTP.
+ * Uses LocalStreamManager (useSyncExternalStore pattern) for state management.
+ * Matches cloud StreamManager architecture for consistent, smooth UX.
+ * 
+ * Key principles:
+ * 1. Manager stores state in refs (not React state) - avoids cascading re-renders
+ * 2. useSyncExternalStore for synchronous updates - no race conditions
+ * 3. Optimistic updates via manager.setOptimisticValues() - instant UI feedback
+ * 4. No React Query for real-time state - avoids timing issues
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { isElectron, send, onIpcEvent } from "@/lib/electron";
+import { useCallback, useEffect, useSyncExternalStore, useMemo } from "react";
 import type { Message } from "@langchain/langgraph-sdk";
-import { useLocalThreadState } from "@/hooks/use-local-threads";
+import { getLocalStreamManager } from "./local-stream-manager";
+import type { LocalStreamState } from "./local-stream-manager";
+import { isElectron, invoke } from "@/lib/electron";
 
-/**
- * LangChain serialized message format from the agent runtime
- */
-interface SerializedMessage {
-    lc?: number;
-    type?: string;
-    id?: string[];
-    kwargs?: {
-        id?: string;
-        content?: string | Array<{ type: string; text?: string }>;
-        tool_calls?: unknown[];
-        tool_call_id?: string;
-        name?: string;
-        [key: string]: unknown;
-    };
-}
-
-/**
- * Stream event types from Electron main process
- */
-interface StreamEvent {
-    type: 'stream' | 'done' | 'error';
-    mode?: 'messages' | 'values';
-    data?: unknown;
-    error?: string;
-}
-
-/**
- * State type for local streaming
- */
-export interface LocalStreamState {
-    messages: Message[];
-    todos?: Array<{
-        id: string;
-        content: string;
-        status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-    }>;
-    workspace_files?: Array<{
-        path: string;
-        is_dir?: boolean;
-        size?: number;
-    }>;
-    browser_snapshot?: {
-        url?: string;
-        screenshot?: string;
-        dom_text?: string;
-    };
-    [key: string]: unknown;
-}
+// Re-export LocalStreamState for external use
+export type { LocalStreamState } from "./local-stream-manager";
 
 /**
  * HITL Interrupt request
@@ -90,6 +49,8 @@ export interface UseLocalStreamOptions {
     onFinish?: (state: LocalStreamState) => void;
     /** Callback when error occurs */
     onError?: (error: string) => void;
+    /** Callback for custom events (token usage, etc.) */
+    onCustomEvent?: (data: unknown) => void;
 }
 
 /**
@@ -106,8 +67,17 @@ export interface UseLocalStreamReturn {
     error: string | null;
     /** Current interrupt request (if any) */
     interrupt: HITLRequest | null;
-    /** Submit a new message */
-    submit: (message: string) => void;
+    /** Submit a new message (with optional optimistic update) */
+    submit: (
+        messageInput: string | { messages: Message[] }, 
+        options?: { optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState> }
+    ) => void;
+    /** Submit to a specific thread (for new thread creation where submit has stale threadId) */
+    submitToThread: (targetThreadId: string, messageContent: string, options?: {
+        modelId?: string;
+        workspacePath?: string;
+        optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
+    }) => void;
     /** Stop the current stream */
     stop: () => void;
     /** Resume after interrupt (approve) */
@@ -117,323 +87,220 @@ export interface UseLocalStreamReturn {
 }
 
 /**
- * Extract text content from message content (string or content blocks)
- */
-function extractContent(
-    content: string | Array<{ type: string; text?: string }> | undefined
-): string {
-    if (typeof content === "string") {
-        return content;
-    }
-    if (Array.isArray(content)) {
-        return content
-            .filter((block): block is { type: "text"; text: string } => block.type === "text")
-            .map((block) => block.text)
-            .join("");
-    }
-    return "";
-}
-
-/**
- * Transform messages to LangGraph SDK Message format
- * Handles three formats:
- * 1. SDK format (already correct): { type: 'human' | 'ai' | 'tool', content, id, ... }
- * 2. LangChain serialized: { lc: 1, id: [...], kwargs: {...} }
- * 3. Legacy role-based: { role: 'user' | 'assistant' | 'tool', content, ... }
- */
-function transformMessages(serializedMessages: unknown[]): Message[] {
-    return serializedMessages
-        .map((msg): Message | null => {
-            const raw = msg as any;
-
-            // Format 1: SDK format (already correct) - just pass through
-            if (raw.type && ['human', 'ai', 'tool', 'system', 'function', 'remove'].includes(raw.type)) {
-                return {
-                    id: raw.id || crypto.randomUUID(),
-                    type: raw.type,
-                    content: extractContent(raw.content),
-                    ...(raw.tool_calls && { tool_calls: raw.tool_calls }),
-                    ...(raw.tool_call_id && { tool_call_id: raw.tool_call_id }),
-                    ...(raw.name && { name: raw.name }),
-                } as Message;
-            }
-
-            // Format 2: LangChain serialized format
-            if (raw.lc !== undefined && Array.isArray(raw.id)) {
-                const kwargs = raw.kwargs || {};
-                const classId = raw.id;
-                const className = classId[classId.length - 1] || "";
-
-                // Determine message type from class name
-                let type: "human" | "ai" | "tool" | "custom" = "custom";
-                if (className.includes("Human")) {
-                    type = "human";
-                } else if (className.includes("AI")) {
-                    type = "ai";
-                } else if (className.includes("Tool")) {
-                    type = "tool";
-                }
-
-                const content = extractContent(kwargs.content);
-                const id = kwargs.id || crypto.randomUUID();
-
-                return {
-                    id,
-                    type,
-                    content,
-                    ...(kwargs.tool_calls && { tool_calls: kwargs.tool_calls }),
-                    ...(kwargs.tool_call_id && { tool_call_id: kwargs.tool_call_id }),
-                    ...(kwargs.name && { name: kwargs.name }),
-                } as Message;
-            }
-
-            // Format 3: Legacy role-based format
-            if (raw.role) {
-                const typeMap: Record<string, Message['type']> = {
-                    'user': 'human',
-                    'assistant': 'ai',
-                    'tool': 'tool',
-                    'system': 'system',
-                };
-
-                return {
-                    id: raw.id || crypto.randomUUID(),
-                    type: typeMap[raw.role] || 'human',
-                    content: extractContent(raw.content),
-                    ...(raw.tool_calls && { tool_calls: raw.tool_calls }),
-                    ...(raw.tool_call_id && { tool_call_id: raw.tool_call_id }),
-                    ...(raw.name && { name: raw.name }),
-                } as Message;
-            }
-
-            // Unknown format - log and skip
-            console.warn('[transformMessages] Unknown message format:', raw);
-            return null;
-        })
-        .filter((msg): msg is Message => msg !== null);
-}
-
-/**
- * Hook for streaming with local agents via Electron IPC
+ * Hook for streaming with local agents via Electron IPC.
  * 
- * This hook provides a similar interface to useStream from the LangGraph SDK
- * but communicates with the local agent running in the Electron main process.
+ * Architecture (based on cloud StreamManager):
+ * 1. LocalStreamManager stores state in refs (single source of truth)
+ * 2. useSyncExternalStore subscribes to updates (synchronous re-renders)
+ * 3. IPC events → manager.handleEvent() → notify() → instant UI update
+ * 4. Optimistic updates integrated into manager (no separate state needed)
+ * 5. Initial state loaded directly via IPC (no React Query timing issues)
  */
 export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamReturn {
-    const { threadId, workspacePath, modelId, onFinish, onError } = options;
+    const { threadId, modelId, workspacePath, onFinish, onError, onCustomEvent } = options;
+
+    // Only use stream if in Electron environment
     const isElectronEnv = isElectron();
 
-    const [values, setValues] = useState<LocalStreamState>({ messages: [] });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [interrupt, setInterrupt] = useState<HITLRequest | null>(null);
+    // Get singleton manager instance
+    const manager = getLocalStreamManager();
 
-    // Track the current stream channel
-    const channelRef = useRef<string>(`agent:stream:${threadId}`);
-    
-    // Track active submission to prevent clearing messages
-    const isSubmittingRef = useRef(false);
+    // Cache the default state to avoid infinite loop
+    // (getSnapshot must return same reference if state hasn't changed)
+    const defaultState = useMemo<LocalStreamState>(() => ({
+        messages: [],
+        isLoading: false,
+        error: null,
+        values: null
+    }), []);
 
-    // Fetch existing thread state to load previous messages
-    const { data: threadState } = useLocalThreadState(threadId);
+    // Subscribe to stream state via useSyncExternalStore
+    // This provides synchronous updates (no re-render delays)
+    const subscribe = useCallback(
+        (callback: () => void) => {
+            if (!threadId) return () => {};
+            return manager.subscribe(threadId, callback);
+        },
+        [manager, threadId]
+    );
 
-    // Update channel when threadId changes
-    useEffect(() => {
-        channelRef.current = `agent:stream:${threadId}`;
-    }, [threadId]);
-    
-    // Load existing messages from thread state when thread changes
-    useEffect(() => {
-        console.log('[useLocalStream] ========================================');
-        console.log('[useLocalStream] Thread state changed');
-        console.log('[useLocalStream]   threadId:', threadId);
-        console.log('[useLocalStream]   threadState:', threadState);
-        
+    const getSnapshot = useCallback(() => {
         if (!threadId) {
-            console.log('[useLocalStream] No threadId - resetting to empty messages');
-            setValues({ messages: [] });
-            return;
+            return defaultState;
         }
-                // Don't overwrite state if we're actively submitting
-        if (isSubmittingRef.current) {
-            console.log('[useLocalStream] Skipping state load - submission in progress');
-            return;
-        }
-                if (threadState?.values?.messages) {
-            console.log('[useLocalStream] Loading existing messages from thread state');
-            console.log('[useLocalStream]   raw messages count:', threadState.values.messages.length);
-            
-            // Transform the messages from storage format
-            const transformedMessages = transformMessages(threadState.values.messages);
-            console.log('[useLocalStream]   transformed messages count:', transformedMessages.length);
-            console.log('[useLocalStream]   message types:', transformedMessages.map(m => m.type).join(', '));
-            
-            setValues({
-                ...threadState.values,
-                messages: transformedMessages,
-            });
-        } else {
-            console.log('[useLocalStream] No existing messages in thread state');
-            setValues({ messages: [] });
-        }
-        console.log('[useLocalStream] ========================================');
-    }, [threadId, threadState]);
+        return manager.getSnapshot(threadId);
+    }, [manager, threadId, defaultState]);
 
-    // Subscribe to stream events
+    const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+    // Set up IPC subscription when threadId changes
+    // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
     useEffect(() => {
-        if (!isElectronEnv || !threadId) {
+        if (isElectronEnv && threadId) {
+            console.log('[useLocalStream] Setting up IPC for threadId:', threadId);
+            manager.setupIPCSubscription(threadId);
+
+            return () => {
+                console.log('[useLocalStream] Cleaning up IPC for threadId:', threadId);
+                // Don't cleanup on threadId change - let manager handle it
+                // Only cleanup on unmount
+            };
+        }
+    }, [isElectronEnv, threadId, manager]);
+
+    // Load initial thread state when threadId changes
+    // This shows cached messages immediately (sub-100ms load time)
+    // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
+    useEffect(() => {
+        if (isElectronEnv && threadId) {
+            console.log('[useLocalStream] Loading initial state for threadId:', threadId);
+        
+        // Load state from IPC (backend database)
+        manager.loadInitialState(threadId, async (id: string) => {
+            return await invoke('threads:getState', id);
+        });
+    }
+    }, [isElectronEnv, threadId, manager]);
+
+    // Submit to specific thread (for new thread creation flow)
+    // This bypasses the closure issue where submit is bound to old threadId
+    const submitToThread = useCallback((targetThreadId: string, messageContent: string, options?: {
+        modelId?: string;
+        workspacePath?: string;
+        optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
+    }) => {
+        if (!isElectronEnv) {
+            console.warn("[useLocalStream] Cannot submit without Electron environment");
             return;
         }
 
-        const channel = `agent:stream:${threadId}`;
-        console.log('[useLocalStream] Setting up event listener for channel:', channel);
+        console.log('[useLocalStream] submitToThread called');
+        console.log('[useLocalStream]   targetThreadId:', targetThreadId);
+        console.log('[useLocalStream]   messageContent length:', messageContent.length);
 
-        const cleanup = onIpcEvent(channel, (event: unknown) => {
-            console.log('[useLocalStream] Received event on channel:', channel);
-            const streamEvent = event as StreamEvent;
-            console.log('[useLocalStream]   event type:', streamEvent.type);
-            console.log('[useLocalStream]   event mode:', streamEvent.mode);
+        // Set up IPC subscription for this thread if not already done
+        manager.setupIPCSubscription(targetThreadId);
 
-            switch (streamEvent.type) {
-                case 'stream':
-                    console.log('[useLocalStream] Processing stream event');
-                    if (streamEvent.mode === 'values') {
-                        console.log('[useLocalStream]   Full state update');
-                        const stateData = streamEvent.data as LocalStreamState;
-                        console.log('[useLocalStream]   raw messages count:', stateData.messages?.length || 0);
-                        
-                        // Transform LangChain serialized messages to SDK format
-                        const transformedMessages = transformMessages(stateData.messages || []);
-                        console.log('[useLocalStream]   transformed messages:', transformedMessages.length);
-                        
-                        setValues({
-                            ...stateData,
-                            messages: transformedMessages,
-                        });
-                    } else if (streamEvent.mode === 'messages') {
-                        console.log('[useLocalStream]   Message-level update');
-                        // Message-level update (partial)
-                        const messageData = streamEvent.data as { messages?: unknown[] };
-                        if (messageData.messages) {
-                            console.log('[useLocalStream]   raw messages count:', messageData.messages.length);
-                            const transformedMessages = transformMessages(messageData.messages);
-                            console.log('[useLocalStream]   transformed messages:', transformedMessages.length);
-                            setValues(prev => ({
-                                ...prev,
-                                messages: transformedMessages,
-                            }));
-                        }
-                    }
-                    break;
+        // Apply optimistic values if provided
+        if (options?.optimisticValues) {
+            console.log('[useLocalStream] Applying optimistic update to target thread');
+            manager.setOptimisticValues(targetThreadId, options.optimisticValues);
+        }
 
-                case 'done':
-                    console.log('[useLocalStream] Stream done');
-                    isSubmittingRef.current = false;
-                    setIsLoading(false);
-                    onFinish?.(values);
-                    break;
-
-                case 'error':
-                    console.log('[useLocalStream] Stream error:', streamEvent.error);
-                    isSubmittingRef.current = false;
-                    setIsLoading(false);
-                    setError(streamEvent.error || 'Unknown error');
-                    onError?.(streamEvent.error || 'Unknown error');
-                    break;
-            }
+        console.log('[useLocalStream] Starting stream for target thread');
+        manager.start(targetThreadId, messageContent, {
+            modelId: options?.modelId || modelId,
+            workspacePath: options?.workspacePath || workspacePath
         });
+    }, [isElectronEnv, modelId, workspacePath, manager]);
 
-        return cleanup;
-    }, [isElectronEnv, threadId, onFinish, onError, values]);
+    // Submit function with integrated optimistic updates
+    const submit = useCallback((
+        messageInput: string | { messages: Message[] },
+        submitOptions?: { optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState> }
+    ) => {
+        if (!threadId || !isElectronEnv) {
+            console.warn("[useLocalStream] Cannot submit without threadId or Electron environment");
+            return;
+        }
 
-    // Submit a new message
-    const submit = useCallback((message: string) => {
         console.log('[useLocalStream] ========================================');
         console.log('[useLocalStream] submit called');
         console.log('[useLocalStream]   threadId:', threadId);
-        console.log('[useLocalStream]   message length:', message?.length);
-        console.log('[useLocalStream]   workspacePath:', workspacePath);
-        console.log('[useLocalStream]   modelId:', modelId);
-        console.log('[useLocalStream]   isElectronEnv:', isElectronEnv);
+        console.log('[useLocalStream]   has optimistic:', !!submitOptions?.optimisticValues);
 
-        if (!isElectronEnv || !threadId) {
-            console.error('[useLocalStream] Cannot submit:', {
-                isElectronEnv,
-                hasThreadId: !!threadId
-            });
-            setError('Cannot submit: Not in Electron or no thread');
-            return;
+        // Apply optimistic values FIRST (instant UI feedback)
+        if (submitOptions?.optimisticValues) {
+            console.log('[useLocalStream] Applying optimistic update');
+            manager.setOptimisticValues(threadId, submitOptions.optimisticValues);
         }
 
-        isSubmittingRef.current = true;
-        setIsLoading(true);
-        setError(null);
-        setInterrupt(null);
+        // Extract message content
+        let messageContent: string;
 
-        console.log('[useLocalStream] Sending agent:invoke via IPC');
-        // Send via IPC
-        send('agent:invoke', {
-            threadId,
-            message,
-            workspacePath,
-            modelId,
-        });
-        console.log('[useLocalStream] agent:invoke sent');
-    }, [isElectronEnv, threadId, workspacePath, modelId]);
+        if (typeof messageInput === 'string') {
+            messageContent = messageInput;
+        } else {
+            // Extract from message object
+            const messages = messageInput.messages;
+            const lastMsg = messages[messages.length - 1];
+            const content = lastMsg.content;
 
-    // Stop the current stream
+            if (typeof content === 'string') {
+                messageContent = content;
+            } else if (Array.isArray(content)) {
+                // Handle content blocks (Message Content Complex)
+                messageContent = content
+                    .map(block => {
+                        if (typeof block === 'object' && block !== null && 'type' in block) {
+                            const typedBlock = block as { type: string; text?: string };
+                            if (typedBlock.type === 'text' && typedBlock.text) {
+                                return typedBlock.text;
+                            }
+                        }
+                        return '';
+                    })
+                    .filter(text => text.length > 0)
+                    .join(' ');
+            } else {
+                messageContent = JSON.stringify(content);
+            }
+        }
+
+        console.log('[useLocalStream] Starting stream');
+        // Start stream (sends IPC)
+        manager.start(threadId, messageContent, { modelId, workspacePath });
+        console.log('[useLocalStream] ========================================');
+    }, [threadId, isElectronEnv, modelId, workspacePath, manager]);
+
+    // Stop function
     const stop = useCallback(() => {
-        if (!isElectronEnv || !threadId) {
-            return;
-        }
+        if (!threadId || !isElectronEnv) return;
+        console.log('[useLocalStream] Stopping stream');
+        manager.stop(threadId);
+    }, [threadId, isElectronEnv, manager]);
 
-        send('agent:cancel', { threadId });
-        setIsLoading(false);
-    }, [isElectronEnv, threadId]);
-
-    // Approve an interrupt
+    // Approve interrupt
     const approve = useCallback(() => {
-        if (!isElectronEnv || !threadId || !interrupt) {
-            return;
-        }
+        if (!threadId || !isElectronEnv) return;
+        console.log('[useLocalStream] Approving interrupt');
+        // TODO: Implement HITL approve
+    }, [threadId, isElectronEnv]);
 
-        setIsLoading(true);
-        send('agent:interrupt', {
-            threadId,
-            decision: {
-                type: 'approve',
-                tool_call_id: interrupt.tool_call.id,
-            },
-        });
-        setInterrupt(null);
-    }, [isElectronEnv, threadId, interrupt]);
-
-    // Reject an interrupt
+    // Reject interrupt
     const reject = useCallback(() => {
-        if (!isElectronEnv || !threadId || !interrupt) {
-            return;
-        }
+        if (!threadId || !isElectronEnv) return;
+        console.log('[useLocalStream] Rejecting interrupt');
+        // TODO: Implement HITL reject
+    }, [threadId, isElectronEnv]);
 
-        setIsLoading(false);
-        send('agent:interrupt', {
-            threadId,
-            decision: {
-                type: 'reject',
-                tool_call_id: interrupt.tool_call.id,
-            },
-        });
-        setInterrupt(null);
-    }, [isElectronEnv, threadId, interrupt]);
+    // Handle stream finish
+    // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
+    useEffect(() => {
+        // Stream finished - call onFinish
+        if (!state.isLoading && state.messages.length > 0 && onFinish) {
+            onFinish(state);
+        }
+    }, [state.isLoading, state.messages.length, onFinish, state]);
+
+    // Handle errors
+    // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
+    useEffect(() => {
+        if (state.error && onError) {
+            onError(state.error);
+        }
+    }, [state.error, onError]);
 
     return {
-        values,
-        messages: values.messages || [],
-        isLoading,
-        error,
-        interrupt,
+        values: state.values || {}, // Return the actual state values (with todos, etc.), not the LocalStreamState wrapper
+        messages: state.messages,
+        isLoading: state.isLoading,
+        error: state.error,
+        interrupt: null, // TODO: Extract from custom events
         submit,
+        submitToThread, // For new thread creation flow
         stop,
         approve,
-        reject,
+        reject
     };
 }

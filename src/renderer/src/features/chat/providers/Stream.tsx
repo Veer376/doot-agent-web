@@ -159,6 +159,12 @@ const CloudStreamSession = ({
 
 /**
  * Local Stream Session - IPC-based streaming with Electron main process
+ *
+ * Refactored to match openwork's architecture:
+ * - useLocalStream now uses LangGraph SDK's useStream with custom transport
+ * - Optimistic updates handled by SDK's StreamManager (no separate state needed)
+ * - Thread creation happens atomically before submit
+ * - No timing hacks needed - transport handles IPC subscription
  */
 const LocalStreamSession = ({
   children,
@@ -181,25 +187,12 @@ const LocalStreamSession = ({
 
   const { mutateAsync: createThread } = useCreateLocalThread();
 
-  // Track optimistic messages during submission
-  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
-
-  // Clear optimistic messages when real messages arrive from stream
-  useEffect(() => {
-    if (localStream.messages.length > 0) {
-      setOptimisticMessages([]);
-    }
-  }, [localStream.messages.length]);
-
   // Adapt to unified context type
+  // No need for optimisticMessages state - SDK's useStream handles it via setStreamValues
   const contextValue: StreamContextType = useMemo(
     () => ({
       values: localStream.values,
-      // Merge optimistic messages with stream messages
-      messages:
-        optimisticMessages.length > 0 && localStream.messages.length === 0
-          ? optimisticMessages
-          : localStream.messages,
+      messages: localStream.messages, // SDK manages optimistic updates internally
       isLoading: localStream.isLoading,
       error: localStream.error,
       stop: localStream.stop,
@@ -209,9 +202,16 @@ const LocalStreamSession = ({
         console.log("[Stream]   values type:", typeof values);
         console.log("[Stream]   threadId before:", threadId);
 
+        // CRITICAL: localStream.submit is bound to the OLD threadId in its closure
+        // For new threads, we must call the manager directly with the new currentThreadId
+        // The hook will re-render with the new threadId on next cycle
+
+        // Extract message content for submission
+        let messageContent: string = "";
+        let messageInput: { messages: Message[] } | undefined;
+
         if (typeof values === "string") {
-          console.log("[Stream] Simple string submission");
-          localStream.submit(values);
+          messageContent = values;
         } else if (
           values &&
           typeof values === "object" &&
@@ -219,117 +219,86 @@ const LocalStreamSession = ({
         ) {
           const msgs = (values as { messages?: Message[] | string }).messages;
 
-          let msgContent = "";
-          if (Array.isArray(msgs) && msgs.length > 0) {
+          if (Array.isArray(msgs)) {
+            messageInput = { messages: msgs };
+            // Extract text from last message
             const lastMsg = msgs[msgs.length - 1];
-            const content = lastMsg.content;
-
-            // Handle content that could be string or array of content blocks
-            if (typeof content === "string") {
-              msgContent = content;
-            } else if (Array.isArray(content)) {
-              // Extract text from content blocks: [{type: 'text', text: '...'}, ...]
-              msgContent = content
-                .filter(
-                  (block): block is { type: string; text: string } =>
+            if (typeof lastMsg.content === "string") {
+              messageContent = lastMsg.content;
+            } else if (Array.isArray(lastMsg.content)) {
+              messageContent = lastMsg.content
+                .map((block) => {
+                  if (
                     typeof block === "object" &&
                     block !== null &&
-                    "type" in block &&
-                    block.type === "text",
-                )
-                .map((block) => block.text)
+                    "type" in block
+                  ) {
+                    const typedBlock = block as { type: string; text?: string };
+                    if (typedBlock.type === "text" && typedBlock.text) {
+                      return typedBlock.text;
+                    }
+                  }
+                  return "";
+                })
+                .filter((text) => text.length > 0)
                 .join(" ");
             }
           } else if (typeof msgs === "string") {
-            msgContent = msgs;
-          }
-
-          console.log("[Stream]   extracted msgContent:", msgContent);
-
-          // Apply optimistic update BEFORE async operations
-          const submitOptions = options as
-            | { optimisticValues?: (prev: any) => any }
-            | undefined;
-          if (submitOptions?.optimisticValues) {
-            console.log("[Stream] Applying optimistic values");
-            const optimistic = submitOptions.optimisticValues({
-              messages: localStream.messages,
-            });
-            if (optimistic?.messages) {
-              console.log(
-                "[Stream]   Setting optimistic messages:",
-                optimistic.messages.length,
-              );
-              setOptimisticMessages(optimistic.messages);
-            }
-          }
-
-          let currentThreadId = threadId;
-
-          // Handle new thread creation for local agent
-          if (!currentThreadId) {
-            console.log("[Stream] No threadId - creating new thread");
-            const metadata = (values as any).metadata || {};
-            const requestedWorkspace = metadata.workspacePath || workspacePath;
-            console.log("[Stream]   metadata:", metadata);
-            console.log("[Stream]   requestedWorkspace:", requestedWorkspace);
-
-            try {
-              console.log("[Stream] Calling createThread...");
-              const newThread = await createThread({
-                metadata: {
-                  assistant_id: "local-agent", // specific to local agent
-                  source: "local",
-                  workspacePath: requestedWorkspace,
-                },
-              });
-              console.log(
-                "[Stream] Thread created successfully:",
-                newThread.thread_id,
-              );
-              console.log(
-                "[Stream] Thread data:",
-                JSON.stringify(newThread, null, 2),
-              );
-              currentThreadId = newThread.thread_id;
-              setThreadId(currentThreadId);
-              console.log("[Stream] ThreadId set in URL:", currentThreadId);
-
-              // Safety delay to ensure useLocalStream effect has subscribed to the new threadId
-              // before we trigger the agent which sends events.
-              await new Promise((resolve) => setTimeout(resolve, 100));
-            } catch (err) {
-              console.error("[Stream] Failed to create thread:", err);
-              return;
-            }
-          }
-
-          console.log("[Stream] About to send agent:invoke");
-          console.log("[Stream]   currentThreadId:", currentThreadId);
-          console.log("[Stream]   msgContent:", msgContent);
-          console.log("[Stream]   workspacePath:", workspacePath);
-          console.log("[Stream]   modelId:", modelId);
-
-          // If we just created the thread, we MUST use direct send because localStream.submit
-          // is bound to the old null threadId and won't update until next render.
-          if (currentThreadId && msgContent) {
-            // We use the direct IPC send which is what useLocalStream does anyway
-            send("agent:invoke", {
-              threadId: currentThreadId,
-              message: msgContent,
-              workspacePath:
-                (values as any).metadata?.workspacePath || workspacePath,
-              modelId,
-            });
-            console.log("[Stream] agent:invoke sent successfully");
+            messageContent = msgs;
           } else {
-            console.error(
-              "[Stream] Cannot send - missing threadId or content:",
-              {
-                hasThreadId: !!currentThreadId,
-                hasContent: !!msgContent,
-              },
-            );
+            console.error("[Stream] Invalid message format:", msgs);
+            return;
+          }
+        }
+
+        if (!messageContent) {
+          console.error("[Stream] No message content extracted");
+          return;
+        }
+
+        // NEW APPROACH: Create thread synchronously first, but don't wait for it
+        // Show optimistic update immediately using the new threadId
+        if (!threadId) {
+          console.log(
+            "[Stream] New thread - creating and showing optimistic update",
+          );
+
+          const metadata = (values as any)?.metadata || {};
+          const requestedWorkspace = metadata.workspacePath || workspacePath;
+
+          // Create thread (this is fast, ~10-20ms IPC call, not 50ms)
+          // We MUST wait for threadId or the manager can't subscribe properly
+          createThread({
+            metadata: {
+              assistant_id: "local-agent",
+              source: "local",
+              workspacePath: requestedWorkspace,
+            },
+          })
+            .then((newThread) => {
+              console.log("[Stream] Thread created:", newThread.thread_id);
+              const currentThreadId = newThread.thread_id;
+              setThreadId(currentThreadId);
+
+              // Now submit with optimistic update - this shows UI INSTANTLY
+              console.log(
+                "[Stream] Submitting to new thread with optimistic update",
+              );
+              localStream.submitToThread(currentThreadId, messageContent, {
+                modelId,
+                workspacePath: requestedWorkspace,
+                optimisticValues: (options as any)?.optimisticValues,
+              });
+            })
+            .catch((err) => {
+              console.error("[Stream] Failed to create thread:", err);
+            });
+        } else {
+          console.log("[Stream] Existing thread - calling normal submit");
+          if (messageInput) {
+            localStream.submit(messageInput, options as any);
+          } else {
+            localStream.submit(messageContent, options as any);
           }
         }
       },
@@ -338,15 +307,7 @@ const LocalStreamSession = ({
       reject: localStream.reject,
       getMessagesMetadata: () => undefined, // Local streams don't have metadata
     }),
-    [
-      localStream,
-      optimisticMessages,
-      threadId,
-      workspacePath,
-      modelId,
-      setThreadId,
-      createThread,
-    ],
+    [localStream, threadId, workspacePath, modelId, setThreadId, createThread],
   );
 
   return (

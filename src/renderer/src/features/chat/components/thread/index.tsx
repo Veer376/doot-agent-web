@@ -6,6 +6,7 @@ import React, {
   useRef,
   useImperativeHandle,
   forwardRef,
+  Component,
 } from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/features/chat/providers/Stream";
@@ -51,6 +52,53 @@ import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
 import { AVAILABLE_MODELS, type Model } from "@/types/model";
 import { PromptGallery } from "@/components/ui/prompt-gallery";
+
+// Error Boundary for Chat Components
+class ChatErrorBoundary extends Component<
+  { children: ReactNode; context?: string },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode; context?: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(
+      `[ChatErrorBoundary${this.props.context ? ` - ${this.props.context}` : ""}] Error caught:`,
+      error,
+      errorInfo
+    );
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Alert variant="destructive">
+          <AlertCircleIconHuge className="size-4" />
+          <AlertTitle>
+            Component Error {this.props.context && `(${this.props.context})`}
+          </AlertTitle>
+          <AlertDescription>
+            <p>{this.state.error?.message || "An unexpected error occurred"}</p>
+            <details className="mt-2 text-xs opacity-70">
+              <summary className="cursor-pointer">Stack trace</summary>
+              <pre className="mt-1 overflow-auto whitespace-pre-wrap">
+                {this.state.error?.stack}
+              </pre>
+            </details>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -651,30 +699,36 @@ export function Thread() {
                         turn.lastHumanIndex === lastHumanMessageIndex;
 
                       return (
-                        <AITurn
+                        <ChatErrorBoundary
                           key={`ai-turn-${turn.startIndex}`}
-                          turnMessages={turn.messages}
-                          lastHumanIndex={turn.lastHumanIndex}
-                          allMessages={messages}
-                          isLoading={turnIsLoading}
-                          handleRegenerate={handleRegenerate}
-                        />
+                          context={`AITurn-${turn.startIndex}`}
+                        >
+                          <AITurn
+                            turnMessages={turn.messages}
+                            lastHumanIndex={turn.lastHumanIndex}
+                            allMessages={messages}
+                            isLoading={turnIsLoading}
+                            handleRegenerate={handleRegenerate}
+                          />
+                        </ChatErrorBoundary>
                       );
                     }
                   })}
                   {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
                       We need to render it outside of the messages list, since there are no messages to render */}
                   {hasNoAIOrToolMessages && !!stream.interrupt && (
-                    <AITurn
-                      key="interrupt-ai-turn"
-                      turnMessages={[]}
-                      lastHumanIndex={
-                        messages.length > 0 ? messages.length - 1 : -1
-                      }
-                      allMessages={messages}
-                      isLoading={isLoading}
-                      handleRegenerate={handleRegenerate}
-                    />
+                    <ChatErrorBoundary context="InterruptAITurn">
+                      <AITurn
+                        key="interrupt-ai-turn"
+                        turnMessages={[]}
+                        lastHumanIndex={
+                          messages.length > 0 ? messages.length - 1 : -1
+                        }
+                        allMessages={messages}
+                        isLoading={isLoading}
+                        handleRegenerate={handleRegenerate}
+                      />
+                    </ChatErrorBoundary>
                   )}
                   {/* Browser Snapshot moved to PreviewPanel above Composer */}
                   {isLoading && (
@@ -713,7 +767,9 @@ export function Thread() {
                 <ScrollToBottom className="absolute bottom-full right-4 mb-4" />
 
                 {/* Browser Preview Panel - Floating above Composer */}
-                <PreviewPanel />
+                <ChatErrorBoundary context="PreviewPanel">
+                  <PreviewPanel />
+                </ChatErrorBoundary>
 
                 {/* Workspace Selection - Only for Local Agent */}
                 {agentId === "local-agent" && (

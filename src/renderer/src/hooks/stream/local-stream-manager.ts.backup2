@@ -1,0 +1,133 @@
+/**
+ * Local Stream Manager for Electron-based LangGraph streaming.
+ * Based on openwork's ThreadProvider pattern - uses useSyncExternalStore with refs.
+ * 
+ * This manager provides a single source of truth for local stream state,
+ * matching the architecture of the cloud StreamManager but using Electron IPC.
+ */
+
+import { useStream } from "@langchain/langgraph-sdk/react";
+import { ElectronIPCTransport } from "./electron-transport";
+import type { Message } from "@langchain/langgraph-sdk";
+
+/**
+ * Stream instance type from LangGraph SDK
+ */
+type StreamInstance = ReturnType<typeof useStream>;
+
+/**
+ * Stream data that components subscribe to
+ */
+export interface LocalStreamData {
+    messages: Message[];
+    isLoading: boolean;
+    stream: StreamInstance | null;
+    values: Record<string, unknown> | null;
+}
+
+/**
+ * Listener callback for stream updates
+ */
+type Listener = () => void;
+
+/**
+ * Default stream data
+ */
+const defaultStreamData: LocalStreamData = {
+    messages: [],
+    isLoading: false,
+    stream: null,
+    values: null
+};
+
+/**
+ * LocalStreamManager manages stream state using useSyncExternalStore pattern.
+ * 
+ * Architecture (based on openwork):
+ * 1. Stream data stored in refs (not React state) - avoids re-render cascades
+ * 2. Subscribers notified via useSyncExternalStore pattern
+ * 3. useStream from LangGraph SDK handles actual streaming with custom transport
+ * 4. Thread-specific stream holders update the manager when data changes
+ * 
+ * This ensures:
+ * - Single source of truth for stream state
+ * - Synchronous updates (notify() triggers immediate re-render)
+ * - No React Query timing issues
+ * - Perfect parity with cloud architecture
+ */
+export class LocalStreamManager {
+    // Stream data store (not React state - we use subscriptions)
+    private streamDataRef = new Map<string, LocalStreamData>();
+    
+    // Subscribers per thread
+    private subscribersRef = new Map<string, Set<Listener>>();
+
+    /**
+     * Subscribe to stream updates for a specific thread.
+     * Returns unsubscribe function.
+     */
+    subscribe(threadId: string, callback: Listener): () => void {
+        if (!this.subscribersRef.has(threadId)) {
+            this.subscribersRef.set(threadId, new Set());
+        }
+        
+        this.subscribersRef.get(threadId)!.add(callback);
+
+        return () => {
+            this.subscribersRef.get(threadId)?.delete(callback);
+        };
+    }
+
+    /**
+     * Get current stream data snapshot for a thread.
+     */
+    getSnapshot(threadId: string): LocalStreamData {
+        return this.streamDataRef.get(threadId) || defaultStreamData;
+    }
+
+    /**
+     * Update stream data and notify subscribers.
+     */
+    setStreamData(threadId: string, data: LocalStreamData): void {
+        this.streamDataRef.set(threadId, data);
+        this.notifySubscribers(threadId);
+    }
+
+    /**
+     * Notify all subscribers for a thread.
+     */
+    private notifySubscribers(threadId: string): void {
+        const subscribers = this.subscribersRef.get(threadId);
+        if (subscribers) {
+            subscribers.forEach(callback => callback());
+        }
+    }
+
+    /**
+     * Clean up stream data for a thread.
+     */
+    cleanup(threadId: string): void {
+        this.streamDataRef.delete(threadId);
+        this.subscribersRef.delete(threadId);
+    }
+
+    /**
+     * Get the stream instance for a thread.
+     */
+    getStream(threadId: string): StreamInstance | null {
+        return this.streamDataRef.get(threadId)?.stream || null;
+    }
+}
+
+/**
+ * Create a transport instance for Electron IPC.
+ * Singleton pattern to reuse across hooks.
+ */
+let transport: ElectronIPCTransport | null = null;
+
+export function getElectronTransport(): ElectronIPCTransport {
+    if (!transport) {
+        transport = new ElectronIPCTransport();
+    }
+    return transport;
+}

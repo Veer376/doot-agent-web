@@ -181,15 +181,29 @@ const LocalStreamSession = ({
 
   const { mutateAsync: createThread } = useCreateLocalThread();
 
+  // Track optimistic messages during submission
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
+
+  // Clear optimistic messages when real messages arrive from stream
+  useEffect(() => {
+    if (localStream.messages.length > 0) {
+      setOptimisticMessages([]);
+    }
+  }, [localStream.messages.length]);
+
   // Adapt to unified context type
   const contextValue: StreamContextType = useMemo(
     () => ({
       values: localStream.values,
-      messages: localStream.messages,
+      // Merge optimistic messages with stream messages
+      messages:
+        optimisticMessages.length > 0 && localStream.messages.length === 0
+          ? optimisticMessages
+          : localStream.messages,
       isLoading: localStream.isLoading,
       error: localStream.error,
       stop: localStream.stop,
-      submit: async (values: unknown) => {
+      submit: async (values: unknown, options?: unknown) => {
         console.log("[Stream] ========================================");
         console.log("[Stream] LocalStreamSession submit called");
         console.log("[Stream]   values type:", typeof values);
@@ -231,6 +245,24 @@ const LocalStreamSession = ({
           }
 
           console.log("[Stream]   extracted msgContent:", msgContent);
+
+          // Apply optimistic update BEFORE async operations
+          const submitOptions = options as
+            | { optimisticValues?: (prev: any) => any }
+            | undefined;
+          if (submitOptions?.optimisticValues) {
+            console.log("[Stream] Applying optimistic values");
+            const optimistic = submitOptions.optimisticValues({
+              messages: localStream.messages,
+            });
+            if (optimistic?.messages) {
+              console.log(
+                "[Stream]   Setting optimistic messages:",
+                optimistic.messages.length,
+              );
+              setOptimisticMessages(optimistic.messages);
+            }
+          }
 
           let currentThreadId = threadId;
 
@@ -306,7 +338,15 @@ const LocalStreamSession = ({
       reject: localStream.reject,
       getMessagesMetadata: () => undefined, // Local streams don't have metadata
     }),
-    [localStream],
+    [
+      localStream,
+      optimisticMessages,
+      threadId,
+      workspacePath,
+      modelId,
+      setThreadId,
+      createThread,
+    ],
   );
 
   return (

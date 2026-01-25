@@ -135,52 +135,80 @@ function extractContent(
 }
 
 /**
- * Transform LangChain serialized messages to LangGraph SDK Message format
+ * Transform messages to LangGraph SDK Message format
+ * Handles three formats:
+ * 1. SDK format (already correct): { type: 'human' | 'ai' | 'tool', content, id, ... }
+ * 2. LangChain serialized: { lc: 1, id: [...], kwargs: {...} }
+ * 3. Legacy role-based: { role: 'user' | 'assistant' | 'tool', content, ... }
  */
 function transformMessages(serializedMessages: unknown[]): Message[] {
     return serializedMessages
         .map((msg): Message | null => {
-            const serialized = msg as SerializedMessage;
-            const kwargs = serialized?.kwargs || {};
-            const classId = Array.isArray(serialized?.id) ? serialized.id : [];
-            const className = classId[classId.length - 1] || "";
+            const raw = msg as any;
 
-            // Determine message type from class name
-            let type: "human" | "ai" | "tool" | "custom" = "custom";
-            if (className.includes("Human")) {
-                type = "human";
-            } else if (className.includes("AI")) {
-                type = "ai";
-            } else if (className.includes("Tool")) {
-                type = "tool";
+            // Format 1: SDK format (already correct) - just pass through
+            if (raw.type && ['human', 'ai', 'tool', 'system', 'function', 'remove'].includes(raw.type)) {
+                return {
+                    id: raw.id || crypto.randomUUID(),
+                    type: raw.type,
+                    content: extractContent(raw.content),
+                    ...(raw.tool_calls && { tool_calls: raw.tool_calls }),
+                    ...(raw.tool_call_id && { tool_call_id: raw.tool_call_id }),
+                    ...(raw.name && { name: raw.name }),
+                } as Message;
             }
 
-            const content = extractContent(kwargs.content);
-            const id = kwargs.id || crypto.randomUUID();
+            // Format 2: LangChain serialized format
+            if (raw.lc !== undefined && Array.isArray(raw.id)) {
+                const kwargs = raw.kwargs || {};
+                const classId = raw.id;
+                const className = classId[classId.length - 1] || "";
 
-            // Build message object
-            const message: Message = {
-                id,
-                type,
-                content,
-            };
+                // Determine message type from class name
+                let type: "human" | "ai" | "tool" | "custom" = "custom";
+                if (className.includes("Human")) {
+                    type = "human";
+                } else if (className.includes("AI")) {
+                    type = "ai";
+                } else if (className.includes("Tool")) {
+                    type = "tool";
+                }
 
-            // Include tool_calls if present
-            if (kwargs.tool_calls) {
-                (message as any).tool_calls = kwargs.tool_calls;
+                const content = extractContent(kwargs.content);
+                const id = kwargs.id || crypto.randomUUID();
+
+                return {
+                    id,
+                    type,
+                    content,
+                    ...(kwargs.tool_calls && { tool_calls: kwargs.tool_calls }),
+                    ...(kwargs.tool_call_id && { tool_call_id: kwargs.tool_call_id }),
+                    ...(kwargs.name && { name: kwargs.name }),
+                } as Message;
             }
 
-            // Include tool_call_id for tool messages
-            if (kwargs.tool_call_id) {
-                (message as any).tool_call_id = kwargs.tool_call_id;
+            // Format 3: Legacy role-based format
+            if (raw.role) {
+                const typeMap: Record<string, Message['type']> = {
+                    'user': 'human',
+                    'assistant': 'ai',
+                    'tool': 'tool',
+                    'system': 'system',
+                };
+
+                return {
+                    id: raw.id || crypto.randomUUID(),
+                    type: typeMap[raw.role] || 'human',
+                    content: extractContent(raw.content),
+                    ...(raw.tool_calls && { tool_calls: raw.tool_calls }),
+                    ...(raw.tool_call_id && { tool_call_id: raw.tool_call_id }),
+                    ...(raw.name && { name: raw.name }),
+                } as Message;
             }
 
-            // Include name if present
-            if (kwargs.name) {
-                (message as any).name = kwargs.name;
-            }
-
-            return message;
+            // Unknown format - log and skip
+            console.warn('[transformMessages] Unknown message format:', raw);
+            return null;
         })
         .filter((msg): msg is Message => msg !== null);
 }
@@ -203,6 +231,9 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
     // Track the current stream channel
     const channelRef = useRef<string>(`agent:stream:${threadId}`);
     
+    // Track active submission to prevent clearing messages
+    const isSubmittingRef = useRef(false);
+
     // Fetch existing thread state to load previous messages
     const { data: threadState } = useLocalThreadState(threadId);
 
@@ -223,8 +254,12 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
             setValues({ messages: [] });
             return;
         }
-        
-        if (threadState?.values?.messages) {
+                // Don't overwrite state if we're actively submitting
+        if (isSubmittingRef.current) {
+            console.log('[useLocalStream] Skipping state load - submission in progress');
+            return;
+        }
+                if (threadState?.values?.messages) {
             console.log('[useLocalStream] Loading existing messages from thread state');
             console.log('[useLocalStream]   raw messages count:', threadState.values.messages.length);
             
@@ -293,12 +328,14 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
 
                 case 'done':
                     console.log('[useLocalStream] Stream done');
+                    isSubmittingRef.current = false;
                     setIsLoading(false);
                     onFinish?.(values);
                     break;
 
                 case 'error':
                     console.log('[useLocalStream] Stream error:', streamEvent.error);
+                    isSubmittingRef.current = false;
                     setIsLoading(false);
                     setError(streamEvent.error || 'Unknown error');
                     onError?.(streamEvent.error || 'Unknown error');
@@ -328,6 +365,7 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
             return;
         }
 
+        isSubmittingRef.current = true;
         setIsLoading(true);
         setError(null);
         setInterrupt(null);

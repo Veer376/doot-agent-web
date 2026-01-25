@@ -12,6 +12,41 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, readdir
 import { v4 as uuid } from 'uuid';
 
 // ============================================================================
+// LangGraph SDK Serializer
+// ============================================================================
+
+/**
+ * Serialize state data to LangGraph SDK format.
+ * 
+ * This mirrors what the LangGraph API server does in serde.mts:
+ * - LangChain messages have a toDict() method that returns { type, data }
+ * - We flatten this to { ...data, type } which is the SDK format
+ * 
+ * This ensures messages are in the correct format for the frontend,
+ * matching what useStream receives from the cloud LangGraph API.
+ */
+function serializeToSDKFormat(obj: unknown): unknown {
+    return JSON.parse(JSON.stringify(obj, function(key, value) {
+        const rawValue = this[key];
+        
+        // Check if this is a LangChain message with toDict() method
+        if (
+            rawValue != null &&
+            typeof rawValue === 'object' &&
+            'toDict' in rawValue &&
+            typeof rawValue.toDict === 'function'
+        ) {
+            // toDict() returns { type: 'human'/'ai'/'tool', data: { content, id, ... } }
+            const { type, data } = rawValue.toDict();
+            // Flatten to SDK format: { type, content, id, ... }
+            return { ...data, type };
+        }
+        
+        return value;
+    }));
+}
+
+// ============================================================================
 // Storage Paths
 // ============================================================================
 
@@ -226,23 +261,22 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
     });
 
     ipcMain.handle('threads:getState', async (_event, threadId: string) => {
-        console.log('[IPC] threads:getState called with threadId:', threadId);
+        console.log('[IPC] threads:getState called for threadId:', threadId);
         const thread = getThread(threadId);
         if (!thread) {
-            console.log('[IPC] threads:getState - thread not found');
+            console.log('[IPC]   Thread not found');
             return null;
         }
 
-        console.log('[IPC] threads:getState returning state with', thread.thread_values?.messages?.length || 0, 'messages');
-        console.log('[DEBUG2] ============================================');
-        console.log('[DEBUG2] Thread state retrieved');
-        console.log('[DEBUG2] Thread ID:', threadId);
-        console.log('[DEBUG2] Messages count:', thread.thread_values?.messages?.length || 0);
-        if (thread.thread_values?.messages && Array.isArray(thread.thread_values.messages)) {
-            console.log('[DEBUG2] Message types:', thread.thread_values.messages.map((m: any) => m.type).join(', '));
+        const messagesCount = thread.thread_values?.messages?.length || 0;
+        console.log('[IPC]   Thread found, messages:', messagesCount);
+        
+        // Debug: Log message format (should be SDK format now)
+        if (messagesCount > 0) {
+            const firstMsg = thread.thread_values.messages[0];
+            console.log('[IPC]   First message type:', firstMsg?.type || 'unknown');
         }
-        console.log('[DEBUG2] Thread status:', thread.status);
-        console.log('[DEBUG2] ============================================');
+        
         return {
             values: thread.thread_values || { messages: [] },
             next: [],
@@ -353,20 +387,7 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
         workspacePath?: string;
         modelId?: string;
     }) => {
-        console.log('[IPC] ========================================');
-        console.log('[IPC] agent:invoke received');
-        console.log('[IPC]   threadId:', threadId);
-        console.log('[IPC]   message length:', message?.length || 0);
-        console.log('[IPC]   message preview:', message?.substring(0, 100));
-        console.log('[IPC]   workspacePath:', workspacePath);
-        console.log('[IPC]   modelId:', modelId);
-        console.log('[IPC] ========================================');
-        console.log('[DEBUG2] ============================================');
-        console.log('[DEBUG2] Human message received');
-        console.log('[DEBUG2] Thread ID:', threadId);
-        console.log('[DEBUG2] Message:', message);
-        console.log('[DEBUG2] ============================================');
-
+        console.log('[IPC] agent:invoke called with threadId:', threadId, 'with message', message);
         const channel = `agent:stream:${threadId}`;
         const window = BrowserWindow.fromWebContents(event.sender);
 
@@ -411,19 +432,22 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 // Stream the agent response
                 const config = { configurable: { thread_id: threadId } };
                 let finalState: unknown;
-                let eventCount = 0;
 
                 console.log('[IPC] Starting agent stream...');
                 for await (const event of await agent.stream(
                     { messages: [{ role: 'user', content: message }] },
                     { ...config, streamMode: ['messages', 'values'] }
                 )) {
-                    eventCount++;
-                    console.log('[IPC] Received stream event #', eventCount);
                     
+                    // Check if stream was cancelled
                     if (abortController.signal.aborted) {
-                        console.log('[IPC] Stream aborted');
-                        break;
+                        console.log('[IPC] Stream aborted by user');
+                        updateThread(threadId, { status: 'idle' });
+                        window.webContents.send(channel, { 
+                            type: 'done',
+                            cancelled: true 
+                        });
+                        return;
                     }
 
                     // LangGraph stream events are arrays: [mode, data]
@@ -450,21 +474,15 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                         console.log('[IPC]   messages count:', (data as any).messages?.length);
                         
                         try {
-                            const serializedData = JSON.parse(JSON.stringify(data));
+                            // Use SDK serializer - converts LangChain messages to SDK format
+                            // This matches what LangGraph API does, so frontend receives same format as useStream
+                            const serializedData = serializeToSDKFormat(data);
                             
-                            // Log AI message if present
+                            // Debug log
                             const messages = (serializedData as any).messages;
-                            if (messages && Array.isArray(messages)) {
-                                const lastMessage = messages[messages.length - 1];
-                                if (lastMessage && lastMessage.type === 'ai') {
-                                    console.log('[DEBUG2] ============================================');
-                                    console.log('[DEBUG2] AI message received');
-                                    console.log('[DEBUG2] Thread ID:', threadId);
-                                    console.log('[DEBUG2] Message type:', lastMessage.type);
-                                    console.log('[DEBUG2] Message content:', typeof lastMessage.content === 'string' ? lastMessage.content : JSON.stringify(lastMessage.content).substring(0, 200));
-                                    console.log('[DEBUG2] Total messages in thread:', messages.length);
-                                    console.log('[DEBUG2] ============================================');
-                                }
+                            if (messages && Array.isArray(messages) && messages.length > 0) {
+                                console.log('[IPC]   First message type:', messages[0]?.type);
+                                console.log('[IPC]   Message types:', messages.map((m: any) => m.type).join(', '));
                             }
                             
                             window.webContents.send(channel, {
@@ -482,7 +500,8 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                         console.log('[IPC]   messages count:', data.length);
                         
                         try {
-                            const serializedMessages = JSON.parse(JSON.stringify(data));
+                            // Use SDK serializer for messages too
+                            const serializedMessages = serializeToSDKFormat(data);
                             window.webContents.send(channel, {
                                 type: 'stream',
                                 mode: 'messages',
@@ -495,18 +514,20 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                     }
                 }
 
-                console.log('[IPC] Agent stream completed. Total events:', eventCount);
+                console.log('[IPC] Agent stream completed.');
                 
-                // Save final state to thread
+                // Save final state to thread in SDK format
                 if (finalState) {
-                    console.log('[DEBUG2] ============================================');
-                    console.log('[DEBUG2] Saving final state to thread');
-                    console.log('[DEBUG2] Thread ID:', threadId);
-                    console.log('[DEBUG2] Messages in final state:', (finalState as any).messages?.length || 0);
-                    console.log('[DEBUG2] ============================================');
+                    console.log('[IPC] Saving final state to thread');
+                    console.log('[IPC]   Thread ID:', threadId);
+                    console.log('[IPC]   Messages count:', (finalState as any).messages?.length || 0);
+                    
+                    // Serialize to SDK format before saving
+                    // This ensures stored data is in the same format as streamed data
+                    const serializedState = serializeToSDKFormat(finalState);
                     
                     updateThread(threadId, { 
-                        thread_values: finalState as any 
+                        thread_values: serializedState as any 
                     });
                     console.log('[IPC] Final state saved to thread');
                 } else {
@@ -533,11 +554,12 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
 Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}`;
 
                 console.log('[IPC] Sending placeholder response to channel:', channel);
-                // Send placeholder response (serialize dates)
+                // Send placeholder response using LangGraph SDK message format
+                // Uses 'type' field (human/ai/tool) instead of 'role' to match SDK expectations
                 const placeholderData = {
                     messages: [
-                        { id: uuid(), role: 'user', content: message, created_at: new Date().toISOString() },
-                        { id: uuid(), role: 'assistant', content: response, created_at: new Date().toISOString() },
+                        { id: uuid(), type: 'human', content: message },
+                        { id: uuid(), type: 'ai', content: response },
                     ],
                 };
                 console.log('[DEBUG2] ============================================');
@@ -601,11 +623,29 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
         }
     });
 
-    ipcMain.handle('agent:cancel', async (_event, { threadId }: { threadId: string }) => {
+    // Handle cancel via both 'on' (send) and 'handle' (invoke)
+    ipcMain.on('agent:cancel', async (_event, { threadId }: { threadId: string }) => {
+        console.log('[IPC] agent:cancel received via send for threadId:', threadId);
         const controller = activeRuns.get(threadId);
         if (controller) {
+            console.log('[IPC] Aborting active run for threadId:', threadId);
             controller.abort();
             activeRuns.delete(threadId);
+        } else {
+            console.log('[IPC] No active run found for threadId:', threadId);
+        }
+        updateThread(threadId, { status: 'idle' });
+    });
+
+    ipcMain.handle('agent:cancel', async (_event, { threadId }: { threadId: string }) => {
+        console.log('[IPC] agent:cancel received via handle for threadId:', threadId);
+        const controller = activeRuns.get(threadId);
+        if (controller) {
+            console.log('[IPC] Aborting active run for threadId:', threadId);
+            controller.abort();
+            activeRuns.delete(threadId);
+        } else {
+            console.log('[IPC] No active run found for threadId:', threadId);
         }
         updateThread(threadId, { status: 'idle' });
         return { success: true };

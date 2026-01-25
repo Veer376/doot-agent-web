@@ -121,6 +121,10 @@ html {
   --radius3: 1.7rem;
   /* Radius 3 for prominent elements (composer, primary actions) */
 
+  /* Composer \u0026 Footer Layout */
+  --composer-max-width: 42rem;
+  /* 672px - Consistent max width for composer, preview panel, and footer elements */
+
   /* Sidebar (HSL format for compatibility) */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;

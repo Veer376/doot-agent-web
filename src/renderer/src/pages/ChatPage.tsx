@@ -60,7 +60,7 @@ export default function ChatPage(): React.ReactNode {
   return (
     <>
       <Toaster />
-      {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints) */}
+      {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints). We will create a separate component for it - ChatHeader - which will have the thread, workspace.*/}
       <header className="flex shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear">
         {/* Mobile-only: sidebar toggle (only show when authenticated) */}
         {isAuthenticated && (

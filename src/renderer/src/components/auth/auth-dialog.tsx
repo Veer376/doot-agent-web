@@ -5,6 +5,7 @@ import { SignInForm } from "./signin-form";
 import { SignUpForm } from "./signup-form";
 import { ForgotPasswordForm } from "./forgot-password-form";
 import { useState, useEffect } from "react";
+import { useAuthSession } from "@/providers/Auth";
 
 export type AuthMode = "signin" | "signup" | "forgot-password";
 
@@ -24,11 +25,23 @@ export function AuthDialog({
   onClearPendingMessage,
 }: AuthDialogProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const { isAuthenticated } = useAuthSession();
 
   // Sync internal mode when prop changes
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
+
+  // Auto-close dialog when user successfully authenticates
+  useEffect(() => {
+    if (isAuthenticated && open) {
+      // Small delay to allow UI to update before closing
+      const timer = setTimeout(() => {
+        onOpenChange(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, open, onOpenChange]);
 
   const handleSuccess = () => {
     // Close dialog after successful auth with delay to allow session to update

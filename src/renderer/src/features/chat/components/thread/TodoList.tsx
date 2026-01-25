@@ -3,11 +3,16 @@
 /**
  * TodoList Component
  * 
- * Displays a list of todos from the agent state.
- * Shows todo status with appropriate icons and styling.
+ * Displays a list of todos from the agent state with expandable functionality.
+ * - Default: Shows only completed task + next task (2 tasks max, single line)
+ * - Hover: Visual hint that it can be expanded (arrow animation)
+ * - Click: Toggles expanded state
+ * - Expanded: Shows all tasks with smooth height transition and scrolling
  */
 
 import { cn } from "@/lib/utils";
+import { Clock01Icon, Tick02Icon, ArrowDown01Icon } from "hugeicons-react";
+import { useState } from "react";
 
 /**
  * Todo item from agent state
@@ -29,14 +34,12 @@ function StatusIcon({ status }: { status: Todo['status'] }) {
       );
     case 'in_progress':
       return (
-        <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <Clock01Icon className="h-4 w-4 text-primary" />
       );
     case 'completed':
       return (
         <div className="h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
-          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
+          <Tick02Icon className="h-3 w-3 text-white" strokeWidth={2.5} />
         </div>
       );
     case 'cancelled':
@@ -69,49 +72,150 @@ function getStatusStyles(status: Todo['status']): string {
 interface TodoListProps {
   todos: Todo[];
   className?: string;
-  maxVisible?: number;
+  /**
+   * Enable expandable mode (default: false for backward compatibility)
+   */
+  expandable?: boolean;
 }
 
 /**
- * TodoList component for displaying agent todos in the PreviewPanel
+ * Get the tasks to show in collapsed mode (only in-progress task)
  */
-export function TodoList({ todos, className, maxVisible = 5 }: TodoListProps) {
+function getCollapsedTasks(todos: Todo[]): Todo[] {
+  const inProgressTask = todos.find(t => t.status === 'in_progress');
+  
+  return inProgressTask ? [inProgressTask] : [];
+}
+
+/**
+ * TodoList component for displaying agent todos
+ */
+export function TodoList({ todos, className, expandable = false }: TodoListProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
   if (!todos || todos.length === 0) {
     return null;
   }
 
-  const visibleTodos = maxVisible ? todos.slice(0, maxVisible) : todos;
-  const hiddenCount = todos.length - visibleTodos.length;
+  // Determine which tasks to show
+  const collapsedTasks = getCollapsedTasks(todos);
+  const visibleTodos = expandable && isExpanded ? todos : (expandable ? collapsedTasks : todos);
+  const hasMoreTasks = todos.length > visibleTodos.length;
+  const canToggle = todos.length > collapsedTasks.length;
+
+  const handleClick = () => {
+    if (expandable) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (expandable) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (expandable) {
+      setIsHovered(false);
+    }
+  };
 
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Tasks
-        </h4>
-        <span className="text-xs text-muted-foreground">
-          {todos.filter(t => t.status === 'completed').length}/{todos.length}
-        </span>
+    <div 
+      className={cn("relative", className)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+    >
+      {/* Header */}
+      <div className="relative flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Tasks
+          </h4>
+          <span className="text-xs text-muted-foreground">
+            {todos.filter(t => t.status === 'completed').length}/{todos.length}
+          </span>
+        </div>
+        
+        {/* Expand/Collapse Indicator - Top right corner */}
+        {expandable && canToggle && (
+          <div
+            className={cn(
+              "transition-opacity duration-200",
+              isHovered ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <ArrowDown01Icon 
+              className={cn(
+                "h-3.5 w-3.5 text-muted-foreground transition-transform duration-300",
+                !isExpanded && "rotate-180"
+              )}
+            />
+          </div>
+        )}
       </div>
       
-      <ul className="space-y-1">
-        {visibleTodos.map((todo) => (
-          <li key={todo.id} className="flex items-start gap-2 text-sm">
-            <span className="mt-0.5 flex-shrink-0">
-              <StatusIcon status={todo.status} />
-            </span>
-            <span className={cn("flex-1", getStatusStyles(todo.status))}>
-              {todo.content}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {/* Task List Container with smooth height transition */}
+      <div 
+        className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out relative",
+        )}
+        style={{
+          maxHeight: isExpanded ? `${todos.length * 32 + 20}px` : `${visibleTodos.length * 32}px`,
+        }}
+      >
+        {/* Top gradient fade - only when expanded */}
+        {isExpanded && (
+          <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-4 bg-gradient-to-b from-card to-transparent" />
+        )}
 
-      {hiddenCount > 0 && (
-        <p className="text-xs text-muted-foreground">
-          +{hiddenCount} more tasks
+        <ul 
+          className={cn(
+            "space-y-1",
+            isExpanded && "overflow-y-auto pr-1 py-2",
+          )}
+          style={{
+            maxHeight: isExpanded ? '120px' : 'none',
+          }}
+        >
+          {visibleTodos.map((todo) => (
+            <li 
+              key={todo.id} 
+              className="flex items-start gap-2 text-sm"
+            >
+              <span className="mt-0.5 flex-shrink-0">
+                <StatusIcon status={todo.status} />
+              </span>
+              <span 
+                className={cn(
+                  "flex-1",
+                  getStatusStyles(todo.status),
+                  // Single line truncation when collapsed
+                  !isExpanded && expandable && "truncate line-clamp-1"
+                )}
+                title={!isExpanded ? todo.content : undefined}
+              >
+                {todo.content}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        {/* Bottom gradient fade - only when expanded */}
+        {isExpanded && (
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-4 bg-gradient-to-t from-card to-transparent" />
+        )}
+      </div>
+
+      {/* Hidden tasks indicator (only in collapsed state) */}
+      {/* {expandable && !isExpanded && hasMoreTasks && (
+        <p className="text-xs text-muted-foreground/70 mt-1.5 transition-opacity duration-200">
+          +{todos.length - visibleTodos.length} more tasks
         </p>
-      )}
+      )} */}
     </div>
   );
 }

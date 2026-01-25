@@ -11,7 +11,18 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "preview": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "protocols": [
+      {
+        "name": "Orbit Agent",
+        "schemes": [
+          "orbit-agent"
+        ]
+      }
+    ]
   },
   "dependencies": {
     "@composio/core": "^0.2.4",

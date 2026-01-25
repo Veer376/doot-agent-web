@@ -52,6 +52,7 @@ const ALLOWED_CHANNELS = {
     ],
     receive: [
         'agent:stream:', // Prefix for dynamic channels like agent:stream:threadId
+        'auth:session-update',
     ],
 };
 

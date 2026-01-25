@@ -9,8 +9,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isElectron, invoke } from "@/lib/electron";
-import type { LocalAgentConfig } from "@/lib/agent-source";
-import { transformLocalAgentToAgent } from "@/lib/agent-source";
 import type { Agent } from "@/types/agent";
 
 // Query key factory for local agents
@@ -25,12 +23,24 @@ export const localAgentKeys = {
  * Default local agent configuration (built-in)
  * This represents the deepagents-based local coding agent
  */
-const DEFAULT_LOCAL_AGENT_CONFIG: LocalAgentConfig = {
-    id: 'local-agent',
+const DEFAULT_LOCAL_AGENT: Agent = {
+    assistant_id: 'local-agent',
     name: 'Local Agent',
     description: 'AI coding assistant running locally on your machine',
-    icon: 'robot',
-    modelId: undefined, // Uses default model from settings
+    graph_id: 'browser_agent',
+    config: {
+        recursion_limit: 50,
+    },
+    metadata: {
+        source: 'local',
+        icon: 'robot',
+        is_primary: true,
+        modelId: undefined, // Uses default model from settings
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    version: 1,
+    context: null,
 };
 
 /**
@@ -50,16 +60,15 @@ export function useLocalAgents() {
 
             // Try to fetch agents from IPC
             try {
-                const customAgents = await invoke<LocalAgentConfig[]>('agents:list');
-                // Transform agents from IPC to full Agent objects
-                const agents = customAgents.map(transformLocalAgentToAgent);
+                // IPC now returns full Agent objects directly
+                const agents = await invoke<Agent[]>('agents:list');
                 console.log('[useLocalAgents] Successfully loaded local agents:', agents);
                 return agents;
             } catch (error) {
                 // If IPC fails, return just the default local agent as fallback
                 console.warn('[useLocalAgents] Failed to fetch local agents from IPC:', error);
                 console.log('[useLocalAgents] Returning default local agent as fallback');
-                return [transformLocalAgentToAgent(DEFAULT_LOCAL_AGENT_CONFIG)];
+                return [DEFAULT_LOCAL_AGENT];
             }
         },
         enabled: isElectronEnv,
@@ -102,9 +111,9 @@ export function useCreateLocalAgent() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (config: Omit<LocalAgentConfig, 'id'>): Promise<Agent> => {
-            const agent = await invoke<LocalAgentConfig>('agents:create', config);
-            return transformLocalAgentToAgent(agent);
+        mutationFn: async (config: Partial<Agent>): Promise<Agent> => {
+            const agent = await invoke<Agent>('agents:create', config);
+            return agent;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: localAgentKeys.lists() });
@@ -124,10 +133,10 @@ export function useUpdateLocalAgent() {
             updates,
         }: {
             agentId: string;
-            updates: Partial<LocalAgentConfig>;
+            updates: Partial<Agent>;
         }): Promise<Agent> => {
-            const agent = await invoke<LocalAgentConfig>('agents:update', { agentId, updates });
-            return transformLocalAgentToAgent(agent);
+            const agent = await invoke<Agent>('agents:update', { agentId, updates });
+            return agent;
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: localAgentKeys.detail(variables.agentId) });

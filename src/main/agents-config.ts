@@ -2,11 +2,11 @@
  * Local Agent Configuration
  * 
  * Defines system assistants available in the Electron app.
- * Similar to backend's config.py with system_assistants.
+ * Matches the structure of the Agent interface used in the renderer.
  */
 
-export interface LocalAssistant {
-    id: string;
+export interface LocalAgent {
+    assistant_id: string;
     name: string;
     description: string;
     graph_id: string;
@@ -18,22 +18,25 @@ export interface LocalAssistant {
         source: 'local';
         icon?: string;
         is_primary?: boolean;
+        modelId?: string;
         [key: string]: unknown;
     };
     created_at: string;
     updated_at: string;
+    version: number;
+    context: null;
 }
 
 /**
  * System assistants registry
  * These are loaded at startup and available via IPC
  */
-export const systemAssistants: Record<string, LocalAssistant> = {
+export const systemAssistants: Record<string, LocalAgent> = {
     'local-agent': {
-        id: 'local-agent',
+        assistant_id: 'local-agent',
         name: 'Local Agent',
         description: 'AI coding assistant running locally on your machine',
-        graph_id: 'browser_agent', // Hardcoded for now, can be dynamic later
+        graph_id: 'browser_agent',
         config: {
             recursion_limit: 50,
         },
@@ -41,22 +44,25 @@ export const systemAssistants: Record<string, LocalAssistant> = {
             source: 'local',
             icon: 'robot',
             is_primary: true,
+            modelId: undefined, // Uses default model from settings
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        version: 1,
+        context: null,
     },
 };
 
 /**
  * Get all local assistants
  */
-export function getLocalAssistants(): LocalAssistant[] {
+export function getLocalAssistants(): LocalAgent[] {
     return Object.values(systemAssistants);
 }
 
 /**
  * Get a specific local assistant by id
  */
-export function getLocalAssistant(id: string): LocalAssistant | undefined {
+export function getLocalAssistant(id: string): LocalAgent | undefined {
     return systemAssistants[id];
 }

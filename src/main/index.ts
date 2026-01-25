@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
@@ -173,7 +173,7 @@ function launchAutomationBrowser(): Promise<string> {
 
 function createWindow(): void {
     const preloadPath = join(__dirname, '../preload/index.mjs');
-    
+
     mainWindow = new BrowserWindow({
         width: 1400,
         height: 900,
@@ -202,19 +202,19 @@ function createWindow(): void {
         const parsedUrl = new URL(url);
         const currentUrl = mainWindow?.webContents.getURL();
         const currentParsed = currentUrl ? new URL(currentUrl) : null;
-        
+
         // Allow navigation within the same origin (includes OAuth callbacks)
         if (currentParsed && parsedUrl.origin === currentParsed.origin) {
             console.log('[Electron] Allowing same-origin navigation:', url);
             return;
         }
-        
+
         // Allow Supabase auth domain for OAuth
         if (parsedUrl.hostname.includes('supabase.co')) {
             console.log('[Electron] Allowing Supabase auth:', url);
             return;
         }
-        
+
         // Block external navigation and open in default browser instead
         event.preventDefault();
         console.log('[Electron] Opening external URL in browser:', url);
@@ -243,22 +243,109 @@ function createWindow(): void {
     }
 }
 
-app.whenReady().then(() => {
-    electronApp.setAppUserModelId('com.orbitagent');
+// ============================================
+// Deep Link Handling
+// ============================================
 
-    // Register local agent IPC handlers
-    registerLocalAgentHandlers(ipcMain);
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('orbit-agent', process.execPath, [resolve(process.argv[1])]);
+    }
+} else {
+    app.setAsDefaultProtocolClient('orbit-agent');
+}
 
-    app.on('browser-window-created', (_, window) => {
-        optimizer.watchWindowShortcuts(window);
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Someone tried to run a second instance, we should focus our window.
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+
+        // Protocol handler for Windows
+        // commandLine will look like: ["path/to/exe", "orbit-agent://..."]
+        const url = commandLine.find(arg => arg.startsWith('orbit-agent://'));
+        if (url) {
+            handleDeepLink(url);
+        }
     });
 
-    createWindow();
+    // Create window
+    app.whenReady().then(() => {
+        electronApp.setAppUserModelId('com.orbitagent');
 
-    app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        // Register local agent IPC handlers
+        registerLocalAgentHandlers(ipcMain);
+
+        app.on('browser-window-created', (_, window) => {
+            optimizer.watchWindowShortcuts(window);
+        });
+
+        createWindow();
+
+        app.on('activate', function () {
+            if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        });
     });
+}
+
+// Handle open-url event for macOS
+app.on('open-url', (event, url) => {
+    event.preventDefault();
+    if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+    }
+    handleDeepLink(url);
 });
+
+function handleDeepLink(url: string) {
+    console.log('[Main] Received deep link:', url);
+
+    try {
+        const urlObj = new URL(url);
+
+        if (urlObj.hostname === 'auth' && urlObj.pathname === '/callback') {
+            // Check for PKCE flow (query parameter with code)
+            // format: orbit-agent://auth/callback?code=...
+            const code = urlObj.searchParams.get('code');
+
+            if (code) {
+                console.log('[Main] Extracted auth code (PKCE flow), sending to renderer');
+                mainWindow?.webContents.send('auth:session-update', {
+                    code: code
+                });
+                return;
+            }
+
+            // Check for Implicit flow (hash fragment with tokens)
+            // format: orbit-agent://auth/callback#access_token=...&refresh_token=...
+            const hash = urlObj.hash.substring(1); // remove #
+            const params = new URLSearchParams(hash);
+
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+                console.log('[Main] Extracted auth tokens (Implicit flow), sending to renderer');
+                mainWindow?.webContents.send('auth:session-update', {
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                });
+                return;
+            }
+
+            console.warn('[Main] Deep link missing tokens or code');
+        }
+    } catch (error) {
+        console.error('[Main] Failed to handle deep link:', error);
+    }
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

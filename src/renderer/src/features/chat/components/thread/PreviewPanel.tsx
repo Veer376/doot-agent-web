@@ -92,15 +92,15 @@ function PreviewPanelContent() {
   return (
     <>
       {/* Preview Panel - Shows agent state (browser snapshot, todos) */}
-      <div className="relative mx-auto w-full max-w-3xl">
-        <div className="flex items-start gap-4">
+      <div className="relative mx-auto w-full" style={{ maxWidth: 'var(--composer-max-width)' }}>
+        <div className="flex flex-col gap-3">
           {/* Browser Preview Section */}
           {hasBrowserSnapshot && browserSnapshot?.screenshot && (
             <div className="flex flex-col gap-1">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="group relative"
+                className="group relative w-fit"
               >
                 {/* Thumbnail Container */}
                 <div
@@ -128,20 +128,23 @@ function PreviewPanelContent() {
             </div>
           )}
 
-          {/* Todos Section */}
+          {/* Todos Section - Expandable list */}
           {hasTodos && todos && (
             <div
               data-radius="radius2"
-              className="max-w-xs flex-1 border border-border bg-card p-3 shadow-sm"
+              className="flex items-start gap-3 border border-border bg-card p-3 shadow-sm transition-all duration-200 hover:border-border/80"
             >
-              <TodoList
-                todos={todos}
-                maxVisible={4}
-              />
+              <div className="flex-1 min-w-0">
+                <TodoList
+                  todos={todos}
+                  expandable={true}
+                />
+              </div>
             </div>
           )}
         </div>
       </div>
+
 
       {/* Full Browser Snapshot Modal */}
       {hasBrowserSnapshot && browserSnapshot && (

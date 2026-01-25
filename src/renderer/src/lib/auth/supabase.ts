@@ -15,29 +15,77 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   constructor(options: AuthProviderOptions = {}) {
     this.supabase = getSupabaseClient();
-    
-    // Determine redirect URL based on environment
-    let redirectUrl: string | undefined;
+
+    // Determine environment and redirect URL
     if (typeof window !== "undefined") {
       // Check if running in Electron
-      const isElectron = !!(window as any).electron;
-      
-      if (isElectron) {
-        // For Electron, use localhost URL for OAuth redirect
-        redirectUrl = import.meta.env.DEV 
-          ? 'http://localhost:5173'
-          : 'http://localhost:5173'; // You can change this for production Electron
+      this.isElectron = !!(window as any).electron;
+
+      if (this.isElectron) {
+        // For Electron, use custom protocol for deep linking
+        // This requires the app to register 'orbit-agent' protocol
+        // and Supabase project to whitelist 'orbit-agent://auth/callback'
+        this.options = {
+          shouldPersistSession: true,
+          ...options,
+          redirectUrl: 'orbit-agent://auth/callback',
+        };
+
+        // Start listening for deep link callbacks immediately
+        this.listenForDeepLink();
       } else {
         // For web, use current origin
-        redirectUrl = window.location.origin;
+        this.options = {
+          shouldPersistSession: true,
+          redirectUrl: window.location.origin,
+          ...options,
+        };
       }
+    } else {
+      this.options = {
+        shouldPersistSession: true,
+        redirectUrl: undefined,
+        ...options
+      };
     }
-    
-    this.options = {
-      shouldPersistSession: true,
-      redirectUrl,
-      ...options,
-    };
+  }
+
+  private isElectron = false;
+
+  private listenForDeepLink() {
+    if (!this.isElectron) return;
+
+    const electron = (window as any).electron;
+
+    // Listen for auth tokens from the main process
+    electron.on('auth:session-update', async (payload: { access_token?: string, refresh_token?: string, code?: string }) => {
+      console.log('[Auth] Received payload via deep link', Object.keys(payload));
+
+      try {
+        if (payload.code) {
+          // PKCE Flow: Exchange code for session
+          const { error } = await this.supabase.auth.exchangeCodeForSession(payload.code);
+          if (error) {
+            console.error('[Auth] Failed to exchange code for session:', error);
+          } else {
+            console.log('[Auth] Successfully signed in via deep link (PKCE)');
+          }
+        } else if (payload.access_token && payload.refresh_token) {
+          // Implicit Flow: Set session directly
+          const { error } = await this.supabase.auth.setSession({
+            access_token: payload.access_token,
+            refresh_token: payload.refresh_token
+          });
+          if (error) {
+            console.error('[Auth] Failed to set session from deep link:', error);
+          } else {
+            console.log('[Auth] Successfully signed in via deep link (Implicit)');
+          }
+        }
+      } catch (err) {
+        console.error('[Auth] Error handling deep link session:', err);
+      }
+    });
   }
 
   // Helper to convert Supabase User to our User interface
@@ -155,9 +203,10 @@ export class SupabaseAuthProvider implements AuthProvider {
         provider: "google",
         options: {
           redirectTo: this.options.redirectUrl,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: this.isElectron, // Important: skip auto-redirect in main window
           queryParams: {
             prompt: "select_account",
+            access_type: "offline", // Request refresh token
           },
         },
       });
@@ -166,12 +215,18 @@ export class SupabaseAuthProvider implements AuthProvider {
         throw error;
       }
 
-      // For browser environments, handle the redirect
-      if (typeof window !== "undefined" && data?.url) {
-        window.location.href = data.url;
+      // Handle the OAuth URL
+      if (data?.url) {
+        if (this.isElectron) {
+          // In Electron, open the system browser
+          const electron = (window as any).electron;
+          await electron.openExternal(data.url);
+        } else if (typeof window !== "undefined") {
+          // In Web, redirect the current window
+          window.location.href = data.url;
+        }
       }
 
-      // OAuth returns data.url - handled above in browser environments
       return {
         user: null,
         session: null,
@@ -193,6 +248,7 @@ export class SupabaseAuthProvider implements AuthProvider {
         provider: "github",
         options: {
           redirectTo: this.options.redirectUrl,
+          skipBrowserRedirect: this.isElectron,
           queryParams: {
             // Force GitHub to show the login/authorization screen
             // This allows users to choose a different account
@@ -203,12 +259,18 @@ export class SupabaseAuthProvider implements AuthProvider {
 
       if (error) throw error;
 
-      // For browser environments, handle the redirect
-      if (typeof window !== "undefined" && data?.url) {
-        window.location.href = data.url;
+      // Handle the OAuth URL
+      if (data?.url) {
+        if (this.isElectron) {
+          // In Electron, open the system browser
+          const electron = (window as any).electron;
+          await electron.openExternal(data.url);
+        } else if (typeof window !== "undefined") {
+          // In Web, redirect the current window
+          window.location.href = data.url;
+        }
       }
 
-      // OAuth returns data.url - handled above in browser environments
       return {
         user: null,
         session: null,

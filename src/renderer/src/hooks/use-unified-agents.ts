@@ -11,24 +11,10 @@ import { useMemo } from "react";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { useLocalAgents } from "@/hooks/use-local-agents";
 import { isElectron } from "@/lib/electron";
-import type { UnifiedAgent, AgentSource } from "@/lib/agent-source";
-import { transformCloudAgent, isAgentCompatibleWithThread } from "@/lib/agent-source";
+import type { AgentSource } from "@/lib/agent-source";
+import { isAgentCompatibleWithThread } from "@/lib/agent-source";
 import type { ThreadSource } from "@/lib/thread-source";
 import type { Agent } from "@/types/agent";
-
-/**
- * Transform an Agent (local or cloud) to UnifiedAgent format
- */
-function agentToUnifiedAgent(agent: Agent): UnifiedAgent {
-    return {
-        id: agent.assistant_id,
-        name: agent.name || agent.assistant_id,
-        description: agent.description || (agent.metadata?.description as string | undefined),
-        source: (agent.metadata?.source as AgentSource) || 'cloud',
-        icon: agent.metadata?.icon as string | undefined,
-        is_primary: agent.metadata?.is_primary,
-    };
-}
 
 /**
  * Options for the unified agents hook
@@ -56,15 +42,20 @@ export function useUnifiedAgents(options?: UseUnifiedAgentsOptions) {
 
     // Merge agents
     const agents = useMemo(() => {
-        const cloudAgents: UnifiedAgent[] =
+        const cloudAgents: Agent[] =
             source !== 'local' && cloudQuery.data
-                ? cloudQuery.data.map(transformCloudAgent)
+                ? cloudQuery.data.map(agent => ({
+                    ...agent,
+                    metadata: {
+                        ...agent.metadata,
+                        source: 'cloud' as const, // Ensure cloud source is set
+                    }
+                }))
                 : [];
 
-        // Local agents are now Agent[] from useLocalAgents, transform to UnifiedAgent
-        const localAgents: UnifiedAgent[] =
+        const localAgents: Agent[] =
             source !== 'cloud' && isElectronEnv && localQuery.data
-                ? localQuery.data.map(agentToUnifiedAgent)
+                ? localQuery.data
                 : [];
 
         console.log('[useUnifiedAgents] Merging agents:', {
@@ -78,9 +69,10 @@ export function useUnifiedAgents(options?: UseUnifiedAgentsOptions) {
 
         // Filter by thread source compatibility if specified
         if (threadSource) {
-            allAgents = allAgents.filter(agent =>
-                isAgentCompatibleWithThread(agent.source, threadSource)
-            );
+            allAgents = allAgents.filter(agent => {
+                const agentSource = (agent.metadata?.source as AgentSource) || 'cloud';
+                return isAgentCompatibleWithThread(agentSource, threadSource);
+            });
         }
 
         return allAgents;
@@ -115,9 +107,10 @@ export function useAgentsForThread(threadSource: ThreadSource | undefined) {
 
         return {
             ...allAgents,
-            agents: allAgents.agents.filter(agent =>
-                isAgentCompatibleWithThread(agent.source, threadSource)
-            ),
+            agents: allAgents.agents.filter(agent => {
+                const agentSource = (agent.metadata?.source as AgentSource) || 'cloud';
+                return isAgentCompatibleWithThread(agentSource, threadSource);
+            }),
         };
     }, [allAgents, threadSource]);
 }
@@ -130,7 +123,7 @@ export function useUnifiedAgent(agentId: string | null) {
 
     return useMemo(() => {
         if (!agentId) return null;
-        return agents.find(a => a.id === agentId) || null;
+        return agents.find(a => a.assistant_id === agentId) || null;
     }, [agents, agentId]);
 }
 
@@ -142,7 +135,7 @@ export function useAgentCounts() {
 
     return useMemo(() => ({
         total: agents.length,
-        local: agents.filter(a => a.source === 'local').length,
-        cloud: agents.filter(a => a.source === 'cloud').length,
+        local: agents.filter(a => a.metadata?.source === 'local').length,
+        cloud: agents.filter(a => !a.metadata?.source || a.metadata?.source === 'cloud').length,
     }), [agents]);
 }

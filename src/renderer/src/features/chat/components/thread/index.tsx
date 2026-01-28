@@ -71,7 +71,7 @@ class ChatErrorBoundary extends Component<
     console.error(
       `[ChatErrorBoundary${this.props.context ? ` - ${this.props.context}` : ""}] Error caught:`,
       error,
-      errorInfo
+      errorInfo,
     );
   }
 
@@ -648,7 +648,7 @@ export function Thread() {
               "mt-[25vh] flex flex-col items-stretch",
             (hasMessages || threadId) && "grid grid-rows-[1fr_auto]",
           )}
-          contentClassName="pt-8 pb-12 [max-width:var(--composer-max-width)] mx-auto flex flex-col gap-4 w-full"
+          contentClassName="pt-8 pb-12 max-w-3xl mx-auto flex flex-col gap-4 w-full"
           content={
             <>
               {!hasMessages && threadId && isLoadingThreadState ? (
@@ -766,38 +766,28 @@ export function Thread() {
               <div className="flex w-full flex-col items-center gap-3">
                 <ScrollToBottom className="absolute bottom-full right-4 mb-4" />
 
-                {/* Horizontal wrapper for PreviewPanel and WorkspaceSelect */}
-                <div 
-                  className="w-full flex items-end gap-3" 
-                  style={{ maxWidth: 'var(--composer-max-width)' }}
-                >
-                  {/* Workspace Selection - Left side, aligned to bottom */}
-                  {agentId === "local-agent" && (
-                    <div className="flex-shrink-0">
-                      <WorkspaceSelect
-                        threadId={threadId}
-                        className="justify-start"
-                        onWorkspaceSelect={setTempWorkspace}
-                        currentPath={tempWorkspace}
-                      />
-                    </div>
-                  )}
+                {/* Browser Preview Panel - Floating above Composer */}
+                <ChatErrorBoundary context="PreviewPanel">
+                  <PreviewPanel />
+                </ChatErrorBoundary>
 
-                  {/* Preview Panel (Browser snapshot, Todos) - Right side */}
-                  <ChatErrorBoundary context="PreviewPanel">
-                    <div className="flex-1 min-w-0">
-                      <PreviewPanel />
-                    </div>
-                  </ChatErrorBoundary>
-                </div>
+                {/* Workspace Selection - Only for Local Agent */}
+                {agentId === "local-agent" && (
+                  <div className="w-full max-w-2xl px-1 pb-1">
+                    <WorkspaceSelect
+                      threadId={threadId}
+                      className="justify-start"
+                      onWorkspaceSelect={setTempWorkspace}
+                    />
+                  </div>
+                )}
 
                 <div
                   ref={dropRef}
                   className={cn(
-                    "relative z-20 mx-auto w-full min-w-0 pb-4 transition-all",
+                    "relative z-20 mx-auto w-full min-w-0 max-w-2xl pb-4 transition-all",
                     dragOver ? "border-2 border-dotted border-primary" : "",
                   )}
-                  style={{ maxWidth: 'var(--composer-max-width)' }}
                 >
                   <Composer
                     value={inputValue}

@@ -18,6 +18,7 @@ import {
   type RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryState } from "@/hooks/use-query-state";
+import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
 import { useAuthSession } from "@/providers/Auth";
 import { useAgentContext } from "@/providers/Agent";
@@ -58,7 +59,7 @@ const useTypedStream = useStream<
 
 // Unified stream context type that works for both local and cloud
 type StreamContextType = {
-  values: StateType | LocalStreamState;
+  values: StateType | LocalStreamState | Record<string, unknown>;
   messages: Message[];
   isLoading: boolean;
   error: unknown;
@@ -256,18 +257,30 @@ const LocalStreamSession = ({
           return;
         }
 
-        // NEW APPROACH: Create thread synchronously first, but don't wait for it
-        // Show optimistic update immediately using the new threadId
+        // FIXED APPROACH: Apply optimistic update FIRST with temp ID, then swap when thread created
+        // This gives instant UI feedback (0ms) instead of waiting for thread creation (10-50ms)
         if (!threadId) {
           console.log(
-            "[Stream] New thread - creating and showing optimistic update",
+            "[Stream] New thread - applying optimistic update BEFORE creation",
           );
 
           const metadata = (values as any)?.metadata || {};
           const requestedWorkspace = metadata.workspacePath || workspacePath;
 
-          // Create thread (this is fast, ~10-20ms IPC call, not 50ms)
-          // We MUST wait for threadId or the manager can't subscribe properly
+          // Generate temporary thread ID for optimistic update
+          const tempThreadId = `temp-${uuid()}`;
+          console.log("[Stream] Generated temp thread ID:", tempThreadId);
+
+          // CRITICAL: Apply optimistic update IMMEDIATELY using temp thread ID
+          // This shows the user's message instantly (0ms delay)
+          localStream.submitToThread(tempThreadId, messageContent, {
+            modelId,
+            workspacePath: requestedWorkspace,
+            optimisticValues: (options as any)?.optimisticValues,
+            isOptimistic: true, // Flag to prevent actual IPC call
+          });
+
+          // Create thread in background (async, doesn't block UI)
           createThread({
             metadata: {
               assistant_id: "local-agent",
@@ -277,21 +290,26 @@ const LocalStreamSession = ({
           })
             .then((newThread) => {
               console.log("[Stream] Thread created:", newThread.thread_id);
-              const currentThreadId = newThread.thread_id;
-              setThreadId(currentThreadId);
+              const realThreadId = newThread.thread_id;
+              setThreadId(realThreadId);
 
-              // Now submit with optimistic update - this shows UI INSTANTLY
+              // Swap temp ID for real ID in manager and start actual stream
               console.log(
-                "[Stream] Submitting to new thread with optimistic update",
+                "[Stream] Swapping temp ID for real ID and starting stream",
               );
-              localStream.submitToThread(currentThreadId, messageContent, {
+              localStream.swapThreadId(tempThreadId, realThreadId);
+
+              // Now start the actual agent stream with real thread ID
+              localStream.submitToThread(realThreadId, messageContent, {
                 modelId,
                 workspacePath: requestedWorkspace,
-                optimisticValues: (options as any)?.optimisticValues,
+                skipOptimistic: true, // Already applied with temp ID
               });
             })
             .catch((err) => {
               console.error("[Stream] Failed to create thread:", err);
+              // Clean up temp thread on error
+              localStream.cleanupThread(tempThreadId);
             });
         } else {
           console.log("[Stream] Existing thread - calling normal submit");
@@ -388,7 +406,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
       ) : (
         <CloudStreamSession
           key={`cloud-stream-${session.accessToken.substring(0, 20)}`} // Force re-mount when session changes
-          agentId={agentId || "chat_agent"}
+          agentId={agentId}
           accessToken={session.accessToken}
           threadId={threadId}
         >

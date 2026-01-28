@@ -48,7 +48,7 @@ const ALLOWED_CHANNELS = {
         'get-app-version', 'is-electron', 'open-external',
     ],
     send: [
-        'agent:invoke', 'agent:resume', 'agent:interrupt',
+        'agent:invoke', 'agent:resume', 'agent:interrupt', 'agent:cancel',
     ],
     receive: [
         'agent:stream:', // Prefix for dynamic channels like agent:stream:threadId

@@ -8,7 +8,7 @@
 import { IpcMain, BrowserWindow } from 'electron';
 import { app } from 'electron';
 import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, readdirSync, appendFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
 
 // ============================================================================
@@ -33,6 +33,10 @@ function getThreadsDir(): string {
 
 function getThreadMetaPath(threadId: string): string {
     return join(getThreadsDir(), `${threadId}.json`);
+}
+
+function getLoggingFilePath(): string {
+    return join(getDataDir(), 'logging.txt');
 }
 
 // ============================================================================
@@ -233,16 +237,44 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
             return null;
         }
 
-        console.log('[IPC] threads:getState returning state with', thread.thread_values?.messages?.length || 0, 'messages');
-        console.log('[DEBUG2] ============================================');
-        console.log('[DEBUG2] Thread state retrieved');
-        console.log('[DEBUG2] Thread ID:', threadId);
-        console.log('[DEBUG2] Messages count:', thread.thread_values?.messages?.length || 0);
-        if (thread.thread_values?.messages && Array.isArray(thread.thread_values.messages)) {
-            console.log('[DEBUG2] Message types:', thread.thread_values.messages.map((m: any) => m.type).join(', '));
+        // Load state from SqlJs checkpoint database (not thread JSON)
+        // The checkpoint has the full message objects with content blocks intact
+        try {
+            const { getCheckpointer } = await import('./agent/runtime');
+            const checkpointer = await getCheckpointer(threadId);
+            const config = {
+                configurable: {
+                    thread_id: threadId,
+                    checkpoint_ns: '',
+                },
+            };
+
+            const checkpointTuple = await checkpointer.getTuple(config);
+            
+            if (checkpointTuple?.checkpoint) {
+                const state = checkpointTuple.checkpoint.channel_values;
+                console.log('[IPC] threads:getState loaded from checkpoint:', state?.messages?.length || 0, 'messages');
+                
+                return {
+                    values: state || { messages: [] },
+                    next: checkpointTuple.checkpoint.pending_sends || [],
+                    config: checkpointTuple.config,
+                    metadata: checkpointTuple.metadata || {
+                        source: 'checkpoint',
+                        step: -1,
+                        writes: null,
+                        parents: {},
+                    },
+                    created_at: thread.created_at,
+                    parent_config: checkpointTuple.parentConfig,
+                };
+            }
+        } catch (checkpointError) {
+            console.warn('[IPC] Failed to load from checkpoint:', checkpointError);
         }
-        console.log('[DEBUG2] Thread status:', thread.status);
-        console.log('[DEBUG2] ============================================');
+
+        // Fallback to thread JSON (simplified format without content blocks)
+        console.log('[IPC] threads:getState returning state from JSON with', thread.thread_values?.messages?.length || 0, 'messages');
         return {
             values: thread.thread_values || { messages: [] },
             next: [],
@@ -347,26 +379,13 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
     // Agent Runtime Handlers (Streaming)
     // ========================================
 
+    // FUTURE-TODO: Here we will provide the agent:invoke:{graph_id} and using the register we will then fetch the graph by passing the configurations.
     ipcMain.on('agent:invoke', async (event, { threadId, message, workspacePath, modelId }: {
         threadId: string;
         message: string;
         workspacePath?: string;
         modelId?: string;
     }) => {
-        console.log('[IPC] ========================================');
-        console.log('[IPC] agent:invoke received');
-        console.log('[IPC]   threadId:', threadId);
-        console.log('[IPC]   message length:', message?.length || 0);
-        console.log('[IPC]   message preview:', message?.substring(0, 100));
-        console.log('[IPC]   workspacePath:', workspacePath);
-        console.log('[IPC]   modelId:', modelId);
-        console.log('[IPC] ========================================');
-        console.log('[DEBUG2] ============================================');
-        console.log('[DEBUG2] Human message received');
-        console.log('[DEBUG2] Thread ID:', threadId);
-        console.log('[DEBUG2] Message:', message);
-        console.log('[DEBUG2] ============================================');
-
         const channel = `agent:stream:${threadId}`;
         const window = BrowserWindow.fromWebContents(event.sender);
 
@@ -393,14 +412,13 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
             // Try to import and run agent runtime
             let response: string;
             try {
-                console.log('[IPC] Attempting to import agent runtime...');
                 const { createAgentRuntime } = await import('./agent/runtime');
-                console.log('[IPC] Agent runtime imported successfully');
 
-                // Use workspace path or default to user home
+                // TODO: Update this to default "C:\users\user-profile\.dootagent\{thread_id}"
                 const effectiveWorkspace = workspacePath || process.env.USERPROFILE || process.env.HOME || '.';
                 console.log('[IPC] Creating agent with workspace:', effectiveWorkspace);
 
+                // FUTURE-TODO: In the future we will import it form the register and not like this.
                 const agent = await createAgentRuntime({
                     threadId,
                     workspacePath: effectiveWorkspace,
@@ -411,15 +429,12 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 // Stream the agent response
                 const config = { configurable: { thread_id: threadId } };
                 let finalState: unknown;
-                let eventCount = 0;
 
                 console.log('[IPC] Starting agent stream...');
                 for await (const event of await agent.stream(
-                    { messages: [{ role: 'user', content: message }] },
+                    { messages: [{ type: 'human', content: message }] },
                     { ...config, streamMode: ['messages', 'values'] }
                 )) {
-                    eventCount++;
-                    console.log('[IPC] Received stream event #', eventCount);
                     
                     if (abortController.signal.aborted) {
                         console.log('[IPC] Stream aborted');
@@ -432,67 +447,25 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                     console.log('[IPC]   mode:', mode);
                     console.log('[IPC]   data keys:', data ? Object.keys(data) : 'null');
 
-                    // Check for interrupt
-                    if (event.interrupt) {
-                        console.log('[IPC] Interrupt detected');
-                        window.webContents.send(channel, {
-                            type: 'stream',
-                            mode: 'values',
-                            data: { interrupt: event.interrupt },
-                        });
-                        updateThread(threadId, { status: 'interrupted' });
-                        return;
-                    }
-
                     // Send values or messages update
                     if (mode === 'values' && data) {
-                        console.log('[IPC] Sending values update');
-                        console.log('[IPC]   messages count:', (data as any).messages?.length);
+                        // Check for interrupt (LangGraph standard: __interrupt__ key in values)
+                        if ('__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0) {
+                            console.log('[IPC] Interrupt detected:', data.__interrupt__);
+                            updateThread(threadId, { status: 'interrupted' });
+                        } else {
+                            console.log('[IPC] Streaming values event');
+                        }
                         
                         try {
                             const serializedData = JSON.parse(JSON.stringify(data));
-                            
-                            // Log all keys in values to see what metadata we have
-                            console.log('[DEBUG2] ============================================');
-                            console.log('[DEBUG2] VALUES STATE - Full Keys:', Object.keys(serializedData));
-                            console.log('[DEBUG2] Thread ID:', threadId);
-                            
-                            // Check for todos
-                            if (serializedData.todos) {
-                                console.log('[DEBUG2] ✅ TODOS FOUND:', serializedData.todos);
-                            }
-                            
-                            // Check for workspace files
-                            if (serializedData.workspaceFiles || serializedData.workspace_files || serializedData.files) {
-                                console.log('[DEBUG2] ✅ WORKSPACE FILES FOUND:', 
-                                    serializedData.workspaceFiles || serializedData.workspace_files || serializedData.files);
-                            }
-                            
-                            // Check for subagents
-                            if (serializedData.subagents) {
-                                console.log('[DEBUG2] ✅ SUBAGENTS FOUND:', serializedData.subagents);
-                            }
-                            
-                            // Log AI message if present
-                            const messages = serializedData.messages;
-                            if (messages && Array.isArray(messages)) {
-                                console.log('[DEBUG2] Messages count:', messages.length);
-                                const lastMessage = messages[messages.length - 1];
-                                if (lastMessage && lastMessage.type === 'ai') {
-                                    console.log('[DEBUG2] Last AI message preview:', 
-                                        typeof lastMessage.content === 'string' 
-                                            ? lastMessage.content.substring(0, 100) 
-                                            : JSON.stringify(lastMessage.content).substring(0, 100));
-                                }
-                            }
-                            console.log('[DEBUG2] ============================================');
+                            console.log('[IPC] VALUES STATE - Full Keys:', Object.keys(serializedData));
                             
                             window.webContents.send(channel, {
                                 type: 'stream',
                                 mode: 'values',
                                 data: serializedData,
                             });
-                            console.log('[IPC] Values update sent successfully');
                         } catch (serializeError) {
                             console.error('[IPC] Failed to serialize values:', serializeError);
                         }
@@ -503,6 +476,14 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                         
                         try {
                             const serializedMessages = JSON.parse(JSON.stringify(data));
+
+                            try {
+                                const logEntry = `\n${'='.repeat(80)}\n[${new Date().toISOString()}] Thread: ${threadId}\nVALUES EVENT:\n${JSON.stringify(serializedMessages, null, 2)}\n${'='.repeat(80)}\n`;
+                                appendFileSync(getLoggingFilePath(), logEntry, 'utf-8');
+                            } catch (logError) {
+                                console.error('[IPC] Failed to write to logging.txt:', logError);
+                            }        
+
                             window.webContents.send(channel, {
                                 type: 'stream',
                                 mode: 'messages',
@@ -515,8 +496,6 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                     }
                 }
 
-                console.log('[IPC] Agent stream completed. Total events:', eventCount);
-                
                 // Save final state to thread
                 if (finalState) {
                     console.log('[DEBUG2] ============================================');
@@ -560,17 +539,14 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                         { id: uuid(), role: 'assistant', content: response, created_at: new Date().toISOString() },
                     ],
                 };
-                console.log('[DEBUG2] ============================================');
-                console.log('[DEBUG2] AI placeholder message (runtime error)');
-                console.log('[DEBUG2] Thread ID:', threadId);
-                console.log('[DEBUG2] Error message:', response.substring(0, 200));
-                console.log('[DEBUG2] ============================================');
+                console.log('[IPC] AI placeholder message (runtime error)');
+                console.log('[IPC] Thread ID:', threadId);
+                console.log('[IPC] Error message:', response.substring(0, 200));
                 
                 // Save placeholder messages to thread
                 updateThread(threadId, { 
                     thread_values: placeholderData as any 
                 });
-                console.log('[DEBUG2] Placeholder messages saved to thread');
                 
                 window.webContents.send(channel, {
                     type: 'stream',
@@ -579,12 +555,8 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                 });
             }
 
-            console.log('[IPC] Updating thread status to idle');
-            // Update thread status back to idle
             updateThread(threadId, { status: 'idle' });
 
-            console.log('[IPC] Sending done event to channel:', channel);
-            // Send done
             window.webContents.send(channel, { type: 'done' });
             console.log('[IPC] Done event sent');
 
@@ -595,6 +567,7 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                 error: error instanceof Error ? error.message : 'Unknown error',
             });
             updateThread(threadId, { status: 'error' });
+
         } finally {
             console.log('[IPC] Cleaning up activeRuns for threadId:', threadId);
             activeRuns.delete(threadId);
@@ -603,32 +576,133 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
 
     ipcMain.on('agent:interrupt', async (event, { threadId, decision }: {
         threadId: string;
-        decision: { type: string; tool_call_id: string };
+        decision: { type: string; tool_call_id?: string };
     }) => {
         const channel = `agent:stream:${threadId}`;
         const window = BrowserWindow.fromWebContents(event.sender);
 
-        console.log('[LocalAgent] Interrupt decision:', { threadId, decision });
+        console.log('[IPC] agent:interrupt received:', { threadId, decision });
 
-        if (!window) return;
+        if (!window) {
+            console.error('[IPC] No window found for interrupt');
+            return;
+        }
 
-        // TODO: Implement actual interrupt handling with agent runtime
-        if (decision.type === 'approve') {
-            window.webContents.send(channel, { type: 'done' });
-        } else {
-            updateThread(threadId, { status: 'idle' });
-            window.webContents.send(channel, { type: 'done' });
+        // Abort any existing stream
+        const existingController = activeRuns.get(threadId);
+        if (existingController) {
+            existingController.abort();
+            activeRuns.delete(threadId);
+        }
+
+        const abortController = new AbortController();
+        activeRuns.set(threadId, abortController);
+
+        try {
+            const { createAgentRuntime } = await import('./agent/runtime');
+            const thread = getThread(threadId);
+            
+            if (!thread) {
+                console.error('[IPC] Thread not found:', threadId);
+                return;
+            }
+
+            const workspacePath = thread.metadata.workspacePath || process.env.USERPROFILE || process.env.HOME || '.';
+            const modelId = thread.metadata.modelId;
+
+            const agent = await createAgentRuntime({
+                threadId,
+                workspacePath,
+                modelId,
+            });
+
+            const config = { 
+                configurable: { thread_id: threadId },
+                signal: abortController.signal,
+                streamMode: ['messages', 'values'] as const
+            };
+            let finalState: unknown;
+
+            console.log('[IPC] Resuming agent with decision:', decision.type);
+            updateThread(threadId, { status: 'busy' });
+
+            if (decision.type === 'approve') {
+                // Resume execution by streaming with null (continues from checkpoint)
+                for await (const event of await agent.stream(null, config)) {
+                    if (abortController.signal.aborted) break;
+
+                    const [mode, data] = Array.isArray(event) ? event : [null, event];
+
+                    // Handle values events (including new interrupts)
+                    if (mode === 'values' && data) {
+                        if ('__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0) {
+                            console.log('[IPC] New interrupt during resume:', data.__interrupt__);
+                            updateThread(threadId, { status: 'interrupted' });
+                        }
+                        
+                        const serializedData = JSON.parse(JSON.stringify(data));
+                        window.webContents.send(channel, {
+                            type: 'stream',
+                            mode: 'values',
+                            data: serializedData,
+                        });
+                        finalState = data;
+                    } else if (mode === 'messages' && Array.isArray(data)) {
+                        const serializedMessages = JSON.parse(JSON.stringify(data));
+                        window.webContents.send(channel, {
+                            type: 'stream',
+                            mode: 'messages',
+                            data: { messages: serializedMessages },
+                        });
+                    }
+                }
+
+                // Save final state
+                if (finalState) {
+                    updateThread(threadId, { thread_values: finalState as any });
+                }
+
+                if (!abortController.signal.aborted) {
+                    updateThread(threadId, { status: 'idle' });
+                    window.webContents.send(channel, { type: 'done' });
+                }
+            } else {
+                // For reject/edit: Currently not implemented properly in LangGraph JS
+                // Just mark as idle and send done (matches openwork behavior)
+                updateThread(threadId, { status: 'idle' });
+                window.webContents.send(channel, { type: 'done' });
+            }
+
+            console.log('[IPC] Resume completed');
+
+        } catch (error) {
+            const isAbortError = error instanceof Error && 
+                (error.name === 'AbortError' || error.message.includes('aborted'));
+
+            if (!isAbortError) {
+                console.error('[IPC] agent:interrupt error:', error);
+                window.webContents.send(channel, {
+                    type: 'error',
+                    error: error instanceof Error ? error.message : 'Resume failed',
+                });
+                updateThread(threadId, { status: 'error' });
+            }
+        } finally {
+            activeRuns.delete(threadId);
         }
     });
 
-    ipcMain.handle('agent:cancel', async (_event, { threadId }: { threadId: string }) => {
+    ipcMain.on('agent:cancel', async (_event, { threadId }: { threadId: string }) => {
+        console.log('[IPC] agent:cancel received for thread:', threadId);
         const controller = activeRuns.get(threadId);
         if (controller) {
+            console.log('[IPC] Aborting stream for thread:', threadId);
             controller.abort();
             activeRuns.delete(threadId);
+        } else {
+            console.log('[IPC] No active controller found for thread:', threadId);
         }
         updateThread(threadId, { status: 'idle' });
-        return { success: true };
     });
 
     console.log('[LocalAgent] IPC handlers registered');

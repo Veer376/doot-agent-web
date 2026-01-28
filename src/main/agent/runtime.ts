@@ -158,9 +158,10 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
             apiKey,
             temperature: 1,
             maxRetries: 2,
-            // Enable thinking blocks (matches Python chat_agent.py)
-            includeThoughts: true,
-            thinkingBudget: -1, // -1 = unlimited thinking
+            thinkingConfig: {
+                includeThoughts: true,
+                thinkingBudget: -1, // Maximum thinking budget for Gemini 2.5
+            },
         });
     }
 
@@ -242,7 +243,7 @@ The workspace root is: ${workspacePath}`;
         backend,
         systemPrompt,
         filesystemSystemPrompt,
-        interruptOn: { execute: false },
+        interruptOn: { execute: true },
     } as Parameters<typeof createDeepAgent>[0]);
 
     console.log('[Runtime] Agent created successfully');

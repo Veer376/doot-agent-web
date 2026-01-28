@@ -57,8 +57,8 @@ export interface UseLocalStreamOptions {
  * Return type of useLocalStream
  */
 export interface UseLocalStreamReturn {
-    /** Current state values */
-    values: LocalStreamState;
+    /** Current state values (contains messages, todos, files, etc.) */
+    values: Record<string, unknown>;
     /** Current messages */
     messages: Message[];
     /** Whether stream is currently running */
@@ -77,6 +77,8 @@ export interface UseLocalStreamReturn {
         modelId?: string;
         workspacePath?: string;
         optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
+        isOptimistic?: boolean;
+        skipOptimistic?: boolean;
     }) => void;
     /** Stop the current stream */
     stop: () => void;
@@ -84,6 +86,10 @@ export interface UseLocalStreamReturn {
     approve: () => void;
     /** Reject the interrupt */
     reject: () => void;
+    /** Swap temp thread ID for real thread ID (for optimistic updates) */
+    swapThreadId: (tempThreadId: string, realThreadId: string) => void;
+    /** Cleanup a thread (for error handling) */
+    cleanupThread: (threadId: string) => void;
 }
 
 /**
@@ -168,6 +174,8 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         modelId?: string;
         workspacePath?: string;
         optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
+        isOptimistic?: boolean;
+        skipOptimistic?: boolean;
     }) => {
         if (!isElectronEnv) {
             console.warn("[useLocalStream] Cannot submit without Electron environment");
@@ -177,14 +185,22 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         console.log('[useLocalStream] submitToThread called');
         console.log('[useLocalStream]   targetThreadId:', targetThreadId);
         console.log('[useLocalStream]   messageContent length:', messageContent.length);
+        console.log('[useLocalStream]   isOptimistic:', options?.isOptimistic);
+        console.log('[useLocalStream]   skipOptimistic:', options?.skipOptimistic);
 
         // Set up IPC subscription for this thread if not already done
         manager.setupIPCSubscription(targetThreadId);
 
-        // Apply optimistic values if provided
-        if (options?.optimisticValues) {
+        // Apply optimistic values if provided (unless skipOptimistic is true)
+        if (options?.optimisticValues && !options?.skipOptimistic) {
             console.log('[useLocalStream] Applying optimistic update to target thread');
             manager.setOptimisticValues(targetThreadId, options.optimisticValues);
+        }
+
+        // If this is only for optimistic display (temp thread), don't start actual stream
+        if (options?.isOptimistic) {
+            console.log('[useLocalStream] Optimistic-only update, skipping IPC stream start');
+            return;
         }
 
         console.log('[useLocalStream] Starting stream for target thread');
@@ -274,6 +290,20 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         // TODO: Implement HITL reject
     }, [threadId, isElectronEnv]);
 
+    // Swap thread ID (for optimistic updates with temp ID)
+    const swapThreadId = useCallback((tempThreadId: string, realThreadId: string) => {
+        if (!isElectronEnv) return;
+        console.log('[useLocalStream] Swapping thread ID:', tempThreadId, '→', realThreadId);
+        manager.swapThreadId(tempThreadId, realThreadId);
+    }, [isElectronEnv, manager]);
+
+    // Cleanup thread (for error handling)
+    const cleanupThread = useCallback((threadId: string) => {
+        if (!isElectronEnv) return;
+        console.log('[useLocalStream] Cleaning up thread:', threadId);
+        manager.cleanup(threadId);
+    }, [isElectronEnv, manager]);
+
     // Handle stream finish
     // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
     useEffect(() => {
@@ -301,6 +331,8 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         submitToThread, // For new thread creation flow
         stop,
         approve,
-        reject
+        reject,
+        swapThreadId, // For swapping temp ID to real ID
+        cleanupThread // For cleaning up on errors
     };
 }

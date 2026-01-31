@@ -1,10 +1,13 @@
 import { useStreamContext } from "@/features/chat/providers/Stream";
-import { Checkpoint, Message, ToolMessage } from "@langchain/langgraph-sdk";
+import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CommandBar } from "./shared";
 import { MarkdownText } from "@/components/ui/markdown-text";
-import { extractChainOfThought, type ChainStep } from "@/features/chat/utils/extract-chain-of-thought";
+import {
+  extractChainOfThought,
+  type ChainStep,
+} from "@/features/chat/utils/extract-chain-of-thought";
 import {
   ChainOfThought,
   ChainOfThoughtHeader,
@@ -12,122 +15,29 @@ import {
   ChainOfThoughtPreview,
   ChainOfThoughtStep,
 } from "@/components/ai-elements/chain-of-thought";
-import {
-  DotIcon,
-  CheckCircle2Icon,
-  XCircleIcon,
-  LoaderCircle,
-} from "lucide-react";
-import { CheckmarkCircleIcon, CopyIcon, ToolsIcon } from "@/components/icons";
-import React, { useMemo, useState } from "react";
-import { toast } from "sonner";
+import { DotIcon, CheckCircle2Icon, ShieldAlert } from "lucide-react";
+import { ToolsIcon } from "@/components/icons";
+import React, { useMemo } from "react";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { ToolItem, type ToolState } from "./tool-item";
 
-// Helper function to format tool responses
-function formatToolResponse(response: ToolMessage): string {
-  if (typeof response.content === "string") {
-    return response.content;
+/**
+ * Convert ChainStep status to ToolState
+ */
+function stepStatusToToolState(
+  status: "pending" | "success" | "error",
+): ToolState {
+  switch (status) {
+    case "pending":
+      return "running";
+    case "success":
+      return "completed";
+    case "error":
+      return "error";
+    default:
+      return "pending";
   }
-
-  if (Array.isArray(response.content)) {
-    return response.content
-      .map((block) =>
-        typeof block === "string" ? block : JSON.stringify(block, null, 2),
-      )
-      .join("\n");
-  }
-
-  return JSON.stringify(response.content, null, 2);
 }
-
-// Separate component for tool items to avoid hooks in map
-interface ToolItemProps {
-  step: Extract<ChainStep, { type: "tool" }>;
-  stepIdx: number;
-}
-
-const ToolItem = React.memo(function ToolItem({ step, stepIdx }: ToolItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleCopy = () => {
-    const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ""}`;
-    navigator.clipboard.writeText(copyContent);
-    toast.success("Copied to clipboard");
-  };
-
-  const handleToggle = () => {
-    if (step.toolResponse) {
-      setIsExpanded(!isExpanded);
-    }
-  };
-
-  return (
-    <div
-      key={`tool-standalone-${stepIdx}`}
-      className="group/toolwrapper inline-block"
-    >
-      {/* Wrap both tool name and response in a common group for hover persistence */}
-      <div
-        data-radius="radius2"
-        className={cn(
-          "group/tool bg-muted/30 inline-flex items-center gap-2 border p-1.5 px-2 transition-colors",
-          step.toolResponse && "hover:bg-muted/50 cursor-pointer",
-        )}
-        onClick={handleToggle}
-      >
-        {/* Processing Icon / Tick */}
-        {step.status === "pending" && (
-          <LoaderCircle className="text-muted-foreground h-4 w-4 flex-shrink-0 animate-spin" />
-        )}
-        {step.status === "success" && (
-          <CheckmarkCircleIcon
-            size="xs"
-            className="flex-shrink-0 text-green-600"
-          />
-        )}
-        {step.status === "error" && (
-          <XCircleIcon className="h-4 w-4 flex-shrink-0 text-red-600" />
-        )}
-        <span className="text-sm font-medium">{step.toolCall.name}</span>
-        {step.toolResponse && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCopy();
-            }}
-            className="ml-2 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100 md:opacity-0 md:group-hover/tool:opacity-100"
-            aria-label="Copy tool and response"
-          >
-            <CopyIcon
-              size="xs"
-              className="text-muted-foreground hover:text-foreground"
-            />
-          </button>
-        )}
-      </div>
-      {step.toolResponse && (
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-          )}
-        >
-          <div className="overflow-hidden">
-            <div
-              data-radius="radius2"
-              className="bg-muted/50 mt-2 inline-block w-fit max-w-[70ch] border px-3 py-2"
-            >
-              <div className="max-h-[400px] overflow-y-auto font-mono text-xs whitespace-pre-wrap">
-                {formatToolResponse(step.toolResponse)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
 
 interface AITurnProps {
   turnMessages: Message[];
@@ -165,7 +75,7 @@ export const AITurn = React.memo(function AITurn({
   // Combine all content for the command bar
   const combinedContent = chainData.renderBlocks
     .filter((block) => block.type === "content")
-    .map((block) => block.type === "content" ? block.content : "")
+    .map((block) => (block.type === "content" ? block.content : ""))
     .join("\n\n");
 
   // Parse citations once from combined content
@@ -217,7 +127,11 @@ export const AITurn = React.memo(function AITurn({
   };
 
   // Render a single step (thinking or tool)
-  const renderStep = (step: ChainStep, idx: number, isPreview: boolean = false) => {
+  const renderStep = (
+    step: ChainStep,
+    idx: number,
+    isPreview: boolean = false,
+  ) => {
     if (step.type === "thinking") {
       return (
         <ChainOfThoughtStep
@@ -234,79 +148,59 @@ export const AITurn = React.memo(function AITurn({
         </ChainOfThoughtStep>
       );
     } else {
-      // Tool step - using same design as standalone tools but scaled down for thinking block
-      const handleCopy = () => {
-        const copyContent = `### ${step.toolCall.name}\n\n${step.toolResponse ? formatToolResponse(step.toolResponse) : ""}`;
-        navigator.clipboard.writeText(copyContent);
-        toast.success("Copied to clipboard");
-      };
+      // Tool step - check if it needs HITL approval
+      const needsApproval = Boolean(
+        thread.interrupt && thread.interrupt.tool_call?.id === step.toolCall.id,
+      );
+
+      // Debug logging for interrupt matching
+      if (
+        thread.interrupt &&
+        step.toolCall.name === thread.interrupt.tool_call?.name
+      ) {
+        console.log("[AITurn renderStep] Checking tool for interrupt match:");
+        console.log("  step.toolCall.id:", step.toolCall.id);
+        console.log(
+          "  thread.interrupt.tool_call.id:",
+          thread.interrupt.tool_call?.id,
+        );
+        console.log("  needsApproval:", needsApproval);
+      }
 
       return (
         <ChainOfThoughtStep
           key={`tool-${step.toolCall.id}-${idx}-${isPreview ? "preview" : "full"}`}
-          icon={ToolsIcon}
+          icon={needsApproval ? ShieldAlert : ToolsIcon}
           label=""
-          status={step.status === "pending" ? "pending" : "complete"}
+          status={
+            needsApproval
+              ? "pending"
+              : step.status === "pending"
+                ? "pending"
+                : "complete"
+          }
           isPreview={isPreview}
           className="space-y-1"
         >
-          <div className="group/toolwrapper inline-block">
-            {/* Wrap both tool name and response in a common group for hover persistence */}
-            <div
-              data-radius="radius2"
-              className="group/tool bg-muted/30 inline-flex items-center gap-1.5 border px-2 py-1"
-            >
-              {/* Processing Icon / Tick */}
-              {step.status === "pending" && (
-                <LoaderCircle className="text-muted-foreground h-4 w-4 flex-shrink-0 animate-spin" />
-              )}
-              {step.status === "success" && (
-                <CheckmarkCircleIcon
-                  size="xs"
-                  className="flex-shrink-0 text-green-600"
-                />
-              )}
-              {step.status === "error" && (
-                <XCircleIcon className="h-4 w-4 flex-shrink-0 text-red-600" />
-              )}
-              <span className="text-xs font-medium">{step.toolCall.name}</span>
-              {step.toolResponse && (
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="ml-1 opacity-0 transition-opacity duration-200 group-hover/tool:opacity-100"
-                  aria-label="Copy tool and response"
-                >
-                  <CopyIcon
-                    size="xs"
-                    className="text-muted-foreground hover:text-foreground"
-                  />
-                </button>
-              )}
-            </div>
-            {/* Show response always in preview mode, on hover in full mode */}
-            {step.toolResponse && (
-              <div
-                className={cn(
-                  "grid transition-all duration-300 ease-in-out",
-                  isPreview
-                    ? "grid-rows-[1fr]"
-                    : "grid-rows-[0fr] group-hover/toolwrapper:grid-rows-[1fr]",
-                )}
-              >
-                <div className="overflow-hidden">
-                  <div
-                    data-radius="radius2"
-                    className="bg-muted/50 mt-1.5 inline-block w-fit max-w-[60ch] border px-2 py-1.5"
-                  >
-                    <div className="max-h-[300px] overflow-y-auto font-mono text-xs leading-relaxed whitespace-pre-wrap">
-                      {formatToolResponse(step.toolResponse)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <ToolItem
+            toolCall={{
+              id: step.toolCall.id,
+              name: step.toolCall.name,
+              args: step.toolCall.args as Record<string, unknown>,
+            }}
+            toolResponse={step.toolResponse}
+            state={stepStatusToToolState(step.status)}
+            interrupt={
+              needsApproval
+                ? {
+                    needsApproval: true,
+                    onApprove: thread.approve,
+                    onReject: thread.reject,
+                  }
+                : undefined
+            }
+            defaultExpanded={false}
+          />
         </ChainOfThoughtStep>
       );
     }
@@ -328,16 +222,9 @@ export const AITurn = React.memo(function AITurn({
               blockIdx === chainData.renderBlocks.length - 1;
             const isActiveThinking = isLoading && isLastThinkingGroup;
 
-            // Determine if we should show preview:
-            // Show preview ONLY when:
-            // 1. Still loading (actively streaming)
-            // 2. This is the last thinking block
-            // 3. No content block follows (if content exists, user should focus on that)
-            const hasContentAfter = chainData.renderBlocks
-              .slice(blockIdx + 1)
-              .some((b) => b.type === "content");
-            const shouldShowPreview =
-              isLoading && isLastThinkingGroup && !hasContentAfter;
+            // Always show preview with the last step (when collapsed)
+            // The ChainOfThoughtPreview component handles hiding when expanded
+            const shouldShowPreview = true;
 
             // Render thinking block with steps and smooth entrance animation
             return (
@@ -450,11 +337,47 @@ export const AITurn = React.memo(function AITurn({
                     { type: "tool" }
                   >;
 
+                  // Check if this tool needs HITL approval
+                  const needsApproval = Boolean(
+                    thread.interrupt &&
+                    thread.interrupt.tool_call?.id === step.toolCall.id,
+                  );
+
+                  // Debug logging for interrupt matching
+                  if (
+                    thread.interrupt &&
+                    step.toolCall.name === thread.interrupt.tool_call?.name
+                  ) {
+                    console.log(
+                      "[AITurn ToolItem] Checking tool for interrupt match:",
+                    );
+                    console.log("  step.toolCall.id:", step.toolCall.id);
+                    console.log(
+                      "  thread.interrupt.tool_call.id:",
+                      thread.interrupt.tool_call?.id,
+                    );
+                    console.log("  needsApproval:", needsApproval);
+                  }
+
                   return (
                     <ToolItem
-                      key={`tool-standalone-${stepIdx}`}
-                      step={step}
-                      stepIdx={stepIdx}
+                      key={`tool-standalone-${step.toolCall.id || stepIdx}`}
+                      toolCall={{
+                        id: step.toolCall.id,
+                        name: step.toolCall.name,
+                        args: step.toolCall.args as Record<string, unknown>,
+                      }}
+                      toolResponse={step.toolResponse}
+                      state={stepStatusToToolState(step.status)}
+                      interrupt={
+                        needsApproval
+                          ? {
+                              needsApproval: true,
+                              onApprove: thread.approve,
+                              onReject: thread.reject,
+                            }
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -470,7 +393,7 @@ export const AITurn = React.memo(function AITurn({
           <div
             className={cn(
               "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
-              "opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0 md:delay-[600ms]",
+              "md:delay-[600ms] opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0",
             )}
           >
             <CommandBar

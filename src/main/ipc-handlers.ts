@@ -7,6 +7,7 @@
 
 import { IpcMain, BrowserWindow } from 'electron';
 import { app } from 'electron';
+import { Command } from '@langchain/langgraph';
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync, readdirSync, appendFileSync } from 'fs';
 import { v4 as uuid } from 'uuid';
@@ -253,10 +254,28 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
             
             if (checkpointTuple?.checkpoint) {
                 const state = checkpointTuple.checkpoint.channel_values;
+                const pendingWrites = checkpointTuple.pendingWrites || [];
                 console.log('[IPC] threads:getState loaded from checkpoint:', state?.messages?.length || 0, 'messages');
+                console.log('[IPC] threads:getState pendingWrites count:', pendingWrites.length);
                 
-                return {
-                    values: state || { messages: [] },
+                // Check for interrupt in pendingWrites
+                // LangGraph stores interrupts as writes to the "__interrupt__" channel
+                let interruptData = null;
+                for (const [taskId, channel, value] of pendingWrites) {
+                    console.log('[IPC] pendingWrite:', { taskId, channel, valueType: typeof value });
+                    if (channel === '__interrupt__') {
+                        interruptData = value;
+                        console.log('[IPC] Found interrupt in pendingWrites:', interruptData);
+                    }
+                }
+                
+                // If we found interrupt data in pendingWrites, add it to the state
+                const valuesWithInterrupt = interruptData 
+                    ? { ...state, __interrupt__: Array.isArray(interruptData) ? interruptData : [interruptData] }
+                    : state;
+                
+                const result = {
+                    values: valuesWithInterrupt || { messages: [] },
                     next: checkpointTuple.checkpoint.pending_sends || [],
                     config: checkpointTuple.config,
                     metadata: checkpointTuple.metadata || {
@@ -268,6 +287,26 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                     created_at: thread.created_at,
                     parent_config: checkpointTuple.parentConfig,
                 };
+                
+                // Log to file for debugging interrupt persistence
+                try {
+                    const { writeFileSync } = await import('fs');
+                    const { join } = await import('path');
+                    const logPath = join(getThreadsDir(), '..', 'logging.txt');
+                    const logEntry = `\n\n[${new Date().toISOString()}] threads:getState for ${threadId}:\n` +
+                        `Has __interrupt__ in channel_values: ${!!state?.__interrupt__}\n` +
+                        `Has __interrupt__ in pendingWrites: ${!!interruptData}\n` +
+                        `pendingWrites count: ${pendingWrites.length}\n` +
+                        `pendingWrites channels: ${pendingWrites.map((w: unknown[]) => w[1]).join(', ')}\n` +
+                        `__interrupt__ value: ${JSON.stringify(interruptData, null, 2)}\n` +
+                        `Messages count: ${state?.messages?.length || 0}\n`;
+                    writeFileSync(logPath, logEntry, { flag: 'a' });
+                    console.log('[IPC] Logged getState to logging.txt');
+                } catch (logError) {
+                    console.warn('[IPC] Failed to write logging.txt:', logError);
+                }
+                
+                return result;
             }
         } catch (checkpointError) {
             console.warn('[IPC] Failed to load from checkpoint:', checkpointError);
@@ -404,6 +443,9 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
         const abortController = new AbortController();
         activeRuns.set(threadId, abortController);
 
+        // Track messages at outer scope so error handler can access them
+        let lastStateWithMessages: unknown = null;
+        
         try {
             // Update thread status
             console.log('[IPC] Updating thread status to busy');
@@ -431,6 +473,7 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 let finalState: unknown;
 
                 console.log('[IPC] Starting agent stream...');
+                
                 for await (const event of await agent.stream(
                     { messages: [{ type: 'human', content: message }] },
                     { ...config, streamMode: ['messages', 'values'] }
@@ -450,8 +493,12 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                     // Send values or messages update
                     if (mode === 'values' && data) {
                         // Check for interrupt (LangGraph standard: __interrupt__ key in values)
-                        if ('__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0) {
+                        const isInterruptEvent = '__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0;
+                        const hasMessages = 'messages' in data && Array.isArray((data as any).messages) && (data as any).messages.length > 0;
+                        
+                        if (isInterruptEvent) {
                             console.log('[IPC] Interrupt detected:', data.__interrupt__);
+                            console.log('[IPC] Interrupt event has messages:', hasMessages);
                             updateThread(threadId, { status: 'interrupted' });
                         } else {
                             console.log('[IPC] Streaming values event');
@@ -469,6 +516,16 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                         } catch (serializeError) {
                             console.error('[IPC] Failed to serialize values:', serializeError);
                         }
+                        
+                        // CRITICAL FIX: Track state with messages separately.
+                        // When interrupt occurs, LangGraph emits { __interrupt__: [...] } WITHOUT messages.
+                        // We need to preserve the last state that actually had messages for persistence.
+                        if (hasMessages) {
+                            lastStateWithMessages = data;
+                            console.log('[IPC] Updated lastStateWithMessages with', (data as any).messages.length, 'messages');
+                        }
+                        
+                        // Always update finalState (for values reference)
                         finalState = data;
                     } else if (mode === 'messages' && Array.isArray(data)) {
                         console.log('[IPC] Sending messages update');
@@ -497,17 +554,26 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 }
 
                 // Save final state to thread
-                if (finalState) {
+                // CRITICAL: Use lastStateWithMessages if available (interrupt events don't have messages)
+                const stateToSave = lastStateWithMessages || finalState;
+                
+                if (stateToSave) {
                     console.log('[DEBUG2] ============================================');
                     console.log('[DEBUG2] Saving final state to thread');
                     console.log('[DEBUG2] Thread ID:', threadId);
-                    console.log('[DEBUG2] Messages in final state:', (finalState as any).messages?.length || 0);
+                    console.log('[DEBUG2] Using lastStateWithMessages:', !!lastStateWithMessages);
+                    console.log('[DEBUG2] Messages in state to save:', (stateToSave as any).messages?.length || 0);
                     console.log('[DEBUG2] ============================================');
                     
+                    // Merge: preserve messages from lastStateWithMessages, but include any new values from finalState
+                    const mergedState = lastStateWithMessages && finalState && lastStateWithMessages !== finalState
+                        ? { ...lastStateWithMessages, ...finalState, messages: (lastStateWithMessages as any).messages }
+                        : stateToSave;
+                    
                     updateThread(threadId, { 
-                        thread_values: finalState as any 
+                        thread_values: mergedState as any 
                     });
-                    console.log('[IPC] Final state saved to thread');
+                    console.log('[IPC] Final state saved to thread with', (mergedState as any).messages?.length || 0, 'messages');
                 } else {
                     console.warn('[IPC] No final state captured - messages may not persist');
                 }
@@ -515,15 +581,33 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
                 response = 'Agent completed successfully';
 
             } catch (runtimeError) {
-                // Fallback to placeholder if runtime fails (missing dependencies, etc.)
+                // Handle runtime error - but preserve any messages that were already streamed
                 console.error('[IPC] ======================================');
                 console.error('[IPC] RUNTIME ERROR - Agent failed to execute');
                 console.error('[IPC] Error type:', runtimeError instanceof Error ? runtimeError.constructor.name : typeof runtimeError);
                 console.error('[IPC] Error message:', runtimeError instanceof Error ? runtimeError.message : String(runtimeError));
                 console.error('[IPC] Error stack:', runtimeError instanceof Error ? runtimeError.stack : 'N/A');
+                console.error('[IPC] Already streamed messages:', (lastStateWithMessages as any)?.messages?.length || 0);
                 console.error('[IPC] ======================================');
                 
-                response = `I received your message: "${message.substring(0, 100)}..."
+                // Check if we already have streamed messages - preserve them!
+                if (lastStateWithMessages && (lastStateWithMessages as any).messages?.length > 0) {
+                    console.log('[IPC] Preserving already-streamed messages despite error');
+                    console.log('[IPC] Saving', (lastStateWithMessages as any).messages.length, 'messages to thread');
+                    
+                    // Save the already-streamed messages (not placeholder)
+                    updateThread(threadId, { 
+                        thread_values: lastStateWithMessages as any 
+                    });
+                    
+                    // Send error event so UI knows something went wrong, but messages are preserved
+                    window.webContents.send(channel, {
+                        type: 'error',
+                        error: runtimeError instanceof Error ? runtimeError.message : 'Agent execution failed',
+                    });
+                } else {
+                    // No messages were streamed yet - use placeholder
+                    response = `I received your message: "${message.substring(0, 100)}..."
 
 ⚠️ Local agent runtime not fully configured. To enable:
 1. Install: npm install deepagents @langchain/anthropic @langchain/openai sql.js
@@ -531,28 +615,25 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
 
 Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}`;
 
-                console.log('[IPC] Sending placeholder response to channel:', channel);
-                // Send placeholder response (serialize dates)
-                const placeholderData = {
-                    messages: [
-                        { id: uuid(), role: 'user', content: message, created_at: new Date().toISOString() },
-                        { id: uuid(), role: 'assistant', content: response, created_at: new Date().toISOString() },
-                    ],
-                };
-                console.log('[IPC] AI placeholder message (runtime error)');
-                console.log('[IPC] Thread ID:', threadId);
-                console.log('[IPC] Error message:', response.substring(0, 200));
-                
-                // Save placeholder messages to thread
-                updateThread(threadId, { 
-                    thread_values: placeholderData as any 
-                });
-                
-                window.webContents.send(channel, {
-                    type: 'stream',
-                    mode: 'values',
-                    data: placeholderData,
-                });
+                    console.log('[IPC] No streamed messages - sending placeholder response');
+                    const placeholderData = {
+                        messages: [
+                            { id: uuid(), role: 'user', content: message, created_at: new Date().toISOString() },
+                            { id: uuid(), role: 'assistant', content: response, created_at: new Date().toISOString() },
+                        ],
+                    };
+                    
+                    // Save placeholder messages to thread
+                    updateThread(threadId, { 
+                        thread_values: placeholderData as any 
+                    });
+                    
+                    window.webContents.send(channel, {
+                        type: 'stream',
+                        mode: 'values',
+                        data: placeholderData,
+                    });
+                }
             }
 
             updateThread(threadId, { status: 'idle' });
@@ -622,21 +703,33 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                 streamMode: ['messages', 'values'] as const
             };
             let finalState: unknown;
+            // Track last state with messages (interrupt events don't have messages)
+            let lastStateWithMessages: unknown = null;
 
             console.log('[IPC] Resuming agent with decision:', decision.type);
             updateThread(threadId, { status: 'busy' });
 
             if (decision.type === 'approve') {
-                // Resume execution by streaming with null (continues from checkpoint)
-                for await (const event of await agent.stream(null, config)) {
+                // Resume execution with Command containing the decision
+                // LangGraph HITL expects { decisions: [{ type: 'approve' | 'reject' }] }
+                const resumeCommand = new Command({
+                    resume: { decisions: [{ type: 'approve' }] }
+                });
+                console.log('[IPC] Sending resume command:', resumeCommand);
+                
+                for await (const event of await agent.stream(resumeCommand, config)) {
                     if (abortController.signal.aborted) break;
 
                     const [mode, data] = Array.isArray(event) ? event : [null, event];
 
                     // Handle values events (including new interrupts)
                     if (mode === 'values' && data) {
-                        if ('__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0) {
+                        const isInterruptEvent = '__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0;
+                        const hasMessages = 'messages' in data && Array.isArray((data as any).messages) && (data as any).messages.length > 0;
+                        
+                        if (isInterruptEvent) {
                             console.log('[IPC] New interrupt during resume:', data.__interrupt__);
+                            console.log('[IPC] Resume interrupt event has messages:', hasMessages);
                             updateThread(threadId, { status: 'interrupted' });
                         }
                         
@@ -646,6 +739,70 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                             mode: 'values',
                             data: serializedData,
                         });
+                        
+                        // Track state with messages separately
+                        if (hasMessages) {
+                            lastStateWithMessages = data;
+                            console.log('[IPC] Resume: Updated lastStateWithMessages with', (data as any).messages.length, 'messages');
+                        }
+                        finalState = data;
+                    } else if (mode === 'messages' && Array.isArray(data)) {
+                        const serializedMessages = JSON.parse(JSON.stringify(data));
+                        window.webContents.send(channel, {
+                            type: 'stream',
+                            mode: 'messages',
+                            data: { messages: serializedMessages },
+                        });
+                    }
+                }
+
+                // Save final state - use lastStateWithMessages if available
+                const stateToSave = lastStateWithMessages || finalState;
+                if (stateToSave) {
+                    // Merge: preserve messages from lastStateWithMessages, but include any new values from finalState
+                    const mergedState = lastStateWithMessages && finalState && lastStateWithMessages !== finalState
+                        ? { ...lastStateWithMessages, ...finalState, messages: (lastStateWithMessages as any).messages }
+                        : stateToSave;
+                    
+                    console.log('[IPC] Resume: Saving state with', (mergedState as any).messages?.length || 0, 'messages');
+                    updateThread(threadId, { thread_values: mergedState as any });
+                }
+
+                if (!abortController.signal.aborted) {
+                    updateThread(threadId, { status: 'idle' });
+                    window.webContents.send(channel, { type: 'done' });
+                }
+            } else if (decision.type === 'reject') {
+                // Reject: Send Command with reject decision
+                const resumeCommand = new Command({
+                    resume: { decisions: [{ type: 'reject' }] }
+                });
+                console.log('[IPC] Sending reject command:', resumeCommand);
+                
+                for await (const event of await agent.stream(resumeCommand, config)) {
+                    if (abortController.signal.aborted) break;
+
+                    const [mode, data] = Array.isArray(event) ? event : [null, event];
+
+                    if (mode === 'values' && data) {
+                        const isInterruptEvent = '__interrupt__' in data && Array.isArray(data.__interrupt__) && data.__interrupt__.length > 0;
+                        const hasMessages = 'messages' in data && Array.isArray((data as any).messages) && (data as any).messages.length > 0;
+                        
+                        if (isInterruptEvent) {
+                            console.log('[IPC] New interrupt during reject:', data.__interrupt__);
+                            updateThread(threadId, { status: 'interrupted' });
+                        }
+                        
+                        const serializedData = JSON.parse(JSON.stringify(data));
+                        window.webContents.send(channel, {
+                            type: 'stream',
+                            mode: 'values',
+                            data: serializedData,
+                        });
+                        
+                        if (hasMessages) {
+                            lastStateWithMessages = data;
+                        }
                         finalState = data;
                     } else if (mode === 'messages' && Array.isArray(data)) {
                         const serializedMessages = JSON.parse(JSON.stringify(data));
@@ -658,8 +815,12 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                 }
 
                 // Save final state
-                if (finalState) {
-                    updateThread(threadId, { thread_values: finalState as any });
+                const stateToSave = lastStateWithMessages || finalState;
+                if (stateToSave) {
+                    const mergedState = lastStateWithMessages && finalState && lastStateWithMessages !== finalState
+                        ? { ...lastStateWithMessages, ...finalState, messages: (lastStateWithMessages as any).messages }
+                        : stateToSave;
+                    updateThread(threadId, { thread_values: mergedState as any });
                 }
 
                 if (!abortController.signal.aborted) {
@@ -667,8 +828,8 @@ Error: ${runtimeError instanceof Error ? runtimeError.message : 'Unknown error'}
                     window.webContents.send(channel, { type: 'done' });
                 }
             } else {
-                // For reject/edit: Currently not implemented properly in LangGraph JS
-                // Just mark as idle and send done (matches openwork behavior)
+                // Unknown decision type - just mark as idle
+                console.warn('[IPC] Unknown decision type:', decision.type);
                 updateThread(threadId, { status: 'idle' });
                 window.webContents.send(channel, { type: 'done' });
             }

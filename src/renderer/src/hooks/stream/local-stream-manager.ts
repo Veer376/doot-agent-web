@@ -12,6 +12,7 @@
 
 import type { Message } from "@langchain/langgraph-sdk";
 import { onIpcEvent, send } from "@/lib/electron";
+import type { HITLRequest } from "./use-local-stream";
 
 /**
  * Stream state for a single thread
@@ -21,15 +22,8 @@ export interface LocalStreamState {
     isLoading: boolean;
     error: string | null;
     values: Record<string, unknown> | null;
-    interrupt?: {
-        id: string;
-        tool_call: {
-            id?: string;
-            name: string;
-            args: Record<string, unknown>;
-        };
-        allowed_decisions: string[];
-    };
+    /** Pending HITL interrupt request */
+    interrupt: HITLRequest | null;
 }
 
 /**
@@ -54,7 +48,8 @@ const defaultState: LocalStreamState = {
     messages: [],
     isLoading: false,
     error: null,
-    values: null
+    values: null,
+    interrupt: null
 };
 
 /**
@@ -255,11 +250,25 @@ export class LocalStreamManager {
                         console.log('[LocalStreamManager] ✅ Found subagents in values:', stateData.subagents);
                     }
                     
-                    // Store values first
-                    this.setState(threadId, {
-                        messages: transformedMessages,
-                        values: stateData
-                    });
+                    // CRITICAL FIX: When an interrupt occurs, LangGraph emits a values event
+                    // containing ONLY { __interrupt__: [...] } without the messages array.
+                    // We must NOT replace existing messages with an empty array in this case.
+                    // Only update messages if the values event actually contains messages.
+                    const isInterruptOnlyEvent = stateData.__interrupt__ && rawMessages.length === 0;
+                    
+                    if (isInterruptOnlyEvent) {
+                        console.log('[LocalStreamManager] ⚠️ Interrupt-only event detected - preserving existing messages');
+                        // Only update values (to capture interrupt metadata), keep messages intact
+                        this.setState(threadId, {
+                            values: stateData
+                        });
+                    } else {
+                        // Normal values event with messages - update both
+                        this.setState(threadId, {
+                            messages: transformedMessages,
+                            values: stateData
+                        });
+                    }
                     
                     // Check for interrupt (LangGraph HITL format) - emit as custom event (matches SDK pattern)
                     if (stateData.__interrupt__ && Array.isArray(stateData.__interrupt__) && stateData.__interrupt__.length > 0) {
@@ -275,43 +284,49 @@ export class LocalStreamManager {
                             );
 
                             // Find tool_call.id from messages (actionRequest doesn't include it)
+                            // CRITICAL FIX: When interrupt-only event arrives, transformedMessages is empty
+                            // We must use existing messages from state instead
+                            const currentState = this.stateMap.get(threadId) || defaultState;
+                            const messagesToSearch = transformedMessages.length > 0 
+                                ? transformedMessages 
+                                : currentState.messages;
+                            
+                            console.log('[LocalStreamManager] Searching for tool_call.id in', messagesToSearch.length, 'messages');
+                            
                             let toolCallId: string | undefined;
-                            for (const msg of transformedMessages) {
+                            // Search from the END of messages (most recent tool call for this action)
+                            for (let i = messagesToSearch.length - 1; i >= 0; i--) {
+                                const msg = messagesToSearch[i];
                                 if (msg.type === 'ai' && (msg as any).tool_calls?.length) {
                                     for (const tc of (msg as any).tool_calls) {
                                         if (tc.name === firstAction.name && tc.id) {
                                             toolCallId = tc.id;
+                                            console.log('[LocalStreamManager] Found tool_call.id:', toolCallId, 'for action:', firstAction.name);
                                             break;
                                         }
                                     }
                                     if (toolCallId) break;
                                 }
                             }
-
-                            console.log('[LocalStreamManager] Emitting interrupt custom event:', {
-                                id: toolCallId || firstAction.id,
-                                name: firstAction.name,
-                                args: firstAction.args
-                            });
-
-                            // Emit as custom event (SDK pattern - matches openwork)
-                            this.notifySubscribers(threadId);
                             
-                            // TODO: Need to emit custom event through a callback mechanism
-                            // For now, store in a separate interrupt state
-                            const currentState = this.stateMap.get(threadId);
-                            if (currentState) {
-                                (currentState as any).interrupt = {
-                                    id: toolCallId || firstAction.id || crypto.randomUUID(),
-                                    tool_call: {
-                                        id: toolCallId,
-                                        name: firstAction.name,
-                                        args: firstAction.args || {}
-                                    },
-                                    allowed_decisions: reviewConfig?.allowedDecisions || ['approve', 'reject']
-                                };
-                                this.notifySubscribers(threadId);
+                            if (!toolCallId) {
+                                console.warn('[LocalStreamManager] ⚠️ Could not find tool_call.id for action:', firstAction.name);
                             }
+
+                            const interruptRequest: HITLRequest = {
+                                id: toolCallId || firstAction.id || crypto.randomUUID(),
+                                tool_call: {
+                                    id: toolCallId || firstAction.id || '',
+                                    name: firstAction.name,
+                                    args: firstAction.args || {}
+                                },
+                                allowed_decisions: (reviewConfig?.allowedDecisions || ['approve', 'reject']) as Array<'approve' | 'reject' | 'edit'>
+                            };
+
+                            console.log('[LocalStreamManager] 🚨 Setting interrupt state:', interruptRequest);
+
+                            // Store interrupt in state and notify subscribers
+                            this.setState(threadId, { interrupt: interruptRequest });
                         }
                     }
                 } else if (event.mode === 'messages') {
@@ -418,6 +433,51 @@ export class LocalStreamManager {
                     messages: transformedMessages,
                     values: threadState.values
                 });
+                
+                // Restore interrupt if there's a pending __interrupt__ in the values
+                const values = threadState.values as { __interrupt__?: Array<{ value?: unknown }> };
+                if (values.__interrupt__ && Array.isArray(values.__interrupt__) && values.__interrupt__.length > 0) {
+                    console.log('[LocalStreamManager] 🔄 Restoring interrupt from checkpoint:', values.__interrupt__);
+                    const interruptValue = values.__interrupt__[0]?.value as { actionRequests?: Array<{ id?: string; name: string; args?: Record<string, unknown> }>; reviewConfigs?: Array<{ actionName: string; allowedDecisions?: string[] }> } | undefined;
+                    const actionRequests = interruptValue?.actionRequests;
+                    const reviewConfigs = interruptValue?.reviewConfigs;
+
+                    if (actionRequests?.length) {
+                        const firstAction = actionRequests[0];
+                        const reviewConfig = reviewConfigs?.find(
+                            (rc) => rc.actionName === firstAction.name
+                        );
+
+                        // Find tool_call.id from messages
+                        let toolCallId: string | undefined;
+                        for (let i = transformedMessages.length - 1; i >= 0; i--) {
+                            const msg = transformedMessages[i];
+                            if (msg.type === 'ai' && (msg as any).tool_calls?.length) {
+                                for (const tc of (msg as any).tool_calls) {
+                                    if (tc.name === firstAction.name && tc.id) {
+                                        toolCallId = tc.id;
+                                        console.log('[LocalStreamManager] Found tool_call.id:', toolCallId, 'for action:', firstAction.name);
+                                        break;
+                                    }
+                                }
+                                if (toolCallId) break;
+                            }
+                        }
+
+                        const interruptRequest: HITLRequest = {
+                            id: toolCallId || firstAction.id || crypto.randomUUID(),
+                            tool_call: {
+                                id: toolCallId || firstAction.id || '',
+                                name: firstAction.name,
+                                args: firstAction.args || {}
+                            },
+                            allowed_decisions: (reviewConfig?.allowedDecisions || ['approve', 'reject']) as Array<'approve' | 'reject' | 'edit'>
+                        };
+
+                        console.log('[LocalStreamManager] 🔄 Restored interrupt state:', interruptRequest);
+                        this.setState(threadId, { interrupt: interruptRequest });
+                    }
+                }
             }
         } catch (error) {
             console.error('[LocalStreamManager] Failed to load initial state:', error);
@@ -476,6 +536,62 @@ export class LocalStreamManager {
         this.cleanupIPC(threadId);
         this.stateMap.delete(threadId);
         this.subscribersMap.delete(threadId);
+    }
+
+    /**
+     * Clear interrupt state for a thread.
+     */
+    clearInterrupt(threadId: string): void {
+        console.log('[LocalStreamManager] Clearing interrupt for:', threadId);
+        this.setState(threadId, { interrupt: null });
+    }
+
+    /**
+     * Approve the current interrupt and resume execution.
+     */
+    approve(threadId: string, workspacePath?: string, modelId?: string): void {
+        const currentState = this.stateMap.get(threadId);
+        if (!currentState?.interrupt) {
+            console.warn('[LocalStreamManager] No interrupt to approve');
+            return;
+        }
+
+        console.log('[LocalStreamManager] ✅ Approving interrupt:', currentState.interrupt);
+
+        // Clear interrupt immediately (optimistic)
+        this.setState(threadId, { interrupt: null, isLoading: true });
+
+        // Send IPC to resume with approve decision
+        send('agent:interrupt', {
+            threadId,
+            decision: { type: 'approve', tool_call_id: currentState.interrupt.tool_call.id },
+            workspacePath,
+            modelId
+        });
+    }
+
+    /**
+     * Reject the current interrupt.
+     */
+    reject(threadId: string, workspacePath?: string, modelId?: string, feedback?: string): void {
+        const currentState = this.stateMap.get(threadId);
+        if (!currentState?.interrupt) {
+            console.warn('[LocalStreamManager] No interrupt to reject');
+            return;
+        }
+
+        console.log('[LocalStreamManager] ❌ Rejecting interrupt:', currentState.interrupt);
+
+        // Clear interrupt immediately (optimistic)
+        this.setState(threadId, { interrupt: null, isLoading: true });
+
+        // Send IPC to resume with reject decision
+        send('agent:interrupt', {
+            threadId,
+            decision: { type: 'reject', tool_call_id: currentState.interrupt.tool_call.id, feedback },
+            workspacePath,
+            modelId
+        });
     }
 }
 

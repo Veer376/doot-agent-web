@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
@@ -11,6 +12,10 @@ import { config as loadDotenv } from 'dotenv';
 // Load environment variables from .env file
 // This allows API keys to be set in .env instead of system env vars
 loadDotenv();
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Playwright browser server types
 import type { BrowserServer } from 'playwright';

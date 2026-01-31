@@ -280,15 +280,15 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
     const approve = useCallback(() => {
         if (!threadId || !isElectronEnv) return;
         console.log('[useLocalStream] Approving interrupt');
-        // TODO: Implement HITL approve
-    }, [threadId, isElectronEnv]);
+        manager.approve(threadId, workspacePath, modelId);
+    }, [threadId, isElectronEnv, manager, workspacePath, modelId]);
 
     // Reject interrupt
     const reject = useCallback(() => {
         if (!threadId || !isElectronEnv) return;
         console.log('[useLocalStream] Rejecting interrupt');
-        // TODO: Implement HITL reject
-    }, [threadId, isElectronEnv]);
+        manager.reject(threadId, workspacePath, modelId);
+    }, [threadId, isElectronEnv, manager, workspacePath, modelId]);
 
     // Swap thread ID (for optimistic updates with temp ID)
     const swapThreadId = useCallback((tempThreadId: string, realThreadId: string) => {
@@ -326,7 +326,7 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         messages: state.messages,
         isLoading: state.isLoading,
         error: state.error,
-        interrupt: null, // TODO: Extract from custom events
+        interrupt: state.interrupt, // Extract from state (set by LocalStreamManager)
         submit,
         submitToThread, // For new thread creation flow
         stop,

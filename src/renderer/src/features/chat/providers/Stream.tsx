@@ -39,6 +39,7 @@ import {
 import {
   useLocalStream,
   type LocalStreamState,
+  type HITLRequest,
 } from "@/hooks/stream/use-local-stream";
 import { send } from "@/lib/electron";
 
@@ -65,7 +66,8 @@ type StreamContextType = {
   error: unknown;
   stop: () => void;
   submit: (values: unknown, options?: unknown) => Promise<void> | void;
-  interrupt?: unknown;
+  /** Pending HITL interrupt request (local agent only) */
+  interrupt: HITLRequest | null;
   // Cloud-specific
   rewind?: () => void;
   next?: () => void;
@@ -145,7 +147,7 @@ const CloudStreamSession = ({
       error: streamValue.error,
       stop: streamValue.stop,
       submit: streamValue.submit as StreamContextType["submit"],
-      interrupt: streamValue.interrupt,
+      interrupt: (streamValue.interrupt as HITLRequest) || null, // Cloud interrupts use SDK's interrupt
       getMessagesMetadata: streamValue.getMessagesMetadata,
     }),
     [streamValue],

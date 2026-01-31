@@ -27,11 +27,11 @@ export function AgentDashboard() {
 
   const allGraphGroups: GraphGroup[] = useMemo(() => {
     if (agentsLoading) return [];
-    
+
     // Group agents by their graph_id
     const agentsGroupedByGraphs = groupAgentsByGraphs(agents);
     const groups: GraphGroup[] = [];
-    
+
     agentsGroupedByGraphs.forEach((agentGroup) => {
       if (agentGroup.length > 0) {
         const graphId = agentGroup[0].graph_id;
@@ -41,7 +41,7 @@ export function AgentDashboard() {
         });
       }
     });
-    
+
     return groups;
   }, [agents, agentsLoading]);
 
@@ -79,7 +79,7 @@ export function AgentDashboard() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-sm">
-            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search agents..."
               data-radius="radius2"
@@ -92,7 +92,7 @@ export function AgentDashboard() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <FilterIcon className="text-muted-foreground h-4 w-4" />
+            <FilterIcon className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filters:</span>
           </div>
 
@@ -100,7 +100,10 @@ export function AgentDashboard() {
             value={graphFilter}
             onValueChange={setGraphFilter}
           >
-            <SelectTrigger data-radius="radius2" className="h-11 min-w-[180px]">
+            <SelectTrigger
+              data-radius="radius2"
+              className="h-11 min-w-[180px]"
+            >
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>
@@ -126,12 +129,15 @@ export function AgentDashboard() {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div data-radius="radius2" className="animate-in fade-in-50 flex flex-col items-center justify-center border border-dashed p-8 text-center">
-          <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <Search className="text-muted-foreground h-10 w-10" />
+        <div
+          data-radius="radius2"
+          className="flex flex-col items-center justify-center border border-dashed p-8 text-center animate-in fade-in-50"
+        >
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <Search className="h-10 w-10 text-muted-foreground" />
           </div>
           <h2 className="mt-6 text-xl font-semibold">No agents found</h2>
-          <p className="text-muted-foreground mt-2 mb-8 text-center">
+          <p className="mb-8 mt-2 text-center text-muted-foreground">
             We couldn't find any agents matching your search criteria. Try
             adjusting your filters or create a new agent.
           </p>

@@ -67,7 +67,7 @@ export function TemplatesList() {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <SearchIcon className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
+          <SearchIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by graph or agent name..."
             className="pl-8"
@@ -78,12 +78,15 @@ export function TemplatesList() {
       </div>
 
       {filteredGraphGroupsState.length === 0 ? (
-        <div data-radius="radius2" className="animate-in fade-in-50 flex flex-col items-center justify-center border border-dashed p-8 text-center">
-          <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <SearchIcon className="text-muted-foreground h-10 w-10" />
+        <div
+          data-radius="radius2"
+          className="flex flex-col items-center justify-center border border-dashed p-8 text-center animate-in fade-in-50"
+        >
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <SearchIcon className="h-10 w-10 text-muted-foreground" />
           </div>
           <h2 className="mt-6 text-xl font-semibold">No graphs found</h2>
-          <p className="text-muted-foreground mt-2 mb-8 text-center">
+          <p className="mb-8 mt-2 text-center text-muted-foreground">
             {searchQueryState
               ? "We couldn't find any graphs matching your search."
               : "There are no agent graphs configured yet."}

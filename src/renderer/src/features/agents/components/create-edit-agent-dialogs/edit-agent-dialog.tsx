@@ -8,7 +8,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUpdateCloudAgent, useDeleteCloudAgent, cloudAgentKeys } from "@/hooks/use-cloud-agents";
+import {
+  useUpdateCloudAgent,
+  useDeleteCloudAgent,
+  cloudAgentKeys,
+} from "@/hooks/use-cloud-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";

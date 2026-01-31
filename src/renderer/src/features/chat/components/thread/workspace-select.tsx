@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { FolderIcon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,13 +14,15 @@ interface WorkspaceSelectProps {
   currentPath?: string | null;
 }
 
-export function WorkspaceSelect({ 
-  threadId, 
-  onWorkspaceSelect, 
+export function WorkspaceSelect({
+  threadId,
+  onWorkspaceSelect,
   className,
-  currentPath: initialPath 
+  currentPath: initialPath,
 }: WorkspaceSelectProps) {
-  const [workspacePath, setWorkspacePath] = useState<string | null>(initialPath || null);
+  const [workspacePath, setWorkspacePath] = useState<string | null>(
+    initialPath || null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
@@ -38,7 +39,10 @@ export function WorkspaceSelect({
       const loadWorkspace = async () => {
         try {
           if (window.electron?.invoke) {
-            const path = await window.electron.invoke('workspace:get', threadId);
+            const path = await window.electron.invoke(
+              "workspace:get",
+              threadId,
+            );
             if (path) {
               setWorkspacePath(path as string);
               onWorkspaceSelect?.(path as string);
@@ -56,11 +60,11 @@ export function WorkspaceSelect({
     setIsLoading(true);
     try {
       if (window.electron?.invoke) {
-        const path = await window.electron.invoke('workspace:select', threadId);
+        const path = await window.electron.invoke("workspace:select", threadId);
         if (path) {
           setWorkspacePath(path as string);
           onWorkspaceSelect?.(path as string);
-          
+
           // Invalidate thread lists to update metadata in other components
           queryClient.invalidateQueries({ queryKey: localThreadKeys.lists() });
           queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
@@ -83,16 +87,19 @@ export function WorkspaceSelect({
         onClick={handleSelectWorkspace}
         disabled={isLoading}
         className={cn(
-          "h-8 gap-2 text-xs font-normal border-dashed transition-all duration-300",
-          workspacePath 
-            ? "border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300" 
-            : "text-muted-foreground hover:text-foreground"
+          "h-8 gap-2 border-dashed text-xs font-normal transition-all duration-300",
+          workspacePath
+            ? "border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+            : "text-muted-foreground hover:text-foreground",
         )}
       >
         {workspacePath ? (
           <>
             <CheckIcon className="h-3.5 w-3.5" />
-            <span className="max-w-[200px] truncate" title={workspacePath}>
+            <span
+              className="max-w-[200px] truncate"
+              title={workspacePath}
+            >
               {workspacePath.split(/[/\\]/).pop()}
             </span>
           </>

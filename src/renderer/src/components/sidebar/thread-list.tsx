@@ -90,17 +90,20 @@ function getFirstHumanMessageContent(thread: Thread) {
     if (!thread.values || Array.isArray(thread.values)) {
       return "";
     }
-    
+
     // Check if messages exist in values
     if (!("messages" in thread.values) || !thread.values.messages) {
       return "";
     }
-    
+
     // Check if messages is an array with length
-    if (!Array.isArray(thread.values.messages) || !thread.values.messages.length) {
+    if (
+      !Array.isArray(thread.values.messages) ||
+      !thread.values.messages.length
+    ) {
       return "";
     }
-    
+
     const castMessages = thread.values.messages as Message[];
     const firstHumanMsg = castMessages.find((msg) => msg.type === "human");
     return getMessageStringContent(firstHumanMsg?.content);
@@ -117,7 +120,7 @@ function getFirstHumanMessageContent(thread: Thread) {
 function getThreadTitle(thread: Thread): string {
   // First check for title property (used by local threads)
   if (thread.title) return thread.title;
-  
+
   // Then check metadata.name
   const customName = thread.metadata?.name as string | undefined;
   if (customName) return customName;
@@ -205,14 +208,18 @@ export function ThreadList() {
   const { state, isMobile } = useSidebar();
   const queryClient = useQueryClient();
   const THREADS_PER_PAGE = 20;
-  
+
   // Use unified threads to get both local and cloud threads
-  const { threads: unifiedThreads, isLoading: unifiedLoading, refetch: refetchUnified } = useThreads({ limit: 100 });
-  
+  const {
+    threads: unifiedThreads,
+    isLoading: unifiedLoading,
+    refetch: refetchUnified,
+  } = useThreads({ limit: 100 });
+
   // Keep infinite scroll for cloud threads in search (fallback)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useFetchCloudThreadsInfinite(undefined, THREADS_PER_PAGE);
-  
+
   const { data: agents = [] } = useFetchCloudAgents();
   const updateThread = useUpdateCloudThread();
   const deleteThread = useDeleteCloudThread();
@@ -241,7 +248,7 @@ export function ThreadList() {
 
   // Use unified threads as primary source
   const allLoadedThreads = useMemo(() => {
-    console.log('[ThreadList] unifiedThreads count:', unifiedThreads.length);
+    console.log("[ThreadList] unifiedThreads count:", unifiedThreads.length);
     return unifiedThreads;
   }, [unifiedThreads]);
 
@@ -510,7 +517,7 @@ export function ThreadList() {
       deleteCompleted: false,
     };
     let deleteTimeout: NodeJS.Timeout | null = null;
-    
+
     // Use a consistent grace period for both toast and delete timeout
     const UNDO_GRACE_PERIOD_MS = 5000;
 
@@ -540,16 +547,18 @@ export function ThreadList() {
               });
               return;
             }
-            
+
             // Mark undo as clicked and cancel the pending deletion
             deleteState.undoClicked = true;
             if (deleteTimeout) {
               clearTimeout(deleteTimeout);
               deleteTimeout = null;
             }
-            
+
             // Restore the thread in the UI by invalidating queries
-            queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
+            queryClient.invalidateQueries({
+              queryKey: cloudThreadKeys.lists(),
+            });
             toast.success("Thread restored");
           },
         },
@@ -563,7 +572,7 @@ export function ThreadList() {
             // Mark deletion as completed before making the API call
             // This prevents race condition where undo is clicked during API call
             deleteState.deleteCompleted = true;
-            
+
             // Actually delete from database
             await deleteThread.mutateAsync({
               threadId: threadIdToDelete,
@@ -572,14 +581,16 @@ export function ThreadList() {
           } catch (error) {
             // Reset completion flag on error since deletion failed
             deleteState.deleteCompleted = false;
-            
+
             console.error("Failed to permanently delete thread:", error);
             toast.error("Failed to delete thread", {
               description:
                 error instanceof Error ? error.message : "Unknown error",
             });
             // Restore thread in UI on error
-            queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
+            queryClient.invalidateQueries({
+              queryKey: cloudThreadKeys.lists(),
+            });
           }
         }
       }, UNDO_GRACE_PERIOD_MS);
@@ -712,19 +723,19 @@ export function ThreadList() {
             {title}
             {isPinned && (
               <PinIcon
-                className="text-muted-foreground flex-shrink-0"
+                className="flex-shrink-0 text-muted-foreground"
                 size="xs"
               />
             )}
             {isActive && (
-              <span className="bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5 text-xs">
+              <span className="bg-primary/10 flex-shrink-0 rounded-full px-2 py-0.5 text-xs text-primary">
                 Current
               </span>
             )}
           </div>
           {/* Agent Name - only shown for agent mode */}
           {agentName && (
-            <div className="text-muted-foreground truncate text-xs">
+            <div className="truncate text-xs text-muted-foreground">
               {agentName}
             </div>
           )}
@@ -745,8 +756,8 @@ export function ThreadList() {
           <DialogDescription className="sr-only">
             Browse and search all your conversation threads
           </DialogDescription>
-          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pt-4 pb-3">
-            <SearchIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pb-3 pt-4">
+            <SearchIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <Input
               ref={searchInputRef}
               placeholder="Search threads..."
@@ -756,7 +767,7 @@ export function ThreadList() {
               className="flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
             />
             <DialogClose asChild>
-              <button className="ring-offset-background focus:ring-ring flex-shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+              <button className="flex-shrink-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -830,7 +841,7 @@ export function ThreadList() {
                 {/* Today */}
                 {groupedThreads.today.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Today
                     </div>
                     <div className="space-y-1">
@@ -847,7 +858,7 @@ export function ThreadList() {
                 {/* Yesterday */}
                 {groupedThreads.yesterday.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Yesterday
                     </div>
                     <div className="space-y-1">
@@ -864,7 +875,7 @@ export function ThreadList() {
                 {/* Previous 7 Days */}
                 {groupedThreads.previous7days.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Previous 7 Days
                     </div>
                     <div className="space-y-1">
@@ -881,7 +892,7 @@ export function ThreadList() {
                 {/* Older */}
                 {groupedThreads.older.length > 0 && (
                   <div>
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Older
                     </div>
                     <div className="space-y-1">
@@ -960,7 +971,7 @@ export function ThreadList() {
                           onChange={(e) => setEditingThreadName(e.target.value)}
                           onKeyDown={handleKeyDown}
                           onBlur={handleSaveEdit}
-                          className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
+                          className="placeholder:text-sidebar-foreground/60 focus-visible:border-primary/30 h-9 border border-border bg-card text-sm text-sidebar-foreground transition-all focus-visible:ring-0 focus-visible:ring-transparent"
                           data-radius="radius2"
                           placeholder="Thread name..."
                         />
@@ -970,24 +981,24 @@ export function ThreadList() {
                         <SidebarMenuButton
                           onClick={() => handleSelectThread(thread.thread_id)}
                           isActive={isActive}
-                          className="!h-auto px-3 !py-2"
+                          className="!h-auto !py-2 px-3"
                         >
-                          <div className="gap-0.3 flex min-w-0 flex-col flex-1">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="truncate text-sm leading-tight flex-1">
+                          <div className="gap-0.3 flex min-w-0 flex-1 flex-col">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="flex-1 truncate text-sm leading-tight">
                                 {title}
                               </span>
-                              {thread.metadata?.source === 'local' && (
-                                <Badge 
-                                  variant="outline" 
-                                  className="text-[10px] h-4 px-1.5 py-0 shrink-0"
+                              {thread.metadata?.source === "local" && (
+                                <Badge
+                                  variant="outline"
+                                  className="h-4 shrink-0 px-1.5 py-0 text-[10px]"
                                 >
                                   Local
                                 </Badge>
                               )}
                             </div>
                             {agentName && (
-                              <span className="text-muted-foreground truncate text-xs leading-tight">
+                              <span className="truncate text-xs leading-tight text-muted-foreground">
                                 {agentName}
                               </span>
                             )}
@@ -1002,7 +1013,7 @@ export function ThreadList() {
                               }}
                               showOnHover={!isPinned}
                               className={cn(
-                                "!top-1/2 !right-3 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
+                                "!right-3 !top-1/2 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
                                 isPinned && "md:opacity-100",
                               )}
                             >

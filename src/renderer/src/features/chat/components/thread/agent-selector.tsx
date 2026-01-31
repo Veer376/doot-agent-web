@@ -20,7 +20,8 @@ interface SimpleAgentSelectorProps {
 }
 
 export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
-  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchCloudAgents();
+  const { data: cloudAgents = [], isLoading: loadingCloud } =
+    useFetchCloudAgents();
   const { data: localAgents = [], isLoading: loadingLocal } = useLocalAgents();
 
   // Combine cloud and local agents

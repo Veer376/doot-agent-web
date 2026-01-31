@@ -147,7 +147,7 @@ export function ConfigField({
       </div>
 
       {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
+        <p className="whitespace-pre-line text-xs text-gray-500">
           {description}
         </p>
       )}
@@ -381,7 +381,7 @@ export function ConfigFieldTool({
       </div>
 
       {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
+        <p className="whitespace-pre-line text-xs text-gray-500">
           {description}
         </p>
       )}

@@ -42,7 +42,8 @@ interface AgentContextType {
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
 
 export function AgentProvider({ children }: { children: ReactNode }) {
-  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchCloudAgents();
+  const { data: cloudAgents = [], isLoading: loadingCloud } =
+    useFetchCloudAgents();
   const { data: localAgents = [], isLoading: loadingLocal } = useLocalAgents();
 
   // Merge cloud and local agents

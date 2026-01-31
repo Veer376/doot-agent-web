@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { localThreadKeys } from "@/hooks/use-local-threads";
-import { threadKeys } from "@/hooks/use-threads";
+import { cloudThreadKeys } from "@/hooks/use-cloud-threads";
 
 interface WorkspaceSelectProps {
   threadId?: string | null;
@@ -63,7 +63,7 @@ export function WorkspaceSelect({
           
           // Invalidate thread lists to update metadata in other components
           queryClient.invalidateQueries({ queryKey: localThreadKeys.lists() });
-          queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+          queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
         }
       } else {
         console.warn("Electron API not available");

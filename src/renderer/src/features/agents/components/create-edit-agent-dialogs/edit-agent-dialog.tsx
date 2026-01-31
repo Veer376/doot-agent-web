@@ -8,8 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
-import { agentKeys } from "@/hooks/use-agents";
+import { useUpdateCloudAgent, useDeleteCloudAgent, cloudAgentKeys } from "@/hooks/use-cloud-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -32,8 +31,8 @@ function EditAgentDialogContent({
   agent: Agent;
   onClose: () => void;
 }) {
-  const { mutateAsync: updateAgent } = useUpdateAgent();
-  const { mutateAsync: deleteAgent } = useDeleteAgent();
+  const { mutateAsync: updateAgent } = useUpdateCloudAgent();
+  const { mutateAsync: deleteAgent } = useDeleteCloudAgent();
   const queryClient = useQueryClient();
   const {
     getSchemaAndUpdateConfig,
@@ -102,7 +101,7 @@ function EditAgentDialogContent({
               clearTimeout(deleteTimeout);
             }
             // Restore the agent in the UI by invalidating queries
-            queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: cloudAgentKeys.lists() });
             toast.success("Agent restored");
           },
         },
@@ -121,7 +120,7 @@ function EditAgentDialogContent({
                 error instanceof Error ? error.message : "Unknown error",
             });
             // Restore agent in UI on error
-            queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: cloudAgentKeys.lists() });
           }
         }
         setDeleteSubmitting(false);

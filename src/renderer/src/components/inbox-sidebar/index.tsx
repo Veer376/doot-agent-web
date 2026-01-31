@@ -24,14 +24,14 @@ import {
 } from "@/components/ui/tooltip";
 import { groupAgentsByGraphs, isPrimaryAgent } from "@/lib/agent-utils";
 import { parseAsString, parseAsInteger, useQueryState } from "@/hooks/use-query-state";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
   const { setThreadData, fetchThreads } = useThreadsContext();
-  const { data: agents = [], isLoading: loading } = useFetchAgents();
+  const { data: agents = [], isLoading: loading } = useFetchCloudAgents();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
 
   const [_offset, setOffset] = useQueryState(

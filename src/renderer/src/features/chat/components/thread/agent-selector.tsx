@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { ArrowDown01Icon, ArrowUp01Icon } from "hugeicons-react";
 import { getAgentIcon } from "@/lib/agent-icon-registry";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { useLocalAgents } from "@/hooks/use-local-agents";
 import { useStreamContext } from "@/features/chat/providers/Stream";
 import { useAgentContext } from "@/providers/Agent";
@@ -20,7 +20,7 @@ interface SimpleAgentSelectorProps {
 }
 
 export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
-  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchAgents();
+  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchCloudAgents();
   const { data: localAgents = [], isLoading: loadingLocal } = useLocalAgents();
 
   // Combine cloud and local agents
@@ -123,12 +123,10 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
                 <ArrowDown01Icon className="size-4 text-muted-foreground" />
               ) : AgentIcon ? (
                 <AgentIcon className="size-5" />
-              ) : (
-                <div className="size-5 rounded-full bg-muted" />
-              )}
+              ) : null}
             </div>
             <span className="max-w-[140px] truncate text-sm font-medium text-foreground">
-              {selectedAgent?.name || "Select Agent"}
+              {selectedAgent?.name || "Agent"}
             </span>
           </button>
         }

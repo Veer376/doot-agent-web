@@ -8,7 +8,7 @@ import {
   useEffect,
   useMemo,
 } from "react";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { useLocalAgents } from "@/hooks/use-local-agents";
 import { isPrimaryAgent } from "@/lib/agent-utils";
 import { isElectron } from "@/lib/electron";
@@ -42,7 +42,7 @@ interface AgentContextType {
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
 
 export function AgentProvider({ children }: { children: ReactNode }) {
-  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchAgents();
+  const { data: cloudAgents = [], isLoading: loadingCloud } = useFetchCloudAgents();
   const { data: localAgents = [], isLoading: loadingLocal } = useLocalAgents();
 
   // Merge cloud and local agents

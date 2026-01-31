@@ -41,10 +41,10 @@ import { WorkspaceSelect } from "./workspace-select";
 import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
   useThreadUpdate,
-  useFetchThreads,
+  useFetchCloudThreads,
   useThreadState,
-  threadKeys,
-} from "@/hooks/use-threads";
+  cloudThreadKeys as threadKeys,
+} from "@/hooks/use-cloud-threads";
 import { useQueryClient } from "@tanstack/react-query";
 import { useComposerDraft } from "@/hooks/use-composer-draft";
 import { AuthDialog } from "@/components/auth/auth-dialog";
@@ -240,7 +240,7 @@ export function Thread() {
   const { mutate: updateThread } = useThreadUpdate();
 
   // Fetch all threads to access thread metadata
-  const { data: threads = [] } = useFetchThreads();
+  const { data: threads = [] } = useFetchCloudThreads();
 
   // Track the last saved agent to avoid redundant updates
   const lastSavedMetadataRef = useRef<{
@@ -490,23 +490,6 @@ export function Thread() {
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     const { getAgentConfig } = useConfigStore.getState();
 
-    let browserContext = undefined;
-    if (agentId === "browser_agent") {
-      try {
-        if (window.electron?.getAutomationBrowserWsUrl) {
-          const wsUrl = await window.electron.getAutomationBrowserWsUrl();
-          browserContext = {
-            browser_config: {
-              wss_url: wsUrl,
-              type: "cdp",
-            },
-          };
-        }
-      } catch (error) {
-        // Silent fail
-      }
-    }
-
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
@@ -523,17 +506,12 @@ export function Thread() {
           configurable: {
             ...getAgentConfig(agentId),
             apiKeys,
-            // Pass browser config in configurable so backend can access it
-            ...(browserContext && {
-              browser_config: browserContext.browser_config,
-            }),
           },
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
           workspacePath: tempWorkspace,
         },
-        context: browserContext,
         streamSubgraphs: true,
         streamResumable: true,
       },

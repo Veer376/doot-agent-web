@@ -28,10 +28,10 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import {
-  useFetchAgents,
-  useUpdateAgent,
-  useCreateAgent,
-} from "@/hooks/use-agents";
+  useFetchCloudAgents,
+  useUpdateCloudAgent,
+  useCreateCloudAgent,
+} from "@/hooks/use-cloud-agents";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isPrimaryAgent } from "@/lib/agent-utils";
@@ -133,7 +133,7 @@ function EditConfigurationDialogContent({ onClose }: { onClose: () => void }) {
   const { agentId } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const { data: agents = [], isFetching: refreshAgentsLoading } =
-    useFetchAgents();
+    useFetchCloudAgents();
   const {
     getSchemaAndUpdateConfig,
     configurations,
@@ -142,8 +142,8 @@ function EditConfigurationDialogContent({ onClose }: { onClose: () => void }) {
     loading,
     supportedConfigs,
   } = useAgentConfig();
-  const { mutate: updateAgent, isPending: isUpdating } = useUpdateAgent();
-  const { mutate: createAgent, isPending: isCreating } = useCreateAgent();
+  const { mutate: updateAgent, isPending: isUpdating } = useUpdateCloudAgent();
+  const { mutate: createAgent, isPending: isCreating } = useCreateCloudAgent();
 
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");

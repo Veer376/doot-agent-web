@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/select";
 import { AgentCard } from "../agent-card";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { GraphGroup } from "../../types";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import _ from "lodash";
 
 export function AgentDashboard() {
-  const { data: agents = [], isLoading: agentsLoading } = useFetchAgents();
+  const { data: agents = [], isLoading: agentsLoading } = useFetchCloudAgents();
   const [searchQuery, setSearchQuery] = useState("");
   const [graphFilter, setGraphFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);

@@ -5,13 +5,13 @@ import { SearchIcon } from "@/components/icons";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { TemplateCard } from "./templates-card";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import { TemplatesLoading } from "./templates-loading";
 import { GraphGroup } from "../../types";
 
 export function TemplatesList() {
-  const { data: agents = [], isLoading: agentsLoading } = useFetchAgents();
+  const { data: agents = [], isLoading: agentsLoading } = useFetchCloudAgents();
 
   const [searchQueryState, setSearchQueryState] = useState("");
   const [openTemplatesState, setOpenTemplatesState] = useState<string[]>([]);

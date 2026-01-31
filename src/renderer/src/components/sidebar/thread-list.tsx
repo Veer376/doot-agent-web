@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  useFetchThreadsInfinite,
-  useUpdateThread,
-  useDeleteThread,
+  useFetchCloudThreadsInfinite,
+  useUpdateCloudThread,
+  useDeleteCloudThread,
   useCopyThread,
-} from "@/hooks/use-threads";
-import { useUnifiedThreads } from "@/hooks/use-unified-threads";
+} from "@/hooks/use-cloud-threads";
+import { useThreads } from "@/hooks/use-threads";
 import { useLocalThreads } from "@/hooks/use-local-threads";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { useAuthSession } from "@/providers/Auth";
 import type { Agent } from "@/types/agent";
 import {
@@ -64,7 +64,7 @@ import { MessageContent } from "@langchain/core/messages";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { threadKeys } from "@/hooks/use-threads";
+import { cloudThreadKeys } from "@/hooks/use-cloud-threads";
 import {
   exportThreadAsMarkdown,
   exportThreadAsJSON,
@@ -207,15 +207,15 @@ export function ThreadList() {
   const THREADS_PER_PAGE = 20;
   
   // Use unified threads to get both local and cloud threads
-  const { threads: unifiedThreads, isLoading: unifiedLoading, refetch: refetchUnified } = useUnifiedThreads({ limit: 100 });
+  const { threads: unifiedThreads, isLoading: unifiedLoading, refetch: refetchUnified } = useThreads({ limit: 100 });
   
   // Keep infinite scroll for cloud threads in search (fallback)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
+    useFetchCloudThreadsInfinite(undefined, THREADS_PER_PAGE);
   
-  const { data: agents = [] } = useFetchAgents();
-  const updateThread = useUpdateThread();
-  const deleteThread = useDeleteThread();
+  const { data: agents = [] } = useFetchCloudAgents();
+  const updateThread = useUpdateCloudThread();
+  const deleteThread = useDeleteCloudThread();
   const copyThread = useCopyThread();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -549,7 +549,7 @@ export function ThreadList() {
             }
             
             // Restore the thread in the UI by invalidating queries
-            queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
             toast.success("Thread restored");
           },
         },
@@ -579,7 +579,7 @@ export function ThreadList() {
                 error instanceof Error ? error.message : "Unknown error",
             });
             // Restore thread in UI on error
-            queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: cloudThreadKeys.lists() });
           }
         }
       }, UNDO_GRACE_PERIOD_MS);

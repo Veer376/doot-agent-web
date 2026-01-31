@@ -15,6 +15,7 @@ import {
 export function NavMain({
   items,
   onSearchClick,
+  onMCPClick,
 }: {
   items: {
     title: string;
@@ -23,6 +24,7 @@ export function NavMain({
     icon?: LucideIcon | React.ComponentType<any>;
   }[];
   onSearchClick?: () => void;
+  onMCPClick?: () => void;
 }) {
   const { pathname } = useLocation();
 
@@ -37,6 +39,21 @@ export function NavMain({
                 <SidebarMenuButton
                   tooltip={item.title}
                   onClick={onSearchClick}
+                >
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          }
+
+          // Handle MCP action
+          if (item.action === "mcp") {
+            return (
+              <SidebarMenuItem key={`${item.title}-${index}`}>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  onClick={onMCPClick}
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

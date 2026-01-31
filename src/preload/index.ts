@@ -10,10 +10,6 @@ const eventListeners = new Map<string, Set<(...args: unknown[]) => void>>();
 
 // Define the API interface
 export interface ElectronAPI {
-    // Legacy CDP methods (kept for backward compatibility)
-    getCdpUrl: () => Promise<string>;
-    getAutomationBrowserWsUrl: () => Promise<string>;
-
     // App info
     getAppVersion: () => Promise<string>;
     isElectron: () => Promise<boolean>;
@@ -43,8 +39,12 @@ const ALLOWED_CHANNELS = {
         'workspace:select', 'workspace:get', 'workspace:set',
         // Agent runtime
         'agent:cancel',
-        // Existing handlers
-        'get-cdp-url', 'get-automation-browser-ws-url',
+        // MCP server operations
+        'mcp:registry:get', 'mcp:managed:list',
+        'mcp:server:install', 'mcp:server:uninstall',
+        'mcp:server:activate', 'mcp:server:deactivate',
+        'mcp:server:connect', 'mcp:server:tools', 'mcp:server:status',
+        // App
         'get-app-version', 'is-electron', 'open-external',
     ],
     send: [
@@ -65,10 +65,6 @@ function isChannelAllowed(channel: string, type: 'invoke' | 'send' | 'receive'):
 
 // Expose Electron API to renderer process
 contextBridge.exposeInMainWorld('electron', {
-    // Legacy CDP methods
-    getCdpUrl: () => ipcRenderer.invoke('get-cdp-url'),
-    getAutomationBrowserWsUrl: () => ipcRenderer.invoke('get-automation-browser-ws-url'),
-
     // App info
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     isElectron: () => ipcRenderer.invoke('is-electron'),

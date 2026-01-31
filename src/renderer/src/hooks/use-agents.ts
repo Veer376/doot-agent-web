@@ -8,7 +8,7 @@
  */
 
 import { useMemo } from "react";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { useLocalAgents } from "@/hooks/use-local-agents";
 import { isElectron } from "@/lib/electron";
 import type { AgentSource } from "@/lib/agent-source";
@@ -17,9 +17,9 @@ import type { ThreadSource } from "@/lib/thread-source";
 import type { Agent } from "@/types/agent";
 
 /**
- * Options for the unified agents hook
+ * Options for the agents hook
  */
-export interface UseUnifiedAgentsOptions {
+export interface UseAgentsOptions {
     /** Filter by source (optional - returns all if not specified) */
     source?: AgentSource;
     /** Filter to agents compatible with a specific thread source */
@@ -30,12 +30,12 @@ export interface UseUnifiedAgentsOptions {
  * Hook that fetches agents from both local and cloud sources
  * and merges them into a single list.
  */
-export function useUnifiedAgents(options?: UseUnifiedAgentsOptions) {
+export function useAgents(options?: UseAgentsOptions) {
     const { source, threadSource } = options || {};
     const isElectronEnv = isElectron();
 
     // Fetch cloud agents
-    const cloudQuery = useFetchAgents();
+    const cloudQuery = useFetchCloudAgents();
 
     // Fetch local agents (only in Electron) - returns Agent[]
     const localQuery = useLocalAgents();
@@ -58,7 +58,7 @@ export function useUnifiedAgents(options?: UseUnifiedAgentsOptions) {
                 ? localQuery.data
                 : [];
 
-        console.log('[useUnifiedAgents] Merging agents:', {
+        console.log('[useAgents] Merging agents:', {
             cloudCount: cloudAgents.length,
             localCount: localAgents.length,
             isElectron: isElectronEnv,
@@ -97,7 +97,7 @@ export function useUnifiedAgents(options?: UseUnifiedAgentsOptions) {
  * Returns only agents that can run on the given thread source
  */
 export function useAgentsForThread(threadSource: ThreadSource | undefined) {
-    const allAgents = useUnifiedAgents();
+    const allAgents = useAgents();
 
     return useMemo(() => {
         if (!threadSource) {
@@ -118,8 +118,8 @@ export function useAgentsForThread(threadSource: ThreadSource | undefined) {
 /**
  * Hook to get a single agent by ID
  */
-export function useUnifiedAgent(agentId: string | null) {
-    const { agents } = useUnifiedAgents();
+export function useAgent(agentId: string | null) {
+    const { agents } = useAgents();
 
     return useMemo(() => {
         if (!agentId) return null;
@@ -131,7 +131,7 @@ export function useUnifiedAgent(agentId: string | null) {
  * Hook that provides agent counts by source
  */
 export function useAgentCounts() {
-    const { agents } = useUnifiedAgents();
+    const { agents } = useAgents();
 
     return useMemo(() => ({
         total: agents.length,

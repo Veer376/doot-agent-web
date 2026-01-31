@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { AgentBrainCPU, NewThreadIcon, SearchIcon } from "@/components/icons";
+import { ElectricPlugsIcon } from "hugeicons-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { NavMain } from "./nav-main";
@@ -14,6 +16,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
+import { MCPServersDialog } from "@/features/mcp";
 
 // This is sample data.
 const data = {
@@ -34,10 +37,17 @@ const data = {
       url: "/agents",
       icon: AgentBrainCPU,
     },
+    {
+      title: "MCP Servers",
+      action: "mcp",
+      icon: ElectricPlugsIcon,
+    },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [showMCPDialog, setShowMCPDialog] = useState(false);
+
   return (
     <Sidebar
       collapsible="icon"
@@ -51,6 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             const event = new CustomEvent("openThreadSearch");
             window.dispatchEvent(event);
           }}
+          onMCPClick={() => setShowMCPDialog(true)}
         />
         <React.Suspense
           fallback={
@@ -85,6 +96,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavFooter />
       </SidebarFooter>
       <SidebarRail />
+
+      {/* MCP Servers Dialog */}
+      <MCPServersDialog open={showMCPDialog} onOpenChange={setShowMCPDialog} />
     </Sidebar>
   );
 }

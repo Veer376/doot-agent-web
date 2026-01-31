@@ -27,11 +27,11 @@ import { checkApiKeysWarning } from "@/lib/agent-utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { config } from "@/config";
 import {
-  threadKeys,
-  useUpdateThread,
+  cloudThreadKeys as threadKeys,
+  useUpdateCloudThread,
   useFetchThreadState,
-  useFetchThreads,
-} from "@/hooks/use-threads";
+  useFetchCloudThreads,
+} from "@/hooks/use-cloud-threads";
 import {
   useLocalThreads,
   useCreateLocalThread,
@@ -96,7 +96,7 @@ const CloudStreamSession = ({
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
   const queryClient = useQueryClient();
-  const { mutate: updateThread } = useUpdateThread();
+  const { mutate: updateThread } = useUpdateCloudThread();
 
   // Fetch cached thread state for instant display with initialValues
   // This shows cached data immediately while SDK loads fresh data in background
@@ -361,7 +361,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 
   // Fetch threads to get metadata (workspacePath)
   // We fetch both lists here, but only one will be active/used based on source context
-  const { data: cloudThreads } = useFetchThreads();
+  const { data: cloudThreads } = useFetchCloudThreads();
   const { data: localThreads } = useLocalThreads();
 
   // CLEAN:

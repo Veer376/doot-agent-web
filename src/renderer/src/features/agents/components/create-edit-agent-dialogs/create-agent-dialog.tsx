@@ -11,7 +11,7 @@ import {
 import { Bot, LoaderCircle, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useCreateAgent, useFetchAgents } from "@/hooks/use-agents";
+import { useCreateCloudAgent, useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
 import { GraphSelect } from "./graph-select";
@@ -40,7 +40,7 @@ function CreateAgentFormContent(props: {
     },
   });
 
-  const { mutateAsync: createAgent } = useCreateAgent();
+  const { mutateAsync: createAgent } = useCreateCloudAgent();
   const {
     getSchemaAndUpdateConfig,
     loading,
@@ -135,16 +135,14 @@ export function CreateAgentDialog({
   open,
   onOpenChange,
 }: CreateAgentDialogProps) {
-  const { data: agents = [] } = useFetchAgents();
+  const { data: agents = [] } = useFetchCloudAgents();
   const [selectedGraph, setSelectedGraph] = useState<Agent | undefined>();
 
   useEffect(() => {
     if (selectedGraph) return;
     if (agentId && graphId) {
       // Find the deployment & default agent, then set them
-      const defaultAgent = agents.find(
-        (a: any) => a.assistant_id === agentId
-      );
+      const defaultAgent = agents.find((a: any) => a.assistant_id === agentId);
       if (!defaultAgent) {
         toast.error("Something went wrong. Please try again.", {
           richColors: true,
@@ -154,12 +152,7 @@ export function CreateAgentDialog({
 
       setSelectedGraph(defaultAgent);
     }
-  }, [
-    agentId,
-    graphId,
-    agents,
-    selectedGraph,
-  ]);
+  }, [agentId, graphId, agents, selectedGraph]);
 
   const [openCounter, setOpenCounter] = useState(0);
 
@@ -205,7 +198,7 @@ export function CreateAgentDialog({
           </div>
         )}
 
-        {selectedGraph  ? (
+        {selectedGraph ? (
           <CreateAgentFormContent
             key={`${openCounter}-${selectedGraph.assistant_id}`}
             selectedGraph={selectedGraph}

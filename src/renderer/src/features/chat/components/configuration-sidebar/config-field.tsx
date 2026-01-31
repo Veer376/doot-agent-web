@@ -24,7 +24,7 @@ import {
   ConfigurableFieldMCPMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import type { ConfigValue } from "@/features/chat/hooks/use-config-store";
 
 interface Option {
@@ -408,7 +408,7 @@ export function ConfigFieldAgents({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:agents`;
 
-  const { data: agents = [], isLoading: loading } = useFetchAgents();
+  const { data: agents = [], isLoading: loading } = useFetchCloudAgents();
 
   // Do not allow adding itself as a sub-agent
   const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);

@@ -27,7 +27,7 @@ const DEFAULT_LOCAL_AGENT: Agent = {
     assistant_id: 'local-agent',
     name: 'Local Agent',
     description: 'AI coding assistant running locally on your machine',
-    graph_id: 'browser_agent',
+    graph_id: 'local_agent',
     config: {
         recursion_limit: 50,
     },

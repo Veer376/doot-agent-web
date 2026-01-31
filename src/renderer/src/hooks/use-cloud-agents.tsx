@@ -17,11 +17,11 @@ import { ConsoleIcon } from "hugeicons-react";
 // ============================================================================
 // Query Key Factory (for type-safe cache management)
 // ============================================================================
-export const agentKeys = {
-  all: ["agents"] as const,
-  lists: () => [...agentKeys.all, "list"] as const,
-  detail: (id: string) => [...agentKeys.all, "detail", id] as const,
-  schema: (id: string) => [...agentKeys.all, "schema", id] as const,
+export const cloudAgentKeys = {
+  all: ["cloudAgents"] as const,
+  lists: () => [...cloudAgentKeys.all, "list"] as const,
+  detail: (id: string) => [...cloudAgentKeys.all, "detail", id] as const,
+  schema: (id: string) => [...cloudAgentKeys.all, "schema", id] as const,
 };
 
 // ============================================================================
@@ -107,7 +107,7 @@ async function fetchAgents(
  * This replaces the manual state management in Agents.tsx
  * Works for both authenticated and unauthenticated users
  */
-export function useFetchAgents() {
+export function useFetchCloudAgents() {
   const { session } = useAuthSession();
   const accessToken = session?.accessToken || undefined; // Ensure undefined instead of null
 
@@ -125,7 +125,7 @@ export function useFetchAgents() {
   };
 
   return useQuery({
-    queryKey: agentKeys.lists(),
+    queryKey: cloudAgentKeys.lists(),
     queryFn: async () => {
       // Pass accessToken (can be undefined for unauthenticated users)
       return fetchAgents(accessToken, getSchemaFn);
@@ -140,12 +140,12 @@ export function useFetchAgents() {
 /**
  * Hook to fetch a single agent by ID
  */
-export function useFetchAgent(agentId: string) {
+export function useFetchCloudAgent(agentId: string) {
   const { session } = useAuthSession();
   const accessToken = session?.accessToken;
 
   return useQuery({
-    queryKey: agentKeys.detail(agentId),
+    queryKey: cloudAgentKeys.detail(agentId),
     queryFn: async () => {
       if (!accessToken) {
         throw new Error("Not authenticated");
@@ -168,7 +168,7 @@ export function useFetchAgent(agentId: string) {
 /**
  * Hook to create a new agent
  */
-export function useCreateAgent() {
+export function useCreateCloudAgent() {
   const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
@@ -205,7 +205,7 @@ export function useCreateAgent() {
     },
     onSuccess: () => {
       // Invalidate agents list to trigger refetch
-      queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: cloudAgentKeys.lists() });
       toast.success("Agent created successfully");
     },
     onError: (error) => {
@@ -218,7 +218,7 @@ export function useCreateAgent() {
 /**
  * Hook to update an existing agent
  */
-export function useUpdateAgent() {
+export function useUpdateCloudAgent() {
   const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
@@ -250,9 +250,9 @@ export function useUpdateAgent() {
     },
     onSuccess: (data, variables) => {
       // Invalidate both list and specific agent detail
-      queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: cloudAgentKeys.lists() });
       queryClient.invalidateQueries({
-        queryKey: agentKeys.detail(variables.agentId),
+        queryKey: cloudAgentKeys.detail(variables.agentId),
       });
       toast.success("Agent updated successfully");
     },
@@ -266,7 +266,7 @@ export function useUpdateAgent() {
 /**
  * Hook to delete an agent with undo support
  */
-export function useDeleteAgent() {
+export function useDeleteCloudAgent() {
   const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const accessToken = session?.accessToken;
@@ -293,16 +293,16 @@ export function useDeleteAgent() {
       // Only do optimistic update for the initial deletion (skipToast: false)
       if (!skipToast) {
         // Cancel outgoing refetches
-        await queryClient.cancelQueries({ queryKey: agentKeys.lists() });
+        await queryClient.cancelQueries({ queryKey: cloudAgentKeys.lists() });
 
         // Snapshot previous value
         const previousAgents = queryClient.getQueriesData({
-          queryKey: agentKeys.lists(),
+          queryKey: cloudAgentKeys.lists(),
         });
 
         // Optimistically remove agent from lists
         queryClient.setQueriesData(
-          { queryKey: agentKeys.lists() },
+          { queryKey: cloudAgentKeys.lists() },
           (old: any) => {
             if (Array.isArray(old)) {
               return old.filter((agent: any) => agent.assistant_id !== agentId);
@@ -318,8 +318,8 @@ export function useDeleteAgent() {
     onSuccess: (_, { agentId, skipToast }) => {
       // Only invalidate and show toast when actually deleting (skipToast: true)
       if (skipToast) {
-        queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
-        queryClient.removeQueries({ queryKey: agentKeys.detail(agentId) });
+        queryClient.invalidateQueries({ queryKey: cloudAgentKeys.lists() });
+        queryClient.removeQueries({ queryKey: cloudAgentKeys.detail(agentId) });
         toast.success("Agent deleted successfully");
       }
     },

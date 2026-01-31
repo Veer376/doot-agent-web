@@ -471,7 +471,7 @@ export const ToolItem = React.memo(function ToolItem({
         {isInProgress && !needsApproval && (
           <ToolArgs
             args={toolCall.args}
-            showSeparator={true}
+            showSeparator={false}
             needsApproval={false}
           />
         )}
@@ -481,7 +481,7 @@ export const ToolItem = React.memo(function ToolItem({
           <>
             <ToolArgs
               args={toolCall.args}
-              showSeparator={true}
+              showSeparator={false}
               needsApproval={true}
             />
             <ToolApprovalActions

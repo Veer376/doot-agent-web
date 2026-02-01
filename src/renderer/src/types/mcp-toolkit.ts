@@ -18,6 +18,8 @@ export interface SelectedToolkit {
     isConnected?: boolean;
     /** Actual tools from the server */
     tools?: ToolkitTool[];
+    /** Whether tools are currently being loaded */
+    isLoading?: boolean;
 }
 
 /**

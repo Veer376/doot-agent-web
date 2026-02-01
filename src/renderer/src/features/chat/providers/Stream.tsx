@@ -281,6 +281,7 @@ const LocalStreamSession = ({
             optimisticValues: (options as any)?.optimisticValues,
             isOptimistic: true, // Flag to prevent actual IPC call
             tools: (options as any)?.tools,
+            toolkits: (options as any)?.toolkits,
           });
 
           // Create thread in background (async, doesn't block UI)
@@ -308,6 +309,7 @@ const LocalStreamSession = ({
                 workspacePath: requestedWorkspace,
                 skipOptimistic: true, // Already applied with temp ID
                 tools: (options as any)?.tools,
+                toolkits: (options as any)?.toolkits,
               });
             })
             .catch((err) => {

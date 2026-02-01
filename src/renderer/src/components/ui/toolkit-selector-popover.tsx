@@ -35,6 +35,8 @@ interface ToolkitSelectorPopoverProps {
   onOpenChange: (open: boolean) => void;
   searchQuery: string;
   onSelect: (toolkit: SelectedToolkit) => void;
+  /** Callback to update a toolkit after async tool loading completes */
+  onUpdateToolkit?: (toolkitId: string, updates: Partial<SelectedToolkit>) => void;
   selectedToolkitIds: string[];
   /**
    * Anchor element for positioning (usually the textarea)
@@ -47,6 +49,7 @@ export function ToolkitSelectorPopover({
   onOpenChange,
   searchQuery,
   onSelect,
+  onUpdateToolkit,
   selectedToolkitIds,
   anchorEl,
 }: ToolkitSelectorPopoverProps) {
@@ -121,46 +124,77 @@ export function ToolkitSelectorPopover({
   }, [open, filteredServers, selectedIndex, onOpenChange]);
 
   const handleSelect = useCallback(
-    async (server: MCPServerInstance) => {
+    (server: MCPServerInstance) => {
       // Try to get tools from cache
-      let tools = queryClient.getQueryData<MCPTool[]>(mcpKeys.tools(server.id));
+      const cachedTools = queryClient.getQueryData<MCPTool[]>(mcpKeys.tools(server.id));
 
-      // If not in cache, fetch them (assuming server is connected/activated)
-      if (!tools || tools.length === 0) {
-        console.log(`[MCP] Tools missing for ${server.id}, fetching...`);
-        try {
-           // We use mcp:server:connect which ensures connection + return tools
-           // This handles re-connecting if the process died or just fetching tools if connected
-           const result = await invoke<{ server: MCPServerInstance; tools: MCPTool[] }>(
-                "mcp:server:connect",
-                server.id
-            );
-            tools = result.tools;
-            // Update cache
-            queryClient.setQueryData(mcpKeys.tools(server.id), tools);
-        } catch (err) {
-            console.error(`[MCP] Failed to fetch tools for ${server.id}:`, err);
-            tools = [];
-        }
+      // If tools are cached, use them immediately (no loading state needed)
+      if (cachedTools && cachedTools.length > 0) {
+        const toolkit: SelectedToolkit = {
+          id: server.id,
+          name: server.name,
+          toolCount: server.toolCount,
+          tools: cachedTools,
+          isConnected: server.status === "CONNECTED",
+          isLoading: false,
+        };
+        console.log(`[MCP] Popover selecting toolkit (cached):`, {
+          id: toolkit.id,
+          name: toolkit.name,
+          toolsFound: toolkit.tools?.length,
+        });
+        onSelect(toolkit);
+        return;
       }
 
-      const toolkit: SelectedToolkit = {
+      // Tools not cached - select IMMEDIATELY with loading state (non-blocking)
+      console.log(`[MCP] Toolkit ${server.id} - selecting with loading state, fetching tools in background...`);
+      
+      const loadingToolkit: SelectedToolkit = {
         id: server.id,
         name: server.name,
         toolCount: server.toolCount,
-        tools: tools || [],
-        isConnected: server.status === "CONNECTED",
+        tools: [],
+        isConnected: false,
+        isLoading: true,
       };
-      
-      console.log(`[MCP] Popover selecting toolkit:`, {
-        id: toolkit.id,
-        name: toolkit.name,
-        toolsFound: toolkit.tools?.length,
-        tools: toolkit.tools
-      });
-      onSelect(toolkit);
+      onSelect(loadingToolkit);
+
+      // Fetch tools in background (async, doesn't block UI)
+      invoke<{ server: MCPServerInstance; tools: MCPTool[] }>(
+        "mcp:server:connect",
+        server.id
+      )
+        .then((result) => {
+          const tools = result.tools || [];
+          console.log(`[MCP] Toolkit ${server.id} - tools loaded:`, tools.length);
+          
+          // Update cache
+          queryClient.setQueryData(mcpKeys.tools(server.id), tools);
+          
+          // Update the toolkit with actual tools via callback
+          if (onUpdateToolkit) {
+            onUpdateToolkit(server.id, {
+              tools,
+              toolCount: tools.length,
+              isConnected: true,
+              isLoading: false,
+            });
+          }
+        })
+        .catch((err) => {
+          console.error(`[MCP] Failed to fetch tools for ${server.id}:`, err);
+          // Still update to remove loading state
+          if (onUpdateToolkit) {
+            onUpdateToolkit(server.id, {
+              tools: [],
+              isConnected: false,
+              isLoading: false,
+            });
+          }
+        });
     },
-    [onSelect, queryClient]
+    [onSelect, onUpdateToolkit, queryClient]
   );
 
   return (

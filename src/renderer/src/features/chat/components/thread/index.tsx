@@ -51,6 +51,8 @@ import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
 import { AVAILABLE_MODELS, type Model } from "@/types/model";
+import { useSelectedToolkits } from "@/hooks/use-selected-toolkits";
+import { SelectedToolkit } from "@/types/mcp-toolkit";
 import { PromptGallery } from "@/components/ui/prompt-gallery";
 
 // Error Boundary for Chat Components
@@ -235,6 +237,38 @@ export function Thread() {
 
   const queryClient = useQueryClient();
 
+  // Toolkit management
+  const {
+    selectedToolkits,
+    addToolkit,
+    removeToolkit,
+    toggleToolkit,
+    updateToolkit,
+    isToolkitSelected,
+  } = useSelectedToolkits();
+
+  const { updateConfig, mcpToolSettings } = useConfigStore();
+
+  // Sync selected toolkits to agent config
+  useEffect(() => {
+    if (!agentId) return;
+
+    // Flatten tools from toolkits, filter by enabled state, and attach serverId
+    const tools = selectedToolkits.flatMap((tk) =>
+      (tk.tools || [])
+        .filter((t) => {
+          // Check if tool is disabled in settings (default to enabled)
+          const key = `${tk.id}:${t.name}`;
+          return mcpToolSettings?.[key] !== false;
+        })
+        .map((t) => ({ ...t, serverId: tk.id })),
+    );
+
+    // Update store with selected tools
+    // We store the tools array directly under the 'tools' key in the agent's config
+    updateConfig(agentId, "tools", tools);
+  }, [agentId, selectedToolkits, updateConfig, mcpToolSettings]);
+
   // Hook for updating thread metadata
   const { mutate: updateThread } = useThreadUpdate();
 
@@ -347,7 +381,7 @@ export function Thread() {
                 ...(prev.messages ?? []),
                 ...toolMessages,
                 newHumanMessage,
-              ],
+            ]
             }),
             config: {
               configurable: {
@@ -360,6 +394,7 @@ export function Thread() {
               supabaseAccessToken: session?.accessToken,
               workspacePath: tempWorkspace,
             },
+            toolkits: selectedToolkits,
             streamSubgraphs: true,
             streamResumable: true,
           },
@@ -511,6 +546,7 @@ export function Thread() {
           supabaseAccessToken: session?.accessToken,
           workspacePath: tempWorkspace,
         },
+        toolkits: selectedToolkits,
         streamSubgraphs: true,
         streamResumable: true,
       },
@@ -756,6 +792,13 @@ export function Thread() {
                     focusKey={threadId}
                     selectedModel={selectedModel}
                     onModelSelect={selectModel}
+
+                    // Toolkit management
+                    selectedToolkits={selectedToolkits}
+                    onToggleToolkit={toggleToolkit}
+                    onUpdateToolkit={updateToolkit}
+                    onRemoveToolkit={removeToolkit}
+                    isToolkitSelected={isToolkitSelected}
                   />
 
                   {/* Prompt Template Gallery - only show when no thread */}

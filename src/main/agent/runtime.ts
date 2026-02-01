@@ -198,12 +198,13 @@ export interface CreateAgentRuntimeOptions {
     workspacePath: string;
     modelId?: string;
     tools?: any[];
+    toolkits?: any[];
 }
 
 export type AgentRuntime = ReturnType<typeof createDeepAgent>;
 
 export async function createAgentRuntime(options: CreateAgentRuntimeOptions): Promise<AgentRuntime> {
-    const { threadId, workspacePath, modelId, tools } = options;
+    const { threadId, workspacePath, modelId, tools, toolkits } = options;
 
     if (!threadId) {
         throw new Error('Thread ID is required.');
@@ -248,7 +249,38 @@ The workspace root is: ${workspacePath}`;
 
     // Prepare MCP tools using @langchain/mcp-adapters
     let mcpTools: any[] = [];
-    if (tools && tools.length > 0) {
+
+    // Prioritize toolkits if available (Run Config)
+    if (toolkits && toolkits.length > 0) {
+        console.log(`[Runtime] Using ${toolkits.length} toolkits from Run Config`);
+        try {
+            const mcpConfig: Record<string, any> = {};
+            // Extract IDs from toolkit objects
+            const toolkitIds = toolkits.map((tk: any) => tk.id).filter(Boolean);
+
+            for (const tid of toolkitIds) {
+                const url = getServerUrl(tid);
+                if (url) {
+                    mcpConfig[tid] = {
+                        transport: "http",
+                        url: url
+                    };
+                }
+            }
+
+            if (Object.keys(mcpConfig).length > 0) {
+                console.log('[Runtime] Initializing MultiServerMCPClient with toolkits:', Object.keys(mcpConfig));
+                const client = new MultiServerMCPClient(mcpConfig);
+                // Load ALL tools from the selected toolkits
+                mcpTools = await client.getTools();
+                console.log(`[Runtime] Loaded ${mcpTools.length} tools from ${Object.keys(mcpConfig).length} toolkits`);
+            }
+        } catch (err) {
+            console.error('[Runtime] Failed to load MCP tools from toolkits:', err);
+        }
+    }
+    // Fallback to legacy 'tools' array if no toolkits provided
+    else if (tools && tools.length > 0) {
         try {
             const uniqueToolkitIds = [...new Set(tools.map((t: any) => t.toolkitId).filter(Boolean))] as string[];
             if (uniqueToolkitIds.length > 0) {
@@ -264,7 +296,7 @@ The workspace root is: ${workspacePath}`;
                 }
 
                 if (Object.keys(mcpConfig).length > 0) {
-                    console.log('[Runtime] Initializing MultiServerMCPClient with config:', JSON.stringify(mcpConfig));
+                    console.log('[Runtime] Initializing MultiServerMCPClient from legacy tools config');
                     const client = new MultiServerMCPClient(mcpConfig);
                     const allMcpTools = await client.getTools();
 

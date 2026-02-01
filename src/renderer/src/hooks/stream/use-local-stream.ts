@@ -174,6 +174,7 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         isOptimistic?: boolean;
         skipOptimistic?: boolean;
         tools?: any[];
+        toolkits?: any[];
     }) => {
         if (!isElectronEnv) {
             console.warn("[useLocalStream] Cannot submit without Electron environment");
@@ -196,7 +197,8 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         manager.start(targetThreadId, messageContent, {
             modelId: options?.modelId || modelId,
             workspacePath: options?.workspacePath || workspacePath,
-            tools: options?.tools
+            tools: options?.tools,
+            toolkits: options?.toolkits
         });
     }, [isElectronEnv, modelId, workspacePath, manager]);
 
@@ -206,6 +208,7 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         submitOptions?: {
             optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
             tools?: any[];
+            toolkits?: any[];
         }
     ) => {
         if (!threadId || !isElectronEnv) {
@@ -253,7 +256,8 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         manager.start(threadId, messageContent, {
             modelId,
             workspacePath,
-            tools: submitOptions?.tools
+            tools: submitOptions?.tools,
+            toolkits: submitOptions?.toolkits
         });
     }, [threadId, isElectronEnv, modelId, workspacePath, manager]);
 

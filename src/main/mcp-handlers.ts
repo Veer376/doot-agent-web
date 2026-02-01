@@ -10,7 +10,7 @@
 import { IpcMain, app } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn, exec } from 'child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import * as net from 'net';
@@ -193,7 +193,7 @@ async function startServerProcess(server: MCPServerInstance): Promise<{ pid: num
 
     console.log('[MCP] Spawning:', server.command, args.join(' '));
 
-    // Spawn the process
+    // Spawn the process with shell: true so it works cross-platform
     const childProcess = spawn(server.command, args, {
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
@@ -262,10 +262,26 @@ async function connectToServer(serverId: string, port: number): Promise<Client> 
  * Stop an MCP server process
  */
 function stopServerProcess(serverId: string): void {
-    const process = runningProcesses.get(serverId);
-    if (process) {
+    const childProc = runningProcesses.get(serverId);
+    if (childProc) {
         console.log('[MCP] Stopping server process:', serverId);
-        process.kill();
+
+        if (childProc.pid) {
+            if (globalThis.process.platform === 'win32') {
+                // On Windows, use taskkill to kill the process tree (including children like node.exe spawned by npx.cmd)
+                exec(`taskkill /pid ${childProc.pid} /T /F`, (err) => {
+                    if (err) {
+                        // Ignore error if process not found (already dead)
+                        if (!err.message.includes('not found')) {
+                            console.error(`[MCP] Failed to kill process tree for ${serverId}:`, err);
+                        }
+                    }
+                });
+            } else {
+                childProc.kill();
+            }
+        }
+
         runningProcesses.delete(serverId);
     }
 
@@ -525,10 +541,35 @@ export function registerMCPHandlers(ipcMain: IpcMain): void {
     // Cleanup on app quit
     // ========================================
 
-    app.on('before-quit', () => {
-        console.log('[MCP] Cleaning up server processes...');
+    // Cleanup function that stops all MCP server processes
+    const cleanupAllMCPServers = () => {
+        console.log('[MCP] Cleaning up all server processes...');
         for (const [serverId] of runningProcesses) {
             stopServerProcess(serverId);
         }
+    };
+
+    app.on('before-quit', cleanupAllMCPServers);
+    app.on('will-quit', cleanupAllMCPServers);
+
+    // Handle SIGINT (Ctrl+C) and SIGTERM signals
+    // This ensures cleanup happens even when the app is killed from terminal
+    process.on('SIGINT', () => {
+        console.log('[MCP] SIGINT received, cleaning up...');
+        cleanupAllMCPServers();
+        // Give taskkill time to complete before exiting
+        setTimeout(() => process.exit(0), 500);
+    });
+
+    process.on('SIGTERM', () => {
+        console.log('[MCP] SIGTERM received, cleaning up...');
+        cleanupAllMCPServers();
+        setTimeout(() => process.exit(0), 500);
+    });
+
+    // Also cleanup on uncaught exceptions
+    process.on('uncaughtException', (err) => {
+        console.error('[MCP] Uncaught exception, cleaning up...', err);
+        cleanupAllMCPServers();
     });
 }

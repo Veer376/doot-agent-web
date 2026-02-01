@@ -347,7 +347,7 @@ export class LocalStreamManager {
      * Start streaming (send IPC agent:invoke).
      * Ensures IPC subscription is set up before starting.
      */
-    start(threadId: string, message: string, options?: { modelId?: string; workspacePath?: string; tools?: any[] }): void {
+    start(threadId: string, message: string, options?: { modelId?: string; workspacePath?: string; tools?: any[]; toolkits?: any[] }): void {
 
         // Ensure IPC subscription is set up
         if (!this.ipcCleanupMap.has(threadId)) {
@@ -364,7 +364,8 @@ export class LocalStreamManager {
             message,
             modelId: options?.modelId,
             workspacePath: options?.workspacePath,
-            tools: options?.tools
+            tools: options?.tools,
+            toolkits: options?.toolkits
         });
     }
 

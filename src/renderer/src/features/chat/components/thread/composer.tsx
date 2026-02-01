@@ -136,6 +136,7 @@ interface ComposerProps {
   // Toolkit management (lifted state)
   selectedToolkits?: SelectedToolkit[];
   onToggleToolkit?: (toolkit: SelectedToolkit) => void;
+  onUpdateToolkit?: (toolkitId: string, updates: Partial<SelectedToolkit>) => void;
   onRemoveToolkit?: (toolkitId: string) => void;
   isToolkitSelected?: (toolkitId: string) => boolean;
 }
@@ -164,6 +165,7 @@ export function Composer({
   // Default props for toolkits (optional to allow gradual migration or fallback)
   selectedToolkits = [],
   onToggleToolkit,
+  onUpdateToolkit,
   onRemoveToolkit,
   isToolkitSelected,
 }: ComposerProps) {
@@ -867,6 +869,7 @@ export function Composer({
         }}
         searchQuery={activeCommand?.type === "toolkit" ? activeCommand.query : ""}
         onSelect={handleToolkitSelect}
+        onUpdateToolkit={onUpdateToolkit}
         selectedToolkitIds={selectedToolkits.map((t) => t.id)}
         anchorEl={editorRef.current}
       />

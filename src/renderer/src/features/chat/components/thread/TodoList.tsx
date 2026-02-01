@@ -181,9 +181,9 @@ export function TodoList({ todos, className, expandable = false }: TodoListProps
             maxHeight: isExpanded ? '120px' : 'none',
           }}
         >
-          {visibleTodos.map((todo) => (
+          {visibleTodos.map((todo, index) => (
             <li 
-              key={todo.id} 
+              key={todo.id ?? `todo-${index}`} 
               className="flex items-start gap-2 text-sm"
             >
               <span className="mt-0.5 flex-shrink-0">

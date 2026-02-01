@@ -69,7 +69,7 @@ export interface UseLocalStreamReturn {
     interrupt: HITLRequest | null;
     /** Submit a new message (with optional optimistic update) */
     submit: (
-        messageInput: string | { messages: Message[] }, 
+        messageInput: string | { messages: Message[] },
         options?: { optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState> }
     ) => void;
     /** Submit to a specific thread (for new thread creation where submit has stale threadId) */
@@ -124,7 +124,7 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
     // This provides synchronous updates (no re-render delays)
     const subscribe = useCallback(
         (callback: () => void) => {
-            if (!threadId) return () => {};
+            if (!threadId) return () => { };
             return manager.subscribe(threadId, callback);
         },
         [manager, threadId]
@@ -143,11 +143,9 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
     // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
     useEffect(() => {
         if (isElectronEnv && threadId) {
-            console.log('[useLocalStream] Setting up IPC for threadId:', threadId);
             manager.setupIPCSubscription(threadId);
 
             return () => {
-                console.log('[useLocalStream] Cleaning up IPC for threadId:', threadId);
                 // Don't cleanup on threadId change - let manager handle it
                 // Only cleanup on unmount
             };
@@ -159,13 +157,12 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
     // IMPORTANT: No early returns - all hooks must run unconditionally (Rules of Hooks)
     useEffect(() => {
         if (isElectronEnv && threadId) {
-            console.log('[useLocalStream] Loading initial state for threadId:', threadId);
-        
-        // Load state from IPC (backend database)
-        manager.loadInitialState(threadId, async (id: string) => {
-            return await invoke('threads:getState', id);
-        });
-    }
+
+            // Load state from IPC (backend database)
+            manager.loadInitialState(threadId, async (id: string) => {
+                return await invoke('threads:getState', id);
+            });
+        }
     }, [isElectronEnv, threadId, manager]);
 
     // Submit to specific thread (for new thread creation flow)
@@ -176,58 +173,48 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
         isOptimistic?: boolean;
         skipOptimistic?: boolean;
+        tools?: any[];
     }) => {
         if (!isElectronEnv) {
             console.warn("[useLocalStream] Cannot submit without Electron environment");
             return;
         }
 
-        console.log('[useLocalStream] submitToThread called');
-        console.log('[useLocalStream]   targetThreadId:', targetThreadId);
-        console.log('[useLocalStream]   messageContent length:', messageContent.length);
-        console.log('[useLocalStream]   isOptimistic:', options?.isOptimistic);
-        console.log('[useLocalStream]   skipOptimistic:', options?.skipOptimistic);
-
         // Set up IPC subscription for this thread if not already done
         manager.setupIPCSubscription(targetThreadId);
 
         // Apply optimistic values if provided (unless skipOptimistic is true)
         if (options?.optimisticValues && !options?.skipOptimistic) {
-            console.log('[useLocalStream] Applying optimistic update to target thread');
             manager.setOptimisticValues(targetThreadId, options.optimisticValues);
         }
 
         // If this is only for optimistic display (temp thread), don't start actual stream
         if (options?.isOptimistic) {
-            console.log('[useLocalStream] Optimistic-only update, skipping IPC stream start');
             return;
         }
 
-        console.log('[useLocalStream] Starting stream for target thread');
         manager.start(targetThreadId, messageContent, {
             modelId: options?.modelId || modelId,
-            workspacePath: options?.workspacePath || workspacePath
+            workspacePath: options?.workspacePath || workspacePath,
+            tools: options?.tools
         });
     }, [isElectronEnv, modelId, workspacePath, manager]);
 
     // Submit function with integrated optimistic updates
     const submit = useCallback((
         messageInput: string | { messages: Message[] },
-        submitOptions?: { optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState> }
+        submitOptions?: {
+            optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
+            tools?: any[];
+        }
     ) => {
         if (!threadId || !isElectronEnv) {
             console.warn("[useLocalStream] Cannot submit without threadId or Electron environment");
             return;
         }
 
-        console.log('[useLocalStream] ========================================');
-        console.log('[useLocalStream] submit called');
-        console.log('[useLocalStream]   threadId:', threadId);
-        console.log('[useLocalStream]   has optimistic:', !!submitOptions?.optimisticValues);
-
         // Apply optimistic values FIRST (instant UI feedback)
         if (submitOptions?.optimisticValues) {
-            console.log('[useLocalStream] Applying optimistic update');
             manager.setOptimisticValues(threadId, submitOptions.optimisticValues);
         }
 
@@ -262,45 +249,41 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
                 messageContent = JSON.stringify(content);
             }
         }
-
-        console.log('[useLocalStream] Starting stream');
         // Start stream (sends IPC)
-        manager.start(threadId, messageContent, { modelId, workspacePath });
-        console.log('[useLocalStream] ========================================');
+        manager.start(threadId, messageContent, {
+            modelId,
+            workspacePath,
+            tools: submitOptions?.tools
+        });
     }, [threadId, isElectronEnv, modelId, workspacePath, manager]);
 
     // Stop function
     const stop = useCallback(() => {
         if (!threadId || !isElectronEnv) return;
-        console.log('[useLocalStream] Stopping stream');
         manager.stop(threadId);
     }, [threadId, isElectronEnv, manager]);
 
     // Approve interrupt
     const approve = useCallback(() => {
         if (!threadId || !isElectronEnv) return;
-        console.log('[useLocalStream] Approving interrupt');
         manager.approve(threadId, workspacePath, modelId);
     }, [threadId, isElectronEnv, manager, workspacePath, modelId]);
 
     // Reject interrupt
     const reject = useCallback(() => {
         if (!threadId || !isElectronEnv) return;
-        console.log('[useLocalStream] Rejecting interrupt');
         manager.reject(threadId, workspacePath, modelId);
     }, [threadId, isElectronEnv, manager, workspacePath, modelId]);
 
     // Swap thread ID (for optimistic updates with temp ID)
     const swapThreadId = useCallback((tempThreadId: string, realThreadId: string) => {
         if (!isElectronEnv) return;
-        console.log('[useLocalStream] Swapping thread ID:', tempThreadId, '→', realThreadId);
         manager.swapThreadId(tempThreadId, realThreadId);
     }, [isElectronEnv, manager]);
 
     // Cleanup thread (for error handling)
     const cleanupThread = useCallback((threadId: string) => {
         if (!isElectronEnv) return;
-        console.log('[useLocalStream] Cleaning up thread:', threadId);
         manager.cleanup(threadId);
     }, [isElectronEnv, manager]);
 

@@ -248,7 +248,6 @@ export function ThreadList() {
 
   // Use unified threads as primary source
   const allLoadedThreads = useMemo(() => {
-    console.log("[ThreadList] unifiedThreads count:", unifiedThreads.length);
     return unifiedThreads;
   }, [unifiedThreads]);
 

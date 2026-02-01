@@ -333,7 +333,7 @@ function ToolArgs({
         {/* Top gradient fade */}
         <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 h-2 bg-gradient-to-b from-background to-transparent" />
 
-        <pre className="max-h-[150px] overflow-auto p-2 font-mono text-xs leading-relaxed text-muted-foreground">
+        <pre className="max-h-[150px] overflow-auto p-2 pt-0 font-mono text-xs leading-relaxed text-muted-foreground">
           {formatArgs(args)}
         </pre>
 
@@ -496,7 +496,7 @@ export const ToolItem = React.memo(function ToolItem({
           <>
             <ToolArgs
               args={toolCall.args}
-              showSeparator={true}
+              showSeparator={false}
               needsApproval={false}
             />
             <ToolResponse response={toolResponse} />

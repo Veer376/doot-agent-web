@@ -1,0 +1,9 @@
+/**
+ * Tab components for file viewing
+ */
+export { FileViewer } from "./FileViewer";
+export { CodeViewer } from "./CodeViewer";
+export { ImageViewer } from "./ImageViewer";
+export { MediaViewer } from "./MediaViewer";
+export { PDFViewer } from "./PDFViewer";
+export { BinaryFileViewer } from "./BinaryFileViewer";

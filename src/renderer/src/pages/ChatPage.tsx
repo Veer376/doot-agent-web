@@ -60,43 +60,9 @@ export default function ChatPage(): React.ReactNode {
   return (
     <>
       <Toaster />
-      {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints). We will create a separate component for it - ChatHeader - which will have the thread, workspace.*/}
-      <header className="flex shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear">
-        {/* Mobile-only: sidebar toggle (only show when authenticated) */}
-        {isAuthenticated && (
-          <div className="flex items-center gap-2 md:hidden">
-            <SidebarTrigger icon={<Menu11Icon />} />
-          </div>
-        )}
-        {/* Shared (mobile + desktop): thread details/title/actions placeholder */}
-        <div className="flex min-w-0 flex-1 items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            {/* TODO(thread): avatar/badge/typing indicator slot */}
-            <div className="text-foreground/90 truncate text-sm font-medium">
-              {/* TODO(thread): thread title */}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 pr-4 pt-2">
-            {/* GitHub link - always visible */}
-
-            {/* Show auth buttons when not authenticated */}
-            {!isAuthenticated && !isLoading ? (
-              <>
-                <Button
-                  size="sm"
-                  onClick={handleOpenSignUp}
-                >
-                  Try Now!
-                </Button>
-              </>
-            ) : (
-              <>{/* TODO(thread): actions (mute, pin, more) */}</>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <ChatInterface />
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        <ChatInterface />
+      </div>
 
       {/* Auth Dialog */}
       <AuthDialog

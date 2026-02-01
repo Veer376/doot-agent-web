@@ -34,11 +34,11 @@ export interface LocalAgent {
 export const systemAssistants: Record<string, LocalAgent> = {
     'local-agent': {
         assistant_id: 'local-agent',
-        name: 'Local Agent',
+        name: 'Doot',
         description: 'AI coding assistant running locally on your machine',
         graph_id: 'local_agent',
         config: {
-            recursion_limit: 50,
+            recursion_limit: 100,
         },
         metadata: {
             source: 'local',

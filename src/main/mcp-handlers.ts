@@ -13,6 +13,7 @@ import { join } from 'path';
 import { ChildProcess, spawn } from 'child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import * as net from 'net';
 
 // ============================================================================
 // Types (mirrored from renderer types for main process)
@@ -63,13 +64,6 @@ interface MCPTool {
 // Managed Server Configs
 // ============================================================================
 
-// Use dynamic ports to avoid conflicts
-let nextPort = 9500;
-
-function getNextPort(): number {
-    return nextPort++;
-}
-
 const MANAGED_MCP_SERVERS: MCPServerConfig[] = [
     {
         id: 'playwright',
@@ -77,11 +71,32 @@ const MANAGED_MCP_SERVERS: MCPServerConfig[] = [
         description: 'Browser automation and web scraping tools',
         package: '@playwright/mcp',
         command: 'npx',
-        args: ['@playwright/mcp@latest', '--port'],  // Port will be appended
+        args: ['@playwright/mcp@latest', '--shared-browser-context', '--isolated', '--port'],  // Port will be appended
         icon: 'browser',
         category: 'browser',
     },
 ];
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function findFreePort(startPort: number): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.listen(startPort, () => {
+            const port = (server.address() as net.AddressInfo).port;
+            server.close(() => resolve(port));
+        });
+        server.on('error', (err: any) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(findFreePort(startPort + 1));
+            } else {
+                reject(err);
+            }
+        });
+    });
+}
 
 // ============================================================================
 // Storage
@@ -169,8 +184,8 @@ async function waitForServerReady(port: number, maxAttempts = 60): Promise<void>
 async function startServerProcess(server: MCPServerInstance): Promise<{ pid: number; port: number }> {
     console.log('[MCP] Starting server process:', server.id);
 
-    // Get a port for this server
-    const port = getNextPort();
+    // Get a free port
+    const port = await findFreePort(9500);
     serverPorts.set(server.id, port);
 
     // Build command args with port
@@ -274,6 +289,20 @@ async function getServerTools(serverId: string): Promise<MCPTool[]> {
 
     const result = await client.listTools();
     return result.tools as MCPTool[];
+}
+
+// ============================================================================
+// Internal Exports (for runtime)
+// ============================================================================
+
+export function getMCPClient(serverId: string): Client | undefined {
+    return mcpClients.get(serverId);
+}
+
+export function getServerUrl(serverId: string): string | undefined {
+    const registry = loadRegistry();
+    const server = registry.servers.find(s => s.id === serverId);
+    return server?.url;
 }
 
 // ============================================================================

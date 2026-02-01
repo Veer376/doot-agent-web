@@ -17,6 +17,8 @@ import { BASE_SYSTEM_PROMPT } from './system-prompt';
 import { app } from 'electron';
 import { join } from 'path';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { getServerUrl } from '../mcp-handlers';
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
 // ============================================================================
 // Storage Paths
@@ -195,12 +197,13 @@ export interface CreateAgentRuntimeOptions {
     threadId: string;
     workspacePath: string;
     modelId?: string;
+    tools?: any[];
 }
 
 export type AgentRuntime = ReturnType<typeof createDeepAgent>;
 
 export async function createAgentRuntime(options: CreateAgentRuntimeOptions): Promise<AgentRuntime> {
-    const { threadId, workspacePath, modelId } = options;
+    const { threadId, workspacePath, modelId, tools } = options;
 
     if (!threadId) {
         throw new Error('Thread ID is required.');
@@ -213,6 +216,12 @@ export async function createAgentRuntime(options: CreateAgentRuntimeOptions): Pr
     console.log('[Runtime] Creating agent runtime...');
     console.log('[Runtime] Thread ID:', threadId);
     console.log('[Runtime] Workspace path:', workspacePath);
+
+    if (tools) {
+        console.log(`[MCP] Runtime injecting ${tools.length} tools`);
+    } else {
+        console.log('[MCP] Runtime received no tools');
+    }
 
     const model = getModelInstance(modelId);
     const checkpointer = await getCheckpointer(threadId);
@@ -237,12 +246,52 @@ export async function createAgentRuntime(options: CreateAgentRuntimeOptions): Pr
 
 The workspace root is: ${workspacePath}`;
 
+    // Prepare MCP tools using @langchain/mcp-adapters
+    let mcpTools: any[] = [];
+    if (tools && tools.length > 0) {
+        try {
+            const uniqueToolkitIds = [...new Set(tools.map((t: any) => t.toolkitId).filter(Boolean))] as string[];
+            if (uniqueToolkitIds.length > 0) {
+                const mcpConfig: Record<string, any> = {};
+                for (const tid of uniqueToolkitIds) {
+                    const url = getServerUrl(tid);
+                    if (url) {
+                        mcpConfig[tid] = {
+                            transport: "http",
+                            url: url
+                        };
+                    }
+                }
+
+                if (Object.keys(mcpConfig).length > 0) {
+                    console.log('[Runtime] Initializing MultiServerMCPClient with config:', JSON.stringify(mcpConfig));
+                    const client = new MultiServerMCPClient(mcpConfig);
+                    const allMcpTools = await client.getTools();
+
+                    // Filter tools based on user selection (frontend passes valid tools in 'tools' arg)
+                    if (tools && tools.length > 0) {
+                        const allowedToolNames = new Set(tools.map((t: any) => t.name));
+                        mcpTools = allMcpTools.filter(t => allowedToolNames.has(t.name));
+                        console.log(`[Runtime] Filtered tools: ${mcpTools.length}/${allMcpTools.length} available.`);
+                    } else {
+                        mcpTools = allMcpTools;
+                    }
+
+                    console.log(`[Runtime] Loaded ${mcpTools.length} tools from MCP`);
+                }
+            }
+        } catch (err) {
+            console.error('[Runtime] Failed to load MCP tools:', err);
+        }
+    }
+
     const agent = createDeepAgent({
         model,
         checkpointer,
         backend,
         systemPrompt,
-        filesystemSystemPrompt,
+        filesystemSystemPrompt, // Note: filesystemSystemPrompt is used as additionalSystemPrompt in older versions, checking compatibility
+        tools: mcpTools,
         interruptOn: { execute: true },
     } as Parameters<typeof createDeepAgent>[0]);
 

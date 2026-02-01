@@ -61,14 +61,10 @@ export function useLocalThreads(options?: { limit?: number }) {
     return useQuery({
         queryKey: localThreadKeys.list(options),
         queryFn: async (): Promise<UnifiedThread[]> => {
-            console.log('[useLocalThreads] queryFn called');
             if (!isElectronEnv) {
-                console.log('[useLocalThreads] Not in Electron, returning empty');
                 return [];
             }
-            console.log('[useLocalThreads] Invoking threads:list via IPC');
             const threads = await invoke<LocalThreadRow[]>('threads:list');
-            console.log('[useLocalThreads] Received threads count:', threads?.length || 0);
             const transformed = threads.map(transformThread);
             return transformed;
         },

@@ -66,7 +66,7 @@ function transformMessages(rawMessages: unknown[]): Message[] {
     return rawMessages
         .map((msg): Message | null => {
             const raw = msg as any;
-            
+
             // Format 1: SDK format (from IPC streams) - pass through
             if (raw.type && ['human', 'ai', 'tool', 'system', 'function', 'remove'].includes(raw.type)) {
                 return {
@@ -121,10 +121,10 @@ function transformMessages(rawMessages: unknown[]): Message[] {
 export class LocalStreamManager {
     // Stream state per thread (stored in refs, not React state)
     private stateMap = new Map<string, LocalStreamState>();
-    
+
     // Subscribers per thread
     private subscribersMap = new Map<string, Set<Listener>>();
-    
+
     // IPC cleanup functions per thread
     private ipcCleanupMap = new Map<string, () => void>();
 
@@ -138,7 +138,7 @@ export class LocalStreamManager {
         if (!this.subscribersMap.has(threadId)) {
             this.subscribersMap.set(threadId, new Set());
         }
-        
+
         this.subscribersMap.get(threadId)!.add(callback);
 
         return () => {
@@ -195,7 +195,6 @@ export class LocalStreamManager {
         this.cleanupIPC(threadId);
 
         const channel = `agent:stream:${threadId}`;
-        console.log('[LocalStreamManager] Setting up IPC for channel:', channel);
 
         const cleanup = onIpcEvent(channel, (event: unknown) => {
             this.handleIPCEvent(threadId, event as IPCStreamEvent);
@@ -208,14 +207,13 @@ export class LocalStreamManager {
      * Handle IPC stream event and update state.
      */
     private handleIPCEvent(threadId: string, event: IPCStreamEvent): void {
-        console.log('[LocalStreamManager] IPC event:', event.type, 'mode:', event.mode);
 
         switch (event.type) {
             case 'stream': {
                 if (event.mode === 'values') {
                     // Full state update - contains ALL messages including history
-                    const stateData = event.data as { 
-                        messages?: unknown[]; 
+                    const stateData = event.data as {
+                        messages?: unknown[];
                         __interrupt__?: Array<{
                             value?: {
                                 actionRequests?: Array<{ name: string; id: string; args: Record<string, unknown> }>;
@@ -225,39 +223,22 @@ export class LocalStreamManager {
                         [key: string]: unknown;
                     };
                     const rawMessages = stateData.messages || [];
-                    
-                    console.log('[LocalStreamManager] ========================================');
-                    console.log('[LocalStreamManager] VALUES event - RAW messages count:', rawMessages.length);
-                    if (rawMessages.length > 0) {
-                        console.log('[LocalStreamManager] First message:', rawMessages[0]);
-                        console.log('[LocalStreamManager] Last message:', rawMessages[rawMessages.length - 1]);
-                    }
-                    
+
+
                     // Validate messages (ensures id, type, content - keeps content blocks intact)
                     const transformedMessages = transformMessages(rawMessages);
-                    console.log('[LocalStreamManager] Transformed messages count:', transformedMessages.length);
-                    console.log('[LocalStreamManager] ========================================');
-                    
-                    // Log what's in the values data
-                    console.log('[LocalStreamManager] VALUES DATA KEYS:', Object.keys(stateData));
-                    if (stateData.todos) {
-                        console.log('[LocalStreamManager] ✅ Found todos in values:', stateData.todos);
-                    }
-                    if (stateData.workspaceFiles || stateData.workspace_files || stateData.files) {
-                        console.log('[LocalStreamManager] ✅ Found workspace files in values');
-                    }
+
                     if (stateData.subagents) {
                         console.log('[LocalStreamManager] ✅ Found subagents in values:', stateData.subagents);
                     }
-                    
+
                     // CRITICAL FIX: When an interrupt occurs, LangGraph emits a values event
                     // containing ONLY { __interrupt__: [...] } without the messages array.
                     // We must NOT replace existing messages with an empty array in this case.
                     // Only update messages if the values event actually contains messages.
                     const isInterruptOnlyEvent = stateData.__interrupt__ && rawMessages.length === 0;
-                    
+
                     if (isInterruptOnlyEvent) {
-                        console.log('[LocalStreamManager] ⚠️ Interrupt-only event detected - preserving existing messages');
                         // Only update values (to capture interrupt metadata), keep messages intact
                         this.setState(threadId, {
                             values: stateData
@@ -269,10 +250,9 @@ export class LocalStreamManager {
                             values: stateData
                         });
                     }
-                    
+
                     // Check for interrupt (LangGraph HITL format) - emit as custom event (matches SDK pattern)
                     if (stateData.__interrupt__ && Array.isArray(stateData.__interrupt__) && stateData.__interrupt__.length > 0) {
-                        console.log('[LocalStreamManager] 🚨 INTERRUPT detected in values:', stateData.__interrupt__);
                         const interruptValue = stateData.__interrupt__[0]?.value;
                         const actionRequests = interruptValue?.actionRequests;
                         const reviewConfigs = interruptValue?.reviewConfigs;
@@ -287,12 +267,10 @@ export class LocalStreamManager {
                             // CRITICAL FIX: When interrupt-only event arrives, transformedMessages is empty
                             // We must use existing messages from state instead
                             const currentState = this.stateMap.get(threadId) || defaultState;
-                            const messagesToSearch = transformedMessages.length > 0 
-                                ? transformedMessages 
+                            const messagesToSearch = transformedMessages.length > 0
+                                ? transformedMessages
                                 : currentState.messages;
-                            
-                            console.log('[LocalStreamManager] Searching for tool_call.id in', messagesToSearch.length, 'messages');
-                            
+
                             let toolCallId: string | undefined;
                             // Search from the END of messages (most recent tool call for this action)
                             for (let i = messagesToSearch.length - 1; i >= 0; i--) {
@@ -301,14 +279,13 @@ export class LocalStreamManager {
                                     for (const tc of (msg as any).tool_calls) {
                                         if (tc.name === firstAction.name && tc.id) {
                                             toolCallId = tc.id;
-                                            console.log('[LocalStreamManager] Found tool_call.id:', toolCallId, 'for action:', firstAction.name);
                                             break;
                                         }
                                     }
                                     if (toolCallId) break;
                                 }
                             }
-                            
+
                             if (!toolCallId) {
                                 console.warn('[LocalStreamManager] ⚠️ Could not find tool_call.id for action:', firstAction.name);
                             }
@@ -323,8 +300,6 @@ export class LocalStreamManager {
                                 allowed_decisions: (reviewConfig?.allowedDecisions || ['approve', 'reject']) as Array<'approve' | 'reject' | 'edit'>
                             };
 
-                            console.log('[LocalStreamManager] 🚨 Setting interrupt state:', interruptRequest);
-
                             // Store interrupt in state and notify subscribers
                             this.setState(threadId, { interrupt: interruptRequest });
                         }
@@ -333,23 +308,17 @@ export class LocalStreamManager {
                     // Message-level update - streaming chunks (should merge, not replace!)
                     const messageData = event.data as { messages?: unknown[] };
                     if (messageData.messages) {
-                        console.log('[LocalStreamManager] ========================================');
-                        console.log('[LocalStreamManager] MESSAGES mode - RAW count:', messageData.messages.length);
-                        console.log('[LocalStreamManager] WARNING: Messages mode might only have partial data!');
-                        console.log('[LocalStreamManager] ========================================');
-                        
+
                         // Validate messages (keeps content blocks intact)
                         const transformedMessages = transformMessages(messageData.messages);
-                        
+
                         // DON'T replace - merge with existing messages
                         const currentState = this.stateMap.get(threadId) || defaultState;
                         const existingMessages = currentState.messages;
-                        
+
                         // Merge: existing messages + new chunks
                         const mergedMessages = [...existingMessages, ...transformedMessages];
-                        
-                        console.log('[LocalStreamManager] Merged messages count:', mergedMessages.length);
-                        
+
                         this.setState(threadId, {
                             messages: mergedMessages
                         });
@@ -359,7 +328,6 @@ export class LocalStreamManager {
             }
 
             case 'done': {
-                console.log('[LocalStreamManager] Stream done');
                 this.setState(threadId, { isLoading: false });
                 break;
             }
@@ -379,15 +347,13 @@ export class LocalStreamManager {
      * Start streaming (send IPC agent:invoke).
      * Ensures IPC subscription is set up before starting.
      */
-    start(threadId: string, message: string, options?: { modelId?: string; workspacePath?: string }): void {
-        console.log('[LocalStreamManager] Starting stream for thread:', threadId);
-        
+    start(threadId: string, message: string, options?: { modelId?: string; workspacePath?: string; tools?: any[] }): void {
+
         // Ensure IPC subscription is set up
         if (!this.ipcCleanupMap.has(threadId)) {
-            console.log('[LocalStreamManager] IPC not set up, setting up now');
             this.setupIPCSubscription(threadId);
         }
-        
+
         this.setState(threadId, {
             isLoading: true,
             error: null
@@ -397,7 +363,8 @@ export class LocalStreamManager {
             threadId,
             message,
             modelId: options?.modelId,
-            workspacePath: options?.workspacePath
+            workspacePath: options?.workspacePath,
+            tools: options?.tools
         });
     }
 
@@ -405,7 +372,6 @@ export class LocalStreamManager {
      * Stop streaming.
      */
     stop(threadId: string): void {
-        console.log('[LocalStreamManager] Stopping stream for thread:', threadId);
         send('agent:cancel', { threadId });
         this.setState(threadId, { isLoading: false });
     }
@@ -418,14 +384,13 @@ export class LocalStreamManager {
     async loadInitialState(threadId: string, stateLoader: (threadId: string) => Promise<any>): Promise<void> {
         try {
             const threadState = await stateLoader(threadId);
-            
+
             // Don't overwrite if stream is already loading (optimistic update in progress)
             const currentState = this.stateMap.get(threadId);
             if (currentState?.isLoading) {
-                console.log('[LocalStreamManager] Skipping initial state load - stream already loading');
                 return;
             }
-            
+
             if (threadState?.values?.messages) {
                 // Transform messages (handles both LangChain serialized and SDK formats)
                 const transformedMessages = transformMessages(threadState.values.messages);
@@ -433,11 +398,10 @@ export class LocalStreamManager {
                     messages: transformedMessages,
                     values: threadState.values
                 });
-                
+
                 // Restore interrupt if there's a pending __interrupt__ in the values
                 const values = threadState.values as { __interrupt__?: Array<{ value?: unknown }> };
                 if (values.__interrupt__ && Array.isArray(values.__interrupt__) && values.__interrupt__.length > 0) {
-                    console.log('[LocalStreamManager] 🔄 Restoring interrupt from checkpoint:', values.__interrupt__);
                     const interruptValue = values.__interrupt__[0]?.value as { actionRequests?: Array<{ id?: string; name: string; args?: Record<string, unknown> }>; reviewConfigs?: Array<{ actionName: string; allowedDecisions?: string[] }> } | undefined;
                     const actionRequests = interruptValue?.actionRequests;
                     const reviewConfigs = interruptValue?.reviewConfigs;
@@ -456,7 +420,6 @@ export class LocalStreamManager {
                                 for (const tc of (msg as any).tool_calls) {
                                     if (tc.name === firstAction.name && tc.id) {
                                         toolCallId = tc.id;
-                                        console.log('[LocalStreamManager] Found tool_call.id:', toolCallId, 'for action:', firstAction.name);
                                         break;
                                     }
                                 }
@@ -474,7 +437,6 @@ export class LocalStreamManager {
                             allowed_decisions: (reviewConfig?.allowedDecisions || ['approve', 'reject']) as Array<'approve' | 'reject' | 'edit'>
                         };
 
-                        console.log('[LocalStreamManager] 🔄 Restored interrupt state:', interruptRequest);
                         this.setState(threadId, { interrupt: interruptRequest });
                     }
                 }
@@ -501,19 +463,16 @@ export class LocalStreamManager {
      * then swap to real ID when thread creation completes.
      */
     swapThreadId(tempThreadId: string, realThreadId: string): void {
-        console.log('[LocalStreamManager] Swapping thread ID:', tempThreadId, '→', realThreadId);
-        
+
         // Copy state from temp to real
         const tempState = this.stateMap.get(tempThreadId);
         if (tempState) {
-            console.log('[LocalStreamManager] Copying state from temp to real thread');
             this.stateMap.set(realThreadId, tempState);
         }
 
         // Copy subscribers from temp to real
         const tempSubscribers = this.subscribersMap.get(tempThreadId);
         if (tempSubscribers) {
-            console.log('[LocalStreamManager] Copying', tempSubscribers.size, 'subscribers from temp to real thread');
             this.subscribersMap.set(realThreadId, tempSubscribers);
         }
 
@@ -521,7 +480,6 @@ export class LocalStreamManager {
         this.setupIPCSubscription(realThreadId);
 
         // Clean up temp thread (state, subscribers, but no IPC to cleanup)
-        console.log('[LocalStreamManager] Cleaning up temp thread:', tempThreadId);
         this.stateMap.delete(tempThreadId);
         this.subscribersMap.delete(tempThreadId);
 
@@ -542,7 +500,6 @@ export class LocalStreamManager {
      * Clear interrupt state for a thread.
      */
     clearInterrupt(threadId: string): void {
-        console.log('[LocalStreamManager] Clearing interrupt for:', threadId);
         this.setState(threadId, { interrupt: null });
     }
 
@@ -555,8 +512,6 @@ export class LocalStreamManager {
             console.warn('[LocalStreamManager] No interrupt to approve');
             return;
         }
-
-        console.log('[LocalStreamManager] ✅ Approving interrupt:', currentState.interrupt);
 
         // Clear interrupt immediately (optimistic)
         this.setState(threadId, { interrupt: null, isLoading: true });
@@ -579,8 +534,6 @@ export class LocalStreamManager {
             console.warn('[LocalStreamManager] No interrupt to reject');
             return;
         }
-
-        console.log('[LocalStreamManager] ❌ Rejecting interrupt:', currentState.interrupt);
 
         // Clear interrupt immediately (optimistic)
         this.setState(threadId, { interrupt: null, isLoading: true });

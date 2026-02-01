@@ -37,6 +37,7 @@ const ALLOWED_CHANNELS = {
         'models:list', 'models:setDefault',
         // Workspace operations
         'workspace:select', 'workspace:get', 'workspace:set',
+        'workspace:readFile', 'workspace:readBinaryFile', 'workspace:loadFromDisk',
         // Agent runtime
         'agent:cancel',
         // MCP server operations

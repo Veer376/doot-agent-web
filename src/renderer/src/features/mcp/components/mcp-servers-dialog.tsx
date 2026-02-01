@@ -58,14 +58,11 @@ export function MCPServersDialog({ trigger, open: controlledOpen, onOpenChange }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-            <ElectricPlugsIcon className="size-4" />
-            MCP Servers
-          </Button>
-        )}
-      </DialogTrigger>
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-[500px] min-h-[400px] flex flex-col" data-radius="radius2">
         <DialogHeader>

@@ -4,10 +4,15 @@ import { SimpleAgentSelector } from "./agent-selector";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
 import { StopIcon } from "@/components/icons";
 import { ModelSelectorPopover } from "@/components/ui/model-selector-popover";
+import { ToolkitSelectorPopover } from "@/components/ui/toolkit-selector-popover";
 import { parseSlashCommand, replaceCommand } from "@/lib/slash-command-parser";
 import type { SlashCommand } from "@/lib/slash-command-parser";
 import type { Model } from "@/types/model";
+import type { SelectedToolkit } from "@/types/mcp-toolkit";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
+import { ToolkitChips } from "./toolkit-chips";
+import { SelectedToolkitsDialog } from "./selected-toolkits-dialog";
+import { useSelectedToolkits } from "@/hooks/use-selected-toolkits";
 import { cn } from "@/lib/utils";
 import { ComposioManagerDialog } from "../composio";
 import {
@@ -127,6 +132,12 @@ interface ComposerProps {
 
   selectedModel?: Model | null;
   onModelSelect?: (model: Model) => void;
+
+  // Toolkit management (lifted state)
+  selectedToolkits?: SelectedToolkit[];
+  onToggleToolkit?: (toolkit: SelectedToolkit) => void;
+  onRemoveToolkit?: (toolkitId: string) => void;
+  isToolkitSelected?: (toolkitId: string) => boolean;
 }
 
 
@@ -149,6 +160,12 @@ export function Composer({
 
   selectedModel,
   onModelSelect,
+
+  // Default props for toolkits (optional to allow gradual migration or fallback)
+  selectedToolkits = [],
+  onToggleToolkit,
+  onRemoveToolkit,
+  isToolkitSelected,
 }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -158,6 +175,10 @@ export function Composer({
   // Model selector state
   const [activeCommand, setActiveCommand] = useState<SlashCommand | null>(null);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+
+  // Toolkit selector state
+  const [toolkitSelectorOpen, setToolkitSelectorOpen] = useState(false);
+  const [toolkitsDialogOpen, setToolkitsDialogOpen] = useState(false);
 
   // Define quick integrations
   const quickIntegrations = useMemo(
@@ -188,7 +209,7 @@ export function Composer({
   const hasAttachments = contentBlocks.length > 0;
   const isSendDisabled = disabled || (!hasMessage && !hasAttachments);
   // Use data attribute instead of internal state
-  const isExpanded = hasMessage || hasAttachments;
+  const isExpanded = hasMessage || hasAttachments || selectedToolkits.length > 0;
 
   useEffect(() => {
     if (disabled) {
@@ -296,10 +317,18 @@ export function Composer({
     if (command?.type === "model") {
       setActiveCommand(command);
       setModelSelectorOpen(true);
-    } else if (modelSelectorOpen) {
-      // Close if command is cleared
-      setActiveCommand(null);
+      setToolkitSelectorOpen(false);
+    } else if (command?.type === "toolkit") {
+      setActiveCommand(command);
+      setToolkitSelectorOpen(true);
       setModelSelectorOpen(false);
+    } else {
+      // Close if command is cleared
+      if (modelSelectorOpen || toolkitSelectorOpen) {
+        setActiveCommand(null);
+        setModelSelectorOpen(false);
+        setToolkitSelectorOpen(false);
+      }
     }
   };
 
@@ -332,8 +361,8 @@ export function Composer({
   };
 
   const handleKeyDownEvent = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    // If model selector is open, don't handle Enter (let selector handle it)
-    if (modelSelectorOpen && event.key === "Enter") {
+    // If model or toolkit selector is open, don't handle Enter (let selector handle it)
+    if ((modelSelectorOpen || toolkitSelectorOpen) && event.key === "Enter") {
       event.preventDefault();
       return;
     }
@@ -382,6 +411,79 @@ export function Composer({
       if (selection) {
         range.selectNodeContents(editor);
         range.collapse(false); // Collapse to end
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    });
+  };
+
+  // Handle toolkit selection from popover
+  const handleToolkitSelect = (toolkit: SelectedToolkit) => {
+    onToggleToolkit?.(toolkit);
+    // Don't close - allow multiple selection
+
+    // Reset the search query to empty string (remove "/play" and "/")
+    if (activeCommand && value) {
+      const { newText } = replaceCommand(
+        value,
+        activeCommand,
+        "", // Remove entirely
+      );
+
+      onChange?.(newText);
+      setActiveCommand(null); // Clear command state
+      setToolkitSelectorOpen(false); // Close the popover
+
+      // Update contentEditable and focus
+      requestAnimationFrame(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        editor.textContent = newText;
+        editor.focus();
+
+        const selection = window.getSelection();
+        const range = document.createRange();
+
+        if (selection) {
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      });
+    }
+  };
+
+  // Handle toolkit selection done (close popover)
+  const handleToolkitSelectionDone = () => {
+    if (!activeCommand || !value) return;
+
+    // Clear the command text
+    const { newText } = replaceCommand(
+      value,
+      activeCommand,
+      "",
+    );
+
+    onChange?.(newText);
+    setToolkitSelectorOpen(false);
+    setActiveCommand(null);
+
+    // Update contentEditable and focus
+    requestAnimationFrame(() => {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      editor.textContent = newText;
+      editor.focus();
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      if (selection) {
+        range.selectNodeContents(editor);
+        range.collapse(false);
         selection.removeAllRanges();
         selection.addRange(range);
       }
@@ -558,7 +660,9 @@ export function Composer({
               "flex w-full transition-all duration-300 [grid-area:primary]",
               "group-data-[expanded=false]/composer:items-center",
               "group-data-[expanded=true]/composer:mb-0.5 group-data-[expanded=true]/composer:items-start",
-              hasAttachments ? "flex-col gap-2" : "flex-row items-center",
+              hasAttachments || selectedToolkits.length > 0
+                ? "flex-col gap-2"
+                : "flex-row items-center",
             )}
             style={{ transformOrigin: "0% 100%" }}
           >
@@ -567,6 +671,16 @@ export function Composer({
                 <ContentBlocksPreview
                   blocks={contentBlocks}
                   onRemove={onRemoveBlock || (() => {})}
+                />
+              </div>
+            )}
+            {/* Selected Toolkits */}
+            {selectedToolkits.length > 0 && (
+              <div className="flex w-full items-start px-1">
+                <ToolkitChips
+                  toolkits={selectedToolkits}
+                  onRemove={onRemoveToolkit || (() => {})}
+                  onViewAll={() => setToolkitsDialogOpen(true)}
                 />
               </div>
             )}
@@ -588,7 +702,7 @@ export function Composer({
                   className={cn(
                     "text-muted-foreground/60 pointer-events-none absolute left-2 z-10 text-sm",
                     "group-data-[expanded=false]/composer:top-1/2 group-data-[expanded=false]/composer:-translate-y-1/2",
-                    "group-data-[expanded=true]/composer:top-3",
+                    "group-data-[expanded=true]/composer:top-1.5",
                   )}
                 >
                   {placeholder}
@@ -740,6 +854,29 @@ export function Composer({
         onSelect={handleModelSelect}
         selectedModelId={selectedModel?.id}
         anchorEl={editorRef.current}
+      />
+
+      {/* Toolkit Selector Popover */}
+      <ToolkitSelectorPopover
+        open={toolkitSelectorOpen}
+        onOpenChange={(open) => {
+          setToolkitSelectorOpen(open);
+          if (!open) {
+            handleToolkitSelectionDone();
+          }
+        }}
+        searchQuery={activeCommand?.type === "toolkit" ? activeCommand.query : ""}
+        onSelect={handleToolkitSelect}
+        selectedToolkitIds={selectedToolkits.map((t) => t.id)}
+        anchorEl={editorRef.current}
+      />
+
+      {/* Selected Toolkits Dialog */}
+      <SelectedToolkitsDialog
+        open={toolkitsDialogOpen}
+        onOpenChange={setToolkitsDialogOpen}
+        toolkits={selectedToolkits}
+        onToggle={(toolkit) => onToggleToolkit?.(toolkit)}
       />
     </DragAndDropWrapper>
   );

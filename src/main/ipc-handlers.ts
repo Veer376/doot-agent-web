@@ -415,6 +415,122 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
     });
 
     // ========================================
+    // Workspace File Operations
+    // ========================================
+
+    // Read a text file from workspace
+    ipcMain.handle('workspace:readFile', async (_event, { threadId, filePath }: { threadId: string; filePath: string }) => {
+        try {
+            const thread = getThread(threadId);
+            if (!thread?.metadata?.workspacePath) {
+                return { success: false, error: 'No workspace set for this thread' };
+            }
+
+            const workspacePath = thread.metadata.workspacePath as string;
+            const fullPath = join(workspacePath, filePath);
+
+            // Security: ensure path is within workspace
+            if (!fullPath.startsWith(workspacePath)) {
+                return { success: false, error: 'Path traversal not allowed' };
+            }
+
+            if (!existsSync(fullPath)) {
+                return { success: false, error: 'File not found' };
+            }
+
+            const content = readFileSync(fullPath, 'utf-8');
+            return { success: true, content };
+        } catch (error) {
+            console.error('[IPC] workspace:readFile error:', error);
+            return { success: false, error: String(error) };
+        }
+    });
+
+    // Read a binary file from workspace (returns base64)
+    ipcMain.handle('workspace:readBinaryFile', async (_event, { threadId, filePath }: { threadId: string; filePath: string }) => {
+        try {
+            const thread = getThread(threadId);
+            if (!thread?.metadata?.workspacePath) {
+                return { success: false, error: 'No workspace set for this thread' };
+            }
+
+            const workspacePath = thread.metadata.workspacePath as string;
+            const fullPath = join(workspacePath, filePath);
+
+            // Security: ensure path is within workspace
+            if (!fullPath.startsWith(workspacePath)) {
+                return { success: false, error: 'Path traversal not allowed' };
+            }
+
+            if (!existsSync(fullPath)) {
+                return { success: false, error: 'File not found' };
+            }
+
+            const content = readFileSync(fullPath);
+            return { success: true, content: content.toString('base64') };
+        } catch (error) {
+            console.error('[IPC] workspace:readBinaryFile error:', error);
+            return { success: false, error: String(error) };
+        }
+    });
+
+    // Load file tree from workspace directory
+    ipcMain.handle('workspace:loadFromDisk', async (_event, threadId: string): Promise<{ success: boolean; error?: string; files: Array<{ path: string; is_dir: boolean; size?: number }> }> => {
+        try {
+            const thread = getThread(threadId);
+            if (!thread?.metadata?.workspacePath) {
+                return { success: false, error: 'No workspace set for this thread', files: [] };
+            }
+
+            const workspacePath = thread.metadata.workspacePath as string;
+            if (!existsSync(workspacePath)) {
+                return { success: false, error: 'Workspace path does not exist', files: [] };
+            }
+
+            const files: Array<{ path: string; is_dir: boolean; size?: number }> = [];
+
+            function scanDir(dirPath: string, basePath: string): void {
+                try {
+                    const entries = readdirSync(dirPath, { withFileTypes: true });
+                    for (const entry of entries) {
+                        // Skip hidden files and common ignore patterns
+                        if (entry.name.startsWith('.') || 
+                            entry.name === 'node_modules' || 
+                            entry.name === '__pycache__' ||
+                            entry.name === 'venv' ||
+                            entry.name === '.git') {
+                            continue;
+                        }
+
+                        const fullPath = join(dirPath, entry.name);
+                        const relativePath = fullPath.replace(basePath, '').replace(/\\/g, '/');
+
+                        if (entry.isDirectory()) {
+                            files.push({ path: relativePath, is_dir: true });
+                            scanDir(fullPath, basePath);
+                        } else {
+                            try {
+                                const stats = require('fs').statSync(fullPath);
+                                files.push({ path: relativePath, is_dir: false, size: stats.size });
+                            } catch {
+                                files.push({ path: relativePath, is_dir: false });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('[IPC] workspace:loadFromDisk scanDir error:', error);
+                }
+            }
+
+            scanDir(workspacePath, workspacePath);
+            return { success: true, files };
+        } catch (error) {
+            console.error('[IPC] workspace:loadFromDisk error:', error);
+            return { success: false, error: String(error), files: [] };
+        }
+    });
+
+    // ========================================
     // Agent Runtime Handlers (Streaming)
     // ========================================
 

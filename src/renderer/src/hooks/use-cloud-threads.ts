@@ -36,16 +36,11 @@ export function useFetchCloudThreads(agentId?: string, options?: { limit?: numbe
   return useQuery({
     queryKey: cloudThreadKeys.list({ agentId, limit, offset }),
     queryFn: async () => {
-      console.log('[useFetchCloudThreads] queryFn called');
-      console.log('[useFetchCloudThreads]   agentId:', agentId);
-      console.log('[useFetchCloudThreads]   hasAccessToken:', !!accessToken);
       
       if (!accessToken) {
-        console.log('[useFetchCloudThreads] No access token, throwing error');
         throw new Error("Not authenticated");
       }
       
-      console.log('[useFetchCloudThreads] Creating client and fetching threads');
       const client = createClient(accessToken);
       const response = await client.threads.search({
         limit,
@@ -56,8 +51,6 @@ export function useFetchCloudThreads(agentId?: string, options?: { limit?: numbe
           },
         }),
       });
-      console.log('[useFetchCloudThreads] Received threads count:', response?.length || 0);
-      console.log('[useFetchCloudThreads] Threads:', response?.map((t: Thread) => ({ id: t.thread_id, source: t.metadata?.source })));
       return response as Thread<ThreadMetadata>[];
     },
     enabled: !!accessToken,

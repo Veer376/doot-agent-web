@@ -1,13 +1,13 @@
 /**
  * Slash Command Parser
  * 
- * Parses textarea input for slash commands (e.g., ">model")
+ * Parses textarea input for slash commands (e.g., ">model", "/search")
  * Can be extended to support other commands in the future
  */
 
 export interface SlashCommand {
-    type: "model" | "none";
-    trigger: string; // ">"
+    type: "model" | "toolkit" | "none";
+    trigger: string; // ">" or "/"
     query: string; // text after trigger
     cursorPosition: number;
     replaceStart: number;
@@ -23,6 +23,7 @@ export interface SlashCommand {
  * 
  * @example
  * parseSlashCommand("Hello >gpt", 10) // { type: "model", query: "gpt", ... }
+ * parseSlashCommand("Hello /play", 11) // { type: "toolkit", query: "play", ... }
  * parseSlashCommand("Hello world", 5) // null
  */
 export function parseSlashCommand(
@@ -32,13 +33,31 @@ export function parseSlashCommand(
     // Find command trigger before cursor
     const beforeCursor = text.slice(0, cursorPosition);
 
+    // Check for "/" at start of line or after whitespace/newline
+    // Pattern: (start|whitespace)(/)(query)
+    const toolsMatch = beforeCursor.match(/(^|\s|\n)(\/)(\S*)$/);
+
+    if (toolsMatch) {
+        const [fullMatch, whitespace, trigger, query] = toolsMatch;
+        const replaceStart = beforeCursor.length - fullMatch.length + whitespace.length;
+
+        return {
+            type: "toolkit",
+            trigger,
+            query: query || "",
+            cursorPosition,
+            replaceStart,
+            replaceEnd: cursorPosition,
+        };
+    }
+
     // Check for ">" at start of line or after whitespace/newline
     // Pattern: (start|whitespace)(>)(query)
-    const match = beforeCursor.match(/(^|\s|\n)(>)(\S*)$/);
+    const modelMatch = beforeCursor.match(/(^|\s|\n)(>)(\S*)$/);
 
-    if (!match) return null;
+    if (!modelMatch) return null;
 
-    const [fullMatch, whitespace, trigger, query] = match;
+    const [fullMatch, whitespace, trigger, query] = modelMatch;
     const replaceStart = beforeCursor.length - fullMatch.length + whitespace.length;
 
     return {

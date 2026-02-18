@@ -8,6 +8,7 @@
  */
 
 import { createDeepAgent } from 'deepagents';
+import { toolRetryMiddleware } from 'langchain';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
@@ -57,6 +58,22 @@ interface Settings {
     };
 }
 
+// ============================================================================
+// In-Memory API Key Storage (Temporary - will be replaced with database)
+// ============================================================================
+// LIMITATION: Keys stored here are session-only and will be lost on app restart.
+// TODO: Replace with database/secure storage in a future iteration.
+const inMemoryApiKeys: Record<string, string> = {};
+
+export function setInMemoryApiKey(provider: 'anthropic' | 'openai' | 'google', key: string): void {
+    console.log(`[Runtime] Setting in-memory API key for provider: ${provider}`);
+    inMemoryApiKeys[provider] = key;
+}
+
+export function getInMemoryApiKey(provider: 'anthropic' | 'openai' | 'google'): string | undefined {
+    return inMemoryApiKeys[provider];
+}
+
 function getSettings(): Settings {
     const path = getSettingsPath();
     if (existsSync(path)) {
@@ -64,7 +81,7 @@ function getSettings(): Settings {
             return JSON.parse(readFileSync(path, 'utf-8'));
         } catch {
             // Default to gemini-2.5-flash for testing
-            return { defaultModel: 'gemini-2.5-flash', apiKeys: {} };
+            return { defaultModel: 'gemini-2.5-pro', apiKeys: {} };
         }
     }
     // Default to gemini-2.5-flash for testing
@@ -78,7 +95,11 @@ export function saveSettings(settings: Partial<Settings>): void {
 }
 
 export function getApiKey(provider: 'anthropic' | 'openai' | 'google'): string | undefined {
-    // First check environment variables
+    // 1. Check in-memory cache first (set via IPC from frontend)
+    const memKey = getInMemoryApiKey(provider);
+    if (memKey) return memKey;
+
+    // 2. Check environment variables
     const envKeys: Record<string, string> = {
         anthropic: 'ANTHROPIC_API_KEY',
         openai: 'OPENAI_API_KEY',
@@ -87,7 +108,7 @@ export function getApiKey(provider: 'anthropic' | 'openai' | 'google'): string |
     const envKey = process.env[envKeys[provider]];
     if (envKey) return envKey;
 
-    // Fall back to stored settings
+    // 3. Fall back to stored settings (file-based, if any)
     return getSettings().apiKeys[provider];
 }
 
@@ -130,30 +151,55 @@ export async function closeAllCheckpointers(): Promise<void> {
 // Model Instance Creation
 // ============================================================================
 
+/**
+ * Get the model instance for the given modelId.
+ * Supports two formats:
+ * 1. Simple: `gemini-2.5-pro`, `claude-3-5-sonnet-latest`, `gpt-4`
+ * 2. Prefixed: `google:gemini-2.5-pro`, `anthropic:claude-3-5-sonnet-latest`, `openai:gpt-4`
+ *
+ * Throws structured error `[MISSING_API_KEY:provider]` if an API key is missing,
+ * allowing the frontend to intercept and prompt the user.
+ */
 function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGoogleGenerativeAI | string {
-    const model = modelId || getDefaultModel();
-    console.log('[Runtime] Using model:', model);
+    const rawModel = modelId || getDefaultModel();
 
-    if (model.startsWith('claude')) {
+    // Parse `provider:model` format
+    let provider: 'anthropic' | 'openai' | 'google' | null = null;
+    let model = rawModel;
+
+    if (rawModel.includes(':')) {
+        const [providerPart, modelPart] = rawModel.split(':', 2);
+        if (['anthropic', 'openai', 'google'].includes(providerPart)) {
+            provider = providerPart as 'anthropic' | 'openai' | 'google';
+            model = modelPart;
+        }
+    }
+
+    console.log(`[Runtime] Using model: ${model} (provider: ${provider || 'auto-detect'})`);
+
+    // Determine provider from model name if not explicitly set
+    const effectiveProvider = provider || inferProvider(model);
+
+    if (effectiveProvider === 'anthropic' || model.startsWith('claude')) {
         const apiKey = getApiKey('anthropic');
         if (!apiKey) {
-            throw new Error('Anthropic API key not configured. Set ANTHROPIC_API_KEY environment variable or configure in settings.');
+            throw new Error('[MISSING_API_KEY:anthropic]');
         }
         return new ChatAnthropic({ model, anthropicApiKey: apiKey });
     }
 
-    if (model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o3') || model.startsWith('o4')) {
+    if (effectiveProvider === 'openai' || model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o3') || model.startsWith('o4')) {
         const apiKey = getApiKey('openai');
         if (!apiKey) {
-            throw new Error('OpenAI API key not configured. Set OPENAI_API_KEY environment variable or configure in settings.');
+            throw new Error('[MISSING_API_KEY:openai]');
         }
         return new ChatOpenAI({ model, openAIApiKey: apiKey });
     }
 
-    if (model.startsWith('gemini')) {
+    if (effectiveProvider === 'google' || model.startsWith('gemini')) {
         const apiKey = getApiKey('google');
         if (!apiKey) {
-            throw new Error('Google API key not configured. Set GOOGLE_API_KEY environment variable or configure in settings.');
+            throw new Error('[MISSING_API_KEY:google]');
         }
         return new ChatGoogleGenerativeAI({
             model,
@@ -169,6 +215,16 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
 
     // Return as string for deepagents to handle
     return model;
+}
+
+/**
+ * Infer provider from model name prefix.
+ */
+function inferProvider(model: string): 'anthropic' | 'openai' | 'google' | null {
+    if (model.startsWith('claude')) return 'anthropic';
+    if (model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o3') || model.startsWith('o4')) return 'openai';
+    if (model.startsWith('gemini')) return 'google';
+    return null;
 }
 
 // ============================================================================
@@ -317,6 +373,17 @@ The workspace root is: ${workspacePath}`;
         }
     }
 
+    // Configure tool retry middleware for MCP tools
+    // This automatically retries failed tool calls and passes errors back to the AI
+    const retryMiddleware = toolRetryMiddleware({
+        maxRetries: 1,              // 1 total attempts (1 initial + 1 retries)
+        initialDelayMs: 1000,       // 1 second initial delay
+        backoffFactor: 2.0,         // Exponential backoff (1s, 2s, 4s)
+        jitter: true,               // Add randomness to avoid thundering herd
+        onFailure: 'continue',      // Pass error message back to AI so it can retry/adapt
+        // Retry on all errors by default (MCP tools can have various failure modes)
+    });
+
     const agent = createDeepAgent({
         model,
         checkpointer,
@@ -324,9 +391,10 @@ The workspace root is: ${workspacePath}`;
         systemPrompt,
         filesystemSystemPrompt, // Note: filesystemSystemPrompt is used as additionalSystemPrompt in older versions, checking compatibility
         tools: mcpTools,
+        middleware: [retryMiddleware],  // Add retry middleware
         interruptOn: { execute: true },
     } as Parameters<typeof createDeepAgent>[0]);
 
-    console.log('[Runtime] Agent created successfully');
+    console.log('[Runtime] Agent created successfully with tool retry middleware');
     return agent;
 }

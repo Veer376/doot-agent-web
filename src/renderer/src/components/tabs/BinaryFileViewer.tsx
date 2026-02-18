@@ -39,9 +39,9 @@ export function BinaryFileViewer({
   };
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-background/50 text-xs text-muted-foreground shrink-0">
+      <div className="bg-background/50 flex shrink-0 items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
         <span className="truncate">{fileName}</span>
         <span className="text-muted-foreground/50">•</span>
         <span>Binary File</span>
@@ -55,16 +55,16 @@ export function BinaryFileViewer({
 
       {/* Binary file info */}
       <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
-        <div className="w-24 h-24 rounded-2xl bg-accent/10 flex items-center justify-center">
-          <File className="size-12 text-muted-foreground/50" />
+        <div className="bg-accent/10 flex h-24 w-24 items-center justify-center rounded-2xl">
+          <File className="text-muted-foreground/50 size-12" />
         </div>
 
         <div>
-          <div className="font-medium text-foreground mb-1">{fileName}</div>
-          <div className="text-sm text-muted-foreground mb-2">
+          <div className="mb-1 font-medium text-foreground">{fileName}</div>
+          <div className="mb-2 text-sm text-muted-foreground">
             {ext} file • {formatSize(size)}
           </div>
-          <div className="text-xs text-muted-foreground max-w-md">
+          <div className="max-w-md text-xs text-muted-foreground">
             This file type cannot be previewed in the viewer. You can open it
             with an external application.
           </div>

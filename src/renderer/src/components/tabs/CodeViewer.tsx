@@ -153,9 +153,9 @@ export function CodeViewer({ filePath, content }: CodeViewerProps) {
   }, [content, shikiLang]);
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* File path header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-background/50 text-xs text-muted-foreground shrink-0">
+      <div className="bg-background/50 flex shrink-0 items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
         <span className="truncate">{filePath}</span>
         <span className="text-muted-foreground/50">•</span>
         <span>{lineCount} lines</span>
@@ -164,7 +164,7 @@ export function CodeViewer({ filePath, content }: CodeViewerProps) {
       </div>
 
       {/* File content with syntax highlighting and line numbers */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           {isLoading ? (
             <div className="flex items-center justify-center p-8 text-muted-foreground">
@@ -173,28 +173,33 @@ export function CodeViewer({ filePath, content }: CodeViewerProps) {
           ) : (
             <div className="flex text-sm">
               {/* Line numbers column */}
-              <div className="shrink-0 py-4 pl-4 pr-2 text-right select-none border-r border-border/50 bg-muted/30">
+              <div className="border-border/50 bg-muted/30 shrink-0 select-none border-r py-4 pl-4 pr-2 text-right">
                 {lines.map((_, i) => (
                   <div
                     key={i}
-                    className="leading-6 text-muted-foreground/50 font-mono text-xs"
+                    className="text-muted-foreground/50 font-mono text-xs leading-6"
                   >
                     {i + 1}
                   </div>
                 ))}
               </div>
-              
+
               {/* Code content */}
-              <div className="flex-1 min-w-0 overflow-x-auto">
+              <div className="min-w-0 flex-1 overflow-x-auto">
                 {highlightedHtml ? (
                   <div
-                    className="shiki-container py-4 px-4 [&_pre]:!bg-transparent [&_code]:!bg-transparent [&_.shiki]:!bg-transparent [&_pre]:!m-0 [&_.line]:leading-6"
+                    className="shiki-container px-4 py-4 [&_.line]:leading-6 [&_.shiki]:!bg-transparent [&_code]:!bg-transparent [&_pre]:!m-0 [&_pre]:!bg-transparent"
                     dangerouslySetInnerHTML={{ __html: highlightedHtml }}
                   />
                 ) : (
-                  <pre className="py-4 px-4 font-mono whitespace-pre">
+                  <pre className="whitespace-pre px-4 py-4 font-mono">
                     {lines.map((line, i) => (
-                      <div key={i} className="leading-6">{line || " "}</div>
+                      <div
+                        key={i}
+                        className="leading-6"
+                      >
+                        {line || " "}
+                      </div>
                     ))}
                   </pre>
                 )}

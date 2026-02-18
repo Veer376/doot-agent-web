@@ -13,7 +13,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useThreadFileState, type FileInfo } from "@/features/chat/providers/ThreadState";
+import {
+  useThreadFileState,
+  type FileInfo,
+} from "@/features/chat/providers/ThreadState";
 import { useQueryState } from "@/hooks/use-query-state";
 
 // ============================================================================
@@ -57,32 +60,32 @@ function FileTreeNode({
       <button
         onClick={handleClick}
         className={cn(
-          "flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors"
+          "hover:bg-muted/50 flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors",
         )}
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
       >
         {isDir ? (
           <>
             {isExpanded ? (
-              <ChevronDown className="size-3 text-muted-foreground shrink-0" />
+              <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
             ) : (
-              <ChevronRight className="size-3 text-muted-foreground shrink-0" />
+              <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
             )}
             {isExpanded ? (
-              <FolderOpen className="size-4 text-amber-500 shrink-0" />
+              <FolderOpen className="size-4 shrink-0 text-amber-500" />
             ) : (
-              <Folder className="size-4 text-amber-500 shrink-0" />
+              <Folder className="size-4 shrink-0 text-amber-500" />
             )}
           </>
         ) : (
           <>
             <span className="w-3 shrink-0" />
-            <File className="size-4 text-muted-foreground shrink-0" />
+            <File className="size-4 shrink-0 text-muted-foreground" />
           </>
         )}
-        <span className="flex-1 text-left truncate">{name}</span>
+        <span className="flex-1 truncate text-left">{name}</span>
         {!isDir && file.size !== undefined && (
-          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
             {formatSize(file.size)}
           </span>
         )}
@@ -159,7 +162,10 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
         if (path) {
           setWorkspacePath(path as string);
           // Load files from disk
-          const result = await window.electron.invoke("workspace:loadFromDisk", threadId);
+          const result = await window.electron.invoke(
+            "workspace:loadFromDisk",
+            threadId,
+          );
           const typedResult = result as { success: boolean; files: FileInfo[] };
           if (typedResult.success) {
             setWorkspaceFiles(typedResult.files);
@@ -180,7 +186,10 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
     setLoading(true);
     try {
       if (window.electron?.invoke) {
-        const result = await window.electron.invoke("workspace:loadFromDisk", threadId);
+        const result = await window.electron.invoke(
+          "workspace:loadFromDisk",
+          threadId,
+        );
         const typedResult = result as { success: boolean; files: FileInfo[] };
         if (typedResult.success) {
           setWorkspaceFiles(typedResult.files);
@@ -231,7 +240,7 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
 
     files.forEach((file) => {
       const normalized = normalizePath(
-        file.path.endsWith("/") ? file.path.slice(0, -1) : file.path
+        file.path.endsWith("/") ? file.path.slice(0, -1) : file.path,
       );
       const parentPath = getParentPath(normalized);
 
@@ -266,11 +275,18 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
   // If no workspace is selected, show selection prompt
   if (!workspacePath) {
     return (
-      <div className={cn("flex flex-1 flex-col min-h-0 overflow-hidden", className)}>
-        <div className="flex flex-col items-center justify-center flex-1 text-center px-4 py-8">
-          <FolderOpen className="size-12 mb-4 text-muted-foreground opacity-50" />
-          <span className="text-sm font-medium mb-2">No workspace selected</span>
-          <span className="text-xs text-muted-foreground mb-4">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col overflow-hidden",
+          className,
+        )}
+      >
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center">
+          <FolderOpen className="mb-4 size-12 text-muted-foreground opacity-50" />
+          <span className="mb-2 text-sm font-medium">
+            No workspace selected
+          </span>
+          <span className="mb-4 text-xs text-muted-foreground">
             Select a folder for the agent to work in
           </span>
           <Button
@@ -281,9 +297,9 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
             className="h-8 px-4"
           >
             {loading ? (
-              <Loader2 className="size-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 size-4 animate-spin" />
             ) : (
-              <FolderOpen className="size-4 mr-2" />
+              <FolderOpen className="mr-2 size-4" />
             )}
             Select Folder
           </Button>
@@ -293,11 +309,13 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
   }
 
   return (
-    <div className={cn("flex flex-1 flex-col min-h-0 overflow-hidden", className)}>
+    <div
+      className={cn("flex min-h-0 flex-1 flex-col overflow-hidden", className)}
+    >
       {/* Header */}
-      <div className="px-3 py-2 border-b border-border shrink-0">
+      <div className="shrink-0 border-b border-border px-3 py-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Workspace
           </span>
           <div className="flex items-center gap-1">
@@ -328,7 +346,7 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
           </div>
         </div>
         <div
-          className="text-xs text-muted-foreground truncate mt-1"
+          className="mt-1 truncate text-xs text-muted-foreground"
           title={workspacePath}
         >
           {workspacePath.split(/[/\\]/).pop()}
@@ -336,14 +354,14 @@ export function FilesystemPanel({ className }: FilesystemPanelProps) {
       </div>
 
       {/* File tree */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="py-2">
             {rootItems.length === 0 ? (
-              <div className="flex flex-col items-center text-center text-sm text-muted-foreground py-8 px-4">
-                <FolderOpen className="size-8 mb-2 opacity-50" />
+              <div className="flex flex-col items-center px-4 py-8 text-center text-sm text-muted-foreground">
+                <FolderOpen className="mb-2 size-8 opacity-50" />
                 <span>Empty workspace</span>
-                <span className="text-xs mt-1 opacity-75">
+                <span className="mt-1 text-xs opacity-75">
                   Files will appear when the agent creates them
                 </span>
               </div>

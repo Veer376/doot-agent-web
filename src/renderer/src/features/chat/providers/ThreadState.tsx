@@ -63,7 +63,9 @@ export interface ThreadFileActions {
   closeFile: (path: string) => void;
   setActiveTab: (tab: "agent" | string) => void;
   setFileContents: (path: string, content: string) => void;
-  setWorkspaceFiles: (files: FileInfo[] | ((prev: FileInfo[]) => FileInfo[])) => void;
+  setWorkspaceFiles: (
+    files: FileInfo[] | ((prev: FileInfo[]) => FileInfo[]),
+  ) => void;
   setWorkspacePath: (path: string | null) => void;
   setTokenUsage: (usage: TokenUsage | null) => void;
 }
@@ -111,7 +113,9 @@ interface ThreadStateProviderProps {
 }
 
 export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
-  const [threadStates, setThreadStates] = useState<Record<string, ThreadFileState>>({});
+  const [threadStates, setThreadStates] = useState<
+    Record<string, ThreadFileState>
+  >({});
   const [isRightPanelOpen, setRightPanelOpen] = useState(false);
   const [rightPanelWidth, setRightPanelWidth] = useState(320);
   const actionsCache = useRef<Record<string, ThreadFileActions>>({});
@@ -124,14 +128,17 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
       if (!threadId) return createDefaultThreadState();
       return threadStates[threadId] || createDefaultThreadState();
     },
-    [threadStates]
+    [threadStates],
   );
 
   /**
    * Update thread state with partial updates
    */
   const updateThreadState = useCallback(
-    (threadId: string | null, updater: (prev: ThreadFileState) => Partial<ThreadFileState>) => {
+    (
+      threadId: string | null,
+      updater: (prev: ThreadFileState) => Partial<ThreadFileState>,
+    ) => {
       if (!threadId) return;
       setThreadStates((prev) => {
         const currentState = prev[threadId] || createDefaultThreadState();
@@ -142,7 +149,7 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
         };
       });
     },
-    []
+    [],
   );
 
   /**
@@ -192,7 +199,9 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
             // Determine new active tab if we're closing the current one
             let newActiveTab = state.activeTab;
             if (state.activeTab === path) {
-              const closedIndex = state.openFiles.findIndex((f) => f.path === path);
+              const closedIndex = state.openFiles.findIndex(
+                (f) => f.path === path,
+              );
               if (newOpenFiles.length === 0) {
                 newActiveTab = "agent";
               } else if (closedIndex > 0) {
@@ -220,9 +229,12 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
           }));
         },
 
-        setWorkspaceFiles: (files: FileInfo[] | ((prev: FileInfo[]) => FileInfo[])) => {
+        setWorkspaceFiles: (
+          files: FileInfo[] | ((prev: FileInfo[]) => FileInfo[]),
+        ) => {
           updateThreadState(threadId, (state) => ({
-            workspaceFiles: typeof files === "function" ? files(state.workspaceFiles) : files,
+            workspaceFiles:
+              typeof files === "function" ? files(state.workspaceFiles) : files,
           }));
         },
 
@@ -238,7 +250,7 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
       actionsCache.current[threadId] = actions;
       return actions;
     },
-    [updateThreadState]
+    [updateThreadState],
   );
 
   const contextValue = useMemo(
@@ -250,7 +262,7 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
       rightPanelWidth,
       setRightPanelWidth,
     }),
-    [getThreadState, getThreadActions, isRightPanelOpen, rightPanelWidth]
+    [getThreadState, getThreadActions, isRightPanelOpen, rightPanelWidth],
   );
 
   return (
@@ -270,7 +282,9 @@ export function ThreadStateProvider({ children }: ThreadStateProviderProps) {
 export function useThreadStateContext(): ThreadStateContextValue {
   const context = useContext(ThreadStateContext);
   if (!context) {
-    throw new Error("useThreadStateContext must be used within a ThreadStateProvider");
+    throw new Error(
+      "useThreadStateContext must be used within a ThreadStateProvider",
+    );
   }
   return context;
 }
@@ -278,7 +292,9 @@ export function useThreadStateContext(): ThreadStateContextValue {
 /**
  * Get file state and actions for a specific thread
  */
-export function useThreadFileState(threadId: string | null): ThreadStateWithActions {
+export function useThreadFileState(
+  threadId: string | null,
+): ThreadStateWithActions {
   const { getThreadState, getThreadActions } = useThreadStateContext();
   const state = getThreadState(threadId);
   const actions = getThreadActions(threadId);
@@ -297,14 +313,21 @@ export function useCurrentThreadFileState(threadId: string | null) {
  * Access right panel visibility controls
  */
 export function useRightPanel() {
-  const { isRightPanelOpen, setRightPanelOpen, rightPanelWidth, setRightPanelWidth } =
-    useThreadStateContext();
+  const {
+    isRightPanelOpen,
+    setRightPanelOpen,
+    rightPanelWidth,
+    setRightPanelWidth,
+  } = useThreadStateContext();
 
   return {
     isOpen: isRightPanelOpen,
     setOpen: setRightPanelOpen,
     width: rightPanelWidth,
     setWidth: setRightPanelWidth,
-    toggle: useCallback(() => setRightPanelOpen(!isRightPanelOpen), [isRightPanelOpen, setRightPanelOpen]),
+    toggle: useCallback(
+      () => setRightPanelOpen(!isRightPanelOpen),
+      [isRightPanelOpen, setRightPanelOpen],
+    ),
   };
 }

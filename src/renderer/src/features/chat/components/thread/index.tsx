@@ -112,7 +112,7 @@ function StickyToBottomContent(props: {
   return (
     <div
       ref={context.scrollRef}
-      className={cn("w-full h-full", props.className)}
+      className={cn("h-full w-full", props.className)}
     >
       <div
         ref={context.contentRef}
@@ -381,7 +381,7 @@ export function Thread() {
                 ...(prev.messages ?? []),
                 ...toolMessages,
                 newHumanMessage,
-            ]
+              ],
             }),
             config: {
               configurable: {
@@ -634,7 +634,7 @@ export function Thread() {
   });
 
   return (
-    <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
       <StickToBottom className="relative min-w-0 flex-1 overflow-hidden">
         <StickyToBottomContent
           className={cn(
@@ -792,7 +792,6 @@ export function Thread() {
                     focusKey={threadId}
                     selectedModel={selectedModel}
                     onModelSelect={selectModel}
-
                     // Toolkit management
                     selectedToolkits={selectedToolkits}
                     onToggleToolkit={toggleToolkit}

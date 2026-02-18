@@ -80,10 +80,10 @@ export function ImageViewer({
   const canPan = zoom > 100;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header with controls */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-background/50 shrink-0">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground overflow-hidden">
+      <div className="bg-background/50 flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2">
+        <div className="flex items-center gap-2 overflow-hidden text-xs text-muted-foreground">
           <span className="truncate">{fileName}</span>
           <span className="text-muted-foreground/50">•</span>
           <span>Image</span>
@@ -109,7 +109,7 @@ export function ImageViewer({
             <ZoomOut className="size-4" />
           </Button>
 
-          <span className="text-xs text-muted-foreground min-w-[3rem] text-center">
+          <span className="min-w-[3rem] text-center text-xs text-muted-foreground">
             {zoom}%
           </span>
 
@@ -144,10 +144,10 @@ export function ImageViewer({
       </div>
 
       {/* Image display */}
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="min-h-0 flex-1">
         <div
           ref={containerRef}
-          className="flex items-center justify-center min-h-full p-8 overflow-hidden"
+          className="flex min-h-full items-center justify-center overflow-hidden p-8"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -160,7 +160,7 @@ export function ImageViewer({
           <img
             src={imageUrl}
             alt={fileName}
-            className="max-w-full h-auto transition-transform duration-200"
+            className="h-auto max-w-full transition-transform duration-200"
             style={{
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom / 100}) rotate(${rotation}deg)`,
               imageRendering: zoom > 100 ? "pixelated" : "auto",

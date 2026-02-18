@@ -25,10 +25,10 @@ export function PDFViewer({
   };
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-background/50 shrink-0">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground overflow-hidden">
+      <div className="bg-background/50 flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2">
+        <div className="flex items-center gap-2 overflow-hidden text-xs text-muted-foreground">
           <span className="truncate">{fileName}</span>
           <span className="text-muted-foreground/50">•</span>
           <span>PDF Document</span>
@@ -38,7 +38,7 @@ export function PDFViewer({
           variant="ghost"
           size="sm"
           onClick={handleOpenExternal}
-          className="h-7 px-2 gap-1"
+          className="h-7 gap-1 px-2"
         >
           <ExternalLink className="size-3" />
           <span className="text-xs">Download</span>
@@ -46,25 +46,28 @@ export function PDFViewer({
       </div>
 
       {/* PDF embed */}
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="flex flex-col items-center min-h-full bg-muted/30">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="bg-muted/30 flex min-h-full flex-col items-center">
           <object
             data={pdfUrl}
             type="application/pdf"
-            className="w-full h-full min-h-[600px]"
+            className="h-full min-h-[600px] w-full"
           >
             {/* Fallback if PDF can't be displayed inline */}
-            <div className="flex flex-col items-center justify-center min-h-[600px] gap-4 p-8">
-              <FileText className="size-16 text-muted-foreground/50" />
+            <div className="flex min-h-[600px] flex-col items-center justify-center gap-4 p-8">
+              <FileText className="text-muted-foreground/50 size-16" />
               <div className="text-center">
-                <div className="font-medium text-foreground mb-2">
+                <div className="mb-2 font-medium text-foreground">
                   {fileName}
                 </div>
-                <div className="text-sm text-muted-foreground mb-4">
+                <div className="mb-4 text-sm text-muted-foreground">
                   PDF preview not available in this browser
                 </div>
-                <Button onClick={handleOpenExternal} variant="outline">
-                  <ExternalLink className="size-4 mr-2" />
+                <Button
+                  onClick={handleOpenExternal}
+                  variant="outline"
+                >
+                  <ExternalLink className="mr-2 size-4" />
                   Download PDF
                 </Button>
               </div>

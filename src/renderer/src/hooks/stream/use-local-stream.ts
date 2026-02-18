@@ -79,6 +79,8 @@ export interface UseLocalStreamReturn {
         optimisticValues?: (prev: LocalStreamState) => Partial<LocalStreamState>;
         isOptimistic?: boolean;
         skipOptimistic?: boolean;
+        tools?: any[];
+        toolkits?: any[];
     }) => void;
     /** Stop the current stream */
     stop: () => void;
@@ -117,7 +119,8 @@ export function useLocalStream(options: UseLocalStreamOptions): UseLocalStreamRe
         messages: [],
         isLoading: false,
         error: null,
-        values: null
+        values: null,
+        interrupt: null
     }), []);
 
     // Subscribe to stream state via useSyncExternalStore

@@ -69,13 +69,16 @@ function WorkspaceButton({
         "h-7 gap-1.5 px-2 text-xs font-normal transition-all",
         workspacePath
           ? "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-          : "text-muted-foreground hover:text-foreground"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {workspacePath ? (
         <>
           <CheckIcon className="size-3" />
-          <span className="max-w-[120px] truncate" title={workspacePath}>
+          <span
+            className="max-w-[120px] truncate"
+            title={workspacePath}
+          >
             {workspacePath.split(/[/\\]/).pop()}
           </span>
         </>
@@ -120,7 +123,8 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
   } = useThreadFileState(threadId);
 
   // Right panel controls
-  const { isOpen: isRightPanelOpen, toggle: toggleRightPanel } = useRightPanel();
+  const { isOpen: isRightPanelOpen, toggle: toggleRightPanel } =
+    useRightPanel();
 
   // Fetch threads to get current thread metadata
   const { data: cloudThreads = [] } = useFetchCloudThreads();
@@ -128,7 +132,7 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
 
   // Find current thread
   const currentThread = [...localThreads, ...cloudThreads].find(
-    (t) => t.thread_id === threadId
+    (t) => t.thread_id === threadId,
   );
 
   // Get thread title
@@ -152,7 +156,7 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
     (path: string) => {
       setWorkspacePath(path);
     },
-    [setWorkspacePath]
+    [setWorkspacePath],
   );
 
   // Only show for local agent (local agent uses workspace)
@@ -166,18 +170,18 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
   return (
     <header
       className={cn(
-        "flex h-10 shrink-0 items-center relative glass-header",
-        className
+        "glass-header relative flex h-10 shrink-0 items-center",
+        className,
       )}
     >
       {/* Left section: Thread name (clickable to go back to chat) + Workspace */}
-      <div className="flex items-center gap-1 px-3 shrink-0">
+      <div className="flex shrink-0 items-center gap-1 px-3">
         {/* Thread Name - clickable to switch to chat */}
         <button
           onClick={() => setActiveTab("agent")}
           className={cn(
-            "text-sm font-medium truncate max-w-[200px] hover:text-primary transition-colors",
-            activeTab === "agent" ? "text-foreground" : "text-muted-foreground"
+            "max-w-[200px] truncate text-sm font-medium transition-colors hover:text-primary",
+            activeTab === "agent" ? "text-foreground" : "text-muted-foreground",
           )}
           title={`${threadTitle} (click to return to chat)`}
         >
@@ -185,9 +189,7 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
         </button>
 
         {/* Separator */}
-        {showWorkspaceSelector && (
-          <div className="h-4 w-px bg-border mx-1" />
-        )}
+        {showWorkspaceSelector && <div className="mx-1 h-4 w-px bg-border" />}
 
         {/* Workspace Selector */}
         {showWorkspaceSelector && (
@@ -199,36 +201,38 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
         )}
 
         {/* Thick separator after workspace */}
-        <div className="h-5 w-0.5 bg-border ml-2" />
+        <div className="ml-2 h-5 w-0.5 bg-border" />
       </div>
 
       {/* Tabs section: pill-style file tabs */}
       {openFiles.length > 0 && (
-        <div className="flex items-center gap-1.5 px-2 overflow-x-auto scrollbar-hide">
+        <div className="scrollbar-hide flex items-center gap-1.5 overflow-x-auto px-2">
           {/* Open File Tabs - Pills */}
           {openFiles.map((file) => (
             <div
               key={file.path}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-full transition-colors group shrink-0",
+                "group flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 transition-colors",
                 activeTab === file.path
                   ? "bg-primary/15 text-foreground"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               <button
                 onClick={() => setActiveTab(file.path)}
-                className="text-xs font-medium whitespace-nowrap"
+                className="whitespace-nowrap text-xs font-medium"
                 title={file.path}
               >
-                <span className="max-w-[100px] truncate inline-block align-middle">{file.name}</span>
+                <span className="inline-block max-w-[100px] truncate align-middle">
+                  {file.name}
+                </span>
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   closeFile(file.path);
                 }}
-                className="flex items-center justify-center size-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-background/50 transition-colors opacity-0 group-hover:opacity-100"
+                className="hover:bg-background/50 flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-colors group-hover:opacity-100 hover:text-foreground"
                 title="Close file"
               >
                 <X className="size-3" />
@@ -242,7 +246,7 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
       <div className="flex-1" />
 
       {/* Right section: Files panel toggle */}
-      <div className="flex items-center gap-1 px-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-1 px-2">
         {/* Files button */}
         <Button
           variant="ghost"
@@ -251,8 +255,8 @@ export function ThreadHeader({ className }: ThreadHeaderProps) {
           className={cn(
             "h-7 gap-1.5 px-2 text-xs font-normal",
             isRightPanelOpen
-              ? "text-primary bg-primary/10"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {isRightPanelOpen ? (

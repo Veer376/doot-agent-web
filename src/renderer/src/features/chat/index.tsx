@@ -2,7 +2,11 @@
 
 import React, { useCallback, useEffect, useRef } from "react";
 import { StreamProvider } from "@/features/chat/providers/Stream";
-import { ThreadStateProvider, useRightPanel, useThreadFileState } from "@/features/chat/providers/ThreadState";
+import {
+  ThreadStateProvider,
+  useRightPanel,
+  useThreadFileState,
+} from "@/features/chat/providers/ThreadState";
 import { Thread } from "./components/thread";
 import { ThreadHeader } from "./components/thread/thread-header";
 import { RightPanel, FileViewerPanel } from "@/components/panels";
@@ -18,7 +22,11 @@ const RIGHT_DEFAULT = 320;
  */
 function ChatInterfaceInner(): React.ReactNode {
   const [threadId] = useQueryState("threadId");
-  const { isOpen: isRightPanelOpen, width: rightPanelWidth, setWidth: setRightPanelWidth } = useRightPanel();
+  const {
+    isOpen: isRightPanelOpen,
+    width: rightPanelWidth,
+    setWidth: setRightPanelWidth,
+  } = useRightPanel();
   const { activeTab } = useThreadFileState(threadId);
   const dragStartWidth = useRef<number | null>(null);
 
@@ -31,7 +39,7 @@ function ChatInterfaceInner(): React.ReactNode {
       const newWidth = dragStartWidth.current - totalDelta;
       setRightPanelWidth(Math.min(RIGHT_MAX, Math.max(RIGHT_MIN, newWidth)));
     },
-    [rightPanelWidth, setRightPanelWidth]
+    [rightPanelWidth, setRightPanelWidth],
   );
 
   // Reset drag start on mouse up
@@ -47,14 +55,14 @@ function ChatInterfaceInner(): React.ReactNode {
   const showFileViewer = activeTab !== "agent" && activeTab !== "";
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Thread Header with workspace, files button, and open file tabs */}
       <ThreadHeader />
 
       {/* Main content area - horizontal flex for chat + right panel */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Main content area - shows Thread or FileViewer based on activeTab */}
-        <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {showFileViewer ? (
             <FileViewerPanel filePath={activeTab} />
           ) : (
@@ -65,7 +73,7 @@ function ChatInterfaceInner(): React.ReactNode {
         {/* Resize handle for right panel */}
         {isRightPanelOpen && (
           <div
-            className="w-1 cursor-col-resize bg-border hover:bg-primary/30 active:bg-primary/50 transition-colors shrink-0"
+            className="hover:bg-primary/30 active:bg-primary/50 w-1 shrink-0 cursor-col-resize bg-border transition-colors"
             onMouseDown={(e) => {
               e.preventDefault();
               const startX = e.clientX;
@@ -91,9 +99,9 @@ function ChatInterfaceInner(): React.ReactNode {
 
         {/* Right Panel - Files viewer */}
         {isRightPanelOpen && (
-          <div 
-            style={{ width: rightPanelWidth }} 
-            className="shrink-0 flex flex-col min-h-0 overflow-hidden"
+          <div
+            style={{ width: rightPanelWidth }}
+            className="flex min-h-0 shrink-0 flex-col overflow-hidden"
           >
             <RightPanel />
           </div>

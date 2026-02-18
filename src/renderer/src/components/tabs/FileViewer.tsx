@@ -55,10 +55,13 @@ export function FileViewer({
         if (isBinary) {
           // Read as binary file (base64)
           if (window.electron?.invoke) {
-            const result = await window.electron.invoke("workspace:readBinaryFile", {
-              threadId,
-              filePath,
-            });
+            const result = await window.electron.invoke(
+              "workspace:readBinaryFile",
+              {
+                threadId,
+                filePath,
+              },
+            );
             const typedResult = result as {
               success: boolean;
               content?: string;
@@ -110,7 +113,7 @@ export function FileViewer({
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <Loader2 className="size-6 animate-spin mr-2" />
+        <Loader2 className="mr-2 size-6 animate-spin" />
         <span>Loading file...</span>
       </div>
     );
@@ -118,10 +121,10 @@ export function FileViewer({
 
   if (error) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground gap-3 p-8">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
         <AlertCircle className="size-10 text-destructive" />
         <div className="text-center">
-          <div className="font-medium text-foreground mb-1">
+          <div className="mb-1 font-medium text-foreground">
             Failed to load file
           </div>
           <div className="text-sm">{error}</div>
@@ -133,7 +136,7 @@ export function FileViewer({
   if (content === undefined && binaryContent === null) {
     return (
       <div className="flex flex-1 items-center justify-center text-muted-foreground">
-        <FileCode className="size-6 mr-2" />
+        <FileCode className="mr-2 size-6" />
         <span>No content</span>
       </div>
     );
@@ -173,16 +176,31 @@ export function FileViewer({
   }
 
   if (fileTypeInfo.type === "pdf" && binaryContent) {
-    return <PDFViewer filePath={filePath} base64Content={binaryContent} />;
+    return (
+      <PDFViewer
+        filePath={filePath}
+        base64Content={binaryContent}
+      />
+    );
   }
 
   if (fileTypeInfo.type === "binary") {
-    return <BinaryFileViewer filePath={filePath} size={fileSize} />;
+    return (
+      <BinaryFileViewer
+        filePath={filePath}
+        size={fileSize}
+      />
+    );
   }
 
   // Default to code/text viewer
   if (content !== undefined) {
-    return <CodeViewer filePath={filePath} content={content} />;
+    return (
+      <CodeViewer
+        filePath={filePath}
+        content={content}
+      />
+    );
   }
 
   return null;

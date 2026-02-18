@@ -14,50 +14,70 @@ export interface Model {
 
 /**
  * Available models for selection
- * TODO: Fetch from backend API in future
+ * 
+ * Model IDs use the `provider:model` format for explicit provider detection.
+ * This ensures the API key management system can correctly identify which
+ * API key is needed when a model is selected.
  */
 export const AVAILABLE_MODELS: Model[] = [
+    // Google Models
     {
-        id: "gpt-4-turbo",
-        name: "GPT-4 Turbo",
-        provider: "openai",
-        description: "Most capable GPT-4 model",
-        contextWindow: 128000,
+        id: "google:gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
+        provider: "google",
+        description: "Most capable Gemini model with extended thinking",
+        contextWindow: 1000000,
     },
     {
-        id: "gpt-4",
-        name: "GPT-4",
-        provider: "openai",
-        description: "Standard GPT-4 model",
-        contextWindow: 8192,
+        id: "google:gemini-2.5-flash",
+        name: "Gemini 2.5 Flash",
+        provider: "google",
+        description: "Fast and efficient Gemini model",
+        contextWindow: 1000000,
     },
+    // Anthropic Models
     {
-        id: "gpt-3.5-turbo",
-        name: "GPT-3.5 Turbo",
-        provider: "openai",
-        description: "Fast and efficient",
-        contextWindow: 16385,
-    },
-    {
-        id: "claude-3-opus",
-        name: "Claude 3 Opus",
+        id: "anthropic:claude-sonnet-4-20250514",
+        name: "Claude Sonnet 4",
         provider: "anthropic",
-        description: "Most capable Claude model",
+        description: "Latest Claude Sonnet model",
         contextWindow: 200000,
     },
     {
-        id: "claude-3-sonnet",
-        name: "Claude 3 Sonnet",
+        id: "anthropic:claude-3-5-sonnet-latest",
+        name: "Claude 3.5 Sonnet",
         provider: "anthropic",
         description: "Balanced performance and speed",
         contextWindow: 200000,
     },
     {
-        id: "gemini-pro",
-        name: "Gemini Pro",
-        provider: "google",
-        description: "Google's advanced model",
-        contextWindow: 32000,
+        id: "anthropic:claude-3-opus-20240229",
+        name: "Claude 3 Opus",
+        provider: "anthropic",
+        description: "Most capable Claude model",
+        contextWindow: 200000,
+    },
+    // OpenAI Models
+    {
+        id: "openai:gpt-4o",
+        name: "GPT-4o",
+        provider: "openai",
+        description: "Omni model with vision and audio",
+        contextWindow: 128000,
+    },
+    {
+        id: "openai:gpt-4-turbo",
+        name: "GPT-4 Turbo",
+        provider: "openai",
+        description: "Fast GPT-4 with large context",
+        contextWindow: 128000,
+    },
+    {
+        id: "openai:o1",
+        name: "o1",
+        provider: "openai",
+        description: "Reasoning model for complex tasks",
+        contextWindow: 128000,
     },
 ];
 

@@ -8,6 +8,7 @@ import React, {
   useEffect,
   useRef,
   useMemo,
+  useCallback,
 } from "react";
 import { useStream } from "@/hooks/stream";
 // import { useStream } from "@langchain/langgraph-sdk/react";
@@ -42,6 +43,12 @@ import {
   type HITLRequest,
 } from "@/hooks/stream/use-local-stream";
 import { send } from "@/lib/electron";
+import {
+  useApiKeyPrompt,
+  parseMissingKeyError,
+  type PendingRequest,
+} from "@/hooks/use-api-key-prompt";
+import { ApiKeyPromptDialog } from "../components/dialogs/ApiKeyPromptDialog";
 
 type AgentSource = "local" | "cloud";
 
@@ -190,6 +197,41 @@ const LocalStreamSession = ({
 
   const { mutateAsync: createThread } = useCreateLocalThread();
 
+  // API Key prompting hook
+  const apiKeyPrompt = useApiKeyPrompt();
+
+  // Track the last request for retry purposes
+  const lastRequestRef = useRef<PendingRequest | null>(null);
+
+  // Detect MISSING_API_KEY errors and trigger prompting
+  useEffect(() => {
+    if (localStream.error) {
+      const provider = parseMissingKeyError(localStream.error);
+      if (provider && lastRequestRef.current) {
+        console.log('[Stream] Detected missing API key for provider:', provider);
+        apiKeyPrompt.promptForKey(provider, lastRequestRef.current);
+      }
+    }
+  }, [localStream.error]);
+
+  // Handler for when user submits API key
+  const handleApiKeySubmit = useCallback(async (apiKey: string) => {
+    const success = await apiKeyPrompt.submitKey(apiKey);
+    if (success && apiKeyPrompt.pendingRequest) {
+      console.log('[Stream] API key saved, retrying request...');
+      const req = apiKeyPrompt.pendingRequest;
+      // Retry the request via localStream
+      if (req.threadId && !req.threadId.startsWith('temp-')) {
+        localStream.submitToThread(req.threadId, req.message, {
+          modelId: req.modelId,
+          workspacePath: req.workspacePath,
+          tools: req.tools,
+          toolkits: req.toolkits,
+        });
+      }
+    }
+  }, [apiKeyPrompt, localStream]);
+
   // Adapt to unified context type
   // No need for optimisticMessages state - SDK's useStream handles it via setStreamValues
   const contextValue: StreamContextType = useMemo(
@@ -259,6 +301,16 @@ const LocalStreamSession = ({
           return;
         }
 
+        // Capture request for potential retry on API key error
+        const capturedRequest: PendingRequest = {
+          threadId: threadId || '',
+          message: messageContent,
+          modelId,
+          workspacePath,
+          tools: (options as any)?.tools,
+          toolkits: (options as any)?.toolkits,
+        };
+
         // FIXED APPROACH: Apply optimistic update FIRST with temp ID, then swap when thread created
         // This gives instant UI feedback (0ms) instead of waiting for thread creation (10-50ms)
         if (!threadId) {
@@ -297,6 +349,10 @@ const LocalStreamSession = ({
               const realThreadId = newThread.thread_id;
               setThreadId(realThreadId);
 
+              // Update captured request with real thread ID
+              capturedRequest.threadId = realThreadId;
+              lastRequestRef.current = capturedRequest;
+
               // Swap temp ID for real ID in manager and start actual stream
               console.log(
                 "[Stream] Swapping temp ID for real ID and starting stream",
@@ -319,6 +375,9 @@ const LocalStreamSession = ({
             });
         } else {
           console.log("[Stream] Existing thread - calling normal submit");
+          // Store for potential retry
+          capturedRequest.threadId = threadId;
+          lastRequestRef.current = capturedRequest;
           if (messageInput) {
             localStream.submit(messageInput, options as any);
           } else {
@@ -335,9 +394,18 @@ const LocalStreamSession = ({
   );
 
   return (
-    <StreamContext.Provider value={contextValue}>
-      {children}
-    </StreamContext.Provider>
+    <>
+      <StreamContext.Provider value={contextValue}>
+        {children}
+      </StreamContext.Provider>
+      <ApiKeyPromptDialog
+        provider={apiKeyPrompt.missingKeyProvider}
+        isSaving={apiKeyPrompt.isSavingKey}
+        error={apiKeyPrompt.saveError}
+        onSubmit={handleApiKeySubmit}
+        onCancel={apiKeyPrompt.cancel}
+      />
+    </>
   );
 };
 
@@ -437,6 +505,7 @@ export const useStreamContext = (): StreamContextType => {
       error: undefined,
       stop: () => {},
       submit: async () => {},
+      interrupt: null,
     } as StreamContextType;
   }
 

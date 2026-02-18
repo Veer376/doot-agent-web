@@ -11,12 +11,23 @@ interface FileViewerPanelProps {
 }
 
 // Image extensions
-const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "ico", "bmp"]);
+const IMAGE_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "svg",
+  "webp",
+  "ico",
+  "bmp",
+]);
 
 // Get file extension
 function getFileExtension(path: string): string {
   const fileName = path.split(/[/\\]/).pop() || "";
-  const ext = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() : "";
+  const ext = fileName.includes(".")
+    ? fileName.split(".").pop()?.toLowerCase()
+    : "";
   return ext || "";
 }
 
@@ -28,11 +39,13 @@ function isImageFile(path: string): boolean {
 
 /**
  * FileViewerPanel - Renders file content in the main content area
- * 
+ *
  * Handles loading file content from disk and displaying it
  * using the appropriate viewer (CodeViewer for text, ImageViewer for images)
  */
-export function FileViewerPanel({ filePath }: FileViewerPanelProps): React.JSX.Element {
+export function FileViewerPanel({
+  filePath,
+}: FileViewerPanelProps): React.JSX.Element {
   const [threadId] = useQueryState("threadId");
   const { workspacePath } = useThreadFileState(threadId);
   const [content, setContent] = useState<string | null>(null);
@@ -60,8 +73,12 @@ export function FileViewerPanel({ filePath }: FileViewerPanelProps): React.JSX.E
             threadId,
             filePath,
           });
-          const typedResult = result as { success: boolean; content?: string; error?: string };
-          
+          const typedResult = result as {
+            success: boolean;
+            content?: string;
+            error?: string;
+          };
+
           if (!cancelled) {
             if (typedResult.success && typedResult.content !== undefined) {
               setContent(typedResult.content);
@@ -113,11 +130,14 @@ export function FileViewerPanel({ filePath }: FileViewerPanelProps): React.JSX.E
   if (error) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex flex-col items-center gap-2 text-muted-foreground max-w-md text-center px-4">
-          <FileWarning className="size-8 text-destructive/70" />
+        <div className="flex max-w-md flex-col items-center gap-2 px-4 text-center text-muted-foreground">
+          <FileWarning className="text-destructive/70 size-8" />
           <span className="text-sm font-medium">Failed to load file</span>
           <span className="text-xs opacity-70">{error}</span>
-          <span className="text-xs opacity-50 truncate max-w-full" title={filePath}>
+          <span
+            className="max-w-full truncate text-xs opacity-50"
+            title={filePath}
+          >
             {filePath}
           </span>
         </div>
@@ -128,22 +148,24 @@ export function FileViewerPanel({ filePath }: FileViewerPanelProps): React.JSX.E
   // Image viewer
   if (isImageFile(filePath)) {
     // Build full path for images
-    const fullImagePath = workspacePath ? `${workspacePath}/${filePath}` : filePath;
-    
+    const fullImagePath = workspacePath
+      ? `${workspacePath}/${filePath}`
+      : filePath;
+
     return (
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Image path header */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-background/50 text-xs text-muted-foreground shrink-0">
+        <div className="bg-background/50 flex shrink-0 items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
           <ImageIcon className="size-3.5" />
           <span className="truncate">{filePath}</span>
         </div>
-        
+
         {/* Image preview */}
-        <div className="flex-1 min-h-0 overflow-auto flex items-center justify-center p-4 bg-muted/30">
+        <div className="bg-muted/30 flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
           <img
             src={`file://${fullImagePath}`}
             alt={filePath.split(/[/\\]/).pop()}
-            className="max-w-full max-h-full object-contain"
+            className="max-h-full max-w-full object-contain"
             onError={(e) => {
               e.currentTarget.style.display = "none";
               setError("Failed to load image");
@@ -155,7 +177,12 @@ export function FileViewerPanel({ filePath }: FileViewerPanelProps): React.JSX.E
   }
 
   // Code viewer for text files
-  return <CodeViewer filePath={filePath} content={content || ""} />;
+  return (
+    <CodeViewer
+      filePath={filePath}
+      content={content || ""}
+    />
+  );
 }
 
 export default FileViewerPanel;

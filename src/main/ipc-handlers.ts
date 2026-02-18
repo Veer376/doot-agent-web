@@ -339,6 +339,30 @@ export function registerLocalAgentHandlers(ipcMain: IpcMain): void {
     });
 
     // ========================================
+    // Settings / API Key Handlers
+    // ========================================
+
+    /**
+     * Set an API key for a provider (in-memory, session-only).
+     * LIMITATION: This key will be lost on app restart.
+     * TODO: Replace with database/secure storage in a future iteration.
+     */
+    ipcMain.handle('settings:setApiKey', async (_event, { provider, apiKey }: {
+        provider: 'anthropic' | 'openai' | 'google';
+        apiKey: string;
+    }) => {
+        console.log('[IPC] settings:setApiKey called for provider:', provider);
+        try {
+            const { setInMemoryApiKey } = await import('./agent/runtime');
+            setInMemoryApiKey(provider, apiKey);
+            return { success: true };
+        } catch (error) {
+            console.error('[IPC] Failed to set API key:', error);
+            return { success: false, error: String(error) };
+        }
+    });
+
+    // ========================================
     // Workspace Selection Handlers
     // ========================================
 

@@ -71,7 +71,7 @@ const MANAGED_MCP_SERVERS: MCPServerConfig[] = [
         description: 'Browser automation and web scraping tools',
         package: '@playwright/mcp',
         command: 'npx',
-        args: ['@playwright/mcp@latest', '--shared-browser-context', '--isolated', '--port'],  // Port will be appended
+        args: ['@playwright/mcp@latest', '--shared-browser-context', '--isolated', '--host', '127.0.0.1', '--allowed-hosts', '*', '--port'],  // Port will be appended
         icon: 'browser',
         category: 'browser',
     },
@@ -84,7 +84,7 @@ const MANAGED_MCP_SERVERS: MCPServerConfig[] = [
 function findFreePort(startPort: number): Promise<number> {
     return new Promise((resolve, reject) => {
         const server = net.createServer();
-        server.listen(startPort, () => {
+        server.listen(startPort, '127.0.0.1', () => {
             const port = (server.address() as net.AddressInfo).port;
             server.close(() => resolve(port));
         });
@@ -148,7 +148,7 @@ const serverPorts = new Map<string, number>();
  * Wait for server to be ready by checking if it responds to any request
  */
 async function waitForServerReady(port: number, maxAttempts = 60): Promise<void> {
-    const url = `http://localhost:${port}/mcp`;
+    const url = `http://127.0.0.1:${port}/mcp`;
     console.log(`[MCP] Waiting for server on port ${port}...`);
 
     for (let i = 0; i < maxAttempts; i++) {
@@ -241,7 +241,7 @@ async function startServerProcess(server: MCPServerInstance): Promise<{ pid: num
  * Connect to a running MCP server via HTTP transport
  */
 async function connectToServer(serverId: string, port: number): Promise<Client> {
-    const url = `http://localhost:${port}/mcp`;
+    const url = `http://127.0.0.1:${port}/mcp`;
     console.log('[MCP] Connecting to server at:', url);
 
     const transport = new StreamableHTTPClientTransport(new URL(url));
@@ -487,10 +487,12 @@ export function registerMCPHandlers(ipcMain: IpcMain): void {
 
             server.status = 'CONNECTED';
             server.pid = pid;
-            server.url = `http://localhost:${port}/mcp`;
+            server.url = `http://127.0.0.1:${port}/mcp`;
             server.connectedAt = new Date().toISOString();
             server.lastError = undefined;
         } catch (error) {
+            // Kill the spawned process if connection failed - prevents zombies on retries
+            stopServerProcess(serverId);
             server.status = 'DISCONNECTED';
             server.lastError = error instanceof Error ? error.message : 'Unknown error';
             saveRegistry(registry);
@@ -505,6 +507,8 @@ export function registerMCPHandlers(ipcMain: IpcMain): void {
             console.log('[MCP] Server connected with', tools.length, 'tools');
             return { server, tools };
         } catch (error) {
+            // Kill the process if tool listing failed - prevents zombies on retries
+            stopServerProcess(serverId);
             server.status = 'DISCONNECTED';
             server.lastError = error instanceof Error ? error.message : 'Unknown error';
             saveRegistry(registry);

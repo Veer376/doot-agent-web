@@ -33,20 +33,20 @@ export function BrowserSnapshotView() {
 
   return (
     <div
-      data-radius="radius2"
-      className="bg-muted/30 mb-4 w-full max-w-lg border px-0 pt-3 pb-0"
+      data-radius="radius"
+      className="mb-4 w-full max-w-lg border bg-muted/30 px-0 pb-0 pt-3"
     >
       <div className="flex items-center justify-between px-4 pb-3">
         <h3 className="text-sm font-semibold">Browser Snapshot</h3>
         <button
           type="button"
           className={cn(
-            "text-muted-foreground inline-flex h-6 w-6 items-center justify-center transition-colors",
+            "inline-flex h-6 w-6 items-center justify-center text-muted-foreground transition-colors",
             browserSnapshot?.dom_text
               ? "hover:bg-muted focus-visible:ring-2"
               : "cursor-not-allowed opacity-50",
           )}
-          data-radius="radius2"
+          data-radius="radius"
           onClick={() =>
             browserSnapshot?.dom_text && setShowDomText((prev) => !prev)
           }
@@ -64,15 +64,15 @@ export function BrowserSnapshotView() {
       </div>
 
       {!browserSnapshot ? (
-        <div className="text-muted-foreground px-4 pb-4 text-xs">
+        <div className="px-4 pb-4 text-xs text-muted-foreground">
           No browser snapshot data available. Check console for debug info.
         </div>
       ) : (
         <>
           {browserSnapshot.url && (
             <div
-              data-radius="radius2"
-              className="bg-background text-muted-foreground mx-4 mb-3 border px-3 py-2 text-xs font-medium"
+              data-radius="radius"
+              className="mx-4 mb-3 border bg-background px-3 py-2 text-xs font-medium text-muted-foreground"
             >
               {browserSnapshot.url}
             </div>
@@ -90,7 +90,7 @@ export function BrowserSnapshotView() {
 
           {browserSnapshot.dom_text && showDomText && (
             <div className="px-4 pb-4">
-              <pre className="bg-background max-h-40 overflow-x-auto overflow-y-auto rounded border p-2 text-xs">
+              <pre className="max-h-40 overflow-x-auto overflow-y-auto rounded border bg-background p-2 text-xs">
                 {browserSnapshot.dom_text}
               </pre>
             </div>

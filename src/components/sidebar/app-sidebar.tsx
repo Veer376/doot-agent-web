@@ -57,23 +57,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <div className="space-y-2 px-3 py-4">
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius2"
+                data-radius="radius"
               />
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius2"
+                data-radius="radius"
               />
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius2"
+                data-radius="radius"
               />
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius2"
+                data-radius="radius"
               />
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius2"
+                data-radius="radius"
               />
             </div>
           }

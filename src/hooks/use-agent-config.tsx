@@ -11,14 +11,18 @@ import {
 } from "@/lib/ui-config";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { Agent } from "@/types/agent";
-import { useQueryState } from "nuqs";
+import { useQueryState } from "@/hooks/use-query-state";
 import { useAuthSession } from "@/providers/Auth";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
+import { invoke, isElectron } from "@/lib/electron";
 
 /**
  * A custom hook for managing and accessing the configurable
  * fields on an agent.
+ *
+ * Supports both cloud agents (fetches schema via LangGraph SDK) and
+ * local Electron agents (fetches schema via `agents:schema` IPC).
  */
 export function useAgentConfig() {
   const { session } = useAuthSession();
@@ -50,6 +54,59 @@ export function useAgentConfig() {
     setLoading(false);
   }, []);
 
+  // ── Shared: process schema object into config UI state ──────────────────
+  const processSchema = useCallback(
+    (agent: Agent, schema: Record<string, unknown>): Record<string, any> => {
+      const { configFields, toolConfig, ragConfig, agentsConfig } =
+        // Cast: our local JSON schema and the SDK's GraphSchema["config_schema"] are
+        // structurally compatible — both have `{ type, properties }`.
+        extractConfigurationsFromAgent({
+          agent: agent as any,
+          schema: schema as any,
+        });
+
+      const agentId = agent.assistant_id;
+      const { setDefaultConfig } = useConfigStore.getState();
+
+      setConfigurations(configFields);
+      setToolConfigurations(toolConfig);
+      setDefaultConfig(agentId, configFields);
+
+      const nextSupportedConfigs: string[] = [];
+
+      if (toolConfig.length) {
+        setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
+        setToolConfigurations(toolConfig);
+        nextSupportedConfigs.push("tools");
+      }
+      if (ragConfig.length) {
+        if (chatWithCollectionId) {
+          ragConfig[0].default = {
+            ...ragConfig[0].default,
+            collections: [chatWithCollectionId],
+          };
+        }
+        setDefaultConfig(`${agentId}:rag`, ragConfig);
+        setRagConfigurations(ragConfig);
+        nextSupportedConfigs.push("rag");
+      }
+      if (agentsConfig.length) {
+        setDefaultConfig(`${agentId}:agents`, agentsConfig);
+        setAgentsConfigurations(agentsConfig);
+        nextSupportedConfigs.push("supervisor");
+      }
+      setSupportedConfigs(nextSupportedConfigs);
+
+      return getConfigurableDefaults(
+        configFields,
+        toolConfig,
+        ragConfig,
+        agentsConfig,
+      );
+    },
+    [chatWithCollectionId],
+  );
+
   const getSchemaAndUpdateConfig = useCallback(
     async (
       agent: Agent,
@@ -59,13 +116,44 @@ export function useAgentConfig() {
       config: Record<string, any>;
     }> => {
       clearState();
-
       setLoading(true);
+
       try {
+        // ── Local agent path ─────────────────────────────────────────────
+        if (agent.metadata?.source === "local" && isElectron()) {
+          const schema = await invoke<Record<string, unknown> | null>(
+            "agents:schema",
+            agent.graph_id,
+          );
+
+          if (!schema) {
+            // Graph has no registered schema — return empty config
+            return {
+              name: agent.name,
+              description:
+                (agent.metadata?.description as string | undefined) ?? "",
+              config: agent.config?.configurable ?? {},
+            };
+          }
+
+          const configurableDefaults = processSchema(agent, schema);
+
+          // Merge in any already-saved graphConfig values as defaults.
+          // User-created agents store their config in the top-level `graphConfig`
+          // field (not inside `config.configurable`).
+          const savedConfig =
+            (agent as any).graphConfig ?? agent.config?.configurable ?? {};
+          return {
+            name: agent.name,
+            description:
+              (agent.metadata?.description as string | undefined) ?? "",
+            config: { ...configurableDefaults, ...savedConfig },
+          };
+        }
+
+        // ── Cloud agent path ─────────────────────────────────────────────
         if (!session?.accessToken) {
-          toast.error("No access token found", {
-            richColors: true,
-          });
+          toast.error("No access token found", { richColors: true });
           return {
             name: agent.name,
             description:
@@ -75,11 +163,9 @@ export function useAgentConfig() {
         }
 
         const client = createClient(session.accessToken);
-        const schemas = await client.assistants.getSchemas(
-          agent.assistant_id,
-        );
+        const schemas = await client.assistants.getSchemas(agent.assistant_id);
         const schema = schemas.config_schema ?? undefined;
-        
+
         if (!schema)
           return {
             name: agent.name,
@@ -87,53 +173,10 @@ export function useAgentConfig() {
               (agent.metadata?.description as string | undefined) ?? "",
             config: {},
           };
-        const { configFields, toolConfig, ragConfig, agentsConfig } =
-          extractConfigurationsFromAgent({
-            agent,
-            schema,
-          });
 
-        const agentId = agent.assistant_id;
-
-        setConfigurations(configFields);
-        setToolConfigurations(toolConfig);
-
-        // Set default config values based on configuration fields
-        const { setDefaultConfig } = useConfigStore.getState();
-        setDefaultConfig(agentId, configFields);
-
-        const supportedConfigs: string[] = [];
-
-        if (toolConfig.length) {
-          setDefaultConfig(`${agentId}:selected-tools`, toolConfig);
-          setToolConfigurations(toolConfig);
-          supportedConfigs.push("tools");
-        }
-        if (ragConfig.length) {
-          if (chatWithCollectionId) {
-            ragConfig[0].default = {
-              ...ragConfig[0].default,
-              collections: [chatWithCollectionId],
-            };
-            // Clear from query params so it's not set again.
-            setChatWithCollectionId(null);
-          }
-          setDefaultConfig(`${agentId}:rag`, ragConfig);
-          setRagConfigurations(ragConfig);
-          supportedConfigs.push("rag");
-        }
-        if (agentsConfig.length) {
-          setDefaultConfig(`${agentId}:agents`, agentsConfig);
-          setAgentsConfigurations(agentsConfig);
-          supportedConfigs.push("supervisor");
-        }
-        setSupportedConfigs(supportedConfigs);
-
-        const configurableDefaults = getConfigurableDefaults(
-          configFields,
-          toolConfig,
-          ragConfig,
-          agentsConfig,
+        const configurableDefaults = processSchema(
+          agent,
+          schema as Record<string, unknown>,
         );
 
         return {
@@ -144,15 +187,23 @@ export function useAgentConfig() {
         };
       } finally {
         setLoading(false);
+        if (chatWithCollectionId) {
+          setChatWithCollectionId(null);
+        }
       }
     },
-    [clearState, session?.accessToken],
+    [
+      clearState,
+      processSchema,
+      session?.accessToken,
+      chatWithCollectionId,
+      setChatWithCollectionId,
+    ],
   );
 
   return {
     clearState,
     getSchemaAndUpdateConfig,
- 
     configurations,
     toolConfigurations,
     ragConfigurations,

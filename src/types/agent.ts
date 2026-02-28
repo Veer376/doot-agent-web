@@ -5,7 +5,7 @@ export interface AgentMetadata {
   [key: string]: unknown;
 }
 
-export interface Agent extends Assistant {
+export interface Agent extends Omit<Assistant, "metadata"> {
   supportedConfigs?: ["tools" | "rag" | "supervisor"];
   metadata?: AgentMetadata;
 }

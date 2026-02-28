@@ -23,15 +23,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { groupAgentsByGraphs, isPrimaryAgent } from "@/lib/agent-utils";
-import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
-import { useFetchAgents } from "@/hooks/use-agents";
+import {
+  parseAsString,
+  parseAsInteger,
+  useQueryState,
+} from "@/hooks/use-query-state";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
   const { setThreadData, fetchThreads } = useThreadsContext();
-  const { data: agents = [], isLoading: loading } = useFetchAgents();
+  const { data: agents = [], isLoading: loading } = useFetchCloudAgents();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
 
   const [_offset, setOffset] = useQueryState(
@@ -72,10 +76,10 @@ function InboxSidebarInternal() {
 
   return (
     <Sidebar
-      className="border-r-[0px] border-l-[1px] bg-neutral-50 dark:bg-neutral-900"
+      className="border-l-[1px] border-r-[0px] bg-neutral-50 dark:bg-neutral-900"
       side="right"
     >
-      <SidebarContent className="flex h-screen flex-col pt-6 pb-9">
+      <SidebarContent className="flex h-screen flex-col pb-9 pt-6">
         <div className="flex items-center justify-between px-5">
           <InboxSidebarTrigger
             isOutside={false}
@@ -121,7 +125,7 @@ function InboxSidebarInternal() {
                                       ? "bg-gray-100 dark:bg-gray-800"
                                       : "",
                                   )}
-                                  data-radius="radius1"
+                                  data-radius="small-radius"
                                 >
                                   <TooltipProvider>
                                     <Tooltip delayDuration={200}>
@@ -213,7 +217,7 @@ export function InboxSidebarTrigger({
     <TooltipIconButton
       tooltip="Toggle Inbox Sidebar"
       onClick={toggleSidebar}
-      className={cn(className, isOutside && "absolute top-4 right-4 z-50")}
+      className={cn(className, isOutside && "absolute right-4 top-4 z-50")}
     >
       {isOutside ? (
         // Custom icon when outside, pointing to the right

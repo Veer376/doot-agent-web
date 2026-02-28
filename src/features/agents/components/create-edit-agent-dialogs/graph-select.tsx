@@ -49,7 +49,10 @@ export function GraphSelect({
         setSelectedGraph(graph);
       }}
     >
-      <SelectTrigger className={cn(className)}>
+      <SelectTrigger
+        className={cn(className)}
+        data-radius="radius"
+      >
         <SelectValue placeholder="Select a graph" />
       </SelectTrigger>
       <SelectContent>

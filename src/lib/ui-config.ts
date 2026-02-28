@@ -10,7 +10,7 @@ import { config } from "@/config";
 
 function getUiConfig(
   value: unknown,
-): { type: string;[key: string]: any } | undefined {
+): { type: string; [key: string]: any } | undefined {
   if (
     typeof value !== "object" ||
     !value ||
@@ -207,47 +207,45 @@ export function extractConfigurationsFromAgent({
       ...f,
       default: defaultConfig
         ? {
-          ...defaultConfig,
-          auth_required: config.features.mcpAuthRequired,
-        }
+            ...defaultConfig,
+            auth_required: config.features.mcpAuthRequired,
+          }
         : undefined,
     };
   });
 
   const configRagWithDefaults = ragConfig
     ? {
-      ...ragConfig,
-      default: {
-        collections:
-          (
-            configurable[
-            ragConfig.label
-            ] as ConfigurableFieldRAGMetadata["default"]
-          )?.collections ??
-          ragConfig.default?.collections ??
-          [],
-        rag_url:
-          configurable[ragConfig.label]?.rag_url ??
-          config.ragApiUrl,
-      },
-    }
+        ...ragConfig,
+        default: {
+          collections:
+            (
+              configurable[
+                ragConfig.label
+              ] as ConfigurableFieldRAGMetadata["default"]
+            )?.collections ??
+            ragConfig.default?.collections ??
+            [],
+          rag_url: configurable[ragConfig.label]?.rag_url ?? config.ragApiUrl,
+        },
+      }
     : undefined;
 
   const configurableAgentsWithDefaults = agentsConfig
     ? {
-      ...agentsConfig,
-      default:
-        Array.isArray(configurable[agentsConfig.label]) &&
+        ...agentsConfig,
+        default:
+          Array.isArray(configurable[agentsConfig.label]) &&
           (configurable[agentsConfig.label] as any[]).length > 0
-          ? (configurable[agentsConfig.label] as {
-            agent_id?: string;
-            deployment_url?: string;
-            name?: string;
-          }[])
-          : Array.isArray(agentsConfig.default)
-            ? agentsConfig.default
-            : [],
-    }
+            ? (configurable[agentsConfig.label] as {
+                agent_id?: string;
+                deployment_url?: string;
+                name?: string;
+              }[])
+            : Array.isArray(agentsConfig.default)
+              ? agentsConfig.default
+              : [],
+      }
     : undefined;
 
   return {

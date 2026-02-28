@@ -104,16 +104,16 @@ export const SyntaxHighlighter: FC<SyntaxHighlighterProps> = ({
 }) => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  
+
   return (
     <SyntaxHighlighterPrism
       language={language}
       style={isDark ? coldarkDark : coldarkCold}
       showLineNumbers={showLineNumbers}
       lineNumberStyle={{
-        fontSize: "0.8rem",
+        fontSize: "0.7rem",
         paddingRight: "1rem",
-        opacity: 0.8,
+        opacity: 0.5,
       }}
       lineNumberContainerStyle={{
         position: "fixed",
@@ -124,7 +124,7 @@ export const SyntaxHighlighter: FC<SyntaxHighlighterProps> = ({
         width: "100%",
         background: "transparent",
         padding: "1rem",
-        fontSize: "0.85rem",
+        fontSize: "0.8rem",
       }}
       className={className}
     >

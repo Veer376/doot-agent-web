@@ -678,7 +678,7 @@ export function ThreadList() {
           isSelected && "bg-accent",
           !isSelected && "hover:bg-accent/50",
         )}
-        data-radius="radius1"
+        data-radius="small-radius"
       >
         <div className="flex flex-col gap-1.5">
           {/* Thread Title */}
@@ -686,19 +686,19 @@ export function ThreadList() {
             {title}
             {isPinned && (
               <PinIcon
-                className="text-muted-foreground flex-shrink-0"
+                className="flex-shrink-0 text-muted-foreground"
                 size="xs"
               />
             )}
             {isActive && (
-              <span className="bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5 text-xs">
+              <span className="flex-shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                 Current
               </span>
             )}
           </div>
           {/* Agent Name - only shown for agent mode */}
           {agentName && (
-            <div className="text-muted-foreground truncate text-xs">
+            <div className="truncate text-xs text-muted-foreground">
               {agentName}
             </div>
           )}
@@ -719,8 +719,8 @@ export function ThreadList() {
           <DialogDescription className="sr-only">
             Browse and search all your conversation threads
           </DialogDescription>
-          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pt-4 pb-3">
-            <SearchIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pb-3 pt-4">
+            <SearchIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
             <Input
               ref={searchInputRef}
               placeholder="Search threads..."
@@ -730,7 +730,7 @@ export function ThreadList() {
               className="flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
             />
             <DialogClose asChild>
-              <button className="ring-offset-background focus:ring-ring flex-shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+              <button className="flex-shrink-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -790,8 +790,8 @@ export function ThreadList() {
                 {/* New Thread Button */}
                 <button
                   onClick={handleCreateNewThread}
-                  className="hover:bg-accent/50 mb-4 w-full px-3 py-2.5 text-left transition-colors"
-                  data-radius="radius1"
+                  className="mb-4 w-full px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
+                  data-radius="small-radius"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
@@ -804,7 +804,7 @@ export function ThreadList() {
                 {/* Today */}
                 {groupedThreads.today.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Today
                     </div>
                     <div className="space-y-1">
@@ -821,7 +821,7 @@ export function ThreadList() {
                 {/* Yesterday */}
                 {groupedThreads.yesterday.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Yesterday
                     </div>
                     <div className="space-y-1">
@@ -838,7 +838,7 @@ export function ThreadList() {
                 {/* Previous 7 Days */}
                 {groupedThreads.previous7days.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Previous 7 Days
                     </div>
                     <div className="space-y-1">
@@ -855,7 +855,7 @@ export function ThreadList() {
                 {/* Older */}
                 {groupedThreads.older.length > 0 && (
                   <div>
-                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
+                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
                       Older
                     </div>
                     <div className="space-y-1">
@@ -934,8 +934,8 @@ export function ThreadList() {
                           onChange={(e) => setEditingThreadName(e.target.value)}
                           onKeyDown={handleKeyDown}
                           onBlur={handleSaveEdit}
-                          className="bg-card text-sidebar-foreground placeholder:text-sidebar-foreground/60 border-border focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
-                          data-radius="radius2"
+                          className="placeholder:text-sidebar-foreground/60 h-9 border border-border bg-card text-sm text-sidebar-foreground transition-all focus-visible:border-primary/30 focus-visible:ring-0 focus-visible:ring-transparent"
+                          data-radius="radius"
                           placeholder="Thread name..."
                         />
                       </div>
@@ -944,14 +944,14 @@ export function ThreadList() {
                         <SidebarMenuButton
                           onClick={() => handleSelectThread(thread.thread_id)}
                           isActive={isActive}
-                          className="!h-auto px-3 !py-2"
+                          className="!h-auto !py-2 px-3"
                         >
                           <div className="gap-0.3 flex min-w-0 flex-col">
                             <span className="truncate text-sm leading-tight">
                               {title}
                             </span>
                             {agentName && (
-                              <span className="text-muted-foreground truncate text-xs leading-tight">
+                              <span className="truncate text-xs leading-tight text-muted-foreground">
                                 {agentName}
                               </span>
                             )}
@@ -966,7 +966,7 @@ export function ThreadList() {
                               }}
                               showOnHover={!isPinned}
                               className={cn(
-                                "!top-1/2 !right-3 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
+                                "!right-3 !top-1/2 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
                                 isPinned && "md:opacity-100",
                               )}
                             >

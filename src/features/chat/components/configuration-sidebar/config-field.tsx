@@ -24,7 +24,7 @@ import {
   ConfigurableFieldMCPMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
-import { useFetchAgents } from "@/hooks/use-agents";
+import { useFetchCloudAgents } from "@/hooks/use-cloud-agents";
 import type { ConfigValue } from "@/features/chat/hooks/use-config-store";
 
 interface Option {
@@ -155,7 +155,7 @@ export function ConfigField({
       {type === "text" && (
         <Input
           id={id}
-          value={currentValue || ""} // Use currentValue
+          value={(currentValue as string | number) || ""} // Use currentValue
           onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
         />
@@ -164,7 +164,7 @@ export function ConfigField({
       {type === "textarea" && (
         <Textarea
           id={id}
-          value={currentValue || ""} // Use currentValue
+          value={(currentValue as string) || ""} // Use currentValue
           onChange={(e) => handleChange(e.target.value)}
           placeholder={placeholder}
           className="min-h-[100px]"
@@ -175,7 +175,9 @@ export function ConfigField({
         <Input
           id={id}
           type="number"
-          value={currentValue !== undefined ? currentValue : ""} // Use currentValue
+          value={
+            currentValue !== undefined ? (currentValue as number | string) : ""
+          } // Use currentValue
           onChange={(e) => {
             // Handle potential empty string or invalid number input
             const val = e.target.value;
@@ -203,7 +205,7 @@ export function ConfigField({
             <span className="text-sm font-medium">
               {/* Use currentValue */}
               {currentValue !== undefined
-                ? currentValue
+                ? (currentValue as React.ReactNode)
                 : min !== undefined && max !== undefined
                   ? (min + max) / 2
                   : ""}
@@ -215,7 +217,7 @@ export function ConfigField({
             // Use currentValue, provide default based on min/max if undefined
             value={[
               currentValue !== undefined
-                ? currentValue
+                ? (currentValue as number)
                 : min !== undefined && max !== undefined
                   ? (min + max) / 2
                   : 0,
@@ -231,7 +233,7 @@ export function ConfigField({
 
       {type === "select" && (
         <Select
-          value={currentValue ?? ""} // Use currentValue, provide default empty string if undefined/null
+          value={(currentValue as string) ?? ""} // Use currentValue, provide default empty string if undefined/null
           onValueChange={handleChange}
         >
           <SelectTrigger>
@@ -274,7 +276,7 @@ export function ConfigField({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleFormatJson(currentValue ?? "")}
+              onClick={() => handleFormatJson((currentValue as string) ?? "")}
               // Disable if value is empty, not a string, or already has a JSON error
               disabled={
                 !currentValue || typeof currentValue !== "string" || !!jsonError
@@ -408,7 +410,7 @@ export function ConfigFieldAgents({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:agents`;
 
-  const { data: agents = [], isLoading: loading } = useFetchAgents();
+  const { data: agents = [], isLoading: loading } = useFetchCloudAgents();
 
   // Do not allow adding itself as a sub-agent
   const filteredAgents = agents.filter((a) => a.assistant_id !== agentId);

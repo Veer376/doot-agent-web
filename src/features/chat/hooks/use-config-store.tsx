@@ -86,7 +86,7 @@ export const useConfigStore = create<ConfigState>()(
         const defaultConfig: AgentConfig = {};
         configurations.forEach((config) => {
           if (config.default !== undefined) {
-            defaultConfig[config.label] = config.default;
+            defaultConfig[config.label] = config.default as ConfigValue;
           }
         });
 

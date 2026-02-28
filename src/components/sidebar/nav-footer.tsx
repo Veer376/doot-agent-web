@@ -121,9 +121,9 @@ export function NavFooter() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12 cursor-pointer group-data-[collapsible=icon]:p-0!"
+              className="h-12 cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:[&>*:not(:first-child)]:hidden"
             >
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 flex-shrink-0">
                 <AvatarImage
                   src={displayUser.avatar}
                   alt={displayUser.name}
@@ -174,7 +174,7 @@ export function NavFooter() {
             <DropdownMenuSeparator />
 
             {/* Theme Selection */}
-            <DropdownMenuLabel className="text-muted-foreground px-2 py-1.5 text-xs">
+            <DropdownMenuLabel className="px-2 py-1.5 text-xs text-muted-foreground">
               Theme
             </DropdownMenuLabel>
             <DropdownMenuItem
@@ -210,9 +210,7 @@ export function NavFooter() {
             </DropdownMenuItem>
 
             {isAuthenticated ? (
-              <DropdownMenuItem
-                onClick={() => setShowLogoutDialog(true)}
-              >
+              <DropdownMenuItem onClick={() => setShowLogoutDialog(true)}>
                 <LogOutIcon size={DEFAULT_ICON_SIZE} />
                 Log out
               </DropdownMenuItem>
@@ -232,8 +230,14 @@ export function NavFooter() {
         </DropdownMenu>
       </SidebarMenuItem>
 
-      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
-        <DialogContent className="sm:max-w-[22rem] gap-6 p-6" data-radius="radius2">
+      <Dialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+      >
+        <DialogContent
+          className="gap-6 p-6 sm:max-w-[22rem]"
+          data-radius="radius"
+        >
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-center text-xl font-semibold">
               Are you sure you want to log out?
@@ -245,7 +249,7 @@ export function NavFooter() {
           <div className="flex flex-col gap-3">
             <Button
               onClick={performSignOut}
-              data-radius="radius2"
+              data-radius="radius"
               className="h-11 bg-black text-white hover:bg-black/90"
               disabled={isSigningOut}
             >
@@ -261,7 +265,7 @@ export function NavFooter() {
             <Button
               variant="outline"
               onClick={() => setShowLogoutDialog(false)}
-              data-radius="radius2"
+              data-radius="radius"
               className="h-11 w-full border-gray-200"
               disabled={isSigningOut}
             >

@@ -241,23 +241,21 @@ export function AgentsCombobox({
                                 e.preventDefault();
                                 onEditAgent(item);
                               }}
-                              data-radius="radius1"
+                              data-radius="small-radius"
                               className={cn(
-                                "peer/edit-btn absolute top-1/2 right-2 z-10 -translate-y-1/2",
-                                "text-muted-foreground p-1.5 transition-all",
+                                "peer/edit-btn absolute right-2 top-1/2 z-10 -translate-y-1/2",
+                                "p-1.5 text-muted-foreground transition-all",
                                 // Hide by default, show on group hover
                                 "opacity-0 group-hover/agent-item:opacity-100",
                                 // Separate hover state for edit button
-                                "hover:bg-accent hover:text-foreground hover:scale-105",
-                                "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
+                                "hover:scale-105 hover:bg-accent hover:text-foreground",
+                                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                               )}
                               aria-label={`Edit ${item.name}`}
                             >
                               <EditIcon size="xs" />
                             </button>
                           )}
-                          
-
 
                           <CommandItem
                             value={itemValue}
@@ -267,7 +265,7 @@ export function AgentsCombobox({
                               // Extra padding on right for icon area
                               onEditAgent ? "pr-10" : "pr-2",
                               // Reset background on edit button hover to maintain clean look
-                              "peer-hover/edit-btn:data-[selected=true]:text-foreground peer-hover/edit-btn:data-[selected=true]:bg-transparent",
+                              "peer-hover/edit-btn:data-[selected=true]:bg-transparent peer-hover/edit-btn:data-[selected=true]:text-foreground",
                             )}
                           >
                             {/* Left: Checkmark (selected) OR Icon (not selected / hovered) */}
@@ -278,17 +276,17 @@ export function AgentsCombobox({
                                 className={cn(
                                   isSelected
                                     ? "block group-hover/agent-item:hidden"
-                                    : "hidden"
+                                    : "hidden",
                                 )}
                               />
-                              
+
                               {/* Icon - visible when NOT selected OR when selected+hovered */}
                               <AgentIconComponent
                                 size="xs"
                                 className={cn(
                                   !isSelected
                                     ? "block"
-                                    : "hidden group-hover/agent-item:block"
+                                    : "hidden group-hover/agent-item:block",
                                 )}
                               />
                             </div>

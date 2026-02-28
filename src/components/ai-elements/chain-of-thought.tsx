@@ -96,22 +96,31 @@ export const ChainOfThoughtHeader = memo(
       >
         <CollapsibleTrigger
           className={cn(
-            "text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-sm transition-colors",
+            "group/thoughts flex w-full items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
             className,
           )}
           {...props}
         >
-          <BrainIcon className="size-4" />
-          {/* Group text and chevron together so arrow stays next to text */}
-          <span className="inline-flex items-center gap-2">
-            <span className="text-left">{children ?? "Chain of Thought"}</span>
+          {/* Icon container: Brain by default, Arrow on hover */}
+          <div className="relative size-4">
+            {/* Brain icon - visible by default, hidden on hover */}
+            <BrainIcon
+              className={cn(
+                "absolute inset-0 size-4 transition-opacity",
+                "opacity-100 group-hover/thoughts:opacity-0",
+              )}
+            />
+            {/* Arrow icon - hidden by default, visible on hover */}
             <ChevronDownIcon
               className={cn(
-                "size-4 transition-transform",
+                "absolute inset-0 size-4 transition-all",
+                "opacity-0 group-hover/thoughts:opacity-100",
                 isOpen ? "rotate-180" : "rotate-0",
               )}
             />
-          </span>
+          </div>
+          {/* Text label */}
+          <span className="text-left">{children ?? "Chain of Thought"}</span>
         </CollapsibleTrigger>
       </Collapsible>
     );
@@ -161,17 +170,17 @@ export const ChainOfThoughtStep = memo(
         className={cn("flex gap-2 text-sm", statusStyles[status], className)}
         {...props}
       >
-        <div className="relative mt-0.5">
+        <div className="relative mt-1">
           <Icon className="size-4" />
           {/* Hide connecting line in preview mode */}
           {!isPreview && (
-            <div className="bg-border absolute top-7 bottom-0 left-1/2 -mx-px w-px" />
+            <div className="absolute bottom-0 left-1/2 top-7 -mx-px w-px bg-border" />
           )}
         </div>
         <div className="flex-1">
           <div>{label}</div>
           {description && (
-            <div className="text-muted-foreground text-xs">{description}</div>
+            <div className="text-xs text-muted-foreground">{description}</div>
           )}
           {children}
         </div>
@@ -218,7 +227,7 @@ export const ChainOfThoughtContent = memo(
         <CollapsibleContent
           className={cn(
             "mt-2 space-y-1",
-            "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground data-[state=closed]:animate-out data-[state=open]:animate-in outline-none",
+            "text-popover-foreground outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2",
             className,
           )}
           {...props}
@@ -290,10 +299,13 @@ export const ChainOfThoughtImage = memo(
       className={cn("mt-2 space-y-2", className)}
       {...props}
     >
-      <div data-radius="radius2" className="bg-muted relative flex max-h-[22rem] items-center justify-center overflow-hidden p-3">
+      <div
+        data-radius="radius"
+        className="relative flex max-h-[22rem] items-center justify-center overflow-hidden bg-muted p-3"
+      >
         {children}
       </div>
-      {caption && <p className="text-muted-foreground text-xs">{caption}</p>}
+      {caption && <p className="text-xs text-muted-foreground">{caption}</p>}
     </div>
   ),
 );

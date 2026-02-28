@@ -18,10 +18,14 @@ export default function Layout({
   return (
     <html
       lang="en"
+      data-theme="black-white"
       className={`${roobert.variable} ${roobertMono.variable}`}
       suppressHydrationWarning
     >
-      <body className={roobert.className} suppressHydrationWarning>
+      <body
+        className={roobert.className}
+        suppressHydrationWarning
+      >
         <AppProviders>
           <main>{children}</main>
         </AppProviders>

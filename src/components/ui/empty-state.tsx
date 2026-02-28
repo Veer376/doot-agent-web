@@ -19,7 +19,7 @@ export interface EmptyStateProps {
  * EmptyState Component
  *
  * A reusable component for displaying empty states throughout the application.
- * Uses data-radius="radius2" for consistent border radius and proper elevation.
+ * Uses data-radius="radius" for consistent border radius and proper elevation.
  *
  * @example
  * ```tsx
@@ -58,12 +58,12 @@ export function EmptyState({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-          data-radius="radius2"
+          data-radius="radius"
           data-elevation="1"
           className="bg-muted/50 mb-2 p-6"
         >
           <Icon
-            className="text-muted-foreground h-12 w-12"
+            className="h-12 w-12 text-muted-foreground"
             strokeWidth={1.5}
           />
         </motion.div>
@@ -75,8 +75,8 @@ export function EmptyState({
           transition={{ duration: 0.3, delay: 0.2, ease: "easeOut" }}
           className="space-y-2"
         >
-          <h3 className="text-foreground text-lg font-semibold">{title}</h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
             {description}
           </p>
         </motion.div>

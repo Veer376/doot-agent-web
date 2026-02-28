@@ -20,9 +20,10 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        brand: "bg-brand-primary hover:bg-brand-primary-hover border-brand-primary text-white",
+        brand:
+          "bg-gradient-brand hover:brightness-110 border-transparent text-white shadow-md hover:-translate-y-[2px] transition-transform",
         default:
-          "bg-brand-primary hover:bg-brand-primary-hover border-brand-primary text-white",
+          "bg-gradient-brand hover:brightness-110 border-transparent text-white shadow-md hover:-translate-y-[2px] transition-transform",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -43,23 +44,21 @@ type ButtonProps = React.ComponentProps<"button"> &
     asChild?: boolean;
   };
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: ButtonProps) {
-  const Comp = asChild ? Slot : "button";
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
 
-  return (
-    <Comp
-      data-slot="button"
-      data-radius="radius2"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
-}
+    return (
+      <Comp
+        ref={ref}
+        data-slot="button"
+        data-radius="radius"
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...props}
+      />
+    );
+  },
+);
+Button.displayName = "Button";
 
 export { Button, buttonVariants, type ButtonProps };

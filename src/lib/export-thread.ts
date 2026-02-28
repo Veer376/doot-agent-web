@@ -1,6 +1,6 @@
 /**
  * Thread Export Utilities
- * 
+ *
  * Provides functions to export thread conversations in various formats:
  * - Markdown (.md) - Human-readable format with proper formatting
  * - JSON (.json) - Complete thread data for programmatic use
@@ -16,7 +16,7 @@ import { createClient } from "@/lib/client";
 const getMessageStringContent = (content: any): string => {
   if (!content) return "";
   if (typeof content === "string") return content;
-  
+
   // Handle array content (e.g., [{ type: "text", text: "..." }, { type: "thinking", ... }])
   if (Array.isArray(content)) {
     const texts = content
@@ -24,7 +24,7 @@ const getMessageStringContent = (content: any): string => {
       .map((c: any) => c.text || "");
     return texts.join("\n");
   }
-  
+
   return String(content);
 };
 
@@ -44,7 +44,7 @@ const formatDate = (date: string | Date): string => {
 const getThreadTitle = (thread: Thread): string => {
   const customName = thread.metadata?.name as string | undefined;
   if (customName) return customName;
-  
+
   // Try to get first human message
   if (thread.values && "messages" in thread.values) {
     const messages = thread.values.messages as Message[];
@@ -54,7 +54,7 @@ const getThreadTitle = (thread: Thread): string => {
       if (content) return content.slice(0, 100);
     }
   }
-  
+
   return `Thread ${thread.thread_id.slice(0, 8)}`;
 };
 
@@ -67,13 +67,20 @@ const getMessages = (thread: Thread): Message[] => {
 };
 
 // Fetch thread state with messages
-async function fetchThreadWithMessages(threadId: string, accessToken: string): Promise<Thread> {
+// If no accessToken is provided (local thread), messages are already in thread.values
+async function fetchThreadWithMessages(
+  thread: Thread,
+  accessToken?: string,
+): Promise<Thread> {
+  if (!accessToken) {
+    return thread;
+  }
   const client = createClient(accessToken);
-  const state = await client.threads.getState(threadId);
-  
+  const state = await client.threads.getState(thread.thread_id);
+
   // Return a thread-like object with the state values
   return {
-    thread_id: threadId,
+    thread_id: thread.thread_id,
     values: state.values,
     metadata: state.metadata || {},
   } as Thread;
@@ -82,30 +89,38 @@ async function fetchThreadWithMessages(threadId: string, accessToken: string): P
 /**
  * Export thread as Markdown
  */
-export async function exportThreadAsMarkdown(thread: Thread, accessToken: string): Promise<void> {
-  // Fetch full thread state with messages
-  const fullThread = await fetchThreadWithMessages(thread.thread_id, accessToken);
-  
+export async function exportThreadAsMarkdown(
+  thread: Thread,
+  accessToken?: string,
+): Promise<void> {
+  // Fetch full thread state with messages (local threads already have values)
+  const fullThread = await fetchThreadWithMessages(thread, accessToken);
+
   const title = getThreadTitle(thread); // Use original thread for title (has metadata)
   const messages = getMessages(fullThread);
   const createdAt = (thread as any).created_at || new Date().toISOString();
-  
+
   let markdown = `# ${title}\n\n`;
   markdown += `**Thread ID:** ${thread.thread_id}\n`;
   markdown += `**Created:** ${formatDate(createdAt)}\n`;
   markdown += `**Messages:** ${messages.length}\n\n`;
   markdown += `---\n\n`;
-  
+
   messages.forEach((message, index) => {
-    const role = message.type === "human" ? "👤 User" : 
-                 message.type === "ai" ? "🤖 Assistant" :
-                 message.type === "tool" ? "🔧 Tool" : message.type;
-    
+    const role =
+      message.type === "human"
+        ? "👤 User"
+        : message.type === "ai"
+          ? "🤖 Assistant"
+          : message.type === "tool"
+            ? "🔧 Tool"
+            : message.type;
+
     const content = getMessageStringContent(message.content);
-    
+
     markdown += `## ${role}\n\n`;
     markdown += `${content}\n\n`;
-    
+
     // Add tool information if it's a tool message
     if (message.type === "ai" && (message as any).tool_calls) {
       const toolCalls = (message as any).tool_calls;
@@ -117,12 +132,12 @@ export async function exportThreadAsMarkdown(thread: Thread, accessToken: string
         markdown += `\n`;
       }
     }
-    
+
     if (index < messages.length - 1) {
       markdown += `---\n\n`;
     }
   });
-  
+
   // Create and download file
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
   downloadFile(blob, `${sanitizeFilename(title)}.md`);
@@ -131,13 +146,16 @@ export async function exportThreadAsMarkdown(thread: Thread, accessToken: string
 /**
  * Export thread as JSON
  */
-export async function exportThreadAsJSON(thread: Thread, accessToken: string): Promise<void> {
-  // Fetch full thread state with messages
-  const fullThread = await fetchThreadWithMessages(thread.thread_id, accessToken);
-  
+export async function exportThreadAsJSON(
+  thread: Thread,
+  accessToken?: string,
+): Promise<void> {
+  // Fetch full thread state with messages (local threads already have values)
+  const fullThread = await fetchThreadWithMessages(thread, accessToken);
+
   const title = getThreadTitle(thread);
   const messages = getMessages(fullThread);
-  
+
   const exportData = {
     thread_id: thread.thread_id,
     title: title,
@@ -154,7 +172,7 @@ export async function exportThreadAsJSON(thread: Thread, accessToken: string): P
     })),
     export_timestamp: new Date().toISOString(),
   };
-  
+
   const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: "application/json;charset=utf-8" });
   downloadFile(blob, `${sanitizeFilename(title)}.json`);
@@ -163,14 +181,17 @@ export async function exportThreadAsJSON(thread: Thread, accessToken: string): P
 /**
  * Export thread as PDF
  */
-export async function exportThreadAsPDF(thread: Thread, accessToken: string): Promise<void> {
-  // Fetch full thread state with messages
-  const fullThread = await fetchThreadWithMessages(thread.thread_id, accessToken);
-  
+export async function exportThreadAsPDF(
+  thread: Thread,
+  accessToken?: string,
+): Promise<void> {
+  // Fetch full thread state with messages (local threads already have values)
+  const fullThread = await fetchThreadWithMessages(thread, accessToken);
+
   const title = getThreadTitle(thread);
   const messages = getMessages(fullThread);
   const createdAt = (thread as any).created_at || new Date().toISOString();
-  
+
   // Create PDF
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -178,7 +199,7 @@ export async function exportThreadAsPDF(thread: Thread, accessToken: string): Pr
   const margin = 20;
   const maxWidth = pageWidth - 2 * margin;
   let yPosition = margin;
-  
+
   // Helper to add new page if needed
   const checkPageBreak = (requiredHeight: number) => {
     if (yPosition + requiredHeight > pageHeight - margin) {
@@ -188,7 +209,7 @@ export async function exportThreadAsPDF(thread: Thread, accessToken: string): Pr
     }
     return false;
   };
-  
+
   // Title
   pdf.setFontSize(20);
   pdf.setFont("helvetica", "bold");
@@ -199,7 +220,7 @@ export async function exportThreadAsPDF(thread: Thread, accessToken: string): Pr
     yPosition += 10;
   });
   yPosition += 5;
-  
+
   // Metadata
   pdf.setFontSize(10);
   pdf.setFont("helvetica", "normal");
@@ -209,40 +230,45 @@ export async function exportThreadAsPDF(thread: Thread, accessToken: string): Pr
   yPosition += 6;
   pdf.text(`Messages: ${messages.length}`, margin, yPosition);
   yPosition += 10;
-  
+
   // Separator
   pdf.setDrawColor(200);
   pdf.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += 10;
-  
+
   // Messages
   messages.forEach((message, index) => {
-    const role = message.type === "human" ? "User" : 
-                 message.type === "ai" ? "Assistant" :
-                 message.type === "tool" ? "Tool" : message.type;
-    
+    const role =
+      message.type === "human"
+        ? "User"
+        : message.type === "ai"
+          ? "Assistant"
+          : message.type === "tool"
+            ? "Tool"
+            : message.type;
+
     const content = getMessageStringContent(message.content);
-    
+
     // Role header
     checkPageBreak(15);
     pdf.setFontSize(12);
     pdf.setFont("helvetica", "bold");
     pdf.text(role, margin, yPosition);
     yPosition += 8;
-    
+
     // Content
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
     const contentLines = pdf.splitTextToSize(content || "(empty)", maxWidth);
-    
+
     contentLines.forEach((line: string) => {
       checkPageBreak(6);
       pdf.text(line, margin, yPosition);
       yPosition += 6;
     });
-    
+
     yPosition += 8;
-    
+
     // Separator between messages
     if (index < messages.length - 1) {
       checkPageBreak(5);
@@ -251,7 +277,7 @@ export async function exportThreadAsPDF(thread: Thread, accessToken: string): Pr
       yPosition += 10;
     }
   });
-  
+
   // Save PDF
   pdf.save(`${sanitizeFilename(title)}.pdf`);
 }

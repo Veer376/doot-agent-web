@@ -17,16 +17,28 @@ export default function AuthLayout({
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-sm">
           {/* Generic auth page skeleton - page-specific loading.tsx files provide better UX */}
-          <div className="mb-10 flex items-center flex-col gap-3 sm:gap-4 justify-center">
-            <Skeleton className="h-8 w-64" data-radius="radius2" />
+          <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
+            <Skeleton
+              className="h-8 w-64"
+              data-radius="radius"
+            />
           </div>
 
           <div className="space-y-3">
-            <Skeleton className="h-11 w-full" data-radius="radius2" />
-            <Skeleton className="h-11 w-full" data-radius="radius2" />
-            
+            <Skeleton
+              className="h-11 w-full"
+              data-radius="radius"
+            />
+            <Skeleton
+              className="h-11 w-full"
+              data-radius="radius"
+            />
+
             <div className="pt-2">
-              <Skeleton className="h-10 w-full" data-radius="radius2" />
+              <Skeleton
+                className="h-10 w-full"
+                data-radius="radius"
+              />
             </div>
           </div>
 
@@ -36,10 +48,16 @@ export default function AuthLayout({
             </div>
           </div>
 
-          <Skeleton className="h-12 w-full" data-radius="radius2" />
+          <Skeleton
+            className="h-12 w-full"
+            data-radius="radius"
+          />
 
           <div className="mt-6 flex justify-center gap-1">
-            <Skeleton className="h-5 w-32" data-radius="radius2" />
+            <Skeleton
+              className="h-5 w-32"
+              data-radius="radius"
+            />
           </div>
         </div>
       </div>

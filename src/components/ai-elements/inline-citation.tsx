@@ -79,7 +79,7 @@ export const InlineCitationText = ({
   ...props
 }: InlineCitationTextProps) => (
   <span
-    className={cn("group-hover:bg-accent transition-colors", className)}
+    className={cn("transition-colors group-hover:bg-accent", className)}
     {...props}
   />
 );
@@ -114,7 +114,7 @@ export const InlineCitationCardTrigger = ({
   return (
     <HoverCardTrigger asChild>
       <Badge
-        data-radius="radius2"
+        data-radius="radius"
         className={cn(
           "bg-muted/20 hover:bg-muted/40 border-muted/20 ml-1 cursor-pointer border opacity-60 transition-all hover:opacity-100",
           hoverState?.isOpen && "scale-105 opacity-100",
@@ -144,8 +144,8 @@ export const InlineCitationCardBody = ({
   ...props
 }: InlineCitationCardBodyProps) => (
   <HoverCardContent
-    data-radius="radius2"
-    className={cn("relative w-80 border p-0 select-text", className)}
+    data-radius="radius"
+    className={cn("relative w-80 select-text border p-0", className)}
     {...props}
   />
 );
@@ -246,7 +246,7 @@ export const InlineCitationCarouselIndex = ({
   return (
     <div
       className={cn(
-        "text-muted-foreground flex flex-1 items-center justify-end px-3 py-1 text-xs",
+        "flex flex-1 items-center justify-end px-3 py-1 text-xs text-muted-foreground",
         className,
       )}
       {...props}
@@ -289,7 +289,7 @@ export const InlineCitationCarouselPrev = ({
   return (
     <button
       aria-label="Previous"
-      data-radius="radius1"
+      data-radius="small-radius"
       className={cn(
         "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
         canScrollPrev && "hover:bg-accent",
@@ -346,7 +346,7 @@ export const InlineCitationCarouselNext = ({
   return (
     <button
       aria-label="Next"
-      data-radius="radius1"
+      data-radius="small-radius"
       className={cn(
         "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
         canScrollNext && "hover:bg-accent",
@@ -389,7 +389,7 @@ export const InlineCitationSource = ({
     {...props}
   >
     {title && (
-      <h4 className="text-foreground truncate text-sm leading-tight font-medium">
+      <h4 className="truncate text-sm font-medium leading-tight text-foreground">
         {title}
       </h4>
     )}
@@ -398,13 +398,13 @@ export const InlineCitationSource = ({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-muted-foreground block cursor-pointer truncate text-xs leading-relaxed break-all underline transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+        className="block cursor-pointer truncate break-all text-xs leading-relaxed text-muted-foreground underline transition-colors hover:text-blue-600 dark:hover:text-blue-400"
       >
         {url}
       </a>
     )}
     {description && (
-      <p className="text-muted-foreground line-clamp-3 text-xs leading-relaxed">
+      <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
         {description}
       </p>
     )}
@@ -421,7 +421,7 @@ export const InlineCitationQuote = ({
 }: InlineCitationQuoteProps) => (
   <blockquote
     className={cn(
-      "border-muted text-muted-foreground border-l-2 pl-3 text-sm italic",
+      "border-l-2 border-muted pl-3 text-sm italic text-muted-foreground",
       className,
     )}
     {...props}

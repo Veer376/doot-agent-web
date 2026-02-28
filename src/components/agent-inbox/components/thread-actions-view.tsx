@@ -264,7 +264,7 @@ export function ThreadActionsView<
                 <ArrowLeft className="h-5 w-5" />
               </TooltipIconButton>
               <div className="flex items-center gap-2">
-                <p className="text-2xl tracking-tighter text-pretty">
+                <p className="text-pretty text-2xl tracking-tighter">
                   {threadTitle}
                 </p>
               </div>
@@ -295,7 +295,10 @@ export function ThreadActionsView<
           <InterruptDetailsView threadData={threadData} />
 
           {/* Invalid schema message */}
-          <div data-radius="radius1" className="w-full border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
+          <div
+            data-radius="small-radius"
+            className="w-full border border-yellow-200 bg-yellow-50 p-4 text-yellow-700"
+          >
             This thread is interrupted, but the required action data is missing
             or invalid. Standard interrupt actions cannot be performed.
           </div>
@@ -345,7 +348,7 @@ export function ThreadActionsView<
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
               )}{" "}
               {/* Icon for valid interrupt */}
-              <p className="text-2xl tracking-tighter text-pretty">
+              <p className="text-pretty text-2xl tracking-tighter">
                 {threadTitle}
               </p>
             </div>
@@ -391,7 +394,10 @@ export function ThreadActionsView<
           )}
 
           {isErrorThread(threadData) && (
-            <div data-radius="radius1" className="border border-red-200 bg-red-50 p-4">
+            <div
+              data-radius="small-radius"
+              className="border border-red-200 bg-red-50 p-4"
+            >
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 text-red-500" />
                 <div>
@@ -406,7 +412,10 @@ export function ThreadActionsView<
           )}
 
           {/* Thread information summary */}
-          <div data-radius="radius1" className="flex flex-col gap-3 border border-gray-200 bg-gray-50 p-4">
+          <div
+            data-radius="small-radius"
+            className="flex flex-col gap-3 border border-gray-200 bg-gray-50 p-4"
+          >
             <h3 className="font-medium">Thread Details</h3>
 
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -467,7 +476,7 @@ export function ThreadActionsView<
           </TooltipIconButton>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <p className="text-2xl tracking-tighter text-pretty">
+            <p className="text-pretty text-2xl tracking-tighter">
               {threadTitle}
             </p>
           </div>

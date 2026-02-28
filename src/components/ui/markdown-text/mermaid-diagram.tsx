@@ -57,7 +57,10 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
   if (error) {
     return (
       <div className={className}>
-        <div data-radius="radius2" className="border border-red-500/20 bg-red-500/10 p-4">
+        <div
+          data-radius="radius"
+          className="border border-red-500/20 bg-red-500/10 p-4"
+        >
           <p className="text-sm text-red-600 dark:text-red-400">
             Failed to render diagram: {error}
           </p>

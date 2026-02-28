@@ -8,7 +8,7 @@ import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Agent } from "@/types/agent";
 import { EditAgentDialog } from "./create-edit-agent-dialogs/edit-agent-dialog";
 import _ from "lodash";
-import NextLink from "next/link";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -65,9 +65,10 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     <>
       <Card
         key={agent.assistant_id}
-        className="overflow-hidden"
+        className="overflow-hidden py-4"
+        data-radius="radius"
       >
-        <CardHeader className="space-y-2 pb-2">
+        <CardHeader className="space-y-1.5 pb-1">
           <div className="flex items-start justify-between">
             <CardTitle className="flex w-full flex-wrap items-center gap-2">
               <p>{agent.name}</p>
@@ -90,10 +91,10 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
               )}
             </CardTitle>
           </div>
-          <div className="flex flex-0 flex-wrap items-center justify-start gap-2">
+          <div className="flex-0 flex flex-wrap items-center justify-start gap-2">
             {agent.metadata?.description &&
             typeof agent.metadata.description === "string" ? (
-              <p className="text-muted-foreground mt-1 text-sm">
+              <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
                 {agent.metadata.description}
               </p>
             ) : null}
@@ -105,37 +106,37 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             ))}
           </div>
         </CardHeader>
-        <CardFooter className="mt-auto flex w-full justify-between pt-2">
+        <CardFooter className="mt-auto flex w-full justify-between pt-1">
           {!isPrimary && (
             <Button
               variant="outline"
               size="sm"
-              data-radius="radius2"
+              data-radius="radius"
               onClick={() => setShowEditDialog(true)}
             >
               <Edit className="mr-2 h-3.5 w-3.5" />
               Edit
             </Button>
           )}
-          <NextLink
+          <Link
             href={`/?agentId=${agent.assistant_id}`}
             className="ml-auto"
           >
             <Button
               size="sm"
-              data-radius="radius2"
+              data-radius="radius"
               className="bg-black text-white hover:bg-black/90"
             >
               <Comment01Icon className="mr-1 h-3.5 w-3.5" />
               Chat
             </Button>
-          </NextLink>
+          </Link>
         </CardFooter>
       </Card>
       <EditAgentDialog
         agent={agent}
         open={showEditDialog}
-        onOpenChange={(c) => setShowEditDialog(c)}
+        onOpenChange={(open: boolean) => setShowEditDialog(open)}
       />
     </>
   );

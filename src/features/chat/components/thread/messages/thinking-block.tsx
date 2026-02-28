@@ -32,7 +32,7 @@ export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
         header={
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="group text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-sm transition-colors focus:outline-none"
+            className="group flex w-full items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
           >
             {/* Icon */}
             <NeuralNetworkIcon className="h-5 w-5 flex-shrink-0" />
@@ -65,7 +65,7 @@ export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="mt-1 ml-2">
+              <div className="ml-2 mt-1">
                 {/* Chain of thoughts timeline */}
                 <div className="relative">
                   {thinkingBlocks.map((block, index) => {
@@ -79,24 +79,24 @@ export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
                         {/* Vertical line and dot */}
                         <div className="relative flex flex-col items-center">
                           {/* Unicode dot character */}
-                          <div className="text-muted-foreground relative z-10 flex items-center justify-center leading-none">
+                          <div className="relative z-10 flex items-center justify-center leading-none text-muted-foreground">
                             •
                           </div>
 
                           {/* Vertical line (only if not last) */}
                           {!isLast && (
-                            <div className="bg-border absolute top-3 h-full w-px" />
+                            <div className="absolute top-3 h-full w-px bg-border" />
                           )}
                         </div>
 
                         {/* Content */}
                         <div className="-mt-0.5 flex-1">
                           {/* Heading and Content together without gap */}
-                          <div className="text-muted-foreground text-xs font-normal">
+                          <div className="text-xs font-normal text-muted-foreground">
                             {block.heading}
                           </div>
                           {block.content && block.content.length > 0 && (
-                            <div className="text-muted-foreground/70 text-xs leading-relaxed whitespace-pre-wrap">
+                            <div className="text-muted-foreground/70 whitespace-pre-wrap text-xs leading-relaxed">
                               {block.content}
                             </div>
                           )}

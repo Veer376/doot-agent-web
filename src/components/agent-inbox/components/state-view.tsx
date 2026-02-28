@@ -106,7 +106,7 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
   }
 
   if (props.value == null) {
-    return <p className="font-light whitespace-pre-wrap text-gray-600">null</p>;
+    return <p className="whitespace-pre-wrap font-light text-gray-600">null</p>;
   }
 
   if (Array.isArray(props.value)) {
@@ -144,7 +144,7 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
     return (
       <div className="relative ml-6 flex w-full flex-col items-start justify-start gap-1">
         {/* Vertical line */}
-        <div className="absolute top-0 left-[-24px] h-full w-[1px] bg-gray-200" />
+        <div className="absolute left-[-24px] top-0 h-full w-[1px] bg-gray-200" />
 
         {Object.entries(props.value).map(([key, value], idx) => (
           <div
@@ -152,7 +152,7 @@ function StateViewRecursive(props: StateViewRecursiveProps) {
             className="relative w-full"
           >
             {/* Horizontal connector line */}
-            <div className="absolute top-[10px] left-[-20px] h-[1px] w-[18px] bg-gray-200" />
+            <div className="absolute left-[-20px] top-[10px] h-[1px] w-[18px] bg-gray-200" />
             <StateViewObject
               expanded={props.expanded}
               keyName={key}
@@ -175,7 +175,7 @@ function HasContentsEllipsis({ onClick }: { onClick?: () => void }) {
         "cursor-pointer transition-colors ease-in-out",
         "inline-block -translate-y-[2px]",
       )}
-      data-radius="radius1"
+      data-radius="small-radius"
     >
       {"{...}"}
     </span>
@@ -211,7 +211,7 @@ export function StateViewObject(props: StateViewProps) {
         <div
           onClick={() => setExpanded((prev) => !prev)}
           className="flex h-5 w-5 cursor-pointer items-center justify-center text-gray-500 transition-colors ease-in-out hover:bg-gray-100 hover:text-black"
-          data-radius="radius1"
+          data-radius="small-radius"
         >
           <ChevronRight className="h-4 w-4" />
         </div>
@@ -270,7 +270,7 @@ export function StateView({
   }
 
   return (
-    <div className="relative flex w-full flex-row gap-0 overflow-y-auto border-t-[1px] border-gray-100 pl-6 lg:border-t-[0px] lg:border-l-[1px]">
+    <div className="relative flex w-full flex-row gap-0 overflow-y-auto border-t-[1px] border-gray-100 pl-6 lg:border-l-[1px] lg:border-t-[0px]">
       {view === "description" && isInterrupted && (
         <InterruptedDescriptionView description={description} />
       )}
@@ -284,7 +284,7 @@ export function StateView({
         />
       )}
 
-      <div className="absolute top-6 right-6 flex gap-2">
+      <div className="absolute right-6 top-6 flex gap-2">
         {view === "state" && (
           <Button
             onClick={() => setExpanded((prev) => !prev)}

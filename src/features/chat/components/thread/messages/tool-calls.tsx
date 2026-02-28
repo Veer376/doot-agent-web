@@ -1,6 +1,7 @@
 import { AIMessage, ToolMessage } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { ToolContainer } from "@/components/ai-elements/tool-container";
 import type { ToolCallArguments } from "@/types/tools";
 
@@ -139,7 +140,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
                       ? isExpanded
                         ? parsedContent
                         : parsedContent.slice(0, 5)
-                      : Object.entries(parsedContent)
+                      : Object.entries(parsedContent as Record<string, unknown>)
                     ).map((item, argIdx) => {
                       const [key, value] = Array.isArray(parsedContent)
                         ? [argIdx, item]

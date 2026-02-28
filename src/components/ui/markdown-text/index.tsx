@@ -70,6 +70,43 @@ const useCopyToClipboard = ({
   return { isCopied, copyToClipboard };
 };
 
+const TableCopyWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isCopied, copyToClipboard } = useCopyToClipboard();
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  const handleCopy = () => {
+    if (!wrapperRef.current) return;
+    const rows = wrapperRef.current.querySelectorAll("tr");
+    const text = Array.from(rows)
+      .map((row) =>
+        Array.from(row.querySelectorAll("th,td"))
+          .map((cell) => cell.textContent ?? "")
+          .join("\t"),
+      )
+      .join("\n");
+    copyToClipboard(text);
+  };
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="group/table relative my-5"
+    >
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label="Copy table"
+        data-radius="radius"
+        className="absolute -top-2 right-0 z-10 flex h-7 items-center gap-1.5 border border-border bg-background px-2 text-xs text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover/table:opacity-100 hover:bg-accent hover:text-foreground"
+      >
+        {isCopied ? <CheckmarkCircleIcon size="xs" /> : <CopyIcon size="xs" />}
+        {isCopied ? "Copied" : "Copy"}
+      </button>
+      {children}
+    </div>
+  );
+};
+
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const onCopy = () => {
@@ -78,7 +115,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="text-foreground sticky top-0 z-10 flex items-center justify-between gap-3 overflow-hidden rounded-full border border-white/30 bg-white/40 px-4 pt-2 text-xs leading-tight font-medium backdrop-blur-[8px] before:absolute before:top-0 before:right-0 before:left-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent before:content-[''] after:absolute after:top-0 after:left-0 after:h-full after:w-px after:bg-gradient-to-b after:from-white/80 after:via-transparent after:to-white/30 after:content-[''] dark:border-white/10 dark:bg-black/40 dark:shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.05)] dark:before:via-white/30 dark:after:from-white/30 dark:after:to-white/10">
+    <div className="sticky top-0 z-10 flex items-center justify-between gap-3 overflow-hidden rounded-full border border-white/30 bg-white/40 px-4 pt-2 text-xs font-medium leading-tight text-foreground backdrop-blur-[8px] before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent before:content-[''] after:absolute after:left-0 after:top-0 after:h-full after:w-px after:bg-gradient-to-b after:from-white/80 after:via-transparent after:to-white/30 after:content-[''] dark:border-white/10 dark:bg-black/40 dark:shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.05)] dark:before:via-white/30 dark:after:from-white/30 dark:after:to-white/10">
       <span className="relative z-10 lowercase opacity-80 [&>span]:text-[0.7rem]">
         {language}
       </span>
@@ -195,7 +232,7 @@ const defaultComponents: any = {
     if (!match) {
       return (
         <p
-          className={cn("mt-4 mb-4 leading-7 first:mt-0 last:mb-0", className)}
+          className={cn("mb-4 mt-4 leading-7 first:mt-0 last:mb-0", className)}
           {...props}
         >
           {processChildrenForCitations(children, citations)}
@@ -335,7 +372,7 @@ const defaultComponents: any = {
         <div className={cn(wrapper, "relative px-3 py-2.5")}>
           <span
             className={cn(
-              `absolute -top-1.5 -left-1.5 flex size-6 items-center justify-center rounded-full bg-transparent`,
+              `absolute -left-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-transparent`,
               badgeBorderMap[labelKey] ?? badgeBorderMap.note,
             )}
           >
@@ -365,7 +402,7 @@ const defaultComponents: any = {
   h2: ({ className, ...props }: { className?: string }) => (
     <h2
       className={cn(
-        "mt-5 mb-2 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
+        "mb-2 mt-5 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -374,7 +411,7 @@ const defaultComponents: any = {
   h3: ({ className, ...props }: { className?: string }) => (
     <h3
       className={cn(
-        "mt-3 mb-2 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0",
+        "mb-2 mt-3 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -383,7 +420,7 @@ const defaultComponents: any = {
   h4: ({ className, ...props }: { className?: string }) => (
     <h4
       className={cn(
-        "mt-4 mb-2 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0",
+        "mb-2 mt-4 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0",
         className,
       )}
       {...props}
@@ -419,7 +456,7 @@ const defaultComponents: any = {
   a: ({ className, ...props }: { className?: string }) => (
     <a
       className={cn(
-        "text-primary font-medium underline underline-offset-4",
+        "font-medium text-primary underline underline-offset-4",
         className,
       )}
       target="_blank"
@@ -542,18 +579,22 @@ const defaultComponents: any = {
     />
   ),
   table: ({ className, ...props }: { className?: string }) => (
-    <table
-      className={cn(
-        "my-5 w-full border-separate border-spacing-0 overflow-y-auto",
-        className,
-      )}
-      {...props}
-    />
+    <TableCopyWrapper>
+      <div
+        data-radius="radius"
+        className="w-full overflow-x-auto border border-border"
+      >
+        <table
+          className={cn("w-full border-collapse text-sm", className)}
+          {...props}
+        />
+      </div>
+    </TableCopyWrapper>
   ),
   th: ({ className, ...props }: { className?: string }) => (
     <th
       className={cn(
-        "bg-muted px-4 py-2 text-left first:rounded-tl-lg last:rounded-tr-lg [&[align=center]]:text-center [&[align=right]]:text-right",
+        "bg-muted/60 border-b border-r border-border px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -562,7 +603,7 @@ const defaultComponents: any = {
   td: ({ className, ...props }: { className?: string }) => (
     <td
       className={cn(
-        "border-b border-l px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right",
+        "border-b border-r border-border px-4 py-2.5 text-sm last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -571,7 +612,7 @@ const defaultComponents: any = {
   tr: ({ className, ...props }: { className?: string }) => (
     <tr
       className={cn(
-        "m-0 border-b p-0 first:border-t [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg",
+        "hover:bg-muted/30 transition-colors last:[&>td]:border-b-0",
         className,
       )}
       {...props}
@@ -609,8 +650,8 @@ const defaultComponents: any = {
       if (language.toLowerCase() === "mermaid") {
         return (
           <div
-            data-radius="radius2"
-            className="bg-card text-card-foreground relative overflow-hidden border p-4"
+            data-radius="radius"
+            className="relative overflow-hidden border bg-card p-2 text-card-foreground"
           >
             <MermaidDiagram chart={code} />
           </div>
@@ -620,8 +661,8 @@ const defaultComponents: any = {
       // Regular code block with syntax highlighting
       return (
         <div
-          data-radius="radius2"
-          className="bg-card text-card-foreground relative border"
+          data-radius="radius"
+          className="relative border bg-card text-card-foreground"
         >
           <CodeHeader
             language={language}
@@ -642,7 +683,7 @@ const defaultComponents: any = {
     return (
       <code
         className={cn(
-          "bg-muted rounded-full px-1 py-0.5 text-[0.9em] font-normal",
+          "rounded-full bg-muted px-1 py-0.5 text-[0.9em] font-normal",
           className,
         )}
       >

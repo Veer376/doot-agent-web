@@ -189,7 +189,7 @@ export const useStreamContext = (): StreamContextType => {
       rewind: () => {},
       next: () => {},
       mutate: () => {},
-    } as StreamContextType;
+    } as unknown as StreamContextType;
   }
 
   return context;

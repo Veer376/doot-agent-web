@@ -81,10 +81,10 @@ async function fetchAgents(
       .map((assistant) => ({
         ...assistant,
         supportedConfigs: supportedConfigs as ["tools" | "rag" | "supervisor"],
-      }));
+      })) as unknown as Agent[];
   });
 
-  return processedAgents;
+  return processedAgents as Agent[];
 }
 
 // ============================================================================
@@ -117,7 +117,7 @@ export function useFetchAgents() {
     queryKey: agentKeys.lists(),
     queryFn: async () => {
       // Pass accessToken (can be undefined for unauthenticated users)
-      return fetchAgents(accessToken, getSchemaFn);
+      return fetchAgents(accessToken ?? undefined, getSchemaFn);
     },
     // Always enabled - unauthenticated users get system agents only
     enabled: true,

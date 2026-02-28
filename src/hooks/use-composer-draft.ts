@@ -91,18 +91,23 @@ export function useComposerDraft(
     const draft = loadDraft(threadId);
     if (draft !== value) {
       onChange(draft);
-      
+
       // Move cursor to end after draft is loaded
       // Use a small timeout to ensure the DOM is updated
       setTimeout(() => {
-        const editor = document.querySelector('[role="textbox"]') as HTMLElement;
+        const editor = document.querySelector(
+          '[role="textbox"]',
+        ) as HTMLElement;
         if (editor && draft) {
           // Set cursor to end of content
           const range = document.createRange();
           const selection = window.getSelection();
           if (editor.childNodes.length > 0) {
             const lastNode = editor.childNodes[editor.childNodes.length - 1];
-            const textNode = lastNode.nodeType === Node.TEXT_NODE ? lastNode : lastNode.childNodes[0];
+            const textNode =
+              lastNode.nodeType === Node.TEXT_NODE
+                ? lastNode
+                : lastNode.childNodes[0];
             if (textNode) {
               range.setStart(textNode, textNode.textContent?.length || 0);
               range.collapse(true);

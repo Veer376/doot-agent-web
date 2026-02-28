@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
-interface FloatingLabelInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FloatingLabelInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
 }
 
@@ -50,10 +49,10 @@ export const FloatingLabelInput = React.forwardRef<
         id={inputId}
         ref={ref}
         data-slot="input"
-        data-radius="radius2"
+        data-radius="radius"
         className={cn(
-          "peer file:text-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex w-full min-w-0 rounded-full border bg-transparent px-4 py-3 text-base shadow-xs transition-all outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+          "dark:bg-input/30 peer flex w-full min-w-0 rounded-full border border-input bg-transparent px-4 py-3 text-base shadow-xs outline-none transition-all selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "focus-visible:ring-ring/50 focus-visible:border-ring focus-visible:ring-[3px]",
           "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
           className,
         )}
@@ -66,7 +65,7 @@ export const FloatingLabelInput = React.forwardRef<
       <label
         htmlFor={inputId}
         className={cn(
-          "text-muted-foreground pointer-events-none absolute left-4 transition-all duration-200 ease-out",
+          "pointer-events-none absolute left-4 text-muted-foreground transition-all duration-200 ease-out",
           "bg-background px-1",
           isFloating
             ? "top-0 -translate-y-1/2 text-xs"
@@ -82,8 +81,10 @@ export const FloatingLabelInput = React.forwardRef<
 
 FloatingLabelInput.displayName = "FloatingLabelInput";
 
-interface FloatingLabelPasswordInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface FloatingLabelPasswordInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   label: string;
 }
 
@@ -128,10 +129,10 @@ export const FloatingLabelPasswordInput = React.forwardRef<
         id={inputId}
         ref={ref}
         data-slot="input"
-        data-radius="radius2"
+        data-radius="radius"
         className={cn(
-          "peer hide-password-toggle file:text-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex w-full min-w-0 rounded-full border bg-transparent p-3 pr-12 text-base shadow-xs transition-all outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+          "hide-password-toggle dark:bg-input/30 peer flex w-full min-w-0 rounded-full border border-input bg-transparent p-3 pr-12 text-base shadow-xs outline-none transition-all selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "focus-visible:ring-ring/50 focus-visible:border-ring focus-visible:ring-[3px]",
           "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
           className,
         )}
@@ -144,7 +145,7 @@ export const FloatingLabelPasswordInput = React.forwardRef<
       <label
         htmlFor={inputId}
         className={cn(
-          "text-muted-foreground pointer-events-none absolute left-4 transition-all duration-200 ease-out",
+          "pointer-events-none absolute left-4 text-muted-foreground transition-all duration-200 ease-out",
           "bg-background px-1",
           isFloating
             ? "top-0 -translate-y-1/2 text-xs"
@@ -158,7 +159,7 @@ export const FloatingLabelPasswordInput = React.forwardRef<
         type="button"
         variant="ghost"
         size="sm"
-        className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 p-0 hover:bg-transparent"
+        className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 p-0 hover:bg-transparent"
         onClick={() => setShowPassword((prev) => !prev)}
         tabIndex={-1}
       >

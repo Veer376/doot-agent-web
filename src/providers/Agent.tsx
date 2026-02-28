@@ -1,20 +1,26 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { useFetchAgents } from "@/hooks/use-agents";
 import { isPrimaryAgent } from "@/lib/agent-utils";
 
 /**
  * AgentProvider: Global agent selection and mode management
- * 
+ *
  * This provider manages agent selection and mode (agent/chat) globally.
  * It was extracted from StreamProvider to follow Single Responsibility Principle.
- * 
+ *
  * Provider Responsibilities:
  * - Agent selection state (agentId)
  * - Mode state (agent/chat)
  * - Auto-initialization with primary agent
- * 
+ *
  * Dependencies:
  * - ReactQueryProvider (for useFetchAgents hook)
  */
@@ -24,6 +30,7 @@ interface AgentContextType {
   setSelectedAgent: (agentId: string) => void;
   mode: "agent" | "chat";
   setMode: (mode: "agent" | "chat") => void;
+  agentSource: "cloud";
 }
 
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
@@ -40,20 +47,20 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   // 4. Primary Agent - Fallback to system's primary agent
   useEffect(() => {
     // Priority 1: URL param (for marketing/sharing)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const urlAgentId = params.get('agentId');
-      
+      const urlAgentId = params.get("agentId");
+
       if (urlAgentId && agents.some((a) => a.assistant_id === urlAgentId)) {
         setSelectedAgent(urlAgentId);
-        setMode('agent');
-        
+        setMode("agent");
+
         // Clean URL param after applying to avoid sticky state on refresh
-        params.delete('agentId');
-        const newUrl = params.toString() 
-          ? `${window.location.pathname}?${params.toString()}` 
+        params.delete("agentId");
+        const newUrl = params.toString()
+          ? `${window.location.pathname}?${params.toString()}`
           : window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+        window.history.replaceState({}, "", newUrl);
         return; // Skip fallback logic
       }
     }
@@ -76,7 +83,9 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   }, [agents, agentId]);
 
   return (
-    <AgentContext.Provider value={{ agentId, setSelectedAgent, mode, setMode }}>
+    <AgentContext.Provider
+      value={{ agentId, setSelectedAgent, mode, setMode, agentSource: "cloud" }}
+    >
       {children}
     </AgentContext.Provider>
   );

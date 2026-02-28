@@ -2,6 +2,7 @@
 
 import { type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import React from "react";
 
 import {
@@ -10,7 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import NextLink from "next/link";
 
 export function NavMain({
   items,
@@ -47,7 +47,7 @@ export function NavMain({
 
           // Handle navigation items
           return (
-            <NextLink
+            <Link
               href={item.url || "/"}
               key={`${item.title}-${index}`}
             >
@@ -61,7 +61,7 @@ export function NavMain({
                   <span>{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </NextLink>
+            </Link>
           );
         })}
       </SidebarMenu>

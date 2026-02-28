@@ -44,11 +44,14 @@ function ArgsRenderer({ args }: { args: Record<string, any> }) {
             key={`args-${k}`}
             className="flex flex-col items-start gap-1"
           >
-            <p className="text-sm leading-[18px] text-wrap text-gray-600">
+            <p className="text-wrap text-sm leading-[18px] text-gray-600">
               {prettifyText(k)}:
             </p>
-            <span data-radius="radius2" className="w-full max-w-full bg-zinc-100 p-3 text-[13px] leading-[18px] text-black">
-              <div className="text-wrap break-words break-all whitespace-pre-wrap">
+            <span
+              data-radius="radius"
+              className="w-full max-w-full bg-zinc-100 p-3 text-[13px] leading-[18px] text-black"
+            >
+              <div className="whitespace-pre-wrap text-wrap break-words break-all">
                 <MarkdownText>{value}</MarkdownText>
               </div>
             </span>
@@ -116,7 +119,10 @@ function ResponseComponent({
   };
 
   return (
-    <div data-radius="radius2" className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6">
+    <div
+      data-radius="radius"
+      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+    >
       <div className="flex w-full items-center justify-between">
         <p className="text-base font-semibold text-black">
           Respond to assistant
@@ -170,7 +176,10 @@ function AcceptComponent({
   ) => Promise<void>;
 }) {
   return (
-    <div data-radius="radius2" className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6">
+    <div
+      data-radius="radius"
+      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+    >
       {actionRequestArgs && Object.keys(actionRequestArgs).length > 0 && (
         <ArgsRenderer args={actionRequestArgs} />
       )}
@@ -267,7 +276,10 @@ function EditAndOrAcceptComponent({
   };
 
   return (
-    <div data-radius="radius2" className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6">
+    <div
+      data-radius="radius"
+      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+    >
       <div className="flex w-full items-center justify-between">
         <p className="text-base font-semibold text-black">{header}</p>
         <ResetButton handleReset={handleReset} />

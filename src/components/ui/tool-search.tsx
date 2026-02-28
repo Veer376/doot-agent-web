@@ -24,7 +24,7 @@ export function Search({
 
   return (
     <div
-      data-radius="radius2"
+      data-radius="radius"
       className={cn(
         className,
         "flex items-center border-[1px] border-slate-200 px-2",
@@ -32,7 +32,7 @@ export function Search({
     >
       <SearchIcon className="size-4 text-slate-400" />
       <Input
-        className="h-8 border-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+        className="h-8 border-0 shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
         placeholder={placeholder}
         value={searchTerm}
         onChange={handleInputChange}

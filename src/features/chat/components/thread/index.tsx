@@ -49,43 +49,6 @@ import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
 import { AVAILABLE_MODELS, type Model } from "@/types/model";
-import { PromptGallery } from "@/components/ui/prompt-gallery";
-import type { PromptTemplate } from "@/components/ui/prompt-card";
-
-// Dummy prompt templates
-const DUMMY_PROMPTS: PromptTemplate[] = [
-  {
-    id: "1",
-    title: "Code Review Assistant",
-    prompt: "Review this code and suggest improvements for readability, performance, and best practices.",
-    imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Email Draft Generator",
-    prompt: "Help me draft a professional email for client communication with a friendly yet formal tone.",
-    imageUrl: "https://images.unsplash.com/photo-1557200515-a350fb961fcf?w=400&h=300&fit=crop",
-  },
-  {
-    id: "3",
-    title: "Data Analysis Expert",
-    prompt: "Analyze this dataset and provide insights, trends, and actionable recommendations.",
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Creative Writing Helper",
-    prompt: "Generate creative story ideas and help me develop compelling narratives with rich characters.",
-    imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
-  },
-  {
-    id: "5",
-    title: "Technical Documentation",
-    prompt: "Create clear and comprehensive technical documentation for this feature or API.",
-    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
-  },
-];
-
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -120,7 +83,7 @@ function ScrollToBottom(props: { className?: string }) {
     <Button
       variant="secondary"
       size="icon"
-      data-radius="radius2"
+      data-radius="radius"
       className={cn("hover:bg-secondary cursor-pointer", props.className)}
       onClick={() => scrollToBottom()}
     >
@@ -189,12 +152,8 @@ export function Thread() {
 
   // Auth state for pending message flow
   const { isAuthenticated } = useAuthSession();
-  const {
-    pendingMessage,
-    pendingMode,
-    setPendingMessage,
-    consumePendingMessage,
-  } = usePendingMessage();
+  const { pendingMessage, setPendingMessage, consumePendingMessage } =
+    usePendingMessage();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   // Auto-save composer drafts to localStorage
@@ -210,13 +169,11 @@ export function Thread() {
     handlePaste,
   } = useFileUpload();
 
-
-
   const { apiKeys } = useApiKeys();
   const hasApiKeys = useHasApiKeys();
 
   const { session } = useAuthSession();
-  
+
   // Model selection for this thread
   const { selectedModel, selectModel } = useThreadModel();
 
@@ -235,9 +192,11 @@ export function Thread() {
   const { data: threads = [] } = useFetchThreads();
 
   // Track the last saved agent/mode/model to avoid redundant updates
-  const lastSavedMetadataRef = useRef<{ agentId: string; mode: string; modelId?: string | null } | null>(
-    null,
-  );
+  const lastSavedMetadataRef = useRef<{
+    agentId: string;
+    mode: string;
+    modelId?: string | null;
+  } | null>(null);
   // Track which thread has been initialized to prevent race conditions
   const threadInitializedRef = useRef<string | null>(null);
 
@@ -315,15 +274,16 @@ export function Thread() {
         // Consume the pending message (this will clear it from localStorage)
         const pendingData = consumePendingMessage();
 
-        if (!pendingData || pendingData.message.trim().length === 0) {
+        if (!pendingData || pendingData.trim().length === 0) {
           return;
         }
 
-        const { message: content, mode: storedMode } = pendingData;
+        const content = pendingData;
+        const storedMode = undefined as string | undefined;
 
         // Restore the mode that was active when the message was stored
         if (storedMode && storedMode !== mode) {
-          setMode(storedMode);
+          setMode(storedMode as "agent" | "chat");
         }
 
         // In agent mode, we need an agentId selected
@@ -370,9 +330,7 @@ export function Thread() {
                 apiKeys,
               },
             },
-            context: {
-
-            },
+            context: {},
             metadata: {
               supabaseAccessToken: session?.accessToken,
             },
@@ -400,7 +358,11 @@ export function Thread() {
                 ...(selectedModel?.id && { model_id: selectedModel.id }),
               },
             });
-            lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
+            lastSavedMetadataRef.current = {
+              agentId,
+              mode,
+              modelId: selectedModel?.id || null,
+            };
           }
 
           queryClient.invalidateQueries({
@@ -448,7 +410,10 @@ export function Thread() {
       return;
     }
     try {
-      const message = stream.error instanceof Error ? stream.error.message : "Stream error occurred";
+      const message =
+        stream.error instanceof Error
+          ? stream.error.message
+          : "Stream error occurred";
       if (!message || lastError.current === message) {
         // Message has already been logged. do not modify ref, return early.
         return;
@@ -473,7 +438,7 @@ export function Thread() {
 
   // Handle auth requirement - store pending message and mode, then show dialog
   const handleAuthRequired = (message: string) => {
-    setPendingMessage(message, mode);
+    setPendingMessage(message);
     setAuthDialogOpen(true);
   };
 
@@ -525,9 +490,7 @@ export function Thread() {
             apiKeys,
           },
         },
-        context: {
-
-        },
+        context: {},
         metadata: {
           supabaseAccessToken: session?.accessToken,
         },
@@ -559,7 +522,11 @@ export function Thread() {
           },
         });
         // Update tracking
-        lastSavedMetadataRef.current = { agentId, mode, modelId: selectedModel?.id || null };
+        lastSavedMetadataRef.current = {
+          agentId,
+          mode,
+          modelId: selectedModel?.id || null,
+        };
       }
 
       // Invalidate thread state cache after message send
@@ -602,9 +569,7 @@ export function Thread() {
         },
       },
       optimisticValues,
-      context: {
-
-      },
+      context: {},
       metadata: {
         supabaseAccessToken: session?.accessToken,
       },
@@ -732,10 +697,17 @@ export function Thread() {
             </>
           }
           footer={
-            <div className="to-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-b from-transparent from-0% to-40%">
+            <div
+              className={cn(
+                "sticky bottom-0 z-10 flex flex-col items-center",
+                hasMessages || threadId
+                  ? "to-background bg-gradient-to-b from-transparent from-0% to-40%"
+                  : "bg-transparent",
+              )}
+            >
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
               <StickApi ref={stickApiRef} />
-              
+
               {/* Title section with independent spacing */}
               {!hasMessages && !threadId && (
                 <div className="mb-10 flex items-center gap-3">
@@ -756,11 +728,14 @@ export function Thread() {
                 <div
                   ref={dropRef}
                   className={cn(
-                    "relative z-20 mx-auto w-full max-w-2xl min-w-0 pb-4 transition-all",
+                    "composer-max-width relative z-20 mx-auto w-full min-w-0 pb-4 transition-all",
                     dragOver ? "border-primary border-2 border-dotted" : "",
                   )}
                 >
                   <Composer
+                    className={cn(!hasMessages && !threadId && "glass")}
+                    isGlass={!hasMessages && !threadId}
+                    forceExpanded={!hasMessages && !threadId}
                     value={inputValue}
                     onChange={setInputValue}
                     onSubmit={isAuthenticated ? handleSubmit : undefined}
@@ -779,18 +754,6 @@ export function Thread() {
                     selectedModel={selectedModel}
                     onModelSelect={selectModel}
                   />
-
-                  {/* Prompt Template Gallery - only show when no thread */}
-                  {!threadId && messages.length === 0 && (
-                    <div className="mx-auto mt-6" style={{ width: "85%" }}>
-                      <PromptGallery
-                        templates={DUMMY_PROMPTS}
-                        onPromptClick={(template) => {
-                          setInputValue(template.prompt);
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

@@ -54,7 +54,7 @@ const renderCollapsedValue = (
       }
       const strValue = JSON.stringify(previewValue, null, 2); // Pretty print preview
       return (
-        <code className="block rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap">
+        <code className="block whitespace-pre-wrap rounded bg-gray-50 px-2 py-1 font-mono text-sm">
           {/* Truncate the stringified preview if it's still too long */}
           {truncateString(strValue, 200)}
         </code>
@@ -74,7 +74,7 @@ const renderTableCellValue = (value: any): React.ReactNode => {
     try {
       // Stringify nested objects/arrays within the table
       return (
-        <code className="block rounded bg-gray-50 px-2 py-1 font-mono text-sm whitespace-pre-wrap">
+        <code className="block whitespace-pre-wrap rounded bg-gray-50 px-2 py-1 font-mono text-sm">
           {JSON.stringify(value, null, 2)}
         </code>
       );
@@ -133,7 +133,10 @@ export function GenericInterruptValue({
   const displayEntries = complex ? processEntries() : [];
 
   return (
-    <div data-radius="radius2" className="overflow-hidden border border-gray-200">
+    <div
+      data-radius="radius"
+      className="overflow-hidden border border-gray-200"
+    >
       {/* Header */}
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -211,10 +214,10 @@ export function GenericInterruptValue({
                           {" "}
                           {/* Sticky header */}
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                               {Array.isArray(interrupt) ? "Index" : "Key"}
                             </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                               Value
                             </th>
                           </tr>
@@ -234,7 +237,7 @@ export function GenericInterruptValue({
                           )}
                           {displayEntries.map(([key, value]) => (
                             <tr key={key}>
-                              <td className="px-4 py-2 align-top text-sm font-medium whitespace-nowrap text-gray-900">
+                              <td className="whitespace-nowrap px-4 py-2 align-top text-sm font-medium text-gray-900">
                                 {key}
                               </td>
                               <td className="px-4 py-2 align-top text-sm text-gray-500">

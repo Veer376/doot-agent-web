@@ -86,6 +86,7 @@ export function AgentFieldsForm({
             id="oap_name"
             {...form.register("name")}
             placeholder="Emails Agent"
+            data-radius="radius"
           />
         </div>
         <div className="flex w-full flex-col items-start justify-start gap-2">
@@ -96,6 +97,7 @@ export function AgentFieldsForm({
             id="oap_description"
             {...form.register("description")}
             placeholder="Agent that handles emails"
+            data-radius="radius"
           />
         </div>
       </div>
@@ -149,7 +151,10 @@ export function AgentFieldsForm({
                 placeholder="Search tools..."
                 className="w-full"
               />
-              <div data-radius="radius1" className="relative w-full flex-1 basis-[500px] border-[1px] border-slate-200 px-4">
+              <div
+                data-radius="small-radius"
+                className="relative w-full flex-1 basis-[500px] border-[1px] border-slate-200 px-4"
+              >
                 <div className="absolute inset-0 overflow-y-auto px-4">
                   {toolConfigurations[0]?.label
                     ? displayTools.map((c) => (
@@ -188,6 +193,7 @@ export function AgentFieldsForm({
                       <Button
                         variant="outline"
                         size="sm"
+                        data-radius="radius"
                         onClick={async () => {
                           try {
                             setLoadingMore(true);
@@ -218,7 +224,7 @@ export function AgentFieldsForm({
             <Separator />
             <div className="mt-4 space-y-4">
               <p className="text-lg font-semibold tracking-tight">Agent RAG</p>
-              <div className="text-muted-foreground text-sm">
+              <div className="text-sm text-muted-foreground">
                 RAG configuration has been removed in this dialog.
               </div>
             </div>

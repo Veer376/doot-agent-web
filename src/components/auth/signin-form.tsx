@@ -99,32 +99,37 @@ export function SignInForm({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex-1 w-full overflow-y-auto p-4 content-mask">
+      <div className="content-mask w-full flex-1 overflow-y-auto p-4">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
               <LoginIcon className="size-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-foreground text-center text-xl leading-tight font-semibold">
+            <h2 className="text-center text-xl font-semibold leading-tight text-foreground">
               Log in
             </h2>
           </div>
           {pendingMessage && (
-            <div data-radius="radius2" className="relative mt-2 w-full min-w-0 overflow-hidden bg-blue-50 p-3 text-left text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+            <div
+              data-radius="radius"
+              className="relative mt-2 w-full min-w-0 overflow-hidden bg-blue-50 p-3 text-left text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+            >
               <div className="flex items-center gap-2 pr-6 font-medium leading-none">
                 <span>Prompt queued</span>
                 <QueueIcon className="size-4" />
               </div>
-              <p className="mt-1 block w-full max-w-[17rem] truncate text-xs opacity-90">{'> ' + pendingMessage}</p>
+              <p className="mt-1 block w-full max-w-[17rem] truncate text-xs opacity-90">
+                {"> " + pendingMessage}
+              </p>
               {onClearPendingMessage && (
                 <button
                   type="button"
                   onClick={onClearPendingMessage}
-                  data-radius="radius2"
-                  className="group absolute top-2 right-2 flex items-center p-1 opacity-70 transition-all hover:bg-red-50 hover:opacity-100 dark:hover:bg-red-900/20"
+                  data-radius="radius"
+                  className="group absolute right-2 top-2 flex items-center p-1 opacity-70 transition-all hover:bg-red-50 hover:opacity-100 dark:hover:bg-red-900/20"
                 >
                   <XIcon className="size-3.5 transition-colors group-hover:text-red-600 dark:group-hover:text-red-400" />
-                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[10px] font-medium opacity-0 transition-all duration-300 group-hover:max-w-[50px] group-hover:pl-1 group-hover:opacity-100 group-hover:text-red-600 dark:group-hover:text-red-400">
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[10px] font-medium opacity-0 transition-all duration-300 group-hover:max-w-[50px] group-hover:pl-1 group-hover:text-red-600 group-hover:opacity-100 dark:group-hover:text-red-400">
                     Remove
                   </span>
                 </button>
@@ -144,7 +149,7 @@ export function SignInForm({
               label="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              data-radius="radius2"
+              data-radius="radius"
               required
             />
           </div>
@@ -161,7 +166,7 @@ export function SignInForm({
               <button
                 type="button"
                 onClick={onSwitchToForgotPassword}
-                className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Forgot password?
               </button>
@@ -171,7 +176,7 @@ export function SignInForm({
           {error && (
             <Alert
               variant="destructive"
-              data-radius="radius2"
+              data-radius="radius"
             >
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -180,7 +185,7 @@ export function SignInForm({
           <div className="pt-2">
             <Button
               type="submit"
-              data-radius="radius2"
+              data-radius="radius"
               className="h-10 w-full bg-black text-white hover:bg-black/90"
               disabled={isLoading || isGoogleLoading || isGithubLoading}
             >
@@ -200,10 +205,10 @@ export function SignInForm({
           <>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="border-border w-full border-t"></div>
+                <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-background text-muted-foreground px-2">
+                <span className="bg-background px-2 text-muted-foreground">
                   OR
                 </span>
               </div>
@@ -214,7 +219,7 @@ export function SignInForm({
                 <Button
                   variant="outline"
                   type="button"
-                  data-radius="radius2"
+                  data-radius="radius"
                   className="h-10 w-full"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading || isGoogleLoading || isGithubLoading}
@@ -255,7 +260,7 @@ export function SignInForm({
                 <Button
                   variant="outline"
                   type="button"
-                  data-radius="radius2"
+                  data-radius="radius"
                   className="h-10 w-full"
                   onClick={handleGithubSignIn}
                   disabled={isLoading || isGoogleLoading || isGithubLoading}
@@ -270,7 +275,7 @@ export function SignInForm({
                         xmlns="http://www.w3.org/2000/svg"
                         fill="currentColor"
                       >
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                       </svg>
                       GitHub
                     </>
@@ -283,20 +288,20 @@ export function SignInForm({
       </div>
 
       {onSwitchToSignUp && (
-        <div className="shrink-0 relative bg-background/80 p-3 pt-0 backdrop-blur-md z-10 text-center text-xs">
+        <div className="bg-background/80 relative z-10 shrink-0 p-3 pt-0 text-center text-xs backdrop-blur-md">
           <div className="pointer-events-none absolute -top-10 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent" />
           <button
             type="button"
             onClick={onSwitchToSignUp}
-            className="group text-muted-foreground hover:text-foreground transition-colors"
+            className="group text-muted-foreground transition-colors hover:text-foreground"
           >
             Don&apos;t have an account?{" "}
-            <span className="group-hover:text-blue-600 transition-colors">Sign up</span>
+            <span className="transition-colors group-hover:text-blue-600">
+              Sign up
+            </span>
           </button>
         </div>
       )}
     </div>
   );
-
 }
-

@@ -4,80 +4,52 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/**
- * CSS VARIABLES - DESIGN SYSTEM
- * 
- * This file defines CSS variables for both the existing shadcn/ui system
- * and our new design system tokens.
- * 
- * STRUCTURE:
- * 1. Font families (Geist Sans & Mono)
- * 2. Existing shadcn/ui variables (background, foreground, primary, etc.)
- * 3. New design system variables (brand colors, semantic colors, neutral scale)
- * 4. Theme inline mappings (for Tailwind CSS v4)
- * 5. Base styles
- * 6. Utility classes
- */
+/*
+ ╔══════════════════════════════════════════════════════════════════════════════╗
+ ║  DESIGN TOKEN RULES — READ BEFORE EDITING                                  ║
+ ╠══════════════════════════════════════════════════════════════════════════════╣
+ ║  1. --background: var(--brand-50) — all surfaces inherit from this.         ║
+ ║  2. --accent: var(--brand-subtle) — global hover state.                     ║
+ ║  3. Never hardcode colors in components — always reference a CSS var.       ║
+ ║     Raw stops   → --brand-50 / 100 / 500 / 700 / 900 / navy                ║
+ ║     Aliases     → --brand-default / hover / active / subtle / muted        ║
+ ╚══════════════════════════════════════════════════════════════════════════════╝
+*/
 
-/* ============================================
-   VIEWPORT-RESPONSIVE SCALING
-   Scales all rem-based values proportionally based on viewport width.
-   - Min: 16px (at ~1024px viewport)
-   - Max: 20px (at ~1920px+ viewport)
-   - Scales smoothly in between
-   ============================================ */
+/* Viewport-responsive scaling: 16px at 1024px → 20px at 1920px+ */
 html {
   font-size: clamp(16px, calc(14px + 0.25vw), 20px);
 }
 
 /* ============================================
-   FONT FAMILIES
+   FONT FAMILIES — Roobert (vars set by next/font in layout.tsx)
    ============================================ */
 :root {
-  /* Geist Sans for body text and UI */
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-  /* Geist Mono for code blocks and technical content */
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --font-sans: var(--font-roobert), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-roobert-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
 }
 
 /* ============================================
-   EXISTING SHADCN/UI VARIABLES (Light Mode)
+   LIGHT MODE
    ============================================ */
 :root {
-  /* Background & Foreground */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-
-  /* Card */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-
-  /* Popover */
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-
-  /* Primary */
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-
-  /* Secondary */
+  /* Shadcn/ui semantic — wired to brand tokens */
+  --background: var(--brand-50);
+  --foreground: var(--brand-navy);
+  --card: var(--brand-50);
+  --card-foreground: var(--brand-navy);
+  --popover: var(--brand-50);
+  --popover-foreground: var(--brand-navy);
+  --primary: var(--brand-default);
+  --primary-foreground: var(--brand-on-brand);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-
-  /* Muted */
+  --secondary-foreground: var(--brand-navy);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-
-  /* Accent - CHANGE LIGHTNESS HERE (0-1 scale): 0.95 = lighter, 0.85 = darker */
-  --accent: oklch(93.705% 0.00011 271.152 / 0.805);
-  --accent-foreground: oklch(0.205 0 0);
-
-  /* Destructive */
+  --muted-foreground: oklch(0.38 0.08 278);
+  --accent: var(--brand-subtle);
+  --accent-foreground: var(--brand-navy);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-
-  /* Border & Input */
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.87 0 0);
@@ -89,14 +61,14 @@ html {
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  --radius1: 0.5rem;
-  /* Radius 1 for hover state */
-  --radius2: 1.1rem;
-  /* Radius 2 for containers */
+  /* Radius */
+  --small-radius: 0.5rem;
+  --radius: 1.1rem;
   --radius3: 1.7rem;
-  /* Radius 3 for prominent elements (composer, primary actions) */
+  --composer-radius: 1.7rem;
+  --composer-max-width: 42rem;
 
-  /* Sidebar (HSL format for compatibility) */
+  /* Sidebar (HSL for shadcn compatibility) */
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
   --sidebar-primary: 240 5.9% 10%;
@@ -106,39 +78,68 @@ html {
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
 
-  /* Sidebar (OKLCH for consistency) */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground-oklch: oklch(0.145 0 0);
-  --sidebar-primary-oklch: oklch(0.205 0 0);
-  --sidebar-primary-foreground-oklch: oklch(0.985 0 0);
+  /* Sidebar (OKLCH) */
+  --sidebar: var(--background);
+  --sidebar-foreground-oklch: var(--foreground);
+  --sidebar-primary-oklch: var(--primary);
+  --sidebar-primary-foreground-oklch: var(--primary-foreground);
   --sidebar-accent-oklch: var(--accent);
-  --sidebar-accent-foreground-oklch: oklch(0.205 0 0);
-  --sidebar-border-oklch: oklch(0.922 0 0);
-  --sidebar-ring-oklch: oklch(0.87 0 0);
+  --sidebar-accent-foreground-oklch: var(--accent-foreground);
+  --sidebar-border-oklch: var(--border);
+  --sidebar-ring-oklch: var(--ring);
 
-  /* ============================================
-     NEW DESIGN SYSTEM VARIABLES (Light Mode)
-     ============================================ */
+  /* ── Brand scale — raw lightness stops ── */
+  --brand-50:   oklch(98.652% 0.00672 286.034);
+  --brand-100:  oklch(0.78 0.10 280);
+  --brand-500:  oklch(0.63 0.17 280);
+  --brand-700:  oklch(0.50 0.22 280);
+  --brand-900:  oklch(0.40 0.24 278);
+  --brand-navy: oklch(0.18 0.12 278);
 
-  /* Brand Colors */
-  --color-brand-primary: oklch(0.20 0 0);
-  --color-brand-primary-hover: oklch(0.30 0 0);
-  --color-brand-primary-light: oklch(0.95 0 0);
-  --color-brand-accent: oklch(0.60 0.20 280);
-  --color-brand-accent-light: oklch(0.92 0.08 280);
+  /* ── Brand purpose aliases ── */
+  --brand-default:  var(--brand-500);
+  --brand-hover:    var(--brand-700);
+  --brand-active:   var(--brand-900);
+  --brand-subtle:   color-mix(in oklch, var(--background) 82%, var(--brand-500) 18%);
+  --brand-muted:    var(--brand-100);
+  --brand-on-brand: oklch(1 0 0);
 
-  /* Semantic Colors */
-  --color-semantic-success: oklch(0.55 0.15 145);
+  /* ── Brand shadows ── */
+  --shadow-brand:
+    0 0 0 1px oklch(from var(--brand-500) l c h / 0.05),
+    0 4px 16px -4px oklch(from var(--brand-500) l c h / 0.15),
+    0 1px 3px 0 oklch(from var(--brand-500) l c h / 0.10);
+  --shadow-brand-focus:
+    0 0 0 0.5px var(--brand-muted),
+    0 4px 16px -4px oklch(from var(--brand-500) l c h / 0.3),
+    0 1px 3px 0 oklch(from var(--brand-500) l c h / 0.10);
+
+  /* ── Doot icon gradients ── */
+  --doot-right-start: var(--brand-muted);
+  --doot-right-end:   var(--brand-muted);
+  --doot-left-start:  var(--brand-default);
+  --doot-left-end:    var(--brand-active);
+
+  /* ── Theme control ── */
+  --theme: colored;
+
+  /* ── Scrollbar — brand-tinted ── */
+  --scrollbar-thumb:        oklch(0.63 0.17 280 / 0.30);
+  --scrollbar-thumb-hover:  oklch(0.63 0.17 280 / 0.55);
+  --scrollbar-thumb-active: oklch(0.63 0.17 280 / 0.70);
+
+  /* Semantic colors */
+  --color-semantic-success:       oklch(0.55 0.15 145);
   --color-semantic-success-light: oklch(0.93 0.06 145);
-  --color-semantic-warning: oklch(0.65 0.18 65);
+  --color-semantic-warning:       oklch(0.65 0.18 65);
   --color-semantic-warning-light: oklch(0.95 0.08 65);
-  --color-semantic-error: oklch(0.55 0.22 25);
-  --color-semantic-error-light: oklch(0.95 0.10 25);
-  --color-semantic-info: oklch(0.55 0.18 250);
-  --color-semantic-info-light: oklch(0.93 0.08 250);
+  --color-semantic-error:         oklch(0.55 0.22 25);
+  --color-semantic-error-light:   oklch(0.95 0.1 25);
+  --color-semantic-info:          oklch(0.55 0.18 250);
+  --color-semantic-info-light:    oklch(0.93 0.08 250);
 
-  /* Neutral Scale */
-  --color-neutral-50: oklch(0.99 0 0);
+  /* Neutral scale */
+  --color-neutral-50:  oklch(0.99 0 0);
   --color-neutral-100: oklch(0.97 0 0);
   --color-neutral-200: oklch(0.92 0 0);
   --color-neutral-300: oklch(0.85 0 0);
@@ -152,47 +153,31 @@ html {
 }
 
 /* ============================================
-   DARK MODE VARIABLES
+   DARK MODE
    ============================================ */
 .dark {
-  /* Existing shadcn/ui variables */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  /* Accent - CHANGE LIGHTNESS HERE (0-1 scale): 0.25 = darker, 0.35 = lighter */
-  --accent: oklch(0.28 0 0);
+  --accent: var(--brand-subtle);
   --accent-foreground: oklch(0.985 0 0);
+  --primary: var(--brand-default);
+  --primary-foreground: var(--brand-on-brand);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
 
-  /* Sidebar (OKLCH) */
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground-oklch: oklch(0.985 0 0);
-  --sidebar-primary-oklch: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground-oklch: oklch(0.985 0 0);
-  --sidebar-accent-oklch: var(--accent);
-  --sidebar-accent-foreground-oklch: oklch(0.985 0 0);
-  --sidebar-border-oklch: oklch(0.269 0 0);
-  --sidebar-ring-oklch: oklch(0.439 0 0);
-
-  /* Sidebar (HSL for compatibility) */
+  /* Sidebar */
+  --sidebar: var(--background);
   --sidebar-background: 240 5.9% 10%;
   --sidebar-foreground: 240 4.8% 95.9%;
   --sidebar-primary: 224.3 76.3% 48%;
@@ -202,27 +187,37 @@ html {
   --sidebar-border: 240 3.7% 15.9%;
   --sidebar-ring: 217.2 91.2% 59.8%;
 
-  /* New design system variables (Dark Mode) */
-  --color-brand-primary: oklch(0.85 0 0);
-  --color-brand-primary-hover: oklch(0.90 0 0);
-  --color-brand-primary-light: oklch(0.25 0 0);
-  --color-brand-accent: oklch(0.70 0.22 280);
-  --color-brand-accent-light: oklch(0.30 0.10 280);
+  --shadow-brand:
+    0 0 0 1px oklch(from var(--brand-500) l c h / 0.10),
+    0 4px 20px -4px oklch(from var(--brand-500) l c h / 0.40),
+    0 1px 4px 0 oklch(from var(--brand-500) l c h / 0.15);
+  --shadow-brand-focus:
+    0 0 0 1.5px var(--brand-active),
+    0 4px 20px -4px oklch(from var(--brand-500) l c h / 0.40),
+    0 1px 4px 0 oklch(from var(--brand-500) l c h / 0.15);
 
-  --color-semantic-success: oklch(0.65 0.18 145);
+  --brand-subtle: color-mix(in oklch, var(--background) 78%, var(--brand-500) 22%);
+  --brand-muted:  oklch(0.63 0.17 280 / 0.22);
+  --brand-hover:  var(--brand-100);
+
+  --doot-left-start:  var(--brand-subtle);
+  --doot-left-end:    var(--brand-muted);
+  --doot-right-start: var(--brand-900);
+  --doot-right-end:   var(--brand-navy);
+
+  --color-semantic-success:       oklch(0.65 0.18 145);
   --color-semantic-success-light: oklch(0.28 0.08 145);
-  --color-semantic-warning: oklch(0.70 0.20 65);
-  --color-semantic-warning-light: oklch(0.30 0.10 65);
-  --color-semantic-error: oklch(0.65 0.24 25);
-  --color-semantic-error-light: oklch(0.30 0.12 25);
-  --color-semantic-info: oklch(0.65 0.20 250);
-  --color-semantic-info-light: oklch(0.28 0.10 250);
+  --color-semantic-warning:       oklch(0.7 0.2 65);
+  --color-semantic-warning-light: oklch(0.3 0.1 65);
+  --color-semantic-error:         oklch(0.65 0.24 25);
+  --color-semantic-error-light:   oklch(0.3 0.12 25);
+  --color-semantic-info:          oklch(0.65 0.2 250);
+  --color-semantic-info-light:    oklch(0.28 0.1 250);
 
-  /* Neutral Scale (Inverted for dark mode) */
-  --color-neutral-50: oklch(0.15 0 0);
+  --color-neutral-50:  oklch(0.15 0 0);
   --color-neutral-100: oklch(0.18 0 0);
   --color-neutral-200: oklch(0.22 0 0);
-  --color-neutral-300: oklch(0.30 0 0);
+  --color-neutral-300: oklch(0.3 0 0);
   --color-neutral-400: oklch(0.45 0 0);
   --color-neutral-500: oklch(0.55 0 0);
   --color-neutral-600: oklch(0.68 0 0);
@@ -230,11 +225,99 @@ html {
   --color-neutral-800: oklch(0.85 0 0);
   --color-neutral-900: oklch(0.92 0 0);
   --color-neutral-950: oklch(0.97 0 0);
+
+  --scrollbar-thumb:        oklch(0.63 0.17 280 / 0.35);
+  --scrollbar-thumb-hover:  oklch(0.63 0.17 280 / 0.55);
+  --scrollbar-thumb-active: oklch(0.63 0.17 280 / 0.70);
 }
 
 /* ============================================
-   TAILWIND THEME INLINE (v4 Syntax)
-   Maps CSS variables to Tailwind color utilities
+   BLACK-WHITE THEME
+   Strips brand chroma to pure neutral greyscale.
+   Toggle: document.documentElement.dataset.theme = 'black-white' | 'colored'
+   ============================================ */
+[data-theme="black-white"] {
+  --brand-50:   oklch(0.98 0 0);
+  --brand-100:  oklch(0.88 0 0);
+  --brand-500:  oklch(0.50 0 0);
+  --brand-700:  oklch(0.35 0 0);
+  --brand-900:  oklch(0.25 0 0);
+  --brand-navy: oklch(0.12 0 0);
+
+  --brand-default:  var(--brand-500);
+  --brand-hover:    var(--brand-700);
+  --brand-active:   var(--brand-900);
+  --brand-on-brand: oklch(1 0 0);
+
+  --doot-right-start: var(--brand-100);
+  --doot-right-end:   var(--brand-100);
+  --doot-left-start:  var(--brand-500);
+  --doot-left-end:    var(--brand-900);
+
+  --shadow-brand:
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 4px 16px -4px oklch(0 0 0 / 0.12),
+    0 1px 3px 0 oklch(0 0 0 / 0.08);
+  --shadow-brand-focus:
+    0 0 0 0.5px var(--brand-100),
+    0 4px 16px -4px oklch(0 0 0 / 0.20),
+    0 1px 3px 0 oklch(0 0 0 / 0.10);
+
+  --scrollbar-thumb:        oklch(0.50 0 0 / 0.30);
+  --scrollbar-thumb-hover:  oklch(0.50 0 0 / 0.55);
+  --scrollbar-thumb-active: oklch(0.50 0 0 / 0.70);
+
+  --color-semantic-success:       oklch(0.55 0 0);
+  --color-semantic-success-light: oklch(0.93 0 0);
+  --color-semantic-warning:       oklch(0.65 0 0);
+  --color-semantic-warning-light: oklch(0.95 0 0);
+  --color-semantic-error:         oklch(0.55 0 0);
+  --color-semantic-error-light:   oklch(0.95 0 0);
+  --color-semantic-info:          oklch(0.55 0 0);
+  --color-semantic-info-light:    oklch(0.93 0 0);
+}
+
+.dark[data-theme="black-white"] {
+  --brand-50:   oklch(0.20 0 0);
+  --brand-100:  oklch(0.30 0 0);
+  --brand-500:  oklch(0.55 0 0);
+  --brand-700:  oklch(0.68 0 0);
+  --brand-900:  oklch(0.78 0 0);
+  --brand-navy: oklch(0.88 0 0);
+
+  --brand-muted: oklch(0.55 0 0 / 0.22);
+  --brand-hover: var(--brand-100);
+
+  --doot-left-start:  var(--brand-500);
+  --doot-left-end:    var(--brand-700);
+  --doot-right-start: var(--brand-900);
+  --doot-right-end:   var(--brand-navy);
+
+  --shadow-brand:
+    0 0 0 1px oklch(1 0 0 / 0.06),
+    0 4px 20px -4px oklch(0 0 0 / 0.40),
+    0 1px 4px 0 oklch(0 0 0 / 0.15);
+  --shadow-brand-focus:
+    0 0 0 1.5px var(--brand-500),
+    0 4px 20px -4px oklch(0 0 0 / 0.40),
+    0 1px 4px 0 oklch(0 0 0 / 0.15);
+
+  --scrollbar-thumb:        oklch(0.55 0 0 / 0.35);
+  --scrollbar-thumb-hover:  oklch(0.55 0 0 / 0.55);
+  --scrollbar-thumb-active: oklch(0.55 0 0 / 0.70);
+
+  --color-semantic-success:       oklch(0.65 0 0);
+  --color-semantic-success-light: oklch(0.28 0 0);
+  --color-semantic-warning:       oklch(0.70 0 0);
+  --color-semantic-warning-light: oklch(0.30 0 0);
+  --color-semantic-error:         oklch(0.65 0 0);
+  --color-semantic-error-light:   oklch(0.30 0 0);
+  --color-semantic-info:          oklch(0.65 0 0);
+  --color-semantic-info-light:    oklch(0.28 0 0);
+}
+
+/* ============================================
+   TAILWIND THEME INLINE (v4)
    ============================================ */
 @theme inline {
   --color-background: var(--background);
@@ -273,26 +356,34 @@ html {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground-oklch);
   --color-sidebar-border: var(--sidebar-border-oklch);
   --color-sidebar-ring: var(--sidebar-ring-oklch);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 
-  /* Brand Colors */
-  --color-brand-primary: var(--color-brand-primary);
-  --color-brand-primary-hover: var(--color-brand-primary-hover);
-  --color-brand-primary-light: var(--color-brand-primary-light);
-  --color-brand-accent: var(--color-brand-accent);
-  --color-brand-accent-light: var(--color-brand-accent-light);
+  /* Brand scale */
+  --color-brand-50:      var(--brand-50);
+  --color-brand-100:     var(--brand-100);
+  --color-brand-500:     var(--brand-500);
+  --color-brand-700:     var(--brand-700);
+  --color-brand-900:     var(--brand-900);
+  --color-brand-navy:    var(--brand-navy);
+  --color-brand-default: var(--brand-default);
+  --color-brand-hover:   var(--brand-hover);
+  --color-brand-active:  var(--brand-active);
+  --color-brand-subtle:  var(--brand-subtle);
+  --color-brand-muted:   var(--brand-muted);
 
-  /* Semantic Colors */
-  --color-semantic-success: var(--color-semantic-success);
+  /* Semantic colors */
+  --color-semantic-success:       var(--color-semantic-success);
   --color-semantic-success-light: var(--color-semantic-success-light);
-  --color-semantic-warning: var(--color-semantic-warning);
+  --color-semantic-warning:       var(--color-semantic-warning);
   --color-semantic-warning-light: var(--color-semantic-warning-light);
-  --color-semantic-error: var(--color-semantic-error);
-  --color-semantic-error-light: var(--color-semantic-error-light);
-  --color-semantic-info: var(--color-semantic-info);
-  --color-semantic-info-light: var(--color-semantic-info-light);
+  --color-semantic-error:         var(--color-semantic-error);
+  --color-semantic-error-light:   var(--color-semantic-error-light);
+  --color-semantic-info:          var(--color-semantic-info);
+  --color-semantic-info-light:    var(--color-semantic-info-light);
 
-  /* Neutral Scale */
-  --color-neutral-50: var(--color-neutral-50);
+  /* Neutral scale */
+  --color-neutral-50:  var(--color-neutral-50);
   --color-neutral-100: var(--color-neutral-100);
   --color-neutral-200: var(--color-neutral-200);
   --color-neutral-300: var(--color-neutral-300);
@@ -310,51 +401,50 @@ html {
    ============================================ */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Code and preformatted text use Geist Mono */
-  code,
-  kbd,
-  samp,
-  pre {
+  /* Text selection */
+  ::selection {
+    background-color: var(--brand-navy);
+    color: oklch(1 0 0);
+  }
+
+  code, kbd, samp, pre {
     font-family: var(--font-mono);
   }
 
-  /* Global Scrollbar Styling - Thin & Modern - Only visible thumb */
+  /* Scrollbars — brand-tinted thin thumb */
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
 
-  /* Webkit browsers (Chrome, Safari, Edge) */
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
     background: transparent;
   }
 
-  *::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track-piece {
     background: transparent;
     border: none;
     margin: 0;
   }
 
-  *::-webkit-scrollbar-track-piece {
-    background: transparent;
-    border: none;
-  }
-
   *::-webkit-scrollbar-thumb {
-    background: rgba(128, 128, 128, 0.3);
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
     border: 2px solid transparent;
     background-clip: padding-box;
@@ -363,12 +453,12 @@ html {
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: rgba(128, 128, 128, 0.5);
+    background: var(--scrollbar-thumb-hover);
     background-clip: padding-box;
   }
 
   *::-webkit-scrollbar-thumb:active {
-    background: rgba(128, 128, 128, 0.6);
+    background: var(--scrollbar-thumb-active);
     background-clip: padding-box;
   }
 
@@ -376,34 +466,29 @@ html {
     background: transparent;
   }
 
-  /* Completely remove scrollbar buttons/arrows */
-  *::-webkit-scrollbar-button {
+  *::-webkit-scrollbar-button,
+  *::-webkit-scrollbar-button:start:decrement,
+  *::-webkit-scrollbar-button:end:increment {
     height: 0;
     display: none;
   }
 
-  *::-webkit-scrollbar-button:start:decrement,
-  *::-webkit-scrollbar-button:end:increment {
-    display: none;
-  }
-
-  /* Dark mode scrollbar */
   .dark * {
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
 
   .dark *::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--scrollbar-thumb);
     background-clip: padding-box;
   }
 
   .dark *::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--scrollbar-thumb-hover);
     background-clip: padding-box;
   }
 
   .dark *::-webkit-scrollbar-thumb:active {
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--scrollbar-thumb-active);
     background-clip: padding-box;
   }
 
@@ -412,38 +497,18 @@ html {
     background: transparent;
   }
 
-  /* Avatar: apply tokenized radius by default and inherit on children */
-  [data-slot="avatar"] {
-    border-radius: var(--radius2);
-  }
-
+  /* Avatar */
+  [data-slot="avatar"]                              { border-radius: var(--radius); }
   [data-slot="avatar-image"],
-  [data-slot="avatar-fallback"] {
-    border-radius: inherit;
-  }
+  [data-slot="avatar-fallback"]                     { border-radius: inherit; }
 
-  /* Data-radius system: Flexible radius application */
-  [data-radius="radius1"] {
-    border-radius: var(--radius1);
-  }
+  /* Data-radius system */
+  [data-radius="small-radius"]    { border-radius: var(--small-radius); }
+  [data-radius="radius"]          { border-radius: var(--radius); }
+  [data-radius="radius3"]         { border-radius: var(--radius3); }
+  [data-radius="composer-radius"] { border-radius: var(--composer-radius); }
 
-  [data-radius="radius2"] {
-    border-radius: var(--radius2);
-  }
-
-  [data-radius="radius3"] {
-    border-radius: var(--radius3);
-  }
-
-  [data-radius="sm"] {
-    border-radius: var(--radius-sm);
-  }
-
-  [data-radius="md"] {
-    border-radius: var(--radius-md);
-  }
-
-  /* Fix browser autofill background to respect border-radius */
+  /* Autofill override */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -455,39 +520,89 @@ html {
   }
 }
 
+/* ============================================
+   UTILITIES
+   ============================================ */
 @layer utilities {
-
-  /* Custom shadow utilities for inner shadows */
-  .shadow-inner-right {
-    box-shadow: inset -9px 0 6px -1px rgb(0 0 0 / 0.02);
+  .composer-max-width {
+    max-width: var(--composer-max-width);
   }
 
-  .shadow-inner-left {
-    box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  /* Dark mode shadow overrides for better visibility */
-  .dark .shadow-xs {
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
-  .dark .shadow-sm {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  /* Brand shadows */
+  .shadow-brand       { box-shadow: var(--shadow-brand); }
+  .shadow-brand-focus { box-shadow: var(--shadow-brand-focus); }
+
+  /* Inner shadows */
+  .shadow-inner-right { box-shadow: inset -9px 0 6px -1px rgb(0 0 0 / 0.02); }
+  .shadow-inner-left  { box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02); }
+
+  /* Gradients */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, var(--brand-default) 0%, var(--brand-active) 100%);
   }
 
-  .dark .shadow-md {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  .bg-gradient-human-message {
+    background: linear-gradient(
+      to bottom left,
+      oklch(from var(--brand-active) l c h / 0.18) 0%,
+      oklch(from var(--brand-default) l c h / 0.06) 50%,
+      var(--card) 100%
+    );
   }
 
-  .dark .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  /* Header */
+  .glass-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
   }
 
-  .dark .shadow-xl {
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+  .dark .glass-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
   }
 
-  .dark .shadow-2xl {
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+  /* Glass surface */
+  .glass {
+    --glass-blur:         20px;
+    --glass-saturation:   180%;
+    --glass-bg:           rgba(255, 255, 255, 0.70);
+    --glass-border:       rgba(255, 255, 255, 0.52);
+    --glass-shadow-outer: rgba(99, 102, 175, 0.14);
+    --glass-gloss-top:    rgba(255, 255, 255, 0.92);
+    --glass-gloss-left:   rgba(255, 255, 255, 0.55);
+
+    backdrop-filter:         blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    background:   var(--glass-bg)     !important;
+    border-color: var(--glass-border) !important;
+    box-shadow:
+      0 8px 32px 0     var(--glass-shadow-outer),
+      inset 0  1px 0 0 var(--glass-gloss-top),
+      inset 1px 0  0 0 var(--glass-gloss-left) !important;
   }
+
+  .dark .glass {
+    --glass-bg:           rgba(20, 20, 35, 0.65);
+    --glass-border:       rgba(255, 255, 255, 0.08);
+    --glass-shadow-outer: rgba(0, 0, 0, 0.38);
+    --glass-gloss-top:    rgba(255, 255, 255, 0.06);
+    --glass-gloss-left:   rgba(255, 255, 255, 0.03);
+  }
+
+  /* Dark mode shadow boosts */
+  .dark .shadow-xs  { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }
+  .dark .shadow-sm  { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4); }
+  .dark .shadow-md  { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4); }
+  .dark .shadow-lg  { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5); }
+  .dark .shadow-xl  { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5); }
+  .dark .shadow-2xl { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6); }
 }

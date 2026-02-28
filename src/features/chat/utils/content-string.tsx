@@ -40,15 +40,21 @@ export function getThinkingBlocks(
   const blocks: Array<{ heading: string; content: string }> = [];
 
   content
-    .filter((c: unknown): c is { type: "thinking"; thinking?: string; text?: string } => {
-      // Check if c is an object with type: "thinking"
-      if (typeof c !== "object" || c === null) return false;
-      if (!("type" in c)) return false;
-      return (c as { type?: unknown }).type === "thinking";
-    })
+    .filter(
+      (
+        c: unknown,
+      ): c is { type: "thinking"; thinking?: string; text?: string } => {
+        // Check if c is an object with type: "thinking"
+        if (typeof c !== "object" || c === null) return false;
+        if (!("type" in c)) return false;
+        return (c as { type?: unknown }).type === "thinking";
+      },
+    )
     .forEach((c) => {
       // The thinking content might be in 'thinking' or 'text' property
-      const thinkingText = c.thinking || c.text || "";
+      const cAny = c as Record<string, unknown>;
+      const thinkingText =
+        (cAny.thinking as string) || (cAny.text as string) || "";
 
       if (!thinkingText || thinkingText.trim().length === 0) {
         return;

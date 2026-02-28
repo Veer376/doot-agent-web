@@ -118,9 +118,7 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
  * @param hasApiKeys Whether the user has API keys set
  * @returns True if API keys are required but user doesn't have them
  */
-export function requiresApiKeysButNotSet(
-  hasApiKeys: boolean,
-): boolean {
+export function requiresApiKeysButNotSet(hasApiKeys: boolean): boolean {
   return config.features.requireApiKeys && !hasApiKeys;
 }
 
@@ -133,7 +131,8 @@ export function checkApiKeysWarning(hasApiKeys: boolean) {
     const baseMessage =
       "This agent requires all necessary API keys to be set in the Settings page under your Account.";
 
-    const customMessage = "You have not set api keys please do right now or leave."
+    const customMessage =
+      "You have not set api keys please do right now or leave.";
     const fullMessage = customMessage
       ? `${baseMessage}\n\n${customMessage}`
       : baseMessage;

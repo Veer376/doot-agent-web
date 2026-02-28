@@ -86,7 +86,7 @@ export function EnhancedLoader({
   return (
     <div
       className={cn(
-        "text-muted-foreground flex items-center gap-2 text-sm",
+        "flex items-center gap-2 text-sm text-foreground/60",
         className,
       )}
     >
@@ -100,3 +100,4 @@ export function EnhancedLoader({
     </div>
   );
 }
+

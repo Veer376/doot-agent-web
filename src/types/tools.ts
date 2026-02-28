@@ -4,7 +4,7 @@
  * Type-safe interfaces for AI tool calls and responses.
  */
 
-import type { ToolMessage } from '@langchain/langgraph-sdk';
+// ToolMessage import removed - ToolResponse is now standalone to avoid SDK type conflicts
 
 // Tool call status
 export type ToolCallStatus = 'pending' | 'success' | 'error';
@@ -22,11 +22,13 @@ export interface ToolCall {
     type?: 'tool_call';
 }
 
-// Tool response structure
-export interface ToolResponse extends ToolMessage {
+// Tool response structure (standalone, not extending ToolMessage to avoid SDK type conflicts)
+export interface ToolResponse {
     tool_call_id: string;
     content: string | Record<string, unknown>;
     type: 'tool';
+    id?: string;
+    name?: string;
 }
 
 // Step types for chain of thought

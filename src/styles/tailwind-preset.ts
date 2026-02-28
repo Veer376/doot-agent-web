@@ -68,13 +68,27 @@ export const designSystemPreset: Partial<Config> = {
        * (background, foreground, primary, etc.)
        */
       colors: {
-        // Brand colors - Your app's identity
+        // Brand colors — scale + purpose aliases
         brand: {
-          primary: 'var(--color-brand-primary)',
-          'primary-hover': 'var(--color-brand-primary-hover)',
-          'primary-light': 'var(--color-brand-primary-light)',
-          accent: 'var(--color-brand-accent)',
-          'accent-light': 'var(--color-brand-accent-light)',
+          // Raw scale stops
+          '50':  'var(--brand-50)',
+          '100': 'var(--brand-100)',
+          '500': 'var(--brand-500)',
+          '700': 'var(--brand-700)',
+          '900': 'var(--brand-900)',
+          navy:  'var(--brand-navy)',
+          // Purpose aliases (use these in components)
+          default: 'var(--brand-default)',
+          hover:   'var(--brand-hover)',
+          active:  'var(--brand-active)',
+          subtle:  'var(--brand-subtle)',
+          muted:   'var(--brand-muted)',
+          // Backward-compat aliases
+          primary: 'var(--brand-default)',
+          'primary-hover': 'var(--brand-hover)',
+          'primary-light': 'var(--brand-muted)',
+          accent: 'var(--brand-500)',
+          'accent-light': 'var(--brand-100)',
         },
 
         // Semantic colors - Meaning-based colors
@@ -227,6 +241,8 @@ export const designSystemPreset: Partial<Config> = {
         '2xl': designTokens.elevation['2xl'],
         inner: designTokens.elevation.inner,
         none: designTokens.elevation.none,
+        brand: 'var(--shadow-brand)',
+        'brand-focus': 'var(--shadow-brand-focus)',
       },
 
       /**

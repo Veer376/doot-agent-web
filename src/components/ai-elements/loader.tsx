@@ -15,7 +15,11 @@ const LoaderIcon = ({ size = 16 }: LoaderIconProps) => (
   >
     <title>Loader</title>
     <g clipPath="url(#clip0_2393_1490)">
-      <path d="M8 0V4" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M8 0V4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
       <path
         d="M8 16V12"
         opacity="0.5"
@@ -73,7 +77,11 @@ const LoaderIcon = ({ size = 16 }: LoaderIconProps) => (
     </g>
     <defs>
       <clipPath id="clip0_2393_1490">
-        <rect fill="white" height="16" width="16" />
+        <rect
+          fill="white"
+          height="16"
+          width="16"
+        />
       </clipPath>
     </defs>
   </svg>
@@ -87,7 +95,7 @@ export const Loader = ({ className, size = 16, ...props }: LoaderProps) => (
   <div
     className={cn(
       "inline-flex animate-spin items-center justify-center",
-      className
+      className,
     )}
     {...props}
   >

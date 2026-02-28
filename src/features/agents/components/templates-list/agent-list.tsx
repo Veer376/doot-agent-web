@@ -33,7 +33,7 @@ export function AgentList({ agents }: AgentListProps) {
     <div className="space-y-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="relative w-full max-w-sm">
-          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search agents..."
             className="pl-8"
@@ -51,7 +51,10 @@ export function AgentList({ agents }: AgentListProps) {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div data-radius="radius2" className="flex flex-col items-center justify-center p-6 py-12">
+        <div
+          data-radius="radius"
+          className="flex flex-col items-center justify-center p-6 py-12"
+        >
           {searchQuery ? (
             <EmptyState
               icon={SearchIcon}

@@ -37,7 +37,9 @@ export function AgentTour() {
       // Check if the target element exists
       const targetElement = document.querySelector("#agent-selector-segment");
       if (!targetElement) {
-        console.warn("AgentTour: Target element #agent-selector-segment not found");
+        console.warn(
+          "AgentTour: Target element #agent-selector-segment not found",
+        );
         return;
       }
 

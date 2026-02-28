@@ -349,7 +349,7 @@ function EditConfigurationDialogContent({ onClose }: { onClose: () => void }) {
                   placeholder="Search tools..."
                 />
                 <div
-                  data-radius="radius2"
+                  data-radius="radius"
                   className="flex-1 space-y-4 overflow-y-auto"
                 >
                   {agentId &&

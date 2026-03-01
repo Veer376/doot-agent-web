@@ -1,0 +1,124 @@
+/* use-electron */
+
+@layer utilities {
+  /* ── Layout ── */
+  .composer-max-width {
+    max-width: var(--composer-max-width);
+  }
+
+  /* ── Scrollbar hide ── */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Brand shadows ── */
+  .shadow-brand {
+    box-shadow: var(--shadow-brand);
+  }
+
+  .shadow-brand-focus {
+    box-shadow: var(--shadow-brand-focus);
+  }
+
+  /* ── Inner shadows ── */
+  .shadow-inner-right { box-shadow: inset -9px 0 6px -1px rgb(0 0 0 / 0.02); }
+  .shadow-inner-left  { box-shadow: inset  9px 0 6px -1px rgb(0 0 0 / 0.02); }
+
+  /* ── Gradients ── */
+  .bg-gradient-brand {
+    background: linear-gradient(
+      135deg,
+      var(--brand-default) 0%,
+      var(--brand-active) 100%
+    );
+  }
+
+  .bg-gradient-human-message {
+    background: linear-gradient(
+      to bottom left,
+      oklch(from var(--brand-active) l c h / 0.18) 0%,
+      oklch(from var(--brand-default) l c h / 0.06) 50%,
+      var(--card) 100%
+    );
+  }
+
+  /* ── Header ── */
+  .glass-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dark .glass-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Glass surface ──────────────────────────────────────────────────────────
+     Frosted-glass panel. Overrides bg-* and border-color so blur shows through.
+     Per-instance overrides via inline CSS vars:
+       style={{ '--glass-blur': '12px', '--glass-bg': 'rgba(255,255,255,0.5)' }}
+  ─────────────────────────────────────────────────────────────────────────── */
+  .glass {
+    --glass-blur:         20px;
+    --glass-saturation:   180%;
+    --glass-bg:           rgba(255, 255, 255, 0.70);
+    --glass-border:       rgba(255, 255, 255, 0.52);
+    --glass-shadow-outer: rgba(99, 102, 175, 0.14);
+    --glass-gloss-top:    rgba(255, 255, 255, 0.92);
+    --glass-gloss-left:   rgba(255, 255, 255, 0.55);
+
+    backdrop-filter:         blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    background:   var(--glass-bg)     !important;
+    border-color: var(--glass-border) !important;
+    box-shadow:
+      0 8px 32px 0     var(--glass-shadow-outer),
+      inset 0  1px 0 0 var(--glass-gloss-top),
+      inset 1px 0  0 0 var(--glass-gloss-left) !important;
+  }
+
+  .dark .glass {
+    --glass-bg:           rgba(20, 20, 35, 0.65);
+    --glass-border:       rgba(255, 255, 255, 0.08);
+    --glass-shadow-outer: rgba(0, 0, 0, 0.38);
+    --glass-gloss-top:    rgba(255, 255, 255, 0.06);
+    --glass-gloss-left:   rgba(255, 255, 255, 0.03);
+  }
+
+  /* ── Dark mode shadow boosts ──────────────────────────────────────────────
+     Tailwind's default shadows are too faint on dark surfaces.
+     These overrides pump up opacity for each size tier.
+  ─────────────────────────────────────────────────────────────────────────── */
+  .dark .shadow-xs  { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3); }
+
+  .dark .shadow-sm  {
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.4),
+      0 1px 2px -1px rgb(0 0 0 / 0.4);
+  }
+
+  .dark .shadow-md  {
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.4),
+      0 2px 4px -2px rgb(0 0 0 / 0.4);
+  }
+
+  .dark .shadow-lg  {
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.5),
+      0 4px 6px -4px rgb(0 0 0 / 0.5);
+  }
+
+  .dark .shadow-xl  {
+    box-shadow:
+      0 20px 25px -5px rgb(0 0 0 / 0.5),
+      0 8px 10px -6px rgb(0 0 0 / 0.5);
+  }
+
+  .dark .shadow-2xl { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6); }
+}

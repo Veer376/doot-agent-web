@@ -316,7 +316,7 @@ export function Thread() {
         stream.submit(
           { messages: [...toolMessages, newHumanMessage] },
           {
-            streamMode: ["values"],
+            streamMode: ["messages-tuple", "values"],
             optimisticValues: (prev) => ({
               ...prev,
               messages: [
@@ -480,7 +480,7 @@ export function Thread() {
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
-        streamMode: ["values"],
+        streamMode: ["messages-tuple", "values"],
         optimisticValues: (prev) => ({
           ...prev,
           messages: [
@@ -566,7 +566,7 @@ export function Thread() {
 
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
-      streamMode: ["values"],
+      streamMode: ["messages-tuple", "values"],
       config: {
         configurable: {
           ...getAgentConfig(effectiveAgentId),

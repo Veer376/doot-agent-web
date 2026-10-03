@@ -84,6 +84,7 @@ const getMessageStringContent = (
 function getFirstHumanMessageContent(thread: Thread) {
   try {
     if (
+      !thread.values ||
       Array.isArray(thread.values) ||
       !("messages" in thread.values) ||
       !thread.values.messages ||

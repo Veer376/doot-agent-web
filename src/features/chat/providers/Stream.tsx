@@ -81,6 +81,7 @@ const StreamSession = ({
     apiUrl: config.apiUrl,
     assistantId: effectiveAgentId,
     threadId: threadId ?? null,
+    reconnectOnMount: true,
     fetchStateHistory: { limit: 500 },
     initialValues: (cachedThreadState?.values as StateType) || null, // Show cached data instantly
     onCustomEvent: (event, options) => {

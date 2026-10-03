@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { AgentTour } from "@/features/tour/components/AgentTour";
 import { WelcomeModal } from "@/components/onboarding/welcome-modal";
+import { config } from "@/config";
 
 /**
  * The default page (/).
@@ -22,6 +23,7 @@ export default function ChatPage(): React.ReactNode {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("signin");
   const [welcomeDone, setWelcomeDone] = useState(() => {
+    if (config.features.localMode) return true;
     // Check if welcome was already seen on initial render
     if (typeof window !== "undefined") {
       return localStorage.getItem("dootagent-demo-seen") === "true";
@@ -117,7 +119,9 @@ export default function ChatPage(): React.ReactNode {
       />
 
       {/* Welcome video modal - shows first */}
-      <WelcomeModal onClose={handleWelcomeClose} />
+      {!config.features.localMode && (
+        <WelcomeModal onClose={handleWelcomeClose} />
+      )}
 
       {/* Tour for unauthenticated users - only after welcome is done */}
       {welcomeDone && <AgentTour />}

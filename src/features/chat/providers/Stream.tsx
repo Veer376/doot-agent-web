@@ -71,7 +71,11 @@ const StreamSession = ({
   // Use a stable assistantId for the stream connection
   // The actual agent/mode will be determined by the submit config, not the stream connection
   // This prevents stream reconnections when user changes agent/mode in UI
-  const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
+  const effectiveAgentId = config.features.localMode
+    ? agentId
+    : mode === "chat"
+      ? "chat_agent"
+      : agentId;
 
   const streamValue = useTypedStream({
     apiUrl: config.apiUrl,

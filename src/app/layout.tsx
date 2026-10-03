@@ -6,8 +6,8 @@ import { roobertMono } from "./fonts/roobert-mono";
 import { AppProviders } from "@/providers";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent",
+  description: "Local DootAgent interface",
 };
 
 export default function Layout({

@@ -27,6 +27,7 @@ interface AppConfig {
 
     // Feature Flags
     features: {
+        localMode: boolean;
         googleAuthDisabled: boolean;
         githubAuthDisabled: boolean;
         requireApiKeys: boolean;
@@ -45,6 +46,7 @@ function getConfig(): AppConfig {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const localMode = process.env.NEXT_PUBLIC_LOCAL_MODE === 'true';
 
     // Validate required variables
     if (!apiUrl) {
@@ -52,12 +54,12 @@ function getConfig(): AppConfig {
             'NEXT_PUBLIC_API_URL is required. Please set it in your .env file.'
         );
     }
-    if (!supabaseUrl) {
+    if (!localMode && !supabaseUrl) {
         throw new Error(
             'NEXT_PUBLIC_SUPABASE_URL is required. Please set it in your .env file.'
         );
     }
-    if (!supabaseAnonKey) {
+    if (!localMode && !supabaseAnonKey) {
         throw new Error(
             'NEXT_PUBLIC_SUPABASE_ANON_KEY is required. Please set it in your .env file.'
         );
@@ -80,13 +82,14 @@ function getConfig(): AppConfig {
 
         // Authentication
         supabase: {
-            url: supabaseUrl,
-            anonKey: supabaseAnonKey,
+            url: supabaseUrl || '',
+            anonKey: supabaseAnonKey || '',
         },
         siteUrl: process.env.NEXT_PUBLIC_SITE_URL || null,
 
         // Feature Flags
         features: {
+            localMode,
             googleAuthDisabled: process.env.NEXT_PUBLIC_GOOGLE_AUTH_DISABLED === 'true',
             githubAuthDisabled: process.env.NEXT_PUBLIC_GITHUB_AUTH_DISABLED === 'true',
             requireApiKeys: process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === 'true',

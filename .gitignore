@@ -31,7 +31,6 @@ next-env.d.ts
 yarn.lock
 .gitignore
 package-lock.json
-pnpm-lock.yaml
 apps/docs/component_tree.md
 *.md
 release

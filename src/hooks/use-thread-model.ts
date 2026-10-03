@@ -20,7 +20,7 @@ export function useThreadModel() {
 
   // Get model from localStorage on mount
   const [selectedModel, setSelectedModel] = useState<Model | null>(() => {
-    if (!threadId) return null;
+    if (!threadId || typeof window === "undefined") return null;
 
     try {
       const cached = localStorage.getItem(`thread-model-${threadId}`);

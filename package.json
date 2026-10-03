@@ -54,7 +54,7 @@
     "framer-motion": "^12.7.3",
     "geist": "^1.5.1",
     "hugeicons-react": "^0.4.0",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.2.1",
     "katex": "latest",
     "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
@@ -101,7 +101,7 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
     "next": "^15.5.7",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.28",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwind-scrollbar": "3.1.0",
@@ -113,6 +113,12 @@
     "react-is": "^19.0.0-rc-69d4b800-20241021",
     "tailwind-scrollbar": {
       "tailwindcss": "^4.0.13"
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.28",
+      "prismjs": "1.30.0"
     }
   }
 }

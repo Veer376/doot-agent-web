@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { ensureToolCallsHaveResponses } from "@/features/chat/utils/tool-responses";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/constants";
 import { useConfigStore } from "../../hooks/use-config-store";
+import { config } from "@/config";
 import { useAuthSession } from "@/providers/Auth";
 import { requiresApiKeysButNotSet } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -470,7 +471,11 @@ export function Thread() {
     // Determine which agent config to use based on current mode
     // This MUST match the effectiveAgentId used in the stream connection
     // to ensure the submit goes to the same assistant the stream is connected to
-    const effectiveAgentId = mode === "chat" ? "chat_agent" : agentId;
+    const effectiveAgentId = config.features.localMode
+      ? agentId
+      : mode === "chat"
+        ? "chat_agent"
+        : agentId;
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },

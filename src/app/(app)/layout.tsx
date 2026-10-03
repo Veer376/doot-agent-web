@@ -5,8 +5,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
 
 export const metadata: Metadata = {
-  title: "Orbit Agent",
-  description: "Handoff complexity to Orbit",
+  title: "DootAgent",
+  description: "Local DootAgent interface",
 };
 
 // Force dynamic rendering to avoid static generation issues

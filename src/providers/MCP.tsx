@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import useMCP from "../hooks/use-mcp";
+import { config } from "@/config";
 
 type MCPContextType = ReturnType<typeof useMCP> & { loading: boolean };
 
@@ -21,6 +22,7 @@ export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (config.features.localMode) return;
     if (mcpState.tools.length || firstRequestMade.current) return;
 
     firstRequestMade.current = true;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { SupabaseAuthProvider } from "@/lib/auth/supabase";
+import { LocalAuthProvider } from "@/lib/auth/local";
 import {
   AuthProvider as CustomAuthProvider,
   Session,
@@ -38,9 +39,11 @@ const getRedirectUrl = () => {
   return undefined;
 };
 
-const authProvider = new SupabaseAuthProvider({
-  redirectUrl: getRedirectUrl(),
-});
+const authProvider: CustomAuthProvider = config.features.localMode
+  ? new LocalAuthProvider()
+  : new SupabaseAuthProvider({
+      redirectUrl: getRedirectUrl(),
+    });
 
 /**
  * AuthProvider: Composed authentication provider

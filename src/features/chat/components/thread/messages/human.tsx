@@ -33,8 +33,7 @@ function EditableContent({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      data-radius="radius"
-      className="bg-card/50 dark:bg-card/30 shadow-brand focus-visible:shadow-brand-focus min-h-11 resize-none border-border px-4 py-3 backdrop-blur-sm transition-[color,box-shadow,border-color] focus-visible:ring-0"
+      className="bg-muted border-border min-h-11 resize-none rounded-3xl px-5 py-3 text-base leading-7 shadow-none focus-visible:ring-2"
     />
   );
 }
@@ -103,11 +102,11 @@ export function HumanMessage({
   return (
     <div
       className={cn(
-        "group ml-auto flex items-center gap-2",
+        "group ml-auto flex min-w-0 max-w-[90%] items-center gap-2 sm:max-w-[80%]",
         isEditing && "w-full max-w-xl",
       )}
     >
-      <div className={cn("flex flex-col gap-2", isEditing && "w-full")}>
+      <div className={cn("flex min-w-0 flex-col gap-1", isEditing && "w-full")}>
         {isEditing ? (
           <EditableContent
             value={value}
@@ -141,11 +140,10 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <div className="relative ml-auto w-fit max-w-xl">
+              <div className="relative ml-auto min-w-0 max-w-full">
                 <p
-                  data-radius="radius"
                   className={cn(
-                    "bg-gradient-human-message whitespace-pre-wrap px-4 py-2 text-left transition-all duration-200",
+                    "bg-muted rounded-3xl px-5 py-3 text-left text-base leading-7 whitespace-pre-wrap [overflow-wrap:anywhere] transition-all duration-200",
                     !isExpanded &&
                       needsExpansion &&
                       "max-h-[120px] overflow-hidden",
@@ -156,8 +154,7 @@ export function HumanMessage({
                 </p>
                 {!isExpanded && needsExpansion && (
                   <div
-                    data-radius="radius"
-                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 rounded-b-[var(--radius-2)] bg-gradient-to-t from-muted to-transparent"
+                    className="pointer-events-none absolute right-0 bottom-0 left-0 h-12 rounded-b-3xl bg-gradient-to-t from-muted to-transparent"
                   />
                 )}
                 {!isExpanded && needsExpansion && (

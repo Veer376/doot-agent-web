@@ -50,6 +50,7 @@ import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
 import { AVAILABLE_MODELS, type Model } from "@/types/model";
+import { DOOT_QUOTE_SELECTION_EVENT } from "./messages/response-selection-actions";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -150,6 +151,43 @@ export function Thread() {
   const { agentId, mode, setSelectedAgent, setMode } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    const handleQuoteSelection = (event: Event) => {
+      const text = (
+        event as CustomEvent<{ text?: string }>
+      ).detail?.text?.trim();
+      if (!text) return;
+
+      const quoted = text
+        .split("\n")
+        .map((line) => `> ${line}`)
+        .join("\n");
+
+      setInputValue((current) =>
+        current.trim()
+          ? `${current.trimEnd()}\n\n${quoted}\n\n`
+          : `${quoted}\n\n`,
+      );
+
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>('[data-doot-composer-editor="true"]')
+          ?.focus({ preventScroll: true });
+      });
+    };
+
+    window.addEventListener(
+      DOOT_QUOTE_SELECTION_EVENT,
+      handleQuoteSelection as EventListener,
+    );
+    return () => {
+      window.removeEventListener(
+        DOOT_QUOTE_SELECTION_EVENT,
+        handleQuoteSelection as EventListener,
+      );
+    };
+  }, []);
 
   // Auth state for pending message flow
   const { isAuthenticated } = useAuthSession();
@@ -603,12 +641,13 @@ export function Thread() {
         <StickyToBottomContent
           className={cn(
             "absolute inset-0 overflow-y-auto px-4 transition-all duration-500 ease-out",
-            !hasMessages &&
-              !threadId &&
-              "mt-[25vh] flex flex-col items-stretch",
+            !hasMessages && !threadId && "flex flex-col items-stretch py-8",
             (hasMessages || threadId) && "grid grid-rows-[1fr_auto]",
           )}
-          contentClassName="pt-8 pb-12 max-w-3xl mx-auto flex flex-col gap-4 w-full"
+          contentClassName={cn(
+            "composer-max-width mx-auto flex w-full min-w-0 flex-col gap-8",
+            hasMessages || threadId ? "pt-8 pb-12" : "empty:hidden",
+          )}
           content={
             <>
               {!hasMessages && threadId && isLoadingThreadState ? (
@@ -704,10 +743,10 @@ export function Thread() {
           footer={
             <div
               className={cn(
-                "sticky bottom-0 z-10 flex flex-col items-center",
+                "z-10 flex flex-col items-center",
                 hasMessages || threadId
-                  ? "to-background bg-gradient-to-b from-transparent from-0% to-40%"
-                  : "bg-transparent",
+                  ? "to-background sticky bottom-0 bg-gradient-to-b from-transparent from-0% to-40%"
+                  : "my-auto shrink-0 bg-transparent",
               )}
             >
               {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
@@ -715,10 +754,10 @@ export function Thread() {
 
               {/* Title section with independent spacing */}
               {!hasMessages && !threadId && (
-                <div className="mb-10 flex items-center gap-3">
-                  <DootLogoIcon size={32} />
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    What's your boring task for today ?
+                <div className="mb-7 flex flex-col items-center gap-3 text-center">
+                  <DootLogoIcon size={40} />
+                  <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">
+                    What can Doot help with?
                   </h1>
                 </div>
               )}
@@ -738,8 +777,9 @@ export function Thread() {
                   )}
                 >
                   <Composer
-                    className={cn(!hasMessages && !threadId && "glass")}
-                    isGlass={!hasMessages && !threadId}
+                    className={cn(
+                      !hasMessages && !threadId && "doot-new-chat-composer",
+                    )}
                     forceExpanded={!hasMessages && !threadId}
                     value={inputValue}
                     onChange={setInputValue}

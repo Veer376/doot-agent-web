@@ -24,16 +24,19 @@ export function SiteHeader() {
   const isHovered = hovered || railHovered;
 
   return (
-    <SidebarHeader>
+    <SidebarHeader className="pt-3 pb-1">
       <SidebarMenu>
         <SidebarMenuItem>
           {/* Desktop: logo swaps to sidebar toggle icon on hover */}
           <SidebarMenuButton
             size="default"
+            aria-label={
+              state === "expanded" ? "Collapse sidebar" : "Expand sidebar"
+            }
             className={cn("flex h-8 items-center gap-2 p-2", "hidden md:flex")}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            onClick={() => isHovered && toggleSidebar()}
+            onClick={toggleSidebar}
           >
             {isHovered ? (
               state === "expanded" ? (
@@ -56,6 +59,8 @@ export function SiteHeader() {
             className="flex h-8 items-center gap-2 p-2 md:hidden"
             onClick={toggleSidebar}
           >
+            <DootLogoIcon size={24} />
+            <span className="flex-1 text-left font-semibold">DootAgent</span>
             <Menu11Icon size="sm" />
             <span className="sr-only">Toggle Sidebar</span>
           </SidebarMenuButton>

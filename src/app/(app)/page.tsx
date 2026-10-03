@@ -2,8 +2,6 @@
 
 import ChatInterface from "@/features/chat";
 import { Toaster } from "@/components/ui/sonner";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, GithubIcon } from "@/components/icons";
 import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -65,48 +63,18 @@ export default function ChatPage(): React.ReactNode {
   return (
     <>
       <Toaster />
-      {/* Header: left (mobile-only) sidebar trigger + shared thread details area (all breakpoints) */}
-      <header className="flex shrink-0 items-center gap-2 px-4 py-2 transition-[width,height] ease-linear">
-        {/* Mobile-only: sidebar toggle (only show when authenticated) */}
-        {isAuthenticated && (
-          <div className="flex items-center gap-2 md:hidden">
-            <SidebarTrigger icon={<Menu11Icon />} />
-          </div>
+      <header className="flex h-14 shrink-0 items-center justify-between gap-3 pr-4 pl-14 md:px-5">
+        <span className="text-foreground/80 truncate text-base font-medium">
+          DootAgent
+        </span>
+        {!isAuthenticated && !isLoading && (
+          <Button
+            size="sm"
+            onClick={handleOpenSignUp}
+          >
+            Try Now!
+          </Button>
         )}
-        {/* Shared (mobile + desktop): thread details/title/actions placeholder */}
-        <div className="flex min-w-0 flex-1 items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            {/* TODO(thread): avatar/badge/typing indicator slot */}
-            <div className="text-foreground/90 truncate text-sm font-medium">
-              {/* TODO(thread): thread title */}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 pt-2 pr-4">
-            {/* GitHub link - always visible */}
-            <a
-              href="https://github.com/Veer376/doot-agent-lab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              title="View on GitHub"
-            >
-              <GithubIcon className="size-5" />
-            </a>
-            {/* Show auth buttons when not authenticated */}
-            {!isAuthenticated && !isLoading ? (
-              <>
-                <Button
-                  size="sm"
-                  onClick={handleOpenSignUp}
-                >
-                  Try Now!
-                </Button>
-              </>
-            ) : (
-              <>{/* TODO(thread): actions (mute, pin, more) */}</>
-            )}
-          </div>
-        </div>
       </header>
 
       <ChatInterface />

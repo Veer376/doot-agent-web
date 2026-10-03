@@ -370,7 +370,7 @@ export function Composer({
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
       <div
         className={cn(
-          "group/composer shadow-brand focus-within:shadow-brand-focus border-border bg-card text-foreground w-full overflow-hidden border transition-all duration-300 ease-out",
+          "group/composer border-border bg-card text-foreground focus-within:border-muted-foreground/40 w-full overflow-hidden border shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:shadow-md",
           className,
         )}
         data-expanded={isExpanded}
@@ -380,7 +380,7 @@ export function Composer({
           onSubmit={handleFormSubmit}
           className={cn(
             "grid w-full transition-all duration-300 ease-out",
-            "grid-cols-[auto_1fr_auto]",
+            "grid-cols-[auto_minmax(0,1fr)_auto]",
             // Collapsed: [leading | primary | trailing]
             // Expanded: primary full width on top, then [leading | . | trailing]
             "[grid-template-areas:'leading_primary_trailing']",
@@ -406,13 +406,14 @@ export function Composer({
                   >
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         data-radius="composer-radius"
-                        className="border-border flex h-9 w-9 cursor-pointer items-center justify-center border bg-transparent p-0 text-[var(--brand-muted)] transition-colors hover:bg-[var(--brand-subtle)] hover:text-[var(--brand-default)]"
+                        className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center bg-transparent p-0 transition-colors"
                         type="button"
+                        aria-label="Add attachments or connectors"
                       >
-                        <PlusIcon size={32} />
+                        <PlusIcon size={24} />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -459,7 +460,7 @@ export function Composer({
           {/* Primary Area - Editor + Attachments + Connected Apps */}
           <div
             className={cn(
-              "flex w-full transition-all duration-300 [grid-area:primary]",
+              "flex w-full min-w-0 transition-all duration-300 [grid-area:primary]",
               "group-data-[expanded=false]/composer:items-center",
               "group-data-[expanded=true]/composer:mb-0.5 group-data-[expanded=true]/composer:items-start",
               hasAttachments ? "flex-col gap-2" : "flex-row items-center",
@@ -490,9 +491,9 @@ export function Composer({
               {!hasMessage && !hasAttachments && (
                 <span
                   className={cn(
-                    "text-foreground pointer-events-none absolute left-2 z-10 text-sm opacity-35 select-none",
+                    "text-muted-foreground pointer-events-none absolute left-3 z-10 text-base select-none",
                     "group-data-[expanded=false]/composer:top-1/2 group-data-[expanded=false]/composer:-translate-y-1/2",
-                    "group-data-[expanded=true]/composer:top-1.5",
+                    "group-data-[expanded=true]/composer:top-3",
                   )}
                 >
                   {placeholder}
@@ -509,19 +510,21 @@ export function Composer({
 
               <div
                 ref={editorRef}
+                data-doot-composer-editor="true"
                 contentEditable={!disabled}
                 suppressContentEditableWarning
                 role="textbox"
                 aria-multiline="true"
+                aria-label={placeholder}
                 aria-placeholder={placeholder}
                 onInput={handleInput}
                 onPaste={handlePasteEvent}
                 onKeyDown={handleKeyDownEvent}
                 className={cn(
-                  "w-full overflow-y-auto text-base break-words whitespace-pre-wrap outline-none",
+                  "w-full overflow-y-auto text-base leading-6 break-words whitespace-pre-wrap outline-none",
                   "disabled:text-muted-foreground disabled:cursor-not-allowed",
-                  "group-data-[expanded=false]/composer:min-h-0 group-data-[expanded=false]/composer:p-2",
-                  "group-data-[expanded=true]/composer:max-h-40 group-data-[expanded=true]/composer:min-h-[32px] group-data-[expanded=true]/composer:px-2 group-data-[expanded=true]/composer:py-1",
+                  "group-data-[expanded=false]/composer:min-h-0 group-data-[expanded=false]/composer:px-3 group-data-[expanded=false]/composer:py-2",
+                  "group-data-[expanded=true]/composer:max-h-40 group-data-[expanded=true]/composer:min-h-[56px] group-data-[expanded=true]/composer:px-3 group-data-[expanded=true]/composer:py-3",
                 )}
               />
 
@@ -579,14 +582,14 @@ export function Composer({
               </button>
             )}
 
-            <div className="relative h-9 w-9">
+            <div className="relative h-9 w-9 shrink-0">
               {isLoading ? (
                 <button
                   type="button"
                   onClick={onCancel}
                   aria-label="Cancel"
                   data-radius="composer-radius"
-                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center bg-black text-white transition duration-200 hover:bg-black/90 focus-visible:ring-2 focus-visible:outline-none dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  className="bg-foreground text-background focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center transition duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none"
                 >
                   <StopIcon />
                 </button>
@@ -594,8 +597,9 @@ export function Composer({
                 <button
                   disabled={isSendDisabled}
                   type="submit"
+                  aria-label="Send message"
                   data-radius="composer-radius"
-                  className="focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center bg-[var(--brand-default)] text-[var(--brand-on-brand)] transition duration-200 hover:bg-[var(--brand-hover)] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[var(--brand-subtle)] disabled:text-[var(--brand-default)] disabled:opacity-60"
+                  className="bg-foreground text-background focus-visible:ring-ring/50 disabled:bg-muted disabled:text-muted-foreground absolute inset-0 z-50 flex items-center justify-center transition duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -607,7 +611,7 @@ export function Composer({
                     strokeWidth="2.3"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="h-4 w-4 transition-all duration-500 ease-linear"
+                    className="h-5 w-5 -rotate-90 transition-all duration-500 ease-linear"
                   >
                     <path
                       stroke="none"

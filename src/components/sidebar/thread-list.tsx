@@ -687,19 +687,19 @@ export function ThreadList() {
             {title}
             {isPinned && (
               <PinIcon
-                className="flex-shrink-0 text-muted-foreground"
+                className="text-muted-foreground flex-shrink-0"
                 size="xs"
               />
             )}
             {isActive && (
-              <span className="flex-shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+              <span className="bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5 text-xs">
                 Current
               </span>
             )}
           </div>
           {/* Agent Name - only shown for agent mode */}
           {agentName && (
-            <div className="truncate text-xs text-muted-foreground">
+            <div className="text-muted-foreground truncate text-xs">
               {agentName}
             </div>
           )}
@@ -720,8 +720,8 @@ export function ThreadList() {
           <DialogDescription className="sr-only">
             Browse and search all your conversation threads
           </DialogDescription>
-          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pb-3 pt-4">
-            <SearchIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          <div className="flex flex-shrink-0 items-center gap-3 border-b px-4 pt-4 pb-3">
+            <SearchIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
             <Input
               ref={searchInputRef}
               placeholder="Search threads..."
@@ -731,7 +731,7 @@ export function ThreadList() {
               className="flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
             />
             <DialogClose asChild>
-              <button className="flex-shrink-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <button className="ring-offset-background focus:ring-ring flex-shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -791,7 +791,7 @@ export function ThreadList() {
                 {/* New Thread Button */}
                 <button
                   onClick={handleCreateNewThread}
-                  className="mb-4 w-full px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
+                  className="hover:bg-accent/50 mb-4 w-full px-3 py-2.5 text-left transition-colors"
                   data-radius="small-radius"
                 >
                   <div className="flex flex-col gap-1">
@@ -805,7 +805,7 @@ export function ThreadList() {
                 {/* Today */}
                 {groupedThreads.today.length > 0 && (
                   <div className="mb-4">
-                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Today
                     </div>
                     <div className="space-y-1">
@@ -822,7 +822,7 @@ export function ThreadList() {
                 {/* Yesterday */}
                 {groupedThreads.yesterday.length > 0 && (
                   <div className="mb-4">
-                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Yesterday
                     </div>
                     <div className="space-y-1">
@@ -839,7 +839,7 @@ export function ThreadList() {
                 {/* Previous 7 Days */}
                 {groupedThreads.previous7days.length > 0 && (
                   <div className="mb-4">
-                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Previous 7 Days
                     </div>
                     <div className="space-y-1">
@@ -856,7 +856,7 @@ export function ThreadList() {
                 {/* Older */}
                 {groupedThreads.older.length > 0 && (
                   <div>
-                    <div className="mb-2 px-3 text-xs font-semibold text-muted-foreground">
+                    <div className="text-muted-foreground mb-2 px-3 text-xs font-semibold">
                       Older
                     </div>
                     <div className="space-y-1">
@@ -896,25 +896,24 @@ export function ThreadList() {
       {/* Thread List in Sidebar - Render when sidebar is expanded OR on mobile */}
       {state === "collapsed" && !isMobile ? null : (
         <SidebarGroup>
-          <SidebarGroupLabel>Threads</SidebarGroupLabel>
-          <SidebarMenu>
+          <SidebarGroupLabel className="text-muted-foreground px-2 text-xs font-normal">
+            Your chats
+          </SidebarGroupLabel>
+          <SidebarMenu className="gap-0.5">
             {isLoading && (
               <>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <SidebarMenuItem key={`skeleton-${index}`}>
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-9 w-full" />
                   </SidebarMenuItem>
                 ))}
               </>
             )}
 
             {!isLoading && sortedThreads.length === 0 && (
-              <EmptyState
-                icon={MessageSquareIcon}
-                title="No threads yet"
-                description="Create your first thread to start a conversation with the agent"
-                className="py-12"
-              />
+              <li className="text-muted-foreground px-2 py-3 text-xs">
+                Your conversations will appear here.
+              </li>
             )}
 
             {!isLoading &&
@@ -935,7 +934,7 @@ export function ThreadList() {
                           onChange={(e) => setEditingThreadName(e.target.value)}
                           onKeyDown={handleKeyDown}
                           onBlur={handleSaveEdit}
-                          className="placeholder:text-sidebar-foreground/60 h-9 border border-border bg-card text-sm text-sidebar-foreground transition-all focus-visible:border-primary/30 focus-visible:ring-0 focus-visible:ring-transparent"
+                          className="placeholder:text-sidebar-foreground/60 border-border bg-card text-sidebar-foreground focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
                           data-radius="radius"
                           placeholder="Thread name..."
                         />
@@ -945,16 +944,21 @@ export function ThreadList() {
                         <SidebarMenuButton
                           onClick={() => handleSelectThread(thread.thread_id)}
                           isActive={isActive}
-                          className="!h-auto !py-2 px-3"
+                          className="h-auto min-h-9 py-2 pr-10 pl-2 data-[active=true]:font-normal"
+                          title={agentName ? `${title} · ${agentName}` : title}
                         >
-                          <div className="gap-0.3 flex min-w-0 flex-col">
+                          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                            {isPinned && (
+                              <PinIcon
+                                size="xs"
+                                className="text-muted-foreground shrink-0"
+                              />
+                            )}
                             <span className="truncate text-sm leading-tight">
                               {title}
                             </span>
                             {agentName && (
-                              <span className="truncate text-xs leading-tight text-muted-foreground">
-                                {agentName}
-                              </span>
+                              <span className="sr-only"> · {agentName}</span>
                             )}
                           </div>
                         </SidebarMenuButton>
@@ -965,25 +969,10 @@ export function ThreadList() {
                                 e.preventDefault();
                                 e.stopPropagation();
                               }}
-                              showOnHover={!isPinned}
-                              className={cn(
-                                "!right-3 !top-1/2 !h-8 !w-8 !-translate-y-1/2 data-[state=open]:opacity-100",
-                                isPinned && "md:opacity-100",
-                              )}
+                              showOnHover
+                              className="!top-1/2 !right-1 !h-7 !w-7 !-translate-y-1/2 data-[state=open]:opacity-100 [@media(hover:none)]:opacity-100"
                             >
-                              <span className="group-hover/menu-item:hidden">
-                                {isPinned ? (
-                                  <PinIcon
-                                    className="text-muted-foreground"
-                                    size="xs"
-                                  />
-                                ) : (
-                                  <MoreVerticalMenuIcon size={5} />
-                                )}
-                              </span>
-                              <span className="hidden group-hover/menu-item:block">
-                                <MoreVerticalMenuIcon />
-                              </span>
+                              <MoreVerticalMenuIcon size="sm" />
                               <span className="sr-only">More options</span>
                             </SidebarMenuAction>
                           </DropdownMenuTrigger>
@@ -1096,7 +1085,7 @@ export function ThreadList() {
               <>
                 {Array.from({ length: 3 }).map((_, index) => (
                   <SidebarMenuItem key={`pagination-skeleton-${index}`}>
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-9 w-full" />
                   </SidebarMenuItem>
                 ))}
               </>

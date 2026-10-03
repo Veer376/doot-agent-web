@@ -37,6 +37,7 @@ export function NavMain({
                 <SidebarMenuButton
                   tooltip={item.title}
                   onClick={onSearchClick}
+                  className="h-9 gap-3 font-medium"
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
@@ -47,21 +48,27 @@ export function NavMain({
 
           // Handle navigation items
           return (
-            <Link
-              href={item.url || "/"}
+            <SidebarMenuItem
               key={`${item.title}-${index}`}
+              className={item.url === "/agents" ? "mt-3" : undefined}
             >
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  // Treat "/" as an action link: don't mark it active to avoid persistent highlight
-                  isActive={item.url !== "/" && pathname === item.url}
-                >
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                className={
+                  item.url === "/agents"
+                    ? "text-muted-foreground h-9 gap-3"
+                    : "h-9 gap-3 font-medium"
+                }
+                // Treat "/" as an action link: don't mark it active to avoid persistent highlight
+                isActive={item.url !== "/" && pathname === item.url}
+              >
+                <Link href={item.url || "/"}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </Link>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           );
         })}
       </SidebarMenu>

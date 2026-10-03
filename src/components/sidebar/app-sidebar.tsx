@@ -19,12 +19,12 @@ import { SiteHeader } from "./sidebar-header";
 const data = {
   navMain: [
     {
-      title: "New Thread",
+      title: "New chat",
       url: "/",
       icon: NewThreadIcon,
     },
     {
-      title: "Search Threads",
+      title: "Search chats",
       // Special marker to indicate this is an action, not a navigation link
       action: "search",
       icon: SearchIcon,
@@ -44,7 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       <SiteHeader />
-      <SidebarContent>
+      <SidebarContent className="gap-1">
         <NavMain
           items={data.navMain}
           onSearchClick={() => {
@@ -84,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <NavFooter />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail className="hover:after:bg-sidebar-border after:bg-transparent" />
     </Sidebar>
   );
 }

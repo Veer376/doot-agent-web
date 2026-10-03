@@ -12,12 +12,12 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="doot-shell">
         {/* Mobile-only floating hamburger — always visible outside the drawer */}
-        <div className="fixed left-3 top-3 z-50 md:hidden">
+        <div className="absolute top-3 left-3 z-30 md:hidden">
           <SidebarTrigger
             icon={<Menu11Icon size={18} />}
-            className="bg-background/80 size-8 rounded-full shadow-sm backdrop-blur-sm"
+            className="bg-background size-8 rounded-lg"
           />
         </div>
         {children}

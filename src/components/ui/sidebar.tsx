@@ -33,8 +33,8 @@ import {
  */
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_MOBILE = "18rem";
+const SIDEBAR_WIDTH = "272px";
+const SIDEBAR_WIDTH_MOBILE = "min(272px, calc(100vw - 48px))";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
@@ -177,7 +177,7 @@ function SidebarProvider({
             } as React.CSSProperties
           }
           className={cn(
-            "group/sidebar-wrapper flex h-screen w-full overflow-hidden",
+            "group/sidebar-wrapper flex h-dvh w-full overflow-hidden",
             className,
           )}
           {...props}

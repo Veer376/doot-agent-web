@@ -20,6 +20,7 @@ import { ToolsIcon } from "@/components/icons";
 import React, { useMemo } from "react";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ToolItem, type ToolState } from "./tool-item";
+import { ResponseSelectionActions } from "./response-selection-actions";
 
 /**
  * Convert ChainStep status to ToolState
@@ -208,8 +209,11 @@ export const AITurn = React.memo(function AITurn({
   };
 
   return (
-    <div className="group mr-auto flex items-start gap-2">
-      <div className="flex flex-col gap-1">
+    <ResponseSelectionActions
+      disabled={isLoading}
+      className="group mr-auto flex w-full min-w-0 items-start gap-2"
+    >
+      <div className="flex w-full min-w-0 flex-col gap-2">
         {/* Render all blocks in order */}
         {chainData.renderBlocks.map((block, blockIdx) => {
           if (block.type === "thinking-group") {
@@ -305,7 +309,7 @@ export const AITurn = React.memo(function AITurn({
             return (
               <motion.div
                 key={`content-${blockIdx}`}
-                className="py-1 text-[0.95em]"
+                className="min-w-0 py-1 text-base leading-7 [overflow-wrap:anywhere]"
                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
                 animate={{
                   opacity: 1,
@@ -407,6 +411,6 @@ export const AITurn = React.memo(function AITurn({
           </div>
         )}
       </div>
-    </div>
+    </ResponseSelectionActions>
   );
 });

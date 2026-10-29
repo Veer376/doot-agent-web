@@ -12,6 +12,8 @@ The matching [Doot backend](https://github.com/Veer376/doot-agent) contains the 
 
 The release preparation also verifies a separate ticket-triage workflow with a live model: tool calls → review proposed report → approve → persisted result after reload.
 
+[Watch approval/resume verification](public/showcase/approval-resume.mp4). Two screen captures of the same real thread are joined; the pause between captures is omitted. This is a live Gemini run on synthetic ticket data, not a simulated UI.
+
 ![Report approval](public/showcase/demo-approval.png)
 
 ## Run

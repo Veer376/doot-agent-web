@@ -6,7 +6,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   CheckmarkCircleIcon,
-  GitBranchIcon,
+  EditIcon,
   type IconSize,
 } from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
@@ -87,32 +87,41 @@ export function BranchSwitcher({
   const canGoNext = index < branchOptions.length - 1;
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className="doot-branch-switcher flex items-center"
+      role="group"
+      aria-label="Response branch navigation"
+    >
       <Button
         variant="ghost"
         size="icon"
-        className="size-6 p-1"
+        className="doot-branch-action p-1"
         onClick={() => {
           const prevBranch = branchOptions[index - 1];
           if (!prevBranch) return;
           onSelect(prevBranch);
         }}
+        aria-label="Previous branch"
         disabled={isLoading || !canGoPrev}
       >
         <ArrowLeftIcon size={DEFAULT_ICON_SIZE} />
       </Button>
-      <span className="text-sm">
+      <span
+        className="doot-branch-counter"
+        aria-live="polite"
+      >
         {index + 1} / {branchOptions.length}
       </span>
       <Button
         variant="ghost"
         size="icon"
-        className="size-6 p-1"
+        className="doot-branch-action p-1"
         onClick={() => {
           const nextBranch = branchOptions[index + 1];
           if (!nextBranch) return;
           onSelect(nextBranch);
         }}
+        aria-label="Next branch"
         disabled={isLoading || !canGoNext}
       >
         <ArrowRightIcon size={DEFAULT_ICON_SIZE} />
@@ -213,13 +222,13 @@ export function CommandBar({
       {showEdit && (
         <TooltipIconButton
           disabled={isLoading}
-          tooltip="Branch"
+          tooltip="Edit checkpoint"
           variant="ghost"
           onClick={() => {
             setIsEditing?.(true);
           }}
         >
-          <GitBranchIcon size={DEFAULT_ICON_SIZE} />
+          <EditIcon size={DEFAULT_ICON_SIZE} />
         </TooltipIconButton>
       )}
     </div>

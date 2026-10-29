@@ -1,0 +1,1476 @@
+/* Doot chat UI system.
+ * Values are Doot-owned semantic tokens derived from the live UI study in
+ * research/chatgpt-ui-2026-10-04/. Keep product behavior in React; keep
+ * visual decisions here.
+ */
+
+:root,
+:root[data-theme] {
+  --doot-canvas: #fcfcfc;
+  --doot-surface: #ffffff;
+  --doot-surface-raised: #ffffff;
+  --doot-surface-soft: #f3f3f3;
+  --doot-sidebar: #f9f9f9;
+  --doot-hover: #f3f3f3;
+  --doot-selected: #ececec;
+  --doot-disabled: #f7f7f7;
+
+  --doot-text: #0d0d0d;
+  --doot-text-secondary: #5d5d5d;
+  --doot-text-tertiary: #8f8f8f;
+  --doot-text-disabled: #b4b4b4;
+
+  --doot-border: rgba(13, 13, 13, 0.1);
+  --doot-border-subtle: rgba(13, 13, 13, 0.065);
+  --doot-border-strong: rgba(13, 13, 13, 0.18);
+  --doot-accent: #0d0d0d;
+  --doot-on-accent: #ffffff;
+  --doot-selection: rgba(124, 98, 255, 0.18);
+
+  --doot-danger: #e02e2a;
+  --doot-warning: #916f00;
+  --doot-success: #008f3c;
+  --doot-info: #0169cc;
+  --doot-annotation-accent: #3b82f6;
+  --doot-annotation-accent-hover: #2563eb;
+  --doot-annotation-on-accent: #ffffff;
+
+  --doot-space-0-5: 0.125rem;
+  --doot-space-1: 0.25rem;
+  --doot-space-1-5: 0.375rem;
+  --doot-space-2: 0.5rem;
+  --doot-space-2-5: 0.625rem;
+  --doot-space-3: 0.75rem;
+  --doot-space-3-5: 0.875rem;
+  --doot-space-4: 1rem;
+  --doot-space-5: 1.25rem;
+  --doot-space-6: 1.5rem;
+  --doot-space-7: 1.75rem;
+  --doot-space-8: 2rem;
+  --doot-space-10: 2.5rem;
+  --doot-space-12: 3rem;
+
+  /* Doot semantic radius aliases. The whole product stays in the 5–16px range
+     except geometry that is intentionally circular. */
+  --doot-radius-xs: var(--radius-inline);
+  --doot-radius-sm: var(--radius-control);
+  --doot-radius-control: var(--radius-control);
+  --doot-radius-panel: var(--radius-surface);
+  --doot-radius-card: var(--radius-surface);
+  --doot-radius-message: var(--radius-message);
+  --doot-radius-composer: var(--radius-composer);
+  --doot-radius-pill: var(--radius-round);
+
+  --doot-shadow-small: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --doot-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --doot-shadow-composer:
+    0 0 0 1px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04),
+    0 4px 80px 8px rgba(0, 0, 0, 0.024);
+  --doot-shadow-floating:
+    0 8px 28px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  --doot-font-ui:
+    -apple-system-body, ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif,
+    "Segoe UI Emoji", "Segoe UI Symbol";
+  --doot-type-micro: 0.6875rem;
+  --doot-type-fine: 0.625rem;
+  --doot-type-caption: 0.75rem;
+  --doot-type-code: 0.8125rem;
+  --doot-type-control: 0.875rem;
+  --doot-type-body: 1rem;
+  --doot-type-heading-sm: 1.0625rem;
+  --doot-type-heading-md: 1.25rem;
+  --doot-type-heading-lg: 1.5rem;
+  --doot-type-title: var(--doot-type-heading-lg);
+  --doot-leading-control: 1.25rem;
+  --doot-leading-compact: 1.125rem;
+  --doot-leading-input: 1.625rem;
+  --doot-leading-body: 1.625rem;
+  --doot-leading-heading-sm: 1.5rem;
+  --doot-leading-heading-md: 1.75rem;
+  --doot-leading-heading-lg: 1.875rem;
+  --doot-leading-title: var(--doot-leading-heading-lg);
+
+  --doot-control-height-compact: 2rem;
+  --doot-control-height: 2.25rem;
+  --doot-control-height-large: 3rem;
+  --doot-touch-target: 2.75rem;
+  --doot-header-height: 3.25rem;
+  --doot-sidebar-width: 17.375rem;
+  --doot-sidebar-icon-width: 3.25rem;
+  --doot-reading-width: 48rem;
+  --doot-composer-width: 48rem;
+  --doot-user-message-max-width: 78%;
+  --doot-user-message-max-width-mobile: 92%;
+  --doot-user-edit-max-width: 36rem;
+  --doot-message-action-target: var(--doot-control-height-compact);
+  --doot-branch-counter-width: var(--doot-touch-target);
+  --doot-status-dot-size: 0.375rem;
+  --doot-inbox-row-min-height: 4.25rem;
+  --doot-attachment-label-max-width: 7.5rem;
+  --doot-auth-action-label-max-width: 3.125rem;
+  --doot-annotation-marker-size: 1.625rem;
+  --doot-prose-paragraph-gap: var(--doot-space-4);
+  --doot-prose-list-gap: var(--doot-space-1-5);
+  --doot-prose-heading-top: var(--doot-space-6);
+  --doot-prose-heading-bottom: var(--doot-space-2);
+  --doot-rich-radius: var(--radius-surface);
+  --doot-rich-control-height: var(--doot-control-height-compact);
+  --doot-code-font-size: var(--doot-type-code);
+  --doot-code-line-height: 1.5rem;
+  --doot-table-cell-x: var(--doot-space-3);
+  --doot-table-cell-y: var(--doot-space-2-5);
+  --doot-composer-height: 3.25rem;
+  --doot-composer-padding: var(--doot-space-2);
+  --doot-editor-expanded-height: var(--doot-control-height-large);
+  --doot-editor-max-height: 12.5rem;
+  --doot-page-gutter: clamp(1rem, 3vw, 2rem);
+  --doot-thread-top: var(--doot-space-8);
+  --doot-thread-gap: var(--doot-space-7);
+  --doot-composer-bottom: var(--doot-space-6);
+
+  --doot-layer-base: 1;
+  --doot-layer-marker: 5;
+  --doot-layer-selection: 60;
+  --doot-layer-overlay: 100;
+
+  --doot-motion-fast: 150ms;
+  --doot-motion-normal: 220ms;
+  --doot-motion-relaxed: 300ms;
+  --doot-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --doot-ease-enter: cubic-bezier(0.19, 1, 0.22, 1);
+  --doot-ease-enter-snappy: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Existing shadcn and rich-content components consume these aliases. */
+  --background: var(--doot-canvas);
+  --foreground: var(--doot-text);
+  --card: var(--doot-surface);
+  --card-foreground: var(--doot-text);
+  --popover: var(--doot-surface-raised);
+  --popover-foreground: var(--doot-text);
+  --muted: var(--doot-surface-soft);
+  --muted-foreground: var(--doot-text-secondary);
+  --secondary: var(--doot-surface-soft);
+  --secondary-foreground: var(--doot-text);
+  --accent: var(--doot-hover);
+  --accent-foreground: var(--doot-text);
+  --primary: var(--doot-accent);
+  --primary-foreground: var(--doot-on-accent);
+  --border: var(--doot-border);
+  --input: var(--doot-border);
+  --ring: var(--doot-accent);
+  --sidebar: var(--doot-sidebar);
+  --sidebar-foreground-oklch: var(--doot-text);
+  --sidebar-accent-oklch: var(--doot-hover);
+  --sidebar-accent-foreground-oklch: var(--doot-text);
+  --small-radius: var(--radius-control);
+  --radius: var(--radius-surface);
+  --radius3: var(--radius-overlay);
+  --composer-radius: var(--radius-composer);
+  --composer-max-width: var(--doot-composer-width);
+}
+
+:root.dark,
+:root.dark[data-theme] {
+  --doot-canvas: #212121;
+  --doot-surface: #2f2f2f;
+  --doot-surface-raised: #2f2f2f;
+  --doot-surface-soft: #303030;
+  --doot-sidebar: #171717;
+  /* Interactive state ladder must stay distinct from the raised surface.
+     If hover matches surface-raised, every hover:bg-accent menu row becomes
+     visually invisible because --accent aliases --doot-hover. */
+  --doot-hover: #373737;
+  --doot-selected: #414141;
+  --doot-disabled: #292929;
+  --doot-text: #ececec;
+  --doot-text-secondary: #b4b4b4;
+  --doot-text-tertiary: #8f8f8f;
+  --doot-text-disabled: #676767;
+  --doot-border: rgba(255, 255, 255, 0.12);
+  --doot-border-subtle: rgba(255, 255, 255, 0.075);
+  --doot-border-strong: rgba(255, 255, 255, 0.2);
+  --doot-accent: #ececec;
+  --doot-on-accent: #212121;
+  --doot-selection: rgba(155, 133, 255, 0.28);
+  --doot-danger: #ff6b68;
+  --doot-warning: #e5b500;
+  --doot-success: #39c875;
+  --doot-info: #60aef5;
+  --doot-shadow-composer:
+    0 0 0 1px rgba(255, 255, 255, 0.035), 0 2px 8px rgba(0, 0, 0, 0.24),
+    0 12px 48px rgba(0, 0, 0, 0.16);
+  --doot-shadow-floating:
+    0 12px 32px rgba(0, 0, 0, 0.42), 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+@theme inline {
+  --color-doot-canvas: var(--doot-canvas);
+  --color-doot-surface: var(--doot-surface);
+  --color-doot-surface-soft: var(--doot-surface-soft);
+  --color-doot-text: var(--doot-text);
+  --color-doot-text-secondary: var(--doot-text-secondary);
+  --color-doot-border: var(--doot-border);
+  --color-doot-accent: var(--doot-accent);
+  --color-doot-hover: var(--doot-hover);
+  --color-doot-selected: var(--doot-selected);
+  --spacing-doot-control: var(--doot-control-height);
+  --spacing-doot-reading: var(--doot-reading-width);
+  --spacing-doot-status-dot: var(--doot-status-dot-size);
+  --spacing-doot-inbox-row: var(--doot-inbox-row-min-height);
+  --spacing-doot-attachment-label: var(--doot-attachment-label-max-width);
+  --spacing-doot-auth-action-label: var(--doot-auth-action-label-max-width);
+  --text-doot-fine: var(--doot-type-fine);
+  --text-doot-code: var(--doot-type-code);
+  --leading-doot-compact: var(--doot-leading-compact);
+  --radius-doot-inline: var(--radius-inline);
+  --radius-doot-control: var(--radius-control);
+  --radius-doot-surface: var(--radius-surface);
+  --radius-doot-overlay: var(--radius-overlay);
+  --radius-doot-message: var(--radius-message);
+  --radius-doot-composer: var(--radius-composer);
+  --radius-doot-round: var(--radius-round);
+  --radius-doot-panel: var(--doot-radius-panel);
+  --shadow-doot-floating: var(--doot-shadow-floating);
+}
+
+.doot-shell,
+[data-sidebar="sidebar"] {
+  font-family: var(--doot-font-ui);
+}
+
+.doot-shell {
+  min-width: 0;
+  background: var(--doot-canvas);
+  color: var(--doot-text);
+}
+
+.doot-header {
+  height: var(--doot-header-height);
+  min-height: var(--doot-header-height);
+  color: var(--doot-text);
+}
+
+.doot-header > span {
+  font-size: var(--doot-type-control);
+  line-height: var(--doot-leading-control);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+[data-sidebar="sidebar"] {
+  --radius: var(--doot-radius-control);
+  background: var(--doot-sidebar);
+  color: var(--doot-text);
+}
+
+[data-sidebar="header"] {
+  padding: var(--doot-space-2) var(--doot-space-2) var(--doot-space-1);
+}
+
+[data-sidebar="content"] {
+  padding-inline: var(--doot-space-2);
+}
+
+[data-sidebar="footer"] {
+  padding: var(--doot-space-2);
+}
+
+[data-sidebar="group-label"] {
+  color: var(--doot-text-tertiary);
+  font-size: var(--doot-type-caption);
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+[data-sidebar="menu-button"] {
+  min-height: var(--doot-control-height);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text);
+  font-size: var(--doot-type-control);
+  line-height: var(--doot-leading-control);
+  transition:
+    background-color var(--doot-motion-fast) var(--doot-ease),
+    color var(--doot-motion-fast) var(--doot-ease);
+}
+
+[data-sidebar="menu-button"][data-size="default"] {
+  height: var(--doot-control-height);
+}
+
+[data-sidebar="menu-button"][data-active="true"] {
+  background: var(--doot-selected);
+  font-weight: 500;
+}
+
+[data-sidebar="menu-button"]:hover {
+  background: var(--doot-hover);
+}
+
+[data-sidebar="menu-action"] {
+  color: var(--doot-text-tertiary);
+  border-radius: var(--doot-radius-control);
+}
+
+[data-sidebar="menu-action"]:hover,
+[data-sidebar="menu-action"][data-state="open"] {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+[data-sidebar="separator"] {
+  background: var(--doot-border-subtle);
+}
+
+[data-sidebar="input"] {
+  border-color: var(--doot-border);
+  border-radius: var(--doot-radius-control);
+  background: var(--doot-surface);
+  box-shadow: none;
+}
+
+.doot-thread-viewport {
+  min-width: 0;
+  padding-inline: var(--doot-page-gutter);
+  scrollbar-gutter: stable;
+}
+
+.doot-reading-column {
+  width: min(100%, var(--doot-reading-width));
+  min-width: 0;
+  max-width: var(--doot-reading-width);
+  justify-self: center;
+  gap: var(--doot-thread-gap);
+}
+
+.doot-composer-dock {
+  width: min(100%, var(--doot-composer-width));
+  min-width: 0;
+  max-width: var(--doot-composer-width);
+  justify-self: center;
+  padding-bottom: max(var(--doot-composer-bottom), env(safe-area-inset-bottom));
+}
+
+.doot-empty-title {
+  margin-bottom: 4.875rem;
+  color: var(--doot-text);
+}
+
+.doot-empty-stack {
+  margin-top: clamp(5.5rem, 22vh, 11.5rem);
+  margin-bottom: auto;
+}
+
+.doot-greeting {
+  font-size: var(--doot-type-title);
+  font-weight: 400;
+  line-height: var(--doot-leading-title);
+  letter-spacing: 0;
+}
+
+.doot-composer {
+  min-height: var(--doot-composer-height);
+  overflow: hidden;
+  background: var(--doot-surface);
+  border: 0;
+  border-radius: var(--doot-radius-composer);
+  box-shadow: var(--doot-shadow-composer);
+  transition:
+    box-shadow var(--doot-motion-fast) var(--doot-ease),
+    background-color var(--doot-motion-fast) var(--doot-ease);
+}
+
+.doot-composer:focus-within {
+  box-shadow:
+    var(--doot-shadow-composer),
+    0 0 0 1px var(--doot-border-strong);
+}
+
+.doot-composer-config {
+  display: flex;
+  align-items: center;
+  grid-area: footer;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.doot-composer-config > button {
+  min-height: var(--doot-control-height);
+  height: var(--doot-control-height);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text-secondary);
+}
+
+.doot-composer-config > button:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-composer-config [aria-label="Choose workspace"] span {
+  max-width: 9rem;
+}
+
+.doot-composer {
+  position: relative;
+  z-index: var(--doot-layer-base);
+  border-radius: var(--doot-radius-composer);
+}
+
+.doot-composer form {
+  padding: var(--doot-composer-padding);
+  gap: var(--doot-space-2);
+}
+
+.doot-composer [data-doot-composer-editor] {
+  color: var(--doot-text);
+  caret-color: var(--doot-text);
+  font-size: var(--doot-type-body);
+  line-height: var(--doot-leading-input);
+  scrollbar-width: thin;
+}
+
+.doot-composer[data-expanded="false"] [data-doot-composer-editor] {
+  min-height: var(--doot-control-height);
+  max-height: var(--doot-control-height);
+  padding: 0.3125rem var(--doot-space-3);
+  overflow-y: hidden;
+}
+
+.doot-composer[data-expanded="true"] [data-doot-composer-editor] {
+  min-height: var(--doot-editor-expanded-height);
+  max-height: var(--doot-editor-max-height);
+  padding: var(--doot-space-2) var(--doot-space-3);
+  overflow-y: auto;
+}
+
+.doot-agent-control {
+  min-height: var(--doot-control-height);
+  height: var(--doot-control-height);
+  max-width: 10rem;
+  padding-inline: var(--doot-space-2);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text-secondary);
+}
+
+.doot-agent-control:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-model-chip {
+  min-height: var(--doot-control-height);
+  height: var(--doot-control-height);
+  border-radius: var(--doot-radius-control);
+  background: color-mix(in oklab, var(--doot-hover) 70%, transparent);
+  color: var(--doot-text-secondary);
+}
+
+.doot-model-chip:hover,
+.doot-model-chip[aria-expanded="true"] {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-new-chat-composer {
+  border-radius: var(--doot-radius-composer);
+}
+
+.doot-response,
+.doot-human-bubble {
+  font-size: var(--doot-type-body);
+  line-height: var(--doot-leading-body);
+  letter-spacing: -0.006em;
+}
+
+.doot-response {
+  color: var(--doot-text);
+}
+
+.doot-response :where(p, li) {
+  line-height: var(--doot-leading-body);
+}
+
+.doot-response :where(h1, h2, h3, h4) {
+  color: var(--doot-text);
+  letter-spacing: -0.02em;
+}
+
+.doot-response :where(a) {
+  text-underline-offset: 0.15em;
+}
+
+.doot-markdown {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--doot-text);
+}
+
+.doot-markdown-paragraph {
+  margin-block: var(--doot-prose-paragraph-gap);
+  line-height: var(--doot-leading-body);
+}
+
+.doot-markdown-paragraph:first-child {
+  margin-top: 0;
+}
+
+.doot-markdown-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.doot-markdown-heading {
+  margin-top: var(--doot-prose-heading-top);
+  margin-bottom: var(--doot-prose-heading-bottom);
+  color: var(--doot-text);
+  letter-spacing: -0.018em;
+}
+
+.doot-markdown-heading:first-child {
+  margin-top: 0;
+}
+
+.doot-markdown-heading:last-child {
+  margin-bottom: 0;
+}
+
+.doot-markdown-h1 {
+  font-size: var(--doot-type-heading-lg);
+  line-height: var(--doot-leading-heading-lg);
+  font-weight: 650;
+}
+
+.doot-markdown-h2 {
+  font-size: var(--doot-type-heading-md);
+  line-height: var(--doot-leading-heading-md);
+  font-weight: 650;
+}
+
+.doot-markdown-h3 {
+  font-size: var(--doot-type-heading-sm);
+  line-height: var(--doot-leading-heading-sm);
+  font-weight: 650;
+}
+
+.doot-markdown-h4 {
+  font-size: var(--doot-type-body);
+  line-height: var(--doot-leading-heading-sm);
+  font-weight: 600;
+}
+
+.doot-markdown-link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-decoration-thickness: 0.0625rem;
+  text-underline-offset: 0.18em;
+}
+
+.doot-markdown-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.doot-blockquote {
+  margin-block: var(--doot-prose-paragraph-gap);
+  border-left: 2px solid var(--doot-border-strong);
+  padding-left: var(--doot-space-4);
+  color: var(--doot-text-secondary);
+  font-style: normal;
+}
+
+.doot-markdown-list {
+  margin-block: var(--doot-prose-paragraph-gap);
+  margin-left: 1.5rem;
+  padding-left: 0.25rem;
+}
+
+.doot-markdown-list > li + li {
+  margin-top: var(--doot-prose-list-gap);
+}
+
+.doot-markdown-list .doot-markdown-list {
+  margin-block: var(--doot-space-2);
+}
+
+.doot-markdown input[type="checkbox"] {
+  margin-right: var(--doot-space-2);
+  accent-color: var(--doot-accent);
+}
+
+.doot-markdown-hr {
+  margin-block: var(--doot-space-6);
+  border: 0;
+  border-top: 1px solid var(--doot-border-subtle);
+}
+
+.doot-callout {
+  border-radius: var(--doot-rich-radius);
+}
+
+.doot-code-block,
+.doot-rich-card,
+.doot-table {
+  border-color: var(--doot-border-subtle);
+  border-radius: var(--doot-rich-radius);
+  background: color-mix(
+    in srgb,
+    var(--doot-surface-soft) 56%,
+    var(--doot-surface)
+  );
+  box-shadow: none;
+}
+
+.doot-code-block {
+  margin-block: var(--doot-space-4);
+  overflow: hidden;
+  border: 1px solid var(--doot-border-subtle);
+}
+
+.doot-code-header {
+  min-height: 2.5rem;
+  padding: 0.25rem 0.375rem 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--doot-border-subtle);
+  background: color-mix(
+    in srgb,
+    var(--doot-surface-soft) 72%,
+    var(--doot-surface)
+  );
+}
+
+.doot-code-language {
+  color: var(--doot-text-secondary);
+  font-family: var(--doot-font-ui);
+  font-size: var(--doot-type-caption);
+  font-weight: 500;
+  line-height: var(--doot-leading-control);
+}
+
+.doot-code-copy {
+  width: var(--doot-rich-control-height);
+  height: var(--doot-rich-control-height);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text-secondary);
+}
+
+.doot-code-copy:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-code-block pre {
+  max-width: 100%;
+  overflow-x: auto !important;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.doot-code-block code {
+  font-size: var(--doot-code-font-size) !important;
+  line-height: var(--doot-code-line-height) !important;
+  tab-size: 2;
+}
+
+.doot-inline-code {
+  background: color-mix(
+    in srgb,
+    var(--doot-surface-soft) 82%,
+    var(--doot-canvas)
+  );
+  color: var(--doot-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  line-height: 1.35;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.doot-pre {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.doot-table-wrap {
+  margin-block: var(--doot-space-4);
+}
+
+.doot-table-toolbar {
+  display: flex;
+  min-height: var(--doot-rich-control-height);
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: var(--doot-space-1);
+}
+
+.doot-table {
+  border: 1px solid var(--doot-border-subtle);
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+
+.doot-table-element {
+  min-width: 100%;
+  color: var(--doot-text);
+  font-size: var(--doot-type-control);
+  line-height: var(--doot-leading-control);
+}
+
+.doot-table-head {
+  background: var(--doot-surface-soft);
+  color: var(--doot-text-secondary);
+  border-right: 1px solid var(--doot-border-subtle);
+  border-bottom: 1px solid var(--doot-border-subtle);
+  padding: var(--doot-table-cell-y) var(--doot-table-cell-x);
+  font-size: var(--doot-type-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.doot-table-cell {
+  border-right: 1px solid var(--doot-border-subtle);
+  border-bottom: 1px solid var(--doot-border-subtle);
+  padding: var(--doot-table-cell-y) var(--doot-table-cell-x);
+  vertical-align: top;
+}
+
+.doot-table-row {
+  transition: background-color var(--doot-motion-fast) var(--doot-ease);
+}
+
+.doot-table-row:hover {
+  background: var(--doot-hover);
+}
+
+.doot-rich-copy {
+  min-height: var(--doot-rich-control-height);
+  border: 1px solid var(--doot-border-subtle);
+  border-radius: var(--doot-radius-control);
+  padding-inline: var(--doot-space-2);
+  background: color-mix(in srgb, var(--doot-surface-raised) 94%, transparent);
+  color: var(--doot-text-secondary);
+  font-size: var(--doot-type-caption);
+  line-height: var(--doot-leading-control);
+  box-shadow: var(--doot-shadow-small);
+  opacity: 1;
+  transition:
+    opacity var(--doot-motion-fast) var(--doot-ease),
+    background-color var(--doot-motion-fast) var(--doot-ease),
+    color var(--doot-motion-fast) var(--doot-ease);
+}
+
+.doot-rich-copy:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-mermaid-card {
+  margin-block: var(--doot-space-4);
+  border: 1px solid var(--doot-border-subtle);
+  background: var(--doot-surface);
+}
+
+.doot-mermaid {
+  position: relative;
+  display: flex;
+  min-height: 8rem;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: var(--doot-space-4);
+  overscroll-behavior: contain;
+}
+
+.doot-mermaid-render-target {
+  width: max-content;
+  min-width: min-content;
+}
+
+.doot-mermaid-render-target > svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.doot-mermaid-loading {
+  display: flex;
+  min-height: 8rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--doot-space-2);
+  color: var(--doot-text-secondary);
+  font-size: var(--doot-type-control);
+}
+
+.doot-mermaid-error {
+  border-color: color-mix(in srgb, var(--doot-danger) 28%, var(--doot-border));
+  background: color-mix(in srgb, var(--doot-danger) 7%, var(--doot-surface));
+  color: var(--doot-danger);
+}
+
+.doot-markdown .katex-display {
+  margin-block: var(--doot-space-4);
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: var(--doot-space-1);
+  scrollbar-width: thin;
+}
+
+.doot-markdown .katex {
+  max-width: 100%;
+}
+
+.doot-markdown-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-block: var(--doot-space-4);
+  border-radius: var(--doot-rich-radius);
+}
+
+.doot-attachment-chip {
+  min-height: var(--doot-control-height-compact);
+  max-width: min(18rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--doot-border-subtle);
+  border-radius: var(--doot-radius-control);
+  background: color-mix(
+    in srgb,
+    var(--doot-surface-soft) 72%,
+    var(--doot-surface)
+  );
+  color: var(--doot-text);
+}
+
+.doot-attachment-main {
+  min-width: 0;
+  min-height: var(--doot-control-height-compact);
+  padding-inline: var(--doot-space-2);
+}
+
+.doot-attachment-main:hover {
+  background: var(--doot-hover);
+}
+
+.doot-attachment-remove {
+  min-width: var(--doot-control-height-compact);
+  min-height: var(--doot-control-height-compact);
+  color: var(--doot-text-tertiary);
+}
+
+.doot-attachment-remove:hover {
+  background: var(--doot-hover);
+  color: var(--doot-danger);
+}
+
+.doot-media-dialog {
+  width: min(56rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+.doot-media-preview {
+  max-height: min(72vh, 48rem);
+  width: 100%;
+  border-radius: var(--doot-rich-radius);
+  object-fit: contain;
+}
+
+.doot-pdf-preview {
+  border: 1px solid var(--doot-border-subtle);
+  border-radius: var(--doot-rich-radius);
+  background: var(--doot-surface-soft);
+  overscroll-behavior: contain;
+}
+
+.doot-human-bubble {
+  max-width: 100%;
+  background: var(--doot-surface-soft);
+  color: var(--doot-text);
+  border-radius: var(--doot-radius-message);
+}
+
+.doot-human-turn {
+  width: fit-content;
+  min-width: 0;
+  max-width: var(--doot-user-message-max-width);
+  align-self: flex-end;
+}
+
+.doot-human-turn[data-editing="true"] {
+  width: 100%;
+  max-width: min(100%, var(--doot-user-edit-max-width));
+}
+
+.doot-human-editor {
+  border-color: var(--doot-border);
+  border-radius: var(--doot-radius-message);
+  background: var(--doot-surface-soft);
+  color: var(--doot-text);
+}
+
+.doot-assistant-turn {
+  width: 100%;
+  min-width: 0;
+  color: var(--doot-text);
+}
+
+.doot-response {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.doot-assistant-selectable ::selection {
+  background: var(--doot-selection);
+  color: var(--doot-text);
+}
+
+.doot-message-actions {
+  opacity: 1;
+  flex-wrap: wrap;
+  gap: var(--doot-space-1);
+  color: var(--doot-text-secondary);
+  transition: opacity var(--doot-motion-fast) var(--doot-ease);
+}
+
+.doot-message-actions button {
+  min-width: var(--doot-message-action-target);
+  min-height: var(--doot-message-action-target);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text-secondary);
+}
+
+.doot-message-actions button:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+
+.doot-message-actions button:disabled {
+  opacity: 0.45;
+}
+
+.doot-branch-switcher {
+  gap: var(--doot-space-1);
+}
+
+.doot-branch-action {
+  width: var(--doot-message-action-target);
+  height: var(--doot-message-action-target);
+}
+
+.doot-branch-counter {
+  min-width: var(--doot-branch-counter-width);
+  color: var(--doot-text-secondary);
+  font-size: var(--doot-type-control);
+  line-height: var(--doot-leading-control);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Agent activity / tools */
+.doot-worked {
+  color: var(--doot-text-secondary);
+  font-size: var(--doot-type-control);
+}
+
+.doot-worked button {
+  min-height: var(--doot-control-height-compact);
+  border-radius: var(--doot-radius-control);
+}
+
+.doot-tool-item {
+  max-width: min(100%, 42rem);
+  color: var(--doot-text-secondary);
+  font-size: var(--doot-type-control);
+}
+
+.doot-tool-group {
+  max-width: min(100%, 42rem);
+}
+
+.doot-tool-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.doot-tool-details pre,
+.doot-tool-details code {
+  font-size: var(--doot-type-code);
+  line-height: var(--doot-code-line-height);
+}
+
+.doot-selection-actions {
+  position: fixed;
+  z-index: var(--doot-layer-selection);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13rem;
+  max-width: calc(100vw - 1rem);
+  padding: var(--doot-space-1);
+  gap: var(--doot-space-1);
+  background: var(--doot-surface-raised);
+  color: var(--doot-text);
+  border: 1px solid var(--doot-border-subtle);
+  border-radius: var(--doot-radius-panel);
+  box-shadow: var(--doot-shadow-floating);
+}
+
+.doot-selection-actions button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--doot-control-height);
+  gap: var(--doot-space-1);
+  border-radius: var(--doot-radius-control);
+  font-size: var(--doot-type-caption);
+  white-space: nowrap;
+}
+
+.doot-selection-actions button:hover {
+  background: var(--doot-hover);
+}
+
+.doot-selection-actions.doot-annotation-editor {
+  width: min(22rem, calc(100vw - 1rem));
+  max-height: min(22rem, 70vh);
+  overflow-y: auto;
+}
+
+.doot-selection-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.doot-annotation-chip-row {
+  padding: var(--doot-space-3) var(--doot-space-3-5) 0;
+}
+.doot-annotation-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--doot-border);
+  border-radius: var(--doot-radius-panel);
+  background: var(--doot-surface-raised);
+}
+.doot-annotation-chip > button:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--doot-space-2);
+  padding: var(--doot-space-1-5) var(--doot-space-2-5);
+  font-size: var(--doot-type-control);
+}
+.doot-annotation-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: var(--doot-space-1);
+  border-radius: var(--doot-radius-pill);
+  opacity: 0;
+}
+.doot-annotation-chip:hover .doot-annotation-clear,
+.doot-annotation-chip:focus-within .doot-annotation-clear {
+  opacity: 1;
+}
+.doot-annotation-clear:hover {
+  background: var(--doot-hover);
+}
+.doot-annotation-details,
+.doot-annotation-note {
+  position: fixed;
+  z-index: var(--doot-layer-overlay);
+  width: min(420px, calc(100vw - 16px));
+  max-height: min(360px, 55vh);
+  overflow-y: auto;
+  border: 1px solid var(--doot-border);
+  border-radius: var(--radius-overlay);
+  background: var(--doot-surface-raised);
+  box-shadow: var(--doot-shadow-floating);
+  color: var(--doot-text);
+}
+.doot-annotation-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--doot-space-2-5);
+  padding: var(--doot-space-4);
+  font-size: var(--doot-type-control);
+  line-height: 1.5;
+}
+.doot-annotation-detail + .doot-annotation-detail {
+  border-top: 1px solid var(--doot-border);
+}
+.doot-annotation-detail-number {
+  color: var(--doot-text-secondary);
+}
+.doot-annotation-detail p {
+  margin: var(--doot-space-1) 0 var(--doot-space-2-5);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.doot-annotation-detail p:last-child {
+  margin-bottom: 0;
+}
+.doot-annotation-detail button {
+  padding: var(--doot-space-1);
+  border-radius: var(--doot-radius-control);
+  color: var(--doot-text-secondary);
+}
+.doot-annotation-detail button:hover {
+  background: var(--doot-hover);
+  color: var(--doot-text);
+}
+.doot-annotation-note {
+  padding: var(--doot-space-3-5);
+}
+.doot-annotation-note textarea {
+  width: 100%;
+  min-height: var(--doot-control-height-large);
+  max-height: 10rem;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: var(--doot-type-body);
+}
+.doot-annotation-note-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--doot-space-2);
+}
+.doot-annotation-note-actions button {
+  min-height: var(--doot-control-height-compact);
+  padding: var(--doot-space-1-5) var(--doot-space-2-5);
+  border-radius: var(--doot-radius-control);
+}
+.doot-annotation-note-actions button:hover {
+  background: var(--doot-hover);
+}
+.doot-annotation-note-actions .doot-annotation-save {
+  background: var(--doot-text);
+  color: var(--doot-surface);
+}
+.doot-annotation-source {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.doot-annotation-highlight {
+  position: absolute;
+  background: color-mix(in srgb, var(--doot-annotation-accent) 20%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--doot-annotation-accent) 60%, transparent);
+}
+.doot-annotation-source-anchor {
+  position: absolute;
+  pointer-events: auto;
+  z-index: var(--doot-layer-marker);
+}
+.doot-annotation-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--doot-annotation-marker-size);
+  height: var(--doot-annotation-marker-size);
+  border: 2px solid var(--doot-surface);
+  border-radius: 50% 50% 50% var(--doot-radius-control);
+  background: var(--doot-annotation-accent);
+  color: var(--doot-annotation-on-accent);
+  font-size: var(--doot-type-code);
+  font-weight: 600;
+}
+.doot-annotation-marker:hover {
+  background: var(--doot-annotation-accent-hover);
+}
+
+:is(
+    .doot-annotation-details,
+    .doot-annotation-note,
+    .doot-annotation-chip,
+    .doot-annotation-source
+  )
+  button:focus-visible {
+  outline: 2px solid var(--doot-accent);
+  outline-offset: 2px;
+}
+
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"] {
+  border-color: var(--doot-border-subtle);
+  border-radius: var(--doot-radius-panel);
+  background: var(--doot-surface-raised);
+  box-shadow: var(--doot-shadow-floating);
+  font-family: var(--doot-font-ui);
+}
+
+[data-slot="command-input-wrapper"] {
+  min-height: 2.75rem;
+  border-bottom-color: var(--doot-border-subtle);
+  padding-inline: var(--doot-space-3);
+}
+
+[data-slot="command-input"] {
+  color: var(--doot-text);
+  font-family: var(--doot-font-ui);
+  font-size: var(--doot-type-control);
+}
+
+[data-slot="command-list"] {
+  padding: var(--doot-space-1);
+  scrollbar-width: thin;
+}
+
+[data-slot="command-item"] {
+  min-height: var(--doot-control-height);
+  border-radius: var(--doot-radius-control);
+  padding-inline: var(--doot-space-2);
+  padding-block: var(--doot-space-1-5);
+  color: var(--doot-text);
+  font-size: var(--doot-type-control);
+}
+
+[data-slot="command-item"][data-selected="true"] {
+  background: var(--doot-hover);
+}
+
+[data-slot="dropdown-menu-item"] {
+  min-height: var(--doot-control-height);
+  border-radius: var(--doot-radius-control);
+  font-family: var(--doot-font-ui);
+  font-size: var(--doot-type-control);
+}
+
+[data-slot="tooltip-content"] {
+  border-radius: var(--doot-radius-control);
+  font-family: var(--doot-font-ui);
+  font-size: var(--doot-type-caption);
+}
+
+[data-slot="dialog-content"] {
+  border-color: var(--doot-border-subtle);
+  border-radius: var(--doot-radius-card);
+  background: var(--doot-surface-raised);
+  box-shadow: var(--doot-shadow-floating);
+  font-family: var(--doot-font-ui);
+}
+
+.doot-search-dialog {
+  width: min(45rem, calc(100vw - 2rem));
+  height: min(28.75rem, calc(100vh - 2rem));
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+  border-radius: var(--doot-radius-card);
+  box-shadow: var(--doot-shadow-floating);
+}
+
+.doot-search-dialog > div:first-of-type {
+  min-height: 4rem;
+}
+
+.doot-search-dialog [data-radius="small-radius"] {
+  min-height: var(--doot-control-height-large);
+  border-radius: var(--doot-radius-panel);
+}
+
+.doot-route-page,
+.doot-inbox-page {
+  font-family: var(--doot-font-ui);
+  color: var(--doot-text);
+}
+
+.doot-route-card {
+  border-color: var(--doot-border-subtle);
+  border-radius: var(--doot-radius-card);
+  background: var(--doot-surface);
+  box-shadow: none;
+}
+
+.doot-shell
+  :is(button, a, textarea, input, [contenteditable="true"]):focus-visible,
+[data-sidebar] :is(button, a, input):focus-visible,
+.doot-selection-actions button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--doot-accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.doot-composer [data-doot-composer-editor]:focus-visible {
+  outline: none;
+}
+
+.doot-composer:focus-within {
+  border-color: color-mix(in srgb, var(--doot-accent) 50%, var(--doot-border));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .group:not(:hover):not(:focus-within)
+    .doot-message-actions:not([data-editing="true"]) {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root,
+  :root[data-theme] {
+    --doot-page-gutter: clamp(0.875rem, 2.5vw, 1.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  :root,
+  :root[data-theme] {
+    --doot-page-gutter: 0.875rem;
+    --doot-composer-bottom: 0.875rem;
+  }
+
+  .doot-header {
+    padding-inline: 3.5rem 0.875rem;
+  }
+
+  .doot-empty-title {
+    margin-bottom: 3rem;
+  }
+
+  .doot-human-turn {
+    max-width: var(--doot-user-message-max-width-mobile);
+  }
+
+  .doot-empty-stack {
+    margin-top: clamp(4rem, 16vh, 7rem);
+  }
+
+  .doot-greeting {
+    font-size: 1.375rem;
+    line-height: 1.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .doot-search-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .doot-composer-config {
+    gap: 0;
+  }
+  .doot-composer-config [aria-label="Choose workspace"] {
+    padding-inline: 0.4rem;
+  }
+  .doot-composer-config [aria-label="Choose workspace"] span,
+  .doot-composer-config [aria-label="Choose workspace"] svg:last-child {
+    display: none;
+  }
+  .doot-composer-config .doot-agent-name {
+    max-width: 3rem;
+  }
+  .doot-composer-config .doot-agent-control {
+    padding-inline: 0.25rem;
+  }
+  .doot-annotation-clear {
+    opacity: 1;
+  }
+  .doot-agent-name {
+    max-width: 28vw;
+  }
+
+  .doot-model-chip > span:last-child {
+    max-width: 22vw;
+  }
+
+  .doot-model-chip {
+    min-height: var(--doot-touch-target);
+    height: var(--doot-touch-target);
+  }
+
+  .doot-composer-config > button {
+    min-height: var(--doot-touch-target);
+    height: var(--doot-touch-target);
+  }
+
+  .doot-composer form {
+    grid-template-areas:
+      "primary primary primary"
+      "leading footer trailing";
+  }
+
+  .doot-composer[data-expanded="false"] form {
+    grid-template-areas: "leading primary trailing";
+  }
+
+  .doot-composer[data-expanded="true"] form {
+    grid-template-rows: max-content auto;
+    align-items: end;
+  }
+
+  .doot-composer[data-expanded="true"] [data-doot-composer-primary],
+  .doot-composer[data-expanded="true"] [data-doot-composer-editor-shell] {
+    min-height: min-content;
+    height: auto;
+  }
+
+  .doot-composer[data-expanded="true"] [data-doot-composer-editor] {
+    height: auto;
+    max-height: min(var(--doot-editor-max-height), 42vh);
+  }
+
+  .doot-message-actions button,
+  .doot-selection-actions button {
+    min-height: var(--doot-touch-target);
+    min-width: var(--doot-touch-target);
+  }
+
+  .doot-rich-copy {
+    min-height: var(--doot-touch-target);
+  }
+
+  .doot-table-toolbar {
+    min-height: var(--doot-touch-target);
+  }
+
+  .doot-attachment-main,
+  .doot-attachment-remove {
+    min-height: var(--doot-touch-target);
+  }
+
+  .doot-attachment-remove {
+    min-width: var(--doot-touch-target);
+  }
+
+  .doot-agent-control {
+    min-width: var(--doot-touch-target);
+    height: var(--doot-touch-target);
+  }
+
+  .doot-composer [data-doot-composer-action="true"] {
+    min-width: var(--doot-touch-target);
+    min-height: var(--doot-touch-target);
+  }
+
+  .doot-composer [data-doot-composer-submit-shell] {
+    width: var(--doot-touch-target);
+    height: var(--doot-touch-target);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doot-shell *,
+  [data-sidebar] *,
+  .doot-selection-actions {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

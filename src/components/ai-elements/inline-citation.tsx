@@ -114,7 +114,7 @@ export const InlineCitationCardTrigger = ({
   return (
     <HoverCardTrigger asChild>
       <Badge
-        data-radius="radius"
+        data-radius="round"
         className={cn(
           "bg-muted/20 hover:bg-muted/40 border-muted/20 ml-1 cursor-pointer border opacity-60 transition-all hover:opacity-100",
           hoverState?.isOpen && "scale-105 opacity-100",
@@ -144,7 +144,7 @@ export const InlineCitationCardBody = ({
   ...props
 }: InlineCitationCardBodyProps) => (
   <HoverCardContent
-    data-radius="radius"
+    data-radius="overlay"
     className={cn("relative w-80 select-text border p-0", className)}
     {...props}
   />
@@ -289,7 +289,7 @@ export const InlineCitationCarouselPrev = ({
   return (
     <button
       aria-label="Previous"
-      data-radius="small-radius"
+      data-radius="control"
       className={cn(
         "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
         canScrollPrev && "hover:bg-accent",
@@ -346,7 +346,7 @@ export const InlineCitationCarouselNext = ({
   return (
     <button
       aria-label="Next"
-      data-radius="small-radius"
+      data-radius="control"
       className={cn(
         "flex size-6 shrink-0 items-center justify-center p-1 transition-colors",
         canScrollNext && "hover:bg-accent",
@@ -398,7 +398,7 @@ export const InlineCitationSource = ({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block cursor-pointer truncate break-all text-xs leading-relaxed text-muted-foreground underline transition-colors hover:text-blue-600 dark:hover:text-blue-400"
+        className="block cursor-pointer truncate break-all text-xs leading-relaxed text-muted-foreground underline transition-colors hover:text-semantic-info dark:hover:text-semantic-info"
       >
         {url}
       </a>

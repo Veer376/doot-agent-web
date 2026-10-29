@@ -11,7 +11,12 @@
  */
 
 import { cn } from "@/lib/utils";
-import { Clock01Icon, Tick02Icon, ArrowDown01Icon } from "hugeicons-react";
+import {
+  Clock01Icon,
+  Tick02Icon,
+  ArrowDown01Icon,
+  MultiplicationSignIcon,
+} from "hugeicons-react";
 import { useState } from "react";
 
 /**
@@ -36,9 +41,9 @@ function StatusIcon({ status }: { status: Todo["status"] }) {
       return <Clock01Icon className="h-4 w-4 text-primary" />;
     case "completed":
       return (
-        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+        <div className="flex h-4 w-4 items-center justify-center rounded-full bg-semantic-success-light">
           <Tick02Icon
-            className="h-3 w-3 text-white"
+            className="h-3 w-3 text-status-on-solid"
             strokeWidth={2.5}
           />
         </div>
@@ -46,19 +51,7 @@ function StatusIcon({ status }: { status: Todo["status"] }) {
     case "cancelled":
       return (
         <div className="bg-muted-foreground/30 flex h-4 w-4 items-center justify-center rounded-full">
-          <svg
-            className="h-3 w-3 text-muted-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <MultiplicationSignIcon className="h-3 w-3 text-muted-foreground" />
         </div>
       );
   }

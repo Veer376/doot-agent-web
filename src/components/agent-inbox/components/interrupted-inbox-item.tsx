@@ -63,19 +63,19 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
       key={threadData.thread.thread_id}
       onClick={handleThreadClick}
       className={cn(
-        "grid h-[71px] w-full cursor-pointer grid-cols-12 items-center p-4 transition-colors ease-in-out hover:bg-gray-50/90",
-        !isLast && "border-b border-gray-200",
+        "grid min-h-doot-inbox-row w-full cursor-pointer grid-cols-12 items-center px-4 py-3 transition-colors ease-in-out hover:bg-accent max-md:grid-cols-1 max-md:gap-2",
+        !isLast && "border-b border-border",
       )}
     >
       {/* Column 1: Dot - adjusted span slightly */}
-      <div className="col-span-1 flex justify-center">
-        <div className="h-[6px] w-[6px] rounded-full bg-blue-400" />
+      <div className="col-span-1 flex justify-center max-md:hidden">
+        <div className="size-doot-status-dot rounded-full bg-semantic-info-light" />
       </div>
 
       {/* Column 2-9: Title and Description - merged spans */}
-      <div className="col-span-8 overflow-hidden">
+      <div className="col-span-8 overflow-hidden max-md:col-span-full">
         <div className="flex items-center">
-          <span className="truncate pr-1 text-sm font-semibold text-black">
+          <span className="truncate pr-1 text-sm font-medium text-foreground">
             {title}
           </span>
 
@@ -89,7 +89,7 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
           )}
         </div>
         {hasDescriptionValue && (
-          <div className="text-muted-foreground h-[18px] truncate text-sm">
+          <div className="text-muted-foreground h-4.5 truncate text-sm">
             {descriptionPreview}
             {descriptionTruncated && "..."}
             {!firstInterrupt && threadData.invalidSchema && (
@@ -101,14 +101,14 @@ export const InterruptedInboxItem = <ThreadValues extends Record<string, any>>({
       </div>
 
       {/* Column 10: Statuses - adjusted span */}
-      <div className="col-span-1">
+      <div className="col-span-1 max-md:col-span-full">
         {firstInterrupt?.config && (
           <InboxItemStatuses config={firstInterrupt.config} />
         )}
       </div>
 
       {/* Column 11-12: Timestamp - adjusted span */}
-      <p className="col-span-2 text-right text-sm font-light text-gray-600">
+      <p className="col-span-2 text-right text-sm text-muted-foreground max-md:col-span-full max-md:text-left">
         {updatedAtDateString}
       </p>
     </div>

@@ -1,13 +1,24 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SimpleAgentSelector } from "./agent-selector";
 import { DragAndDropWrapper } from "./drag-drop-wrapper";
-import { StopIcon } from "@/components/icons";
+import {
+  StopIcon,
+  XIcon,
+  ChevronUpIcon,
+  LoaderIcon,
+} from "@/components/icons";
 import { ModelSelectorPopover } from "@/components/ui/model-selector-popover";
+import { ModelProviderIcon } from "@/components/ui/model-provider-icon";
 import { parseSlashCommand, replaceCommand } from "@/lib/slash-command-parser";
 import type { SlashCommand } from "@/lib/slash-command-parser";
 import type { Model } from "@/types/model";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
+import type { ResponseAnnotation } from "./messages/response-selection-actions";
+import { config } from "@/config";
+import { WorkspaceSelector } from "./workspace-selector";
+import { PermissionSelector, ApprovalPanel } from "./permissions";
+import { AnnotationChip } from "./annotations";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -21,89 +32,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Paperclip } from "lucide-react";
-import { PlusIcon } from "@/components/icons";
-
-// Provider icons for model display
-const ProviderIcon = ({
-  provider,
-  className,
-}: {
-  provider: string;
-  className?: string;
-}) => {
-  switch (provider) {
-    case "openai":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          className={cn("h-4 w-4", className)}
-          fill="currentColor"
-        >
-          <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" />
-        </svg>
-      );
-    case "anthropic":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          className={cn("h-4 w-4", className)}
-          fill="currentColor"
-        >
-          <path d="M17.3037 3.293h3.1716L13.0257 20.707h-3.1696l7.4476-17.414Zm-10.6074 0H3.525l7.4476 17.414h3.1696L6.6963 3.293Z" />
-        </svg>
-      );
-    case "google":
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          className={cn("h-4 w-4", className)}
-          fill="currentColor"
-        >
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-      );
-    default:
-      return (
-        <svg
-          viewBox="0 0 24 24"
-          className={cn("h-4 w-4", className)}
-          fill="currentColor"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="2"
-            fill="none"
-          />
-          <path
-            d="M12 8v4l3 3"
-            stroke="currentColor"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
-      );
-  }
-};
+import {
+  AttachIcon as Paperclip,
+  ChevronDownIcon,
+  PlusIcon,
+} from "@/components/icons";
 
 interface ComposerProps {
   value?: string;
@@ -116,6 +49,7 @@ interface ComposerProps {
   placeholder?: string;
   disabled?: boolean;
   isLoading?: boolean;
+  isStopping?: boolean;
   contentBlocks?: import("@/types/multimodal").Base64ContentBlock[];
   onRemoveBlock?: (index: number) => void;
   onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -127,9 +61,25 @@ interface ComposerProps {
   focusKey?: string | null;
 
   selectedModel?: Model | null;
+  availableModels?: Model[];
   onModelSelect?: (model: Model) => void;
   /** When true the composer is always expanded regardless of content */
   forceExpanded?: boolean;
+  annotations?: ResponseAnnotation[];
+}
+
+function editorHasMultipleLines(editor: HTMLDivElement, text: string) {
+  if (text.includes("\n")) return true;
+  if (!text.trim()) return false;
+
+  const lineHeight =
+    Number.parseFloat(window.getComputedStyle(editor).lineHeight) || 26;
+  const range = document.createRange();
+  range.selectNodeContents(editor);
+  const contentHeight = range.getBoundingClientRect().height;
+  range.detach?.();
+
+  return contentHeight > lineHeight * 1.35;
 }
 
 export function Composer({
@@ -143,6 +93,7 @@ export function Composer({
   placeholder = "Type your message...",
   disabled = false,
   isLoading = false,
+  isStopping = false,
   contentBlocks = [],
   onRemoveBlock,
   onFileUpload,
@@ -151,22 +102,25 @@ export function Composer({
   focusKey,
 
   selectedModel,
+  availableModels = [],
   onModelSelect,
   forceExpanded = false,
+  annotations = [],
 }: ComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const [showPlusPopover, setShowPlusPopover] = useState(false);
+  const [isMultiline, setIsMultiline] = useState(false);
 
   // Model selector state
   const [activeCommand, setActiveCommand] = useState<SlashCommand | null>(null);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
   const hasMessage = Boolean(value?.trim()?.length);
-  const hasAttachments = contentBlocks.length > 0;
+  const hasContentBlocks = contentBlocks.length > 0;
+  const hasAttachments = hasContentBlocks || annotations.length > 0;
   const isSendDisabled = disabled || (!hasMessage && !hasAttachments);
-  const isExpanded =
-    forceExpanded || hasMessage || hasAttachments || !!selectedModel;
+  const isExpanded = forceExpanded || hasAttachments || isMultiline;
 
   useEffect(() => {
     if (disabled) {
@@ -196,13 +150,17 @@ export function Composer({
     };
   }, [disabled, focusKey]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const editorEl = editorRef.current;
     if (!editorEl) return;
     const textContent = editorEl.textContent ?? "";
     if ((value ?? "") !== textContent) {
       editorEl.textContent = value ?? "";
     }
+    const frame = requestAnimationFrame(() => {
+      setIsMultiline(editorHasMultipleLines(editorEl, value ?? ""));
+    });
+    return () => cancelAnimationFrame(frame);
   }, [value]);
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -256,6 +214,7 @@ export function Composer({
     if (!editor) return;
     const text = editor.textContent ?? "";
     emitChange(text);
+    setIsMultiline(editorHasMultipleLines(editor, text));
 
     // Get accurate cursor position in contentEditable
     const selection = window.getSelection();
@@ -331,16 +290,13 @@ export function Composer({
 
   // Handle model selection from popover
   const handleModelSelect = (model: Model) => {
-    if (!activeCommand || !value) return;
-
     // Clear the command text entirely (model chip will show selection)
-    const { newText } = replaceCommand(
-      value,
-      activeCommand,
-      "", // Replace with empty string, not the model id
-    );
+    const newText =
+      activeCommand && value
+        ? replaceCommand(value, activeCommand, "").newText
+        : (value ?? "");
 
-    onChange?.(newText);
+    if (activeCommand) onChange?.(newText);
     onModelSelect?.(model);
     setModelSelectorOpen(false);
     setActiveCommand(null);
@@ -370,12 +326,14 @@ export function Composer({
     <DragAndDropWrapper onFileDrop={handleFileDrop}>
       <div
         className={cn(
-          "group/composer border-border bg-card text-foreground focus-within:border-muted-foreground/40 w-full overflow-hidden border shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:shadow-md",
+          "doot-composer group/composer text-foreground w-full overflow-hidden",
           className,
         )}
         data-expanded={isExpanded}
-        data-radius="composer-radius"
+        data-radius="composer"
       >
+        <AnnotationChip />
+        <ApprovalPanel model={selectedModel?.id} />
         <form
           onSubmit={handleFormSubmit}
           className={cn(
@@ -392,7 +350,7 @@ export function Composer({
           {/* Leading Area - Plus Button + Segmented Control */}
           <div
             className={cn(
-              "flex items-center gap-2 transition-all duration-300 [grid-area:leading]",
+              "doot-composer-leading flex min-w-0 items-center gap-1 transition-all duration-300 [grid-area:leading]",
               "group-data-[expanded=true]/composer:mb-0",
             )}
             style={{ transformOrigin: "50% 100%" }}
@@ -408,8 +366,8 @@ export function Composer({
                       <Button
                         variant="ghost"
                         size="sm"
-                        data-radius="composer-radius"
-                        className="text-muted-foreground hover:bg-muted hover:text-foreground flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center bg-transparent p-0 transition-colors"
+                        data-doot-composer-action="true"
+                        className="text-muted-foreground hover:bg-muted hover:text-foreground h-doot-control w-doot-control flex shrink-0 cursor-pointer items-center justify-center bg-transparent p-0 transition-colors"
                         type="button"
                         aria-label="Add attachments or connectors"
                       >
@@ -426,12 +384,12 @@ export function Composer({
                           handleAttachmentClick();
                           setShowPlusPopover(false);
                         }}
-                        data-radius="small-radius"
+                        data-radius="control"
                         className="hover:bg-accent flex w-full items-center gap-3 p-2 text-sm transition-colors"
                         type="button"
                       >
                         <div
-                          data-radius="radius"
+                          data-radius="surface"
                           className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center"
                         >
                           <Paperclip className="h-4 w-4" />
@@ -452,22 +410,74 @@ export function Composer({
               </Tooltip>
             </TooltipProvider>
 
-            <SimpleAgentSelector className="flex-1" />
             {/* Vertical divider - instant show/hide via display, no transition */}
             <div className="bg-border h-5 w-px flex-shrink-0 group-data-[expanded=true]/composer:hidden" />
           </div>
 
+          <div
+            className="doot-composer-config"
+            role="group"
+            aria-label="Composer configuration"
+          >
+            {config.features.localAgentEnabled && <WorkspaceSelector />}
+            <SimpleAgentSelector />
+            <ModelSelectorPopover
+              open={modelSelectorOpen}
+              onOpenChange={setModelSelectorOpen}
+              searchQuery={activeCommand?.query ?? ""}
+              autoFocusSearch={!activeCommand}
+              onSelect={handleModelSelect}
+              models={availableModels}
+              selectedModelId={selectedModel?.id}
+              trigger={
+                <button
+                  type="button"
+                  className="doot-model-chip text-muted-foreground hover:text-foreground focus-visible:ring-ring/40 flex cursor-pointer items-center gap-1.5 px-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2"
+                  data-radius="control"
+                  aria-label={`Select model${selectedModel ? `: ${selectedModel.name}` : ""}`}
+                  aria-haspopup="listbox"
+                  aria-expanded={modelSelectorOpen}
+                  title={selectedModel?.name ?? "Select model"}
+                >
+                  <span className="relative size-4 shrink-0">
+                    <ModelProviderIcon
+                      provider={selectedModel?.provider ?? "custom"}
+                      className="size-4"
+                    />
+                  </span>
+                  <span className="max-w-[100px] truncate">
+                    {selectedModel?.name ?? "Model"}
+                  </span>
+                  {selectedModel?.source === "local" && (
+                    <span className="bg-muted text-muted-foreground text-doot-fine shrink-0 rounded-full px-1.5 py-0.5 font-medium leading-none">
+                      Local
+                    </span>
+                  )}
+                  <ChevronDownIcon
+                    size="xs"
+                    className={cn(
+                      "shrink-0 transition-transform duration-150",
+                      modelSelectorOpen && "rotate-180",
+                    )}
+                  />
+                </button>
+              }
+            />
+            <PermissionSelector />
+          </div>
+
           {/* Primary Area - Editor + Attachments + Connected Apps */}
           <div
+            data-doot-composer-primary="true"
             className={cn(
               "flex w-full min-w-0 transition-all duration-300 [grid-area:primary]",
               "group-data-[expanded=false]/composer:items-center",
               "group-data-[expanded=true]/composer:mb-0.5 group-data-[expanded=true]/composer:items-start",
-              hasAttachments ? "flex-col gap-2" : "flex-row items-center",
+              hasContentBlocks ? "flex-col gap-2" : "flex-row items-center",
             )}
             style={{ transformOrigin: "0% 100%" }}
           >
-            {hasAttachments && (
+            {hasContentBlocks && (
               <div className="flex w-full flex-wrap items-start gap-2">
                 <ContentBlocksPreview
                   blocks={contentBlocks}
@@ -477,18 +487,19 @@ export function Composer({
             )}
             {/* Wrapper with transitioning max-height for smooth expansion/collapse */}
             <div
+              data-doot-composer-editor-shell="true"
               className={cn(
                 "relative w-full transition-all duration-300 ease-out",
                 "group-data-[expanded=false]/composer:overflow-hidden",
                 "group-data-[expanded=false]/composer:flex group-data-[expanded=false]/composer:items-center",
                 "group-data-[expanded=true]/composer:overflow-visible",
               )}
-              data-radius="radius"
+              data-radius="surface"
               style={{
                 maxHeight: isExpanded ? "208px" : "44px",
               }}
             >
-              {!hasMessage && !hasAttachments && (
+              {!hasMessage && (
                 <span
                   className={cn(
                     "text-muted-foreground pointer-events-none absolute left-3 z-10 text-base select-none",
@@ -515,6 +526,7 @@ export function Composer({
                 suppressContentEditableWarning
                 role="textbox"
                 aria-multiline="true"
+                aria-disabled={disabled}
                 aria-label={placeholder}
                 aria-placeholder={placeholder}
                 onInput={handleInput}
@@ -538,97 +550,48 @@ export function Composer({
             </div>
           </div>
 
-          {/* Trailing Area - Selected Model Chip + Send/Stop Button */}
+          {/* Trailing Area - Send/Stop only. Model is composer configuration. */}
           <div
             className={cn(
               "flex items-center justify-end gap-2 transition-all duration-300 [grid-area:trailing]",
             )}
             style={{ transformOrigin: "50% 50%" }}
           >
-            {/* Selected Model Chip - only show when model is explicitly selected */}
-            {selectedModel && (
-              <button
-                type="button"
-                onClick={() => onModelSelect?.(null as unknown as Model)}
-                className="group/model-chip bg-accent/50 text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex cursor-pointer items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors"
-                data-radius="radius"
-                aria-label={`Remove ${selectedModel.name}`}
-              >
-                {/* Provider Icon - changes to X on hover */}
-                <span className="relative h-3.5 w-3.5 flex-shrink-0">
-                  {/* Provider Icon - hidden on hover */}
-                  <span className="block group-hover/model-chip:hidden">
-                    <ProviderIcon
-                      provider={selectedModel.provider}
-                      className="h-3.5 w-3.5"
-                    />
-                  </span>
-                  {/* X Icon - shown on hover */}
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="hidden h-3.5 w-3.5 group-hover/model-chip:block"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </span>
-                <span className="max-w-[100px] truncate">
-                  {selectedModel.name}
-                </span>
-              </button>
-            )}
-
-            <div className="relative h-9 w-9 shrink-0">
-              {isLoading ? (
+            <div
+              data-doot-composer-submit-shell="true"
+              className="h-doot-control w-doot-control relative shrink-0"
+            >
+              {isLoading && isSendDisabled ? (
                 <button
                   type="button"
                   onClick={onCancel}
-                  aria-label="Cancel"
-                  data-radius="composer-radius"
-                  className="bg-foreground text-background focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center transition duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none"
+                  disabled={isStopping}
+                  aria-label={isStopping ? "Stopping agent" : "Stop agent"}
+                  title={isStopping ? "Stopping…" : "Stop"}
+                  data-radius="control"
+                  data-doot-composer-action="true"
+                  className="bg-foreground text-background focus-visible:ring-ring/50 absolute inset-0 z-50 flex items-center justify-center transition duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-wait disabled:opacity-70"
                 >
-                  <StopIcon />
+                  {isStopping ? (
+                    <LoaderIcon className="animate-spin" />
+                  ) : (
+                    <StopIcon />
+                  )}
                 </button>
               ) : (
                 <button
                   disabled={isSendDisabled}
                   type="submit"
                   aria-label="Send message"
-                  data-radius="composer-radius"
+                  data-radius="control"
+                  data-doot-composer-action="true"
                   className="bg-foreground text-background focus-visible:ring-ring/50 disabled:bg-muted disabled:text-muted-foreground absolute inset-0 z-50 flex items-center justify-center transition duration-200 hover:opacity-80 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5 -rotate-90 transition-all duration-500 ease-linear"
-                  >
-                    <path
-                      stroke="none"
-                      d="M0 0h24v24H0z"
-                      fill="none"
-                    />
-                    <path
-                      d="M5 12l14 0"
-                      className="transition-all duration-500 ease-linear"
-                      style={{
-                        strokeDasharray: hasMessage ? "14" : "7",
-                        strokeDashoffset: hasMessage ? "0" : "7",
-                      }}
-                    />
-                    <path d="M13 18l6 -6" />
-                    <path d="M13 6l6 6" />
-                  </svg>
+                  <ChevronUpIcon
+                    size="sm"
+                    strokeWidth={2.3}
+                    className="transition-all duration-200"
+                  />
                 </button>
               )}
             </div>
@@ -645,15 +608,6 @@ export function Composer({
         className="hidden"
       />
 
-      {/* Model Selector Popover */}
-      <ModelSelectorPopover
-        open={modelSelectorOpen}
-        onOpenChange={setModelSelectorOpen}
-        searchQuery={activeCommand?.query ?? ""}
-        onSelect={handleModelSelect}
-        selectedModelId={selectedModel?.id}
-        anchorEl={editorRef.current}
-      />
     </DragAndDropWrapper>
   );
 }

@@ -1,98 +1,145 @@
 /**
  * Thread Model Hook
  *
- * Manages model selection state per thread
- * Persists model selection in localStorage
+ * Resolves model selection against the selected agent's model policy and the
+ * merged backend model catalog. Thread selection remains cached in localStorage.
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryState } from "nuqs";
-import type { Model } from "@/types/model";
-import { getModelById } from "@/types/model";
 
-/**
- * Hook for managing model selection in a thread
- *
- * @returns Model state and actions
- */
+import type { Model } from "@/types/model";
+import { useModelCatalog } from "@/hooks/use-model-catalog";
+
+const MODEL_CHANGE_EVENT = "doot:thread-model-change";
+
+function storageKey(threadId: string) {
+  return `thread-model-${threadId}`;
+}
+
+function readCachedModelId(threadId: string | null) {
+  if (!threadId || typeof window === "undefined") return null;
+  try {
+    const cached = localStorage.getItem(storageKey(threadId));
+    return cached ? (JSON.parse(cached) as string) : null;
+  } catch (error) {
+    console.error("Failed to load cached model:", error);
+    return null;
+  }
+}
+
 export function useThreadModel() {
   const [threadId] = useQueryState("threadId");
+  const {
+    allModels,
+    availableModels,
+    defaultModel,
+    isReady: modelCatalogReady,
+  } = useModelCatalog();
+  const previousThreadId = useRef<string | null>(threadId);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(() =>
+    readCachedModelId(threadId),
+  );
 
-  // Get model from localStorage on mount
-  const [selectedModel, setSelectedModel] = useState<Model | null>(() => {
-    if (!threadId || typeof window === "undefined") return null;
+  const publishSelection = useCallback(
+    (modelId: string | null) => {
+      setSelectedModelId(modelId);
+      if (typeof window === "undefined") return;
+      window.dispatchEvent(
+        new CustomEvent(MODEL_CHANGE_EVENT, {
+          detail: { threadId, modelId },
+        }),
+      );
+    },
+    [threadId],
+  );
 
-    try {
-      const cached = localStorage.getItem(`thread-model-${threadId}`);
-      if (cached) {
-        const modelId = JSON.parse(cached);
-        return getModelById(modelId) || null;
-      }
-    } catch (error) {
-      console.error("Failed to load cached model:", error);
-    }
-
-    return null;
-  });
-
-  // Update localStorage when model changes
+  // Keep independent hook consumers (composer, edit/regenerate actions, etc.)
+  // synchronized without making the model choice a component-local concern.
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onModelChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail as
+        | { threadId?: string | null; modelId?: string | null }
+        | undefined;
+      if ((detail?.threadId ?? null) !== threadId) return;
+      setSelectedModelId(detail?.modelId ?? null);
+    };
+    window.addEventListener(MODEL_CHANGE_EVENT, onModelChange);
+    return () => window.removeEventListener(MODEL_CHANGE_EVENT, onModelChange);
+  }, [threadId]);
+
+  // Restore a persisted thread choice. When a new chat receives its first
+  // thread ID, preserve the model that was used to create that run.
+  useEffect(() => {
+    const previous = previousThreadId.current;
+    previousThreadId.current = threadId;
     if (!threadId) return;
 
-    if (selectedModel) {
-      try {
-        localStorage.setItem(
-          `thread-model-${threadId}`,
-          JSON.stringify(selectedModel.id),
-        );
-      } catch (error) {
-        console.error("Failed to cache model:", error);
-      }
-    } else {
-      try {
-        localStorage.removeItem(`thread-model-${threadId}`);
-      } catch (error) {
-        console.error("Failed to remove cached model:", error);
-      }
-    }
-  }, [threadId, selectedModel]);
-
-  // Clear model when thread changes
-  useEffect(() => {
-    if (!threadId) {
-      setSelectedModel(null);
-      return;
-    }
-
-    // Load model for new thread
-    try {
-      const cached = localStorage.getItem(`thread-model-${threadId}`);
-      if (cached) {
-        const modelId = JSON.parse(cached);
-        setSelectedModel(getModelById(modelId) || null);
-      } else {
-        setSelectedModel(null);
-      }
-    } catch (error) {
-      console.error("Failed to load thread model:", error);
-      setSelectedModel(null);
+    const cached = readCachedModelId(threadId);
+    if (cached) {
+      setSelectedModelId(cached);
+    } else if (previous !== null) {
+      setSelectedModelId(null);
     }
   }, [threadId]);
 
-  // Update model selection
-  const selectModel = useCallback((model: Model | null) => {
-    setSelectedModel(model);
-  }, []);
+  const selectedModel = useMemo(() => {
+    if (selectedModelId) {
+      const selected = availableModels.find(
+        (model) => model.id === selectedModelId,
+      );
+      if (selected) return selected;
+    }
+    return defaultModel;
+  }, [selectedModelId, availableModels, defaultModel]);
 
-  // Clear model selection
-  const clearModel = useCallback(() => {
-    setSelectedModel(null);
-  }, []);
+  // Agent switches change the allowed model set. Keep the current model when it
+  // is valid for both agents; otherwise move deterministically to the new
+  // agent's default model.
+  useEffect(() => {
+    if (!modelCatalogReady) return;
+    const nextModelId = selectedModel?.id ?? null;
+    if (nextModelId !== selectedModelId) publishSelection(nextModelId);
+  }, [modelCatalogReady, selectedModel, selectedModelId, publishSelection]);
+
+  useEffect(() => {
+    if (!threadId || typeof window === "undefined") return;
+    try {
+      if (selectedModel?.id) {
+        localStorage.setItem(
+          storageKey(threadId),
+          JSON.stringify(selectedModel.id),
+        );
+      } else {
+        localStorage.removeItem(storageKey(threadId));
+      }
+    } catch (error) {
+      console.error("Failed to cache model:", error);
+    }
+  }, [threadId, selectedModel?.id]);
+
+  const selectModel = useCallback(
+    (model: Model | null) => publishSelection(model?.id ?? null),
+    [publishSelection],
+  );
+
+  const clearModel = useCallback(() => publishSelection(null), [publishSelection]);
+
+  const resolveModel = useCallback(
+    (modelId: string) => allModels.find((model) => model.id === modelId),
+    [allModels],
+  );
 
   return {
     selectedModel,
     selectModel,
     clearModel,
+    resolveModel,
+    availableModels,
+    allModels,
+    defaultModel,
+    modelCatalogReady,
     hasModel: selectedModel !== null,
   };
 }

@@ -90,18 +90,19 @@ const TableCopyWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div
       ref={wrapperRef}
-      className="group/table relative my-5"
+      className="doot-table-wrap group/table relative"
     >
-      <button
-        type="button"
-        onClick={handleCopy}
-        aria-label="Copy table"
-        data-radius="radius"
-        className="absolute -top-2 right-0 z-10 flex h-7 items-center gap-1.5 border border-border bg-background px-2 text-xs text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover/table:opacity-100 hover:bg-accent hover:text-foreground"
-      >
-        {isCopied ? <CheckmarkCircleIcon size="xs" /> : <CopyIcon size="xs" />}
-        {isCopied ? "Copied" : "Copy"}
-      </button>
+      <div className="doot-table-toolbar">
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label="Copy table"
+          className="doot-rich-copy flex items-center gap-1.5"
+        >
+          {isCopied ? <CheckmarkCircleIcon size="xs" /> : <CopyIcon size="xs" />}
+          {isCopied ? "Copied" : "Copy"}
+        </button>
+      </div>
       {children}
     </div>
   );
@@ -115,14 +116,14 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between gap-3 overflow-hidden rounded-full border border-white/30 bg-white/40 px-4 pt-2 text-xs font-medium leading-tight text-foreground backdrop-blur-[8px] before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/80 before:to-transparent before:content-[''] after:absolute after:left-0 after:top-0 after:h-full after:w-px after:bg-gradient-to-b after:from-white/80 after:via-transparent after:to-white/30 after:content-[''] dark:border-white/10 dark:bg-black/40 dark:shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(255,255,255,0.05)] dark:before:via-white/30 dark:after:from-white/30 dark:after:to-white/10">
-      <span className="relative z-10 lowercase opacity-80 [&>span]:text-[0.7rem]">
+    <div className="doot-code-header sticky top-0 z-10 flex items-center justify-between gap-3">
+      <span className="doot-code-language lowercase">
         {language}
       </span>
       <TooltipIconButton
         tooltip="Copy"
         onClick={onCopy}
-        className="relative z-10"
+        className="doot-code-copy relative z-10"
       >
         {!isCopied && <CopyIcon size="xs" />}
         {isCopied && <CheckmarkCircleIcon size="xs" />}
@@ -232,7 +233,7 @@ const defaultComponents: any = {
     if (!match) {
       return (
         <p
-          className={cn("mb-4 mt-4 leading-7 first:mt-0 last:mb-0", className)}
+          className={cn("doot-markdown-paragraph", className)}
           {...props}
         >
           {processChildrenForCitations(children, citations)}
@@ -244,38 +245,38 @@ const defaultComponents: any = {
     const labelMap: Record<string, { wrapper: string; label: string }> = {
       note: {
         wrapper:
-          "my-4 rounded-lg border-amber-200 bg-amber-50/70 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300",
-        label: "font-semibold text-amber-700 dark:text-amber-300",
+          "my-4 rounded-lg border-semantic-warning/40 bg-semantic-warning-light text-semantic-warning",
+        label: "font-semibold text-semantic-warning",
       },
       tip: {
         wrapper:
-          "my-4 rounded-lg border-emerald-200 bg-emerald-50/70 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-300",
-        label: "font-semibold text-emerald-700 dark:text-emerald-300",
+          "my-4 rounded-lg border-semantic-success/40 bg-semantic-success-light text-semantic-success",
+        label: "font-semibold text-semantic-success",
       },
       info: {
         wrapper:
-          "my-4 rounded-lg border-sky-200 bg-sky-50/70 text-sky-900 dark:border-sky-900/40 dark:bg-sky-950/20 dark:text-sky-300",
-        label: "font-semibold text-sky-700 dark:text-sky-300",
+          "my-4 rounded-lg border-semantic-info/40 bg-semantic-info-light text-semantic-info",
+        label: "font-semibold text-semantic-info",
       },
       warning: {
         wrapper:
-          "my-4 rounded-lg border-orange-200 bg-orange-50/70 text-orange-900 dark:border-orange-900/40 dark:bg-orange-950/20 dark:text-orange-300",
-        label: "font-semibold text-orange-700 dark:text-orange-300",
+          "my-4 rounded-lg border-semantic-warning/40 bg-semantic-warning-light text-semantic-warning",
+        label: "font-semibold text-semantic-warning",
       },
       important: {
         wrapper:
-          "my-4 rounded-lg border-red-200 bg-red-50/70 text-red-900 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300",
-        label: "font-semibold text-red-700 dark:text-red-300",
+          "my-4 rounded-lg border-destructive/40 bg-destructive/10 text-destructive",
+        label: "font-semibold text-destructive",
       },
       caution: {
         wrapper:
-          "my-4 rounded-lg border-yellow-200 bg-yellow-50/70 text-yellow-900 dark:border-yellow-900/40 dark:bg-yellow-950/20 dark:text-yellow-300",
-        label: "font-semibold text-yellow-700 dark:text-yellow-300",
+          "my-4 rounded-lg border-semantic-warning/40 bg-semantic-warning-light text-semantic-warning",
+        label: "font-semibold text-semantic-warning",
       },
       todo: {
         wrapper:
-          "my-4 rounded-lg border-purple-200 bg-purple-50/70 text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-300",
-        label: "font-semibold text-purple-700 dark:text-purple-300",
+          "my-4 rounded-lg border-primary/40 bg-primary/10 text-primary",
+        label: "font-semibold text-primary",
       },
     };
 
@@ -313,55 +314,55 @@ const defaultComponents: any = {
       note: (
         <NoteIcon
           size="xs"
-          className="text-amber-600 dark:text-amber-300"
+          className="text-semantic-warning"
         />
       ),
       tip: (
         <TipIcon
           size="xs"
-          className="text-emerald-600 dark:text-emerald-300"
+          className="text-semantic-success"
         />
       ),
       info: (
         <InfoIcon
           size="xs"
-          className="text-sky-600 dark:text-sky-300"
+          className="text-semantic-info"
         />
       ),
       warning: (
         <WarningIcon
           size="xs"
-          className="text-orange-600 dark:text-orange-300"
+          className="text-semantic-warning"
         />
       ),
       important: (
         <ImportantIcon
           size="xs"
-          className="text-red-600 dark:text-red-300"
+          className="text-destructive"
         />
       ),
       caution: (
         <WarningIcon
           size="xs"
-          className="text-yellow-600 dark:text-yellow-300"
+          className="text-semantic-warning"
         />
       ),
       todo: (
         <TodoIcon
           size="xs"
-          className="text-purple-600 dark:text-purple-300"
+          className="text-primary"
         />
       ),
     };
     // Badge border colors to blend with wrapper border for each callout type
     const badgeBorderMap: Record<string, string> = {
-      note: "border-amber-300 dark:border-amber-900/60",
-      tip: "border-emerald-300 dark:border-emerald-900/60",
-      info: "border-sky-300 dark:border-sky-900/60",
-      warning: "border-orange-300 dark:border-orange-900/60",
-      important: "border-red-300 dark:border-red-900/60",
-      caution: "border-yellow-300 dark:border-yellow-900/60",
-      todo: "border-purple-300 dark:border-purple-900/60",
+      note: "border-semantic-warning/40",
+      tip: "border-semantic-success/40",
+      info: "border-semantic-info/40",
+      warning: "border-semantic-warning/40",
+      important: "border-destructive/40",
+      caution: "border-semantic-warning/40",
+      todo: "border-primary/40",
     };
     const labelText =
       match[1][0].toUpperCase() + match[1].slice(1).toLowerCase();
@@ -369,10 +370,10 @@ const defaultComponents: any = {
     return (
       <>
         {/* Consistency in padding and margin whatever */}
-        <div className={cn(wrapper, "relative px-3 py-2.5")}>
+        <div className={cn(wrapper, "doot-callout relative px-3 py-2.5")}>
           <span
             className={cn(
-              `absolute -left-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-transparent`,
+              `absolute -top-1.5 -left-1.5 flex size-6 items-center justify-center rounded-full bg-transparent`,
               badgeBorderMap[labelKey] ?? badgeBorderMap.note,
             )}
           >
@@ -393,7 +394,7 @@ const defaultComponents: any = {
   h1: ({ className, ...props }: { className?: string }) => (
     <h1
       className={cn(
-        "mb-5 scroll-m-20 text-2xl font-bold tracking-tight last:mb-0",
+        "doot-markdown-heading doot-markdown-h1 scroll-m-20",
         className,
       )}
       {...props}
@@ -402,7 +403,7 @@ const defaultComponents: any = {
   h2: ({ className, ...props }: { className?: string }) => (
     <h2
       className={cn(
-        "mb-2 mt-5 scroll-m-20 text-xl font-semibold tracking-tight first:mt-0 last:mb-0",
+        "doot-markdown-heading doot-markdown-h2 scroll-m-20",
         className,
       )}
       {...props}
@@ -411,7 +412,7 @@ const defaultComponents: any = {
   h3: ({ className, ...props }: { className?: string }) => (
     <h3
       className={cn(
-        "mb-2 mt-3 scroll-m-20 text-lg font-semibold tracking-tight first:mt-0 last:mb-0",
+        "doot-markdown-heading doot-markdown-h3 scroll-m-20",
         className,
       )}
       {...props}
@@ -420,7 +421,7 @@ const defaultComponents: any = {
   h4: ({ className, ...props }: { className?: string }) => (
     <h4
       className={cn(
-        "mb-2 mt-4 scroll-m-20 text-base font-semibold tracking-tight first:mt-0 last:mb-0",
+        "doot-markdown-heading doot-markdown-h4 scroll-m-20",
         className,
       )}
       {...props}
@@ -455,10 +456,7 @@ const defaultComponents: any = {
   ),
   a: ({ className, ...props }: { className?: string }) => (
     <a
-      className={cn(
-        "font-medium text-primary underline underline-offset-4",
-        className,
-      )}
+      className={cn("doot-markdown-link", className)}
       target="_blank"
       rel="noopener noreferrer"
       {...props}
@@ -466,19 +464,19 @@ const defaultComponents: any = {
   ),
   blockquote: ({ className, ...props }: { className?: string }) => (
     <blockquote
-      className={cn("border-l-2 pl-6 italic", className)}
+      className={cn("doot-blockquote", className)}
       {...props}
     />
   ),
   ul: ({ className, ...props }: { className?: string }) => (
     <ul
-      className={cn("my-5 ml-6 list-disc [&>li]:mt-2", className)}
+      className={cn("doot-markdown-list list-disc", className)}
       {...props}
     />
   ),
   ol: ({ className, ...props }: { className?: string }) => (
     <ol
-      className={cn("my-5 ml-6 list-decimal [&>li]:mt-2", className)}
+      className={cn("doot-markdown-list list-decimal", className)}
       {...props}
     />
   ),
@@ -574,18 +572,32 @@ const defaultComponents: any = {
   },
   hr: ({ className, ...props }: { className?: string }) => (
     <hr
-      className={cn("my-5 border-b", className)}
+      className={cn("doot-markdown-hr", className)}
+      {...props}
+    />
+  ),
+  img: ({
+    className,
+    alt = "",
+    ...props
+  }: {
+    className?: string;
+    alt?: string;
+  }) => (
+    <img
+      className={cn("doot-markdown-image", className)}
+      alt={alt}
+      loading="lazy"
       {...props}
     />
   ),
   table: ({ className, ...props }: { className?: string }) => (
     <TableCopyWrapper>
       <div
-        data-radius="radius"
-        className="w-full overflow-x-auto border border-border"
+        className="doot-table w-full overflow-x-auto"
       >
         <table
-          className={cn("w-full border-collapse text-sm", className)}
+          className={cn("doot-table-element w-full border-collapse", className)}
           {...props}
         />
       </div>
@@ -594,7 +606,7 @@ const defaultComponents: any = {
   th: ({ className, ...props }: { className?: string }) => (
     <th
       className={cn(
-        "bg-muted/60 border-b border-r border-border px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
+        "doot-table-head text-left last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -603,7 +615,7 @@ const defaultComponents: any = {
   td: ({ className, ...props }: { className?: string }) => (
     <td
       className={cn(
-        "border-b border-r border-border px-4 py-2.5 text-sm last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
+        "doot-table-cell last:border-r-0 [&[align=center]]:text-center [&[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -612,7 +624,7 @@ const defaultComponents: any = {
   tr: ({ className, ...props }: { className?: string }) => (
     <tr
       className={cn(
-        "hover:bg-muted/30 transition-colors last:[&>td]:border-b-0",
+        "doot-table-row last:[&>td]:border-b-0",
         className,
       )}
       {...props}
@@ -626,10 +638,7 @@ const defaultComponents: any = {
   ),
   pre: ({ className, ...props }: { className?: string }) => (
     <pre
-      className={cn(
-        // "overflow-x-auto",
-        className,
-      )}
+      className={cn("doot-pre min-w-0 max-w-full", className)}
       {...props}
     />
   ),
@@ -650,8 +659,7 @@ const defaultComponents: any = {
       if (language.toLowerCase() === "mermaid") {
         return (
           <div
-            data-radius="radius"
-            className="relative overflow-hidden border bg-card p-2 text-card-foreground"
+            className="doot-rich-card doot-mermaid-card relative overflow-hidden"
           >
             <MermaidDiagram chart={code} />
           </div>
@@ -661,8 +669,7 @@ const defaultComponents: any = {
       // Regular code block with syntax highlighting
       return (
         <div
-          data-radius="radius"
-          className="relative border bg-card text-card-foreground"
+          className="doot-code-block relative"
         >
           <CodeHeader
             language={language}
@@ -683,7 +690,7 @@ const defaultComponents: any = {
     return (
       <code
         className={cn(
-          "rounded-full bg-muted px-1 py-0.5 text-[0.9em] font-normal",
+          "doot-inline-code rounded-md px-1.5 py-0.5 text-[0.9em] font-normal",
           className,
         )}
       >
@@ -749,7 +756,7 @@ const MarkdownTextImpl: FC<{
   };
 
   return (
-    <div className={cn("markdown-content max-w-3xl", className)}>
+    <div className={cn("doot-markdown markdown-content w-full min-w-0", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

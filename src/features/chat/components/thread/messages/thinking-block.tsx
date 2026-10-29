@@ -53,7 +53,7 @@ export function ThinkingBlock({ thinkingBlocks }: ThinkingBlockProps) {
             <span className="flex-1" />
           </button>
         }
-        contentClassName="bg-gray-100"
+        contentClassName="bg-muted"
       >
         {/* Collapsible Content - Chain of Thoughts Timeline */}
         <AnimatePresence>

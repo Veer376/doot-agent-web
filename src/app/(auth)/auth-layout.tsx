@@ -20,24 +20,24 @@ export default function AuthLayout({
           <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
             <Skeleton
               className="h-8 w-64"
-              data-radius="radius"
+              data-radius="surface"
             />
           </div>
 
           <div className="space-y-3">
             <Skeleton
               className="h-11 w-full"
-              data-radius="radius"
+              data-radius="surface"
             />
             <Skeleton
               className="h-11 w-full"
-              data-radius="radius"
+              data-radius="surface"
             />
 
             <div className="pt-2">
               <Skeleton
                 className="h-10 w-full"
-                data-radius="radius"
+                data-radius="surface"
               />
             </div>
           </div>
@@ -50,13 +50,13 @@ export default function AuthLayout({
 
           <Skeleton
             className="h-12 w-full"
-            data-radius="radius"
+            data-radius="surface"
           />
 
           <div className="mt-6 flex justify-center gap-1">
             <Skeleton
               className="h-5 w-32"
-              data-radius="radius"
+              data-radius="surface"
             />
           </div>
         </div>

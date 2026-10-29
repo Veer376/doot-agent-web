@@ -10,11 +10,12 @@ export interface Model {
     provider: "openai" | "anthropic" | "google" | "custom";
     description?: string;
     contextWindow?: number;
+    source?: "cloud" | "local" | string;
+    runtimeModel?: string;
 }
 
 /**
- * Available models for selection
- * TODO: Fetch from backend API in future
+ * Built-in/cloud catalog. Backend catalogs are merged with this list at runtime.
  */
 export const AVAILABLE_MODELS: Model[] = [
     {
@@ -64,8 +65,8 @@ export const AVAILABLE_MODELS: Model[] = [
 /**
  * Get model by ID
  */
-export function getModelById(id: string): Model | undefined {
-    return AVAILABLE_MODELS.find((model) => model.id === id);
+export function getModelById(id: string, models: Model[] = AVAILABLE_MODELS): Model | undefined {
+    return models.find((model) => model.id === id);
 }
 
 /**

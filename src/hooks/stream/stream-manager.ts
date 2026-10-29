@@ -190,6 +190,53 @@ export class StreamManager<StateType extends Record<string, unknown>> {
         break;
       }
 
+      case "messages": {
+        // Current LangGraph messages-tuple streams emit one tuple per event:
+        // [messageChunk, metadata]. Merge chunks by message ID so React sees
+        // the assistant response grow while the run is still active.
+        const data = event.data as [
+          Message,
+          Record<string, unknown> | undefined,
+        ];
+        if (!Array.isArray(data) || !data[0]) break;
+
+        const [message, metadata] = data;
+        const currentValues = this.state.values ?? options.initialValues;
+        const currentMessages = getMessages(currentValues);
+        const managed = this.messageManager.add(
+          message,
+          metadata,
+          currentMessages.length,
+        );
+
+        if (!managed) break;
+
+        let updatedMessages = [...currentMessages];
+        const existingIndex = updatedMessages.findIndex(
+          (item) => item.id === managed.id,
+        );
+        const targetIndex =
+          existingIndex >= 0
+            ? existingIndex
+            : (managed.index ?? updatedMessages.length);
+
+        if (managed.message.type === "remove") {
+          if (managed.id === "__remove_all__") {
+            updatedMessages = [];
+          } else if (existingIndex >= 0) {
+            updatedMessages.splice(existingIndex, 1);
+          }
+        } else if (targetIndex < updatedMessages.length) {
+          updatedMessages[targetIndex] = managed.message;
+        } else {
+          updatedMessages.push(managed.message);
+        }
+
+        const newValues = setMessages(currentValues, updatedMessages);
+        this.setState({ values: newValues });
+        break;
+      }
+
       case "messages/partial": {
         // Handle message chunks during streaming
         const data = event.data as Array<[Message, Record<string, unknown>]>;

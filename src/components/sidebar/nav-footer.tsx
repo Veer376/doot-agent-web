@@ -5,6 +5,7 @@ import {
   UserIconHuge,
   LoaderIcon,
   TriangleAlertIcon,
+  CheckIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -183,7 +184,13 @@ export function NavFooter() {
             >
               <LightThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>Light</span>
-              {theme === "light" && <span className="ml-auto text-xs">✓</span>}
+              {theme === "light" && (
+                <CheckIcon
+                  size="xs"
+                  className="ml-auto"
+                  aria-hidden="true"
+                />
+              )}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setTheme("dark")}
@@ -191,7 +198,13 @@ export function NavFooter() {
             >
               <DarkThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>Dark</span>
-              {theme === "dark" && <span className="ml-auto text-xs">✓</span>}
+              {theme === "dark" && (
+                <CheckIcon
+                  size="xs"
+                  className="ml-auto"
+                  aria-hidden="true"
+                />
+              )}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setTheme("system")}
@@ -199,7 +212,13 @@ export function NavFooter() {
             >
               <SystemThemeIcon size={DEFAULT_ICON_SIZE} />
               <span>System</span>
-              {theme === "system" && <span className="ml-auto text-xs">✓</span>}
+              {theme === "system" && (
+                <CheckIcon
+                  size="xs"
+                  className="ml-auto"
+                  aria-hidden="true"
+                />
+              )}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -222,7 +241,7 @@ export function NavFooter() {
             )}
             {!isProdEnv && (
               <DropdownMenuItem onClick={handleClearLocalData}>
-                <TriangleAlertIcon className="mr-2 h-4 w-4 text-red-500" />
+                <TriangleAlertIcon className="mr-2 h-4 w-4 text-destructive" />
                 Clear local data
               </DropdownMenuItem>
             )}
@@ -235,8 +254,8 @@ export function NavFooter() {
         onOpenChange={setShowLogoutDialog}
       >
         <DialogContent
-          className="gap-6 p-6 sm:max-w-[22rem]"
-          data-radius="radius"
+          className="gap-6 p-6 sm:max-w-88"
+          data-radius="overlay"
         >
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-center text-xl font-semibold">
@@ -249,8 +268,8 @@ export function NavFooter() {
           <div className="flex flex-col gap-3">
             <Button
               onClick={performSignOut}
-              data-radius="radius"
-              className="h-11 bg-black text-white hover:bg-black/90"
+              data-radius="control"
+              className="h-11 bg-foreground text-background hover:bg-foreground/90"
               disabled={isSigningOut}
             >
               {isSigningOut ? (
@@ -265,8 +284,8 @@ export function NavFooter() {
             <Button
               variant="outline"
               onClick={() => setShowLogoutDialog(false)}
-              data-radius="radius"
-              className="h-11 w-full border-gray-200"
+              data-radius="control"
+              className="h-11 w-full border-border"
               disabled={isSigningOut}
             >
               Cancel

@@ -19,7 +19,7 @@ export function ConfigSection({
   return (
     <div className={cn("mb-6", className)}>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
         {action}
       </div>
       <div className="space-y-4">{children}</div>

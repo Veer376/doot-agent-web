@@ -8,7 +8,7 @@ export function NonInterruptedDescriptionView(
 ) {
   return (
     <div className="w-full pt-6 pb-2">
-      <p className="text-sm text-gray-500 italic">
+      <p className="text-sm text-muted-foreground italic">
         This thread has no additional description.
       </p>
     </div>

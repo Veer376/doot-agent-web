@@ -3,7 +3,7 @@ import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CommandBar } from "./shared";
-import { MarkdownText } from "@/components/ui/markdown-text";
+import { MarkdownText } from "@/components/ui/markdown-text/lazy";
 import {
   extractChainOfThought,
   type ChainStep,
@@ -12,15 +12,17 @@ import {
   ChainOfThought,
   ChainOfThoughtHeader,
   ChainOfThoughtContent,
-  ChainOfThoughtPreview,
   ChainOfThoughtStep,
 } from "@/components/ai-elements/chain-of-thought";
-import { DotIcon, CheckCircle2Icon, ShieldAlert } from "lucide-react";
-import { ToolsIcon } from "@/components/icons";
-import React, { useMemo } from "react";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+import { DotIcon } from "@/components/icons";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ToolItem, type ToolState } from "./tool-item";
+import { ToolGroup, type ToolGroupEntry } from "./tool-group";
 import { ResponseSelectionActions } from "./response-selection-actions";
+import {
+  compactWorkedTimeline,
+  flattenWorkedBlocks,
+} from "./worked-timeline";
 
 /**
  * Convert ChainStep status to ToolState
@@ -38,6 +40,29 @@ function stepStatusToToolState(
     default:
       return "pending";
   }
+}
+
+type ToolStep = Extract<ChainStep, { type: "tool" }>;
+
+function parseStateTime(value: string | null | undefined) {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function formatWorkedDuration(milliseconds: number | null) {
+  if (milliseconds == null || milliseconds < 0) return null;
+  const totalMinutes = Math.floor(milliseconds / 60_000);
+  if (totalMinutes < 1) return "<1 minute";
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const hourLabel = `${hours} hour${hours === 1 ? "" : "s"}`;
+  const minuteLabel = `${minutes} minute${minutes === 1 ? "" : "s"}`;
+
+  if (hours === 0) return minuteLabel;
+  if (minutes === 0) return hourLabel;
+  return `${hourLabel} ${minuteLabel}`;
 }
 
 interface AITurnProps {
@@ -72,6 +97,94 @@ export const AITurn = React.memo(function AITurn({
   const humanMeta = humanMessage
     ? thread.getMessagesMetadata(humanMessage)
     : undefined;
+
+  const hasWorked = chainData.hasThinking || chainData.hasToolCalls;
+  const lastWorkedBlockIndex = useMemo(() => {
+    for (let index = chainData.renderBlocks.length - 1; index >= 0; index--) {
+      if (chainData.renderBlocks[index].type !== "content") return index;
+    }
+    return -1;
+  }, [chainData.renderBlocks]);
+  const workedBlocks =
+    lastWorkedBlockIndex >= 0
+      ? chainData.renderBlocks.slice(0, lastWorkedBlockIndex + 1)
+      : [];
+  const responseBlocks =
+    lastWorkedBlockIndex >= 0
+      ? chainData.renderBlocks.slice(lastWorkedBlockIndex + 1)
+      : chainData.renderBlocks;
+
+  const historicalTurnTimes = turnMessages
+    .map((message) =>
+      parseStateTime(
+        thread.getMessagesMetadata(message)?.firstSeenState?.created_at,
+      ),
+    )
+    .filter((timestamp): timestamp is number => timestamp != null);
+  const historicalStartedAt =
+    historicalTurnTimes[0] ??
+    parseStateTime(humanMeta?.firstSeenState?.created_at) ??
+    null;
+  const historicalEndedAt = historicalTurnTimes.at(-1) ?? null;
+  const wasLoading = useRef(isLoading);
+  const [liveStartedAt, setLiveStartedAt] = useState<number | null>(() =>
+    isLoading ? Date.now() : null,
+  );
+  const [liveCompletedAt, setLiveCompletedAt] = useState<number | null>(null);
+  const [liveNow, setLiveNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (isLoading) {
+      setLiveCompletedAt(null);
+      if (!wasLoading.current) setLiveStartedAt(Date.now());
+    } else if (wasLoading.current) {
+      setLiveCompletedAt(Date.now());
+    }
+    wasLoading.current = isLoading;
+  }, [isLoading]);
+
+  const effectiveStartedAt = historicalStartedAt ?? liveStartedAt;
+
+  // The label only displays whole minutes, so tick at the next minute boundary
+  // instead of re-rendering the entire active turn every second.
+  useEffect(() => {
+    if (!isLoading || effectiveStartedAt == null) return;
+
+    let timeoutId: number | undefined;
+    const updateAndSchedule = () => {
+      const now = Date.now();
+      setLiveNow(now);
+
+      const elapsed = Math.max(0, now - effectiveStartedAt);
+      const remainder = elapsed % 60_000;
+      const untilNextMinute = 60_000 - remainder;
+      timeoutId = window.setTimeout(
+        updateAndSchedule,
+        Math.max(1_000, untilNextMinute + 50),
+      );
+    };
+
+    updateAndSchedule();
+    return () => {
+      if (timeoutId != null) window.clearTimeout(timeoutId);
+    };
+  }, [isLoading, effectiveStartedAt]);
+
+  const runningDuration = formatWorkedDuration(
+    isLoading && effectiveStartedAt != null ? liveNow - effectiveStartedAt : null,
+  );
+  const workedDuration = formatWorkedDuration(
+    effectiveStartedAt != null && (liveCompletedAt ?? historicalEndedAt) != null
+      ? (liveCompletedAt ?? historicalEndedAt)! - effectiveStartedAt
+      : null,
+  );
+  const workedLabel = isLoading
+    ? runningDuration
+      ? `Working ${runningDuration}`
+      : "Working…"
+    : workedDuration
+      ? `Worked ${workedDuration}`
+      : "Worked";
 
   // Combine all content for the command bar
   const combinedContent = chainData.renderBlocks
@@ -127,6 +240,45 @@ export const AITurn = React.memo(function AITurn({
     });
   };
 
+  const toolStepToEntry = (step: ToolStep): ToolGroupEntry => {
+    const interruptAny = thread.interrupt as any;
+    const needsApproval = Boolean(
+      thread.interrupt && interruptAny.tool_call?.id === step.toolCall.id,
+    );
+
+    // Preserve the existing interrupt-match diagnostics while tool rendering
+    // moves through the Worked compaction state machine.
+    if (
+      thread.interrupt &&
+      step.toolCall.name === interruptAny.tool_call?.name
+    ) {
+      console.log("[AITurn ToolItem] Checking tool for interrupt match:");
+      console.log("  step.toolCall.id:", step.toolCall.id);
+      console.log(
+        "  thread.interrupt.tool_call.id:",
+        interruptAny.tool_call?.id,
+      );
+      console.log("  needsApproval:", needsApproval);
+    }
+
+    return {
+      toolCall: {
+        id: step.toolCall.id,
+        name: step.toolCall.name,
+        args: step.toolCall.args as Record<string, unknown>,
+      },
+      toolResponse: step.toolResponse,
+      state: stepStatusToToolState(step.status),
+      interrupt: needsApproval
+        ? {
+            needsApproval: true,
+            onApprove: (thread as any).approve,
+            onReject: (thread as any).reject,
+          }
+        : undefined,
+    };
+  };
+
   // Render a single step (thinking or tool)
   const renderStep = (
     step: ChainStep,
@@ -138,7 +290,11 @@ export const AITurn = React.memo(function AITurn({
         <ChainOfThoughtStep
           key={`thinking-${idx}-${isPreview ? "preview" : "full"}`}
           icon={DotIcon}
-          label={step.heading}
+          label={
+            step.content.trim() && /^Thinking(?:\.\.\.|…)?$/i.test(step.heading)
+              ? ""
+              : step.heading
+          }
           status="complete"
           isPreview={isPreview}
           className="space-y-1"
@@ -149,259 +305,121 @@ export const AITurn = React.memo(function AITurn({
         </ChainOfThoughtStep>
       );
     } else {
-      // Tool step - check if it needs HITL approval
-      const interruptAny = thread.interrupt as any;
-      const needsApproval = Boolean(
-        thread.interrupt && interruptAny.tool_call?.id === step.toolCall.id,
-      );
-
-      // Debug logging for interrupt matching
-      if (
-        thread.interrupt &&
-        step.toolCall.name === interruptAny.tool_call?.name
-      ) {
-        console.log("[AITurn renderStep] Checking tool for interrupt match:");
-        console.log("  step.toolCall.id:", step.toolCall.id);
-        console.log(
-          "  thread.interrupt.tool_call.id:",
-          interruptAny.tool_call?.id,
-        );
-        console.log("  needsApproval:", needsApproval);
-      }
-
       return (
-        <ChainOfThoughtStep
-          key={`tool-${step.toolCall.id}-${idx}-${isPreview ? "preview" : "full"}`}
-          icon={needsApproval ? ShieldAlert : ToolsIcon}
-          label=""
-          status={
-            needsApproval
-              ? "pending"
-              : step.status === "pending"
-                ? "pending"
-                : "complete"
-          }
-          isPreview={isPreview}
-          className="space-y-1"
-        >
-          <ToolItem
-            toolCall={{
-              id: step.toolCall.id,
-              name: step.toolCall.name,
-              args: step.toolCall.args as Record<string, unknown>,
-            }}
-            toolResponse={step.toolResponse}
-            state={stepStatusToToolState(step.status)}
-            interrupt={
-              needsApproval
-                ? {
-                    needsApproval: true,
-                    onApprove: (thread as any).approve,
-                    onReject: (thread as any).reject,
-                  }
-                : undefined
-            }
-            defaultExpanded={false}
-          />
-        </ChainOfThoughtStep>
+        <ToolItem
+          key={`tool-${step.toolCall.id}-${idx}`}
+          {...toolStepToEntry(step)}
+          defaultExpanded={false}
+        />
       );
     }
   };
 
+  const workedTimeline = useMemo(
+    () => compactWorkedTimeline(flattenWorkedBlocks(workedBlocks), isLoading),
+    [workedBlocks, isLoading],
+  );
+
+  const renderWorkedSegment = (
+    segment: (typeof workedTimeline)[number],
+    segmentIdx: number,
+  ) => {
+    if (segment.type === "tool-group") {
+      return (
+        <ToolGroup
+          key={`worked-tool-group-${segmentIdx}-${segment.tools[0]?.toolCall.id || "group"}`}
+          entries={segment.tools.map(toolStepToEntry)}
+        />
+      );
+    }
+
+    if (segment.item.type === "tool") {
+      return (
+        <React.Fragment key={`worked-tool-${segment.item.step.toolCall.id || segmentIdx}`}>
+          {renderStep(segment.item.step, segmentIdx, false)}
+        </React.Fragment>
+      );
+    }
+
+    if (segment.item.type === "thinking") {
+      return (
+        <React.Fragment key={`worked-thinking-${segmentIdx}`}>
+          {renderStep(segment.item.step, segmentIdx, false)}
+        </React.Fragment>
+      );
+    }
+
+    return (
+      <ChainOfThoughtStep
+        key={`worked-text-${segmentIdx}`}
+        icon={DotIcon}
+        label=""
+        status="complete"
+        className="space-y-1"
+      >
+        <div className="prose prose-sm mt-1 max-w-none text-sm">
+          <MarkdownText citations={citations}>{segment.item.content}</MarkdownText>
+        </div>
+      </ChainOfThoughtStep>
+    );
+  };
+
+  const renderResponseBlock = (
+    block: (typeof chainData.renderBlocks)[number],
+    blockIdx: number,
+  ) => {
+    if (block.type !== "content") return null;
+    return (
+      <motion.div
+        key={`content-${blockIdx}`}
+        data-doot-response-content="true"
+        className="doot-response min-w-0 py-1 [overflow-wrap:anywhere]"
+        initial={{ opacity: 0, y: 4 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          transition: {
+            duration: 0.3,
+            ease: [0.19, 1, 0.22, 1],
+          },
+        }}
+      >
+        <MarkdownText citations={citations}>{block.content}</MarkdownText>
+      </motion.div>
+    );
+  };
+
   return (
     <ResponseSelectionActions
+      turnId={turnMessages[0]?.id ?? ""}
       disabled={isLoading}
-      className="group mr-auto flex w-full min-w-0 items-start gap-2"
+      className="doot-assistant-turn group mr-auto flex w-full min-w-0 items-start gap-2"
     >
       <div className="flex w-full min-w-0 flex-col gap-2">
-        {/* Render all blocks in order */}
-        {chainData.renderBlocks.map((block, blockIdx) => {
-          if (block.type === "thinking-group") {
-            // Get the last step for preview
-            const lastStep = block.steps[block.steps.length - 1];
+        {hasWorked && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+            }}
+          >
+            <ChainOfThought processing={isLoading} defaultOpen={isLoading}>
+              <ChainOfThoughtHeader>{workedLabel}</ChainOfThoughtHeader>
+              <ChainOfThoughtContent>
+                {workedTimeline.map(renderWorkedSegment)}
+              </ChainOfThoughtContent>
+            </ChainOfThought>
+          </motion.div>
+        )}
 
-            // Determine if this is active thinking or completed thoughts
-            // Active: last thinking-group block AND still loading
-            // Complete: everything else (has content after, not loading, or not last block)
-            const isLastThinkingGroup =
-              blockIdx === chainData.renderBlocks.length - 1;
-            const isActiveThinking = isLoading && isLastThinkingGroup;
-
-            // Always show preview with the last step (when collapsed)
-            // The ChainOfThoughtPreview component handles hiding when expanded
-            const shouldShowPreview = true;
-
-            // Render thinking block with steps and smooth entrance animation
-            return (
-              <motion.div
-                key={`thinking-wrapper-${blockIdx}`}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    duration: 0.5,
-                    ease: [0.16, 1, 0.3, 1],
-                  },
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -8,
-                  transition: {
-                    duration: 0.4,
-                    ease: [0.7, 0, 0.84, 0],
-                  },
-                }}
-              >
-                <ChainOfThought
-                  key={`thinking-${blockIdx}`}
-                  defaultOpen={false}
-                >
-                  <ChainOfThoughtHeader>
-                    {isActiveThinking ? (
-                      <Shimmer
-                        duration={1}
-                        spread={2}
-                      >
-                        Thinking...
-                      </Shimmer>
-                    ) : (
-                      "Thoughts"
-                    )}
-                  </ChainOfThoughtHeader>
-
-                  {/* Preview: Show last step when collapsed (actively streaming and no content after) */}
-                  {/* ChainOfThoughtPreview automatically hides when isOpen=true, preventing duplication */}
-                  <ChainOfThoughtPreview
-                    showPreview={shouldShowPreview}
-                    contentKey={
-                      lastStep
-                        ? `${lastStep.type}-${block.steps.length}-${blockIdx}`
-                        : undefined
-                    }
-                  >
-                    {lastStep &&
-                      renderStep(lastStep, block.steps.length - 1, true)}
-                  </ChainOfThoughtPreview>
-
-                  {/* Full content: Show all steps when expanded */}
-                  {/* Preview is automatically hidden when expanded, so no duplication occurs */}
-                  <ChainOfThoughtContent>
-                    {block.steps.map((step, stepIdx) =>
-                      renderStep(step, stepIdx, false),
-                    )}
-
-                    {/* Done step if group is complete */}
-                    {block.showDone && (
-                      <ChainOfThoughtStep
-                        icon={CheckCircle2Icon}
-                        label="Done"
-                        status="complete"
-                        className="space-y-0"
-                      />
-                    )}
-                  </ChainOfThoughtContent>
-                </ChainOfThought>
-              </motion.div>
-            );
-          } else if (block.type === "content") {
-            // Render content block with smooth animation
-            return (
-              <motion.div
-                key={`content-${blockIdx}`}
-                className="min-w-0 py-1 text-base leading-7 [overflow-wrap:anywhere]"
-                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  transition: {
-                    duration: 0.6,
-                    ease: [0.16, 1, 0.3, 1],
-                    delay: 0.1,
-                  },
-                }}
-              >
-                <MarkdownText citations={citations}>
-                  {block.content}
-                </MarkdownText>
-              </motion.div>
-            );
-          } else if (block.type === "tools-only") {
-            // Render standalone tools WITHOUT thinking wrapper
-            // New design: Fixed container for tool name, response expands below independently
-            return (
-              <div
-                key={`tools-${blockIdx}`}
-                className="my-2 flex flex-col gap-2"
-              >
-                {block.tools.map((toolStep, stepIdx) => {
-                  // Type assertion: we know tools array only contains tool steps
-                  const step = toolStep as Extract<
-                    typeof toolStep,
-                    { type: "tool" }
-                  >;
-
-                  // Check if this tool needs HITL approval
-                  const interruptAny2 = thread.interrupt as any;
-                  const needsApproval = Boolean(
-                    thread.interrupt &&
-                    interruptAny2.tool_call?.id === step.toolCall.id,
-                  );
-
-                  // Debug logging for interrupt matching
-                  if (
-                    thread.interrupt &&
-                    step.toolCall.name === interruptAny2.tool_call?.name
-                  ) {
-                    console.log(
-                      "[AITurn ToolItem] Checking tool for interrupt match:",
-                    );
-                    console.log("  step.toolCall.id:", step.toolCall.id);
-                    console.log(
-                      "  thread.interrupt.tool_call.id:",
-                      interruptAny2.tool_call?.id,
-                    );
-                    console.log("  needsApproval:", needsApproval);
-                  }
-
-                  return (
-                    <ToolItem
-                      key={`tool-standalone-${step.toolCall.id || stepIdx}`}
-                      toolCall={{
-                        id: step.toolCall.id,
-                        name: step.toolCall.name,
-                        args: step.toolCall.args as Record<string, unknown>,
-                      }}
-                      toolResponse={step.toolResponse}
-                      state={stepStatusToToolState(step.status)}
-                      interrupt={
-                        needsApproval
-                          ? {
-                              needsApproval: true,
-                              onApprove: (thread as any).approve,
-                              onReject: (thread as any).reject,
-                            }
-                          : undefined
-                      }
-                    />
-                  );
-                })}
-              </div>
-            );
-          }
-          return null;
-        })}
+        {responseBlocks.map(renderResponseBlock)}
 
         {/* CommandBar - only shown when streaming is complete */}
         {/* Don't render at all while loading to avoid showing non-functional buttons */}
         {!isLoading && (
-          <div
-            className={cn(
-              "mr-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
-              "opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0 md:delay-[600ms]",
-            )}
-          >
+          <div className={cn("doot-message-actions mr-auto flex items-center")}>
             <CommandBar
               content={combinedContent}
               isLoading={false}

@@ -35,8 +35,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isPrimaryAgent } from "@/lib/agent-utils";
-import { LoaderCircle, Save, X, RotateCcw, Plus } from "lucide-react";
-import { DeleteIcon } from "@/components/icons";
+import {
+  LoaderIcon as LoaderCircle,
+  SaveIcon as Save,
+  XIcon as X,
+  RefreshIcon as RotateCcw,
+  PlusIcon as Plus,
+  DeleteIcon,
+} from "@/components/icons";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQueryState } from "nuqs";
 
@@ -83,7 +89,7 @@ function NameAndDescriptionContent({
       <div className="flex flex-col gap-4 py-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="name">
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-destructive">*</span>
           </Label>
           <Input
             placeholder="Agent Name"
@@ -349,7 +355,7 @@ function EditConfigurationDialogContent({ onClose }: { onClose: () => void }) {
                   placeholder="Search tools..."
                 />
                 <div
-                  data-radius="radius"
+                  data-radius="surface"
                   className="flex-1 space-y-4 overflow-y-auto"
                 >
                   {agentId &&
@@ -365,17 +371,17 @@ function EditConfigurationDialogContent({ onClose }: { onClose: () => void }) {
                       />
                     ))}
                   {agentId && displayTools.length === 0 && toolSearchTerm && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
+                    <p className="mt-4 text-center text-sm text-muted-foreground">
                       No tools found matching "{toolSearchTerm}".
                     </p>
                   )}
                   {!agentId && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
+                    <p className="mt-4 text-center text-sm text-muted-foreground">
                       Select an agent to see tools.
                     </p>
                   )}
                   {agentId && tools.length === 0 && !toolSearchTerm && (
-                    <p className="mt-4 text-center text-sm text-slate-500">
+                    <p className="mt-4 text-center text-sm text-muted-foreground">
                       No tools available for this agent.
                     </p>
                   )}

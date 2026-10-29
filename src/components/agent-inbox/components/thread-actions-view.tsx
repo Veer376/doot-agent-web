@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
+  ArrowLeftIcon as ArrowLeft,
+  RefreshIcon as RefreshCw,
+  TriangleAlertIcon as AlertTriangle,
   ClockIcon,
-  AlertCircle,
-  Loader,
-} from "lucide-react";
+  AlertCircleIconHuge as AlertCircle,
+  LoaderIcon as Loader,
+} from "@/components/icons";
 import { ThreadData, GenericThreadData } from "../types";
 import useInterruptedActions from "../hooks/use-interrupted-actions";
 import { constructOpenInStudioURL } from "../utils";
@@ -65,8 +65,8 @@ function ButtonGroup({
       <Button
         variant="outline"
         className={cn(
-          "rounded-l-md rounded-r-none border-r-[0px]",
-          showingState ? "text-black" : "bg-white",
+          "rounded-l-md rounded-r-none border-r-0",
+          showingState ? "text-foreground" : "bg-background",
         )}
         size="sm"
         onClick={handleShowState}
@@ -76,8 +76,8 @@ function ButtonGroup({
       <Button
         variant="outline"
         className={cn(
-          "rounded-l-none rounded-r-md border-l-[0px]",
-          showingDescription ? "text-black" : "bg-white",
+          "rounded-l-none rounded-r-md border-l-0",
+          showingDescription ? "text-foreground" : "bg-background",
         )}
         size="sm"
         onClick={handleShowDescription}
@@ -234,11 +234,11 @@ export function ThreadActionsView<
   // Status Icon Logic
   const getStatusIcon = () => {
     if (isIdleThread(threadData)) {
-      return <ClockIcon className="h-4 w-4 text-gray-500" />;
+      return <ClockIcon className="h-4 w-4 text-muted-foreground" />;
     } else if (isBusyThread(threadData)) {
-      return <Loader className="h-4 w-4 animate-spin text-blue-500" />;
+      return <Loader className="h-4 w-4 animate-spin text-semantic-info" />;
     } else if (isErrorThread(threadData)) {
-      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      return <AlertTriangle className="h-4 w-4 text-destructive" />;
     }
     return null;
   };
@@ -276,7 +276,7 @@ export function ThreadActionsView<
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex items-center gap-1 bg-white"
+                  className="flex items-center gap-1 bg-background"
                   onClick={() => handleOpenInStudio(agentInboxId)}
                 >
                   Studio
@@ -296,8 +296,8 @@ export function ThreadActionsView<
 
           {/* Invalid schema message */}
           <div
-            data-radius="small-radius"
-            className="w-full border border-yellow-200 bg-yellow-50 p-4 text-yellow-700"
+            data-radius="control"
+            className="w-full border border-semantic-warning/40 bg-semantic-warning-light p-4 text-semantic-warning"
           >
             This thread is interrupted, but the required action data is missing
             or invalid. Standard interrupt actions cannot be performed.
@@ -307,7 +307,7 @@ export function ThreadActionsView<
           <div className="flex w-full flex-row items-center justify-start gap-2">
             <Button
               variant="outline"
-              className="border-gray-500 bg-white font-normal text-gray-800"
+              className="border-border bg-background font-normal text-foreground"
               onClick={actions?.handleIgnore} // Assuming ignore doesn't need config
               disabled={actions?.loading}
             >
@@ -345,7 +345,7 @@ export function ThreadActionsView<
             <div className="flex items-center gap-2">
               {!isInterrupted && getStatusIcon()}
               {isInterrupted && !threadData.invalidSchema && (
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertCircle className="h-4 w-4 text-semantic-warning" />
               )}{" "}
               {/* Icon for valid interrupt */}
               <p className="text-pretty text-2xl tracking-tighter">
@@ -359,7 +359,7 @@ export function ThreadActionsView<
               <Button
                 size="sm"
                 variant="outline"
-                className="flex items-center gap-1 bg-white"
+                className="flex items-center gap-1 bg-background"
                 onClick={() => handleOpenInStudio(agentInboxId)}
               >
                 Studio
@@ -381,7 +381,7 @@ export function ThreadActionsView<
             <div className="flex w-full flex-row items-center justify-start gap-2">
               <Button
                 variant="outline"
-                className="flex items-center gap-2 border-gray-500 bg-white font-normal text-gray-800"
+                className="flex items-center gap-2 border-border bg-background font-normal text-foreground"
                 onClick={handleRefreshThread}
                 disabled={refreshing}
               >
@@ -395,14 +395,14 @@ export function ThreadActionsView<
 
           {isErrorThread(threadData) && (
             <div
-              data-radius="small-radius"
-              className="border border-red-200 bg-red-50 p-4"
+              data-radius="control"
+              className="border border-destructive/40 bg-destructive/10 p-4"
             >
               <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 text-red-500" />
+                <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
                 <div>
-                  <h3 className="font-medium text-red-800">Error State</h3>
-                  <p className="mt-1 text-sm text-red-700">
+                  <h3 className="font-medium text-destructive">Error State</h3>
+                  <p className="mt-1 text-sm text-destructive">
                     This thread is in an error state. You may need to check the
                     logs or retry the operation.
                   </p>
@@ -413,33 +413,33 @@ export function ThreadActionsView<
 
           {/* Thread information summary */}
           <div
-            data-radius="small-radius"
-            className="flex flex-col gap-3 border border-gray-200 bg-gray-50 p-4"
+            data-radius="control"
+            className="flex flex-col gap-3 border border-border bg-muted/40 p-4"
           >
             <h3 className="font-medium">Thread Details</h3>
 
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Status:</span>
+                <span className="font-medium text-foreground">Status:</span>
                 <span className="ml-2 capitalize">{threadData.status}</span>
               </div>
 
               <div>
-                <span className="font-medium text-gray-700">Created:</span>
+                <span className="font-medium text-foreground">Created:</span>
                 <span className="ml-2">
                   {new Date(threadData.thread.created_at).toLocaleString()}
                 </span>
               </div>
 
               <div>
-                <span className="font-medium text-gray-700">Last updated:</span>
+                <span className="font-medium text-foreground">Last updated:</span>
                 <span className="ml-2">
                   {new Date(threadData.thread.updated_at).toLocaleString()}
                 </span>
               </div>
 
               <div>
-                <span className="font-medium text-gray-700">ID:</span>
+                <span className="font-medium text-foreground">ID:</span>
                 <span className="ml-2 font-mono text-xs">
                   {threadData.thread.thread_id}
                 </span>
@@ -447,7 +447,7 @@ export function ThreadActionsView<
             </div>
           </div>
 
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             View the thread state in the &quot;State&quot; tab for detailed
             information about this thread.
           </p>
@@ -475,7 +475,7 @@ export function ThreadActionsView<
             <ArrowLeft className="h-5 w-5" />
           </TooltipIconButton>
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertCircle className="h-4 w-4 text-semantic-warning" />
             <p className="text-pretty text-2xl tracking-tighter">
               {threadTitle}
             </p>
@@ -487,7 +487,7 @@ export function ThreadActionsView<
             <Button
               size="sm"
               variant="outline"
-              className="flex items-center gap-1 bg-white"
+              className="flex items-center gap-1 bg-background"
               onClick={() => handleOpenInStudio(agentInboxId)}
             >
               Studio
@@ -507,7 +507,7 @@ export function ThreadActionsView<
       <div className="flex w-full flex-row items-center justify-start gap-2">
         <Button
           variant="outline"
-          className="border-gray-500 bg-white font-normal text-gray-800"
+          className="border-border bg-background font-normal text-foreground"
           onClick={actions?.handleResolve}
           disabled={actions?.loading}
         >

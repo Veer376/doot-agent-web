@@ -7,7 +7,11 @@ if (!apiUrl) {
   throw new Error("LANGGRAPH_API_URL is required");
 }
 
-if (!gatewayToken) {
+const localUpstream =
+  apiUrl.startsWith("http://127.0.0.1:") ||
+  apiUrl.startsWith("http://localhost:");
+
+if (!gatewayToken && !localUpstream) {
   throw new Error("DOOT_GATEWAY_TOKEN is required");
 }
 
@@ -17,7 +21,8 @@ export const { GET, POST, PUT, PATCH, DELETE, OPTIONS, runtime } =
     baseRoute: "langgraph",
     disableWarningLog: true,
     headers: async () => ({
-      "x-doot-token": gatewayToken,
+      "content-type": "application/json",
+      ...(gatewayToken ? { "x-doot-token": gatewayToken } : {}),
       // Prevent an upstream CDN from compressing SSE and leaving a stale
       // content-encoding header after fetch has already decompressed the body.
       "accept-encoding": "identity",

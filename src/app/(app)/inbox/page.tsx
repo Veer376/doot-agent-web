@@ -3,8 +3,7 @@
 import { AgentInbox } from "@/components/agent-inbox";
 import React from "react";
 import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootLogoIcon } from "@/components/icons";
+import { DootLogoIcon } from "@/components/icons";
 import { Toaster } from "@/components/ui/sonner";
 import { InboxSidebar, InboxSidebarTrigger } from "@/components/inbox-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -24,13 +23,8 @@ export default function InboxPage(): React.ReactNode {
     >
       <Toaster />
       <ThreadsProvider>
-        <div className="flex min-h-full w-full flex-row">
-          {/* Main content with a mobile-only menu trigger */}
-          <div className="w-full">
-            <header className="flex items-center gap-2 px-4 py-2 md:hidden">
-              <SidebarTrigger icon={<Menu11Icon />} />
-            </header>
-
+        <div className="doot-inbox-page flex min-h-full w-full min-w-0 flex-row">
+          <div className="min-w-0 flex-1">
             <div className="flex h-full w-full flex-col">
               <AgentInbox />
             </div>

@@ -31,8 +31,8 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
       onOpenChange={handleClose}
     >
       <DialogContent
-        className="flex max-h-[90vh] max-w-4xl flex-col gap-0 overflow-hidden bg-background p-0"
-        data-radius="radius"
+        className="flex max-w-4xl flex-col gap-0 overflow-hidden bg-background p-0"
+        data-radius="overlay"
       >
         {/* Header */}
         <div className="flex shrink-0 items-center gap-3 px-6 py-5">
@@ -55,7 +55,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           <div className="px-6 pb-4">
             <div
               className="relative aspect-video w-full overflow-hidden bg-muted"
-              data-radius="radius"
+              data-radius="surface"
             >
               <video
                 src="/dootagent-demo.mp4"
@@ -89,7 +89,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               href="https://www.linkedin.com/posts/aryaveer-aiml_agentic-ai-browseragent-activity-7363970757086875649-uJHN?utm_source=share&utm_medium=member_desktop&rcm=ACoAADT9Sm8BN3I8bmHvcUr7YqjYbBWlvo3VwvQ"
               target="_blank"
               rel="noopener noreferrer"
-              data-radius="radius"
+              data-radius="control"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
             >
               <LinkedInIcon className="size-5 text-[#0A66C2]" />
@@ -99,7 +99,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               href="https://github.com/Veer376/doot-agent-lab"
               target="_blank"
               rel="noopener noreferrer"
-              data-radius="radius"
+              data-radius="control"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
             >
               <GithubIcon className="size-5 text-foreground" />

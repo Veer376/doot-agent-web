@@ -178,7 +178,7 @@ export function AgentsCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn("min-w-[200px] justify-between", className)}
+            className={cn("min-w-50 justify-between", className)}
             style={style}
           >
             {selectedValues.length > 0
@@ -192,7 +192,8 @@ export function AgentsCombobox({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-full min-w-[200px] p-0"
+        className="w-full min-w-50 p-0"
+        aria-label="Agent selection"
       >
         <Command
           filter={(value: string, search: string) => {
@@ -204,7 +205,10 @@ export function AgentsCombobox({
             return 0;
           }}
         >
-          <CommandInput placeholder="Search agents..." />
+          <CommandInput
+            placeholder="Search agents..."
+            aria-label="Search agents"
+          />
           <CommandList>
             <CommandEmpty>
               {agentsLoading ? (
@@ -241,7 +245,7 @@ export function AgentsCombobox({
                                 e.preventDefault();
                                 onEditAgent(item);
                               }}
-                              data-radius="small-radius"
+                              data-radius="control"
                               className={cn(
                                 "peer/edit-btn absolute right-2 top-1/2 z-10 -translate-y-1/2",
                                 "p-1.5 text-muted-foreground transition-all",

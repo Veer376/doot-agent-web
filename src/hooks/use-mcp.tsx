@@ -1,5 +1,3 @@
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Tool } from "@/types/tool";
 import { useState } from "react";
 import { config } from "@/config";
@@ -27,7 +25,13 @@ export default function useMCP({
    * @returns A promise that resolves to the connected MCP client instance.
    */
   const createAndConnectMCPClient = async () => {
-    const connectionClient = new StreamableHTTPClientTransport(new URL(config.mcpUrl));
+    const [{ StreamableHTTPClientTransport }, { Client }] = await Promise.all([
+      import("@modelcontextprotocol/sdk/client/streamableHttp.js"),
+      import("@modelcontextprotocol/sdk/client/index.js"),
+    ]);
+    const connectionClient = new StreamableHTTPClientTransport(
+      new URL(config.mcpUrl),
+    );
     const mcp = new Client({
       name,
       version,

@@ -2,8 +2,7 @@
 
 import AgentsInterface from "@/features/agents";
 import { Toaster } from "@/components/ui/sonner";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu11Icon, DootLogoIcon } from "@/components/icons";
+import { DootLogoIcon } from "@/components/icons";
 import React from "react";
 
 /**
@@ -23,10 +22,6 @@ export default function AgentsPage(): React.ReactNode {
       }
     >
       <Toaster />
-      {/* Mobile-only top bar: show a Menu icon to toggle the sidebar */}
-      <header className="flex items-center gap-2 px-4 py-2 md:hidden">
-        <SidebarTrigger icon={<Menu11Icon />} />
-      </header>
       <AgentsInterface />
     </React.Suspense>
   );

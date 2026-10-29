@@ -7,17 +7,17 @@ export default function ResetPasswordLoading() {
       <div className="w-full max-w-md">
         <Skeleton
           className="w-full p-6"
-          data-radius="radius"
+          data-radius="surface"
         >
           {/* Card Header */}
           <div className="mb-6 space-y-3">
             <Skeleton
               className="mx-auto h-8 w-48"
-              data-radius="radius"
+              data-radius="surface"
             />
             <Skeleton
               className="mx-auto h-4 w-64"
-              data-radius="radius"
+              data-radius="surface"
             />
           </div>
 
@@ -27,11 +27,11 @@ export default function ResetPasswordLoading() {
             <div className="space-y-2">
               <Skeleton
                 className="h-4 w-32"
-                data-radius="radius"
+                data-radius="surface"
               />
               <Skeleton
                 className="h-11 w-full"
-                data-radius="radius"
+                data-radius="surface"
               />
             </div>
 
@@ -39,18 +39,18 @@ export default function ResetPasswordLoading() {
             <div className="space-y-2">
               <Skeleton
                 className="h-4 w-36"
-                data-radius="radius"
+                data-radius="surface"
               />
               <Skeleton
                 className="h-11 w-full"
-                data-radius="radius"
+                data-radius="surface"
               />
             </div>
 
             {/* Submit button */}
             <Skeleton
               className="h-10 w-full"
-              data-radius="radius"
+              data-radius="surface"
             />
           </div>
         </Skeleton>

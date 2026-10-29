@@ -1,6 +1,6 @@
 "use client";
 
-import { type LucideIcon } from "lucide-react";
+import { type AppIconComponent as LucideIcon } from "@/components/icons";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import React from "react";
@@ -37,6 +37,7 @@ export function NavMain({
                 <SidebarMenuButton
                   tooltip={item.title}
                   onClick={onSearchClick}
+                  aria-label={item.title}
                   className="h-9 gap-3 font-medium"
                 >
                   {item.icon && <item.icon />}
@@ -60,6 +61,7 @@ export function NavMain({
                     ? "text-muted-foreground h-9 gap-3"
                     : "h-9 gap-3 font-medium"
                 }
+                aria-label={item.title}
                 // Treat "/" as an action link: don't mark it active to avoid persistent highlight
                 isActive={item.url !== "/" && pathname === item.url}
               >

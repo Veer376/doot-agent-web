@@ -24,13 +24,13 @@ export function Search({
 
   return (
     <div
-      data-radius="radius"
+      data-radius="surface"
       className={cn(
         className,
-        "flex items-center border-[1px] border-slate-200 px-2",
+        "flex items-center border border-border px-2",
       )}
     >
-      <SearchIcon className="size-4 text-slate-400" />
+      <SearchIcon className="size-4 text-muted-foreground" />
       <Input
         className="h-8 border-0 shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
         placeholder={placeholder}

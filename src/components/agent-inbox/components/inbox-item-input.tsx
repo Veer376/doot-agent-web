@@ -8,10 +8,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import React from "react";
 import { haveArgsChanged, prettifyText } from "../utils";
-import { MarkdownText } from "@/components/ui/markdown-text";
+import { MarkdownText } from "@/components/ui/markdown-text/lazy";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { CircleX, LoaderCircle, Undo2 } from "lucide-react";
+import {
+  CircleXIcon as CircleX,
+  LoaderIcon as LoaderCircle,
+  Undo2Icon as Undo2,
+} from "@/components/icons";
 import { toast } from "sonner";
 import { logger } from "../utils/logger";
 
@@ -20,7 +24,7 @@ function ResetButton({ handleReset }: { handleReset: () => void }) {
     <Button
       onClick={handleReset}
       variant="ghost"
-      className="flex items-center justify-center gap-2 text-gray-500 hover:text-red-500"
+      className="flex items-center justify-center gap-2 text-muted-foreground hover:text-destructive"
     >
       <Undo2 className="h-4 w-4" />
       <span>Reset</span>
@@ -44,12 +48,12 @@ function ArgsRenderer({ args }: { args: Record<string, any> }) {
             key={`args-${k}`}
             className="flex flex-col items-start gap-1"
           >
-            <p className="text-wrap text-sm leading-[18px] text-gray-600">
+            <p className="text-wrap text-sm leading-doot-compact text-muted-foreground">
               {prettifyText(k)}:
             </p>
             <span
-              data-radius="radius"
-              className="w-full max-w-full bg-zinc-100 p-3 text-[13px] leading-[18px] text-black"
+              data-radius="surface"
+              className="w-full max-w-full bg-muted p-3 text-doot-code leading-doot-compact text-foreground"
             >
               <div className="whitespace-pre-wrap text-wrap break-words break-all">
                 <MarkdownText>{value}</MarkdownText>
@@ -120,11 +124,11 @@ function ResponseComponent({
 
   return (
     <div
-      data-radius="radius"
-      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+      data-radius="surface"
+      className="flex w-full flex-col items-start gap-4 border border-border p-6"
     >
       <div className="flex w-full items-center justify-between">
-        <p className="text-base font-semibold text-black">
+        <p className="text-base font-semibold text-foreground">
           Respond to assistant
         </p>
         <ResetButton
@@ -177,8 +181,8 @@ function AcceptComponent({
 }) {
   return (
     <div
-      data-radius="radius"
-      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+      data-radius="surface"
+      className="flex w-full flex-col items-start gap-4 border border-border p-6"
     >
       {actionRequestArgs && Object.keys(actionRequestArgs).length > 0 && (
         <ArgsRenderer args={actionRequestArgs} />
@@ -277,11 +281,11 @@ function EditAndOrAcceptComponent({
 
   return (
     <div
-      data-radius="radius"
-      className="flex w-full flex-col items-start gap-4 border-[1px] border-gray-300 p-6"
+      data-radius="surface"
+      className="flex w-full flex-col items-start gap-4 border border-border p-6"
     >
       <div className="flex w-full items-center justify-between">
-        <p className="text-base font-semibold text-black">{header}</p>
+        <p className="text-base font-semibold text-foreground">{header}</p>
         <ResetButton handleReset={handleReset} />
       </div>
 
@@ -533,7 +537,7 @@ export function InboxItemInput({
         {supportsMultipleMethods ? (
           <div className="mt-3 flex w-full items-center gap-3">
             <Separator className="w-1/2" />
-            <p className="text-sm text-gray-500">Or</p>
+            <p className="text-sm text-muted-foreground">Or</p>
             <Separator className="w-1/2" />
           </div>
         ) : null}
@@ -548,28 +552,28 @@ export function InboxItemInput({
           />
         )}
         {streaming && !currentNode && (
-          <p className="text-sm text-gray-600">Waiting for Graph to start...</p>
+          <p className="text-sm text-muted-foreground">Waiting for Graph to start...</p>
         )}
         {streaming && currentNode && !isError && (
           <div className="flex gap-2">
-            <span className="flex items-center justify-start gap-1 text-sm text-gray-600">
+            <span className="flex items-center justify-start gap-1 text-sm text-muted-foreground">
               <p>Running</p>
               <LoaderCircle className="h-3 w-3 animate-spin" />
             </span>
-            <p className="font-mono text-sm text-black">
-              <span className="font-sans text-gray-700">Node: </span>
+            <p className="font-mono text-sm text-foreground">
+              <span className="font-sans text-foreground">Node: </span>
               {prettifyText(currentNode)}
             </p>
           </div>
         )}
         {streaming && currentNode && isError && (
-          <div className="flex items-center justify-start gap-1 text-sm text-red-500">
+          <div className="flex items-center justify-start gap-1 text-sm text-destructive">
             <p>Error occurred</p>
-            <CircleX className="h-3 w-3 text-red-500" />
+            <CircleX className="h-3 w-3 text-destructive" />
           </div>
         )}
         {streamFinished && (
-          <p className="text-base font-medium text-green-600">
+          <p className="text-base font-medium text-semantic-success">
             Successfully finished Graph invocation.
           </p>
         )}

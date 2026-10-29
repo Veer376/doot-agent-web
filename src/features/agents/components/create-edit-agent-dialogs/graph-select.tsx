@@ -51,7 +51,7 @@ export function GraphSelect({
     >
       <SelectTrigger
         className={cn(className)}
-        data-radius="radius"
+        data-radius="control"
       >
         <SelectValue placeholder="Select a graph" />
       </SelectTrigger>

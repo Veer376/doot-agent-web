@@ -35,7 +35,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
 import { Composer } from "./composer";
-import { DootLogoIcon } from "@/components/icons";
 import { PreviewPanel } from "./PreviewPanel";
 import { EnhancedLoader } from "@/components/ai-elements/enhanced-loader";
 import {
@@ -49,8 +48,14 @@ import { useComposerDraft } from "@/hooks/use-composer-draft";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { usePendingMessage } from "@/hooks/use-pending-message";
 import { useThreadModel } from "@/hooks/use-thread-model";
-import { AVAILABLE_MODELS, type Model } from "@/types/model";
-import { DOOT_QUOTE_SELECTION_EVENT } from "./messages/response-selection-actions";
+import { AnnotationProvider, type ResponseAnnotation } from "./annotations";
+import {
+  analyzeStreamFailure,
+  getPersistedRunId,
+  serializeStreamError,
+  type StreamFailureAnalysis,
+} from "@/features/chat/utils/stream-diagnostics";
+import { approvalInterrupts } from "@/features/chat/utils/permissions";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -85,7 +90,7 @@ function ScrollToBottom(props: { className?: string }) {
     <Button
       variant="secondary"
       size="icon"
-      data-radius="radius"
+      data-radius="control"
       className={cn("hover:bg-secondary cursor-pointer", props.className)}
       onClick={() => scrollToBottom()}
     >
@@ -151,43 +156,8 @@ export function Thread() {
   const { agentId, mode, setSelectedAgent, setMode } = useAgentContext();
   const [threadId] = useQueryState("threadId");
   const [inputValue, setInputValue] = useState("");
-
-  useEffect(() => {
-    const handleQuoteSelection = (event: Event) => {
-      const text = (
-        event as CustomEvent<{ text?: string }>
-      ).detail?.text?.trim();
-      if (!text) return;
-
-      const quoted = text
-        .split("\n")
-        .map((line) => `> ${line}`)
-        .join("\n");
-
-      setInputValue((current) =>
-        current.trim()
-          ? `${current.trimEnd()}\n\n${quoted}\n\n`
-          : `${quoted}\n\n`,
-      );
-
-      requestAnimationFrame(() => {
-        document
-          .querySelector<HTMLElement>('[data-doot-composer-editor="true"]')
-          ?.focus({ preventScroll: true });
-      });
-    };
-
-    window.addEventListener(
-      DOOT_QUOTE_SELECTION_EVENT,
-      handleQuoteSelection as EventListener,
-    );
-    return () => {
-      window.removeEventListener(
-        DOOT_QUOTE_SELECTION_EVENT,
-        handleQuoteSelection as EventListener,
-      );
-    };
-  }, []);
+  const [annotations, setAnnotations] = useState<ResponseAnnotation[]>([]);
+  useEffect(() => setAnnotations([]), [threadId]);
 
   // Auth state for pending message flow
   const { isAuthenticated } = useAuthSession();
@@ -214,11 +184,18 @@ export function Thread() {
   const { session } = useAuthSession();
 
   // Model selection for this thread
-  const { selectedModel, selectModel } = useThreadModel();
+  const {
+    selectedModel,
+    selectModel,
+    resolveModel,
+    availableModels,
+    modelCatalogReady,
+  } = useThreadModel();
 
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+  const hasBlockingApproval = approvalInterrupts(stream.interrupts).length > 0;
 
   const { isLoading: isLoadingThreadState } = useFetchThreadState(threadId);
 
@@ -282,25 +259,36 @@ export function Thread() {
       setMode(threadMode);
     }
 
-    // Restore model if saved in metadata
+    if (!modelCatalogReady) return;
+
+    // Restore model if saved in metadata. Agent policy validation happens in
+    // useThreadModel after the selected assistant changes.
     if (typeof model_id === "string" && model_id) {
-      const modelToRestore = AVAILABLE_MODELS.find((m) => m.id === model_id);
+      const modelToRestore = resolveModel(model_id);
       if (modelToRestore) {
         selectModel(modelToRestore);
       }
-    } else {
-      // Clear model selection if not saved in thread
-      selectModel(null as unknown as Model);
     }
 
     // Mark this thread as initialized to prevent re-running restoration
     threadInitializedRef.current = threadId;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId, threads]);
+  }, [
+    threadId,
+    threads,
+    modelCatalogReady,
+    resolveModel,
+    selectModel,
+    setMode,
+    setSelectedAgent,
+  ]);
 
   // Handle cancellation of the current stream
-  const handleCancel = useCallback(() => {
-    stream.stop();
+  const handleCancel = useCallback(async () => {
+    try {
+      await stream.stop();
+    } catch {
+      // StreamProvider owns the server-authoritative stop error feedback.
+    }
   }, [stream]);
 
   // Effect: Auto-submit pending message after authentication
@@ -363,15 +351,16 @@ export function Thread() {
                 newHumanMessage,
               ],
             }),
-            config: {
-              configurable: {
-                ...getAgentConfig(effectiveAgentId),
-                apiKeys,
-              },
+            context: {
+              ...getAgentConfig(effectiveAgentId),
+              apiKeys,
+              workspace: stream.workspace,
+              permission_mode: stream.permissionMode,
+              model: selectedModel?.id,
             },
-            context: {},
             metadata: {
               supabaseAccessToken: session?.accessToken,
+              ...(selectedModel?.id && { model_id: selectedModel.id }),
             },
             streamSubgraphs: true,
             streamResumable: true,
@@ -438,6 +427,8 @@ export function Thread() {
 
   const lastError = useRef<string | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState("");
+  const [errorAnalysis, setErrorAnalysis] =
+    useState<StreamFailureAnalysis | null>(null);
   // Bridge to access StickToBottom API from within this component
   type StickApiHandle = { isAtBottom: boolean; scrollToBottom: () => void };
   const stickApiRef = useRef<StickApiHandle | null>(null);
@@ -446,34 +437,38 @@ export function Thread() {
     if (!stream.error) {
       lastError.current = undefined;
       setErrorMessage("");
+      setErrorAnalysis(null);
       return;
     }
-    try {
-      const message =
-        stream.error instanceof Error
-          ? stream.error.message
-          : "Stream error occurred";
-      if (!message || lastError.current === message) {
-        // Message has already been logged. do not modify ref, return early.
-        return;
-      }
+    const rawMessage = serializeStreamError(stream.error);
+    if (!rawMessage || lastError.current === rawMessage) return;
 
-      // Message is defined, and it has not been logged yet. Save it, and send the error
-      lastError.current = message;
-      setErrorMessage(message);
-      toast.error("An error occurred. Please try again.", {
-        description: (
-          <p>
-            <strong>Error:</strong> <code>{message}</code>
-          </p>
-        ),
+    lastError.current = rawMessage;
+    setErrorMessage(rawMessage);
+    setErrorAnalysis(null);
+
+    let active = true;
+    const runId = getPersistedRunId(threadId);
+    void analyzeStreamFailure({
+      apiUrl: config.apiUrl,
+      threadId,
+      runId,
+      error: stream.error,
+    }).then((analysis) => {
+      if (!active) return;
+      setErrorAnalysis(analysis);
+      setErrorMessage(analysis.message);
+      toast.error(analysis.title, {
+        description: analysis.message,
         richColors: true,
         closeButton: true,
       });
-    } catch {
-      // no-op
-    }
-  }, [stream.error]);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [stream.error, threadId]);
 
   // Handle auth requirement - store pending message and mode, then show dialog
   const handleAuthRequired = (message: string) => {
@@ -484,15 +479,33 @@ export function Thread() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    const content = inputValue.trim();
+    const content = [
+      inputValue.trim(),
+      ...annotations.map(
+        ({ text, note }) =>
+          `${text
+            .split("\n")
+            .map((line) => `> ${line}`)
+            .join("\n")}\n\n${note}`,
+      ),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    if (
+      !stream.workspaceReady ||
+      !stream.permissionReady ||
+      hasBlockingApproval
+    )
+      return;
 
-    setInputValue(""); // Clear the input after submission
-    clearDraft(threadId); // Clear the saved draft
     // In chat mode, agentId can be empty since we use chat_agent
     // In agent mode, we need an agentId selected
     if (mode === "agent" && !agentId) return;
-    if ((content.length === 0 && contentBlocks.length === 0) || isLoading)
-      return;
+    if (content.length === 0 && contentBlocks.length === 0) return;
+
+    setInputValue("");
+    clearDraft(threadId);
+    setAnnotations([]);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
@@ -503,13 +516,15 @@ export function Thread() {
       ] as Message["content"],
     };
 
-    const toolMessages = ensureToolCallsHaveResponses(stream.messages);
+    const toolMessages = isLoading
+      ? []
+      : ensureToolCallsHaveResponses(stream.messages);
     const { getAgentConfig } = useConfigStore.getState();
 
     // Determine which agent config to use based on current mode
     // This MUST match the effectiveAgentId used in the stream connection
     // to ensure the submit goes to the same assistant the stream is connected to
-    const effectiveAgentId = config.features.localMode
+    const effectiveAgentId = config.features.localAgentEnabled
       ? agentId
       : mode === "chat"
         ? "chat_agent"
@@ -518,6 +533,8 @@ export function Thread() {
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
       {
+        checkpoint: null,
+        multitaskStrategy: "interrupt",
         streamMode: ["messages-tuple", "values"],
         optimisticValues: (prev) => ({
           ...prev,
@@ -527,15 +544,16 @@ export function Thread() {
             newHumanMessage,
           ],
         }),
-        config: {
-          configurable: {
-            ...getAgentConfig(effectiveAgentId),
-            apiKeys,
-          },
+        context: {
+          ...getAgentConfig(effectiveAgentId),
+          apiKeys,
+          workspace: stream.workspace,
+          permission_mode: stream.permissionMode,
+          model: selectedModel?.id,
         },
-        context: {},
         metadata: {
           supabaseAccessToken: session?.accessToken,
+          ...(selectedModel?.id && { model_id: selectedModel.id }),
         },
         streamSubgraphs: true,
         streamResumable: true,
@@ -605,16 +623,16 @@ export function Thread() {
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["messages-tuple", "values"],
-      config: {
-        configurable: {
-          ...getAgentConfig(effectiveAgentId),
-          apiKeys,
-        },
-      },
       optimisticValues,
-      context: {},
+      context: {
+        ...getAgentConfig(effectiveAgentId),
+        apiKeys,
+        workspace: stream.workspace,
+        model: selectedModel?.id,
+      },
       metadata: {
         supabaseAccessToken: session?.accessToken,
+        ...(selectedModel?.id && { model_id: selectedModel.id }),
       },
       streamSubgraphs: true,
       streamResumable: true,
@@ -636,184 +654,226 @@ export function Thread() {
   });
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      <StickToBottom className="relative min-w-0 flex-1 overflow-hidden">
-        <StickyToBottomContent
-          className={cn(
-            "absolute inset-0 overflow-y-auto px-4 transition-all duration-500 ease-out",
-            !hasMessages && !threadId && "flex flex-col items-stretch py-8",
-            (hasMessages || threadId) && "grid grid-rows-[1fr_auto]",
-          )}
-          contentClassName={cn(
-            "composer-max-width mx-auto flex w-full min-w-0 flex-col gap-8",
-            hasMessages || threadId ? "pt-8 pb-12" : "empty:hidden",
-          )}
-          content={
-            <>
-              {!hasMessages && threadId && isLoadingThreadState ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="text-muted-foreground flex items-center gap-2">
-                    <LoaderIcon className="h-4 w-4" />
-                    <span>Loading thread...</span>
+    <AnnotationProvider
+      annotations={annotations}
+      setAnnotations={setAnnotations}
+    >
+      <div className="flex h-full w-full overflow-hidden">
+        <StickToBottom className="relative min-w-0 flex-1 overflow-hidden">
+          <StickyToBottomContent
+            className={cn(
+              "doot-thread-viewport absolute inset-0 overflow-y-auto",
+              !hasMessages && !threadId && "flex flex-col items-stretch py-8",
+              (hasMessages || threadId) && "grid grid-rows-[1fr_auto]",
+            )}
+            contentClassName={cn(
+              "doot-reading-column mx-auto flex w-full min-w-0 flex-col",
+              hasMessages || threadId ? "pt-8 pb-12" : "empty:hidden",
+            )}
+            content={
+              <>
+                {!hasMessages && threadId && isLoadingThreadState ? (
+                  <div className="flex items-center justify-center py-16">
+                    <div className="text-muted-foreground flex items-center gap-2">
+                      <LoaderIcon className="h-4 w-4" />
+                      <span>Loading thread...</span>
+                    </div>
+                  </div>
+                ) : !hasMessages && threadId ? (
+                  <div className="flex items-center justify-center py-16">
+                    <EmptyState
+                      icon={MessageSquareIcon}
+                      title="No messages yet"
+                      description="Start the conversation by sending your first message below"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {groupMessagesIntoTurns(
+                      messages
+                        .filter(
+                          (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
+                        )
+                        // Deduplicate consecutive messages with the same ID to prevent ghosting
+                        .filter(
+                          (m, i, arr) =>
+                            i === 0 || !m.id || m.id !== arr[i - 1].id,
+                        ),
+                    ).map((turn, turnIndex, allTurns) => {
+                      if (turn.type === "human") {
+                        return (
+                          <HumanMessage
+                            key={turn.index}
+                            message={turn.message}
+                            isLoading={isLoading}
+                          />
+                        );
+                      } else {
+                        // Find the last human message index to determine which AI turn is actively loading
+                        const lastHumanMessageIndex =
+                          allTurns
+                            .map((t, i) => (t.type === "human" ? t.index : -1))
+                            .filter((i) => i !== -1)
+                            .pop() ?? -1;
+
+                        // This AI turn is loading only if we're loading AND it corresponds to the last human message
+                        const turnIsLoading =
+                          isLoading &&
+                          turn.lastHumanIndex === lastHumanMessageIndex;
+
+                        return (
+                          <AITurn
+                            key={`ai-turn-${turn.startIndex}`}
+                            turnMessages={turn.messages}
+                            lastHumanIndex={turn.lastHumanIndex}
+                            allMessages={messages}
+                            isLoading={turnIsLoading}
+                            handleRegenerate={handleRegenerate}
+                          />
+                        );
+                      }
+                    })}
+                    {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
+                      We need to render it outside of the messages list, since there are no messages to render */}
+                    {hasNoAIOrToolMessages && !!stream.interrupt && (
+                      <AITurn
+                        key="interrupt-ai-turn"
+                        turnMessages={[]}
+                        lastHumanIndex={
+                          messages.length > 0 ? messages.length - 1 : -1
+                        }
+                        allMessages={messages}
+                        isLoading={isLoading}
+                        handleRegenerate={handleRegenerate}
+                      />
+                    )}
+                    {/* Browser Snapshot moved to PreviewPanel above Composer */}
+                    {isLoading && (
+                      <div className="flex items-start justify-start">
+                        <EnhancedLoader messages={messages} />
+                      </div>
+                    )}
+                    {errorMessage && (
+                      <Alert variant="destructive">
+                        <AlertCircleIconHuge className="size-4" />
+                        <AlertTitle>
+                          {errorAnalysis?.title ?? "Agent stream failed"}
+                        </AlertTitle>
+                        <AlertDescription className="gap-2">
+                          <p>{errorMessage}</p>
+                          {errorAnalysis?.technical_detail &&
+                            errorAnalysis.technical_detail !== errorMessage && (
+                              <p className="text-xs opacity-80">
+                                Technical: {errorAnalysis.technical_detail}
+                              </p>
+                            )}
+                          {(errorAnalysis?.code || errorAnalysis?.run_id) && (
+                            <div className="flex flex-wrap items-center gap-2 text-xs opacity-80">
+                              {errorAnalysis?.code && (
+                                <code>{errorAnalysis.code}</code>
+                              )}
+                              {errorAnalysis?.run_id && (
+                                <code>
+                                  run {errorAnalysis.run_id.slice(0, 8)}
+                                </code>
+                              )}
+                              {threadId && (
+                                <a
+                                  className="underline underline-offset-2"
+                                  href={`/diagnostics?threadId=${encodeURIComponent(threadId)}`}
+                                >
+                                  Open diagnostics
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </>
+                )}
+              </>
+            }
+            footer={
+              <div
+                className={cn(
+                  "z-10 flex flex-col items-center",
+                  hasMessages || threadId
+                    ? "to-background sticky bottom-0 bg-gradient-to-b from-transparent from-0% to-40%"
+                    : "doot-empty-stack shrink-0 bg-transparent",
+                )}
+              >
+                {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
+                <StickApi ref={stickApiRef} />
+
+                {/* Title section with independent spacing */}
+                {!hasMessages && !threadId && (
+                  <div className="doot-empty-title flex flex-col items-center text-center">
+                    <h1 className="doot-greeting">What can Doot help with?</h1>
+                  </div>
+                )}
+
+                {/* Components group with larger gap */}
+                <div className="flex w-full flex-col items-center gap-3">
+                  <ScrollToBottom className="absolute right-4 bottom-full mb-4" />
+
+                  {/* Browser Preview Panel - Floating above Composer */}
+                  <PreviewPanel />
+
+                  <div
+                    ref={dropRef}
+                    className={cn(
+                      "doot-composer-dock composer-max-width relative z-20 mx-auto w-full min-w-0",
+                      dragOver ? "border-primary border-2 border-dotted" : "",
+                    )}
+                  >
+                    <Composer
+                      className={cn(
+                        !hasMessages && !threadId && "doot-new-chat-composer",
+                      )}
+                      value={inputValue}
+                      onChange={setInputValue}
+                      onSubmit={isAuthenticated ? handleSubmit : undefined}
+                      onAuthRequired={
+                        !isAuthenticated ? handleAuthRequired : undefined
+                      }
+                      onCancel={handleCancel}
+                      onPaste={handlePaste}
+                      placeholder="Message Doot"
+                      disabled={
+                        !stream.workspaceReady ||
+                        !stream.permissionReady ||
+                        hasBlockingApproval ||
+                        requiresApiKeysButNotSet(hasApiKeys)
+                      }
+                      annotations={annotations}
+                      forceExpanded
+                      isLoading={stream.isLoading}
+                      isStopping={stream.isStopping}
+                      contentBlocks={contentBlocks}
+                      onRemoveBlock={removeBlock}
+                      onFileUpload={handleFileUpload}
+                      focusKey={threadId}
+                      selectedModel={selectedModel}
+                      availableModels={availableModels}
+                      onModelSelect={selectModel}
+                    />
                   </div>
                 </div>
-              ) : !hasMessages && threadId ? (
-                <div className="flex items-center justify-center py-16">
-                  <EmptyState
-                    icon={MessageSquareIcon}
-                    title="No messages yet"
-                    description="Start the conversation by sending your first message below"
-                  />
-                </div>
-              ) : (
-                <>
-                  {groupMessagesIntoTurns(
-                    messages
-                      .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
-                      // Deduplicate consecutive messages with the same ID to prevent ghosting
-                      .filter(
-                        (m, i, arr) =>
-                          i === 0 || !m.id || m.id !== arr[i - 1].id,
-                      ),
-                  ).map((turn, turnIndex, allTurns) => {
-                    if (turn.type === "human") {
-                      return (
-                        <HumanMessage
-                          key={turn.index}
-                          message={turn.message}
-                          isLoading={isLoading}
-                        />
-                      );
-                    } else {
-                      // Find the last human message index to determine which AI turn is actively loading
-                      const lastHumanMessageIndex =
-                        allTurns
-                          .map((t, i) => (t.type === "human" ? t.index : -1))
-                          .filter((i) => i !== -1)
-                          .pop() ?? -1;
-
-                      // This AI turn is loading only if we're loading AND it corresponds to the last human message
-                      const turnIsLoading =
-                        isLoading &&
-                        turn.lastHumanIndex === lastHumanMessageIndex;
-
-                      return (
-                        <AITurn
-                          key={`ai-turn-${turn.startIndex}`}
-                          turnMessages={turn.messages}
-                          lastHumanIndex={turn.lastHumanIndex}
-                          allMessages={messages}
-                          isLoading={turnIsLoading}
-                          handleRegenerate={handleRegenerate}
-                        />
-                      );
-                    }
-                  })}
-                  {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
-                      We need to render it outside of the messages list, since there are no messages to render */}
-                  {hasNoAIOrToolMessages && !!stream.interrupt && (
-                    <AITurn
-                      key="interrupt-ai-turn"
-                      turnMessages={[]}
-                      lastHumanIndex={
-                        messages.length > 0 ? messages.length - 1 : -1
-                      }
-                      allMessages={messages}
-                      isLoading={isLoading}
-                      handleRegenerate={handleRegenerate}
-                    />
-                  )}
-                  {/* Browser Snapshot moved to PreviewPanel above Composer */}
-                  {isLoading && (
-                    <div className="flex items-start justify-start">
-                      <EnhancedLoader messages={messages} />
-                    </div>
-                  )}
-                  {errorMessage && (
-                    <Alert variant="destructive">
-                      <AlertCircleIconHuge className="size-4" />
-                      <AlertTitle>An error occurred:</AlertTitle>
-                      <AlertDescription>{errorMessage}</AlertDescription>
-                    </Alert>
-                  )}
-                </>
-              )}
-            </>
-          }
-          footer={
-            <div
-              className={cn(
-                "z-10 flex flex-col items-center",
-                hasMessages || threadId
-                  ? "to-background sticky bottom-0 bg-gradient-to-b from-transparent from-0% to-40%"
-                  : "my-auto shrink-0 bg-transparent",
-              )}
-            >
-              {/* Expose isAtBottom/scrollToBottom to the parent via ref */}
-              <StickApi ref={stickApiRef} />
-
-              {/* Title section with independent spacing */}
-              {!hasMessages && !threadId && (
-                <div className="mb-7 flex flex-col items-center gap-3 text-center">
-                  <DootLogoIcon size={40} />
-                  <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">
-                    What can Doot help with?
-                  </h1>
-                </div>
-              )}
-
-              {/* Components group with larger gap */}
-              <div className="flex w-full flex-col items-center gap-3">
-                <ScrollToBottom className="absolute right-4 bottom-full mb-4" />
-
-                {/* Browser Preview Panel - Floating above Composer */}
-                <PreviewPanel />
-
-                <div
-                  ref={dropRef}
-                  className={cn(
-                    "composer-max-width relative z-20 mx-auto w-full min-w-0 pb-4 transition-all",
-                    dragOver ? "border-primary border-2 border-dotted" : "",
-                  )}
-                >
-                  <Composer
-                    className={cn(
-                      !hasMessages && !threadId && "doot-new-chat-composer",
-                    )}
-                    forceExpanded={!hasMessages && !threadId}
-                    value={inputValue}
-                    onChange={setInputValue}
-                    onSubmit={isAuthenticated ? handleSubmit : undefined}
-                    onAuthRequired={
-                      !isAuthenticated ? handleAuthRequired : undefined
-                    }
-                    onCancel={handleCancel}
-                    onPaste={handlePaste}
-                    placeholder="Type your message..."
-                    disabled={isLoading || requiresApiKeysButNotSet(hasApiKeys)}
-                    isLoading={stream.isLoading}
-                    contentBlocks={contentBlocks}
-                    onRemoveBlock={removeBlock}
-                    onFileUpload={handleFileUpload}
-                    focusKey={threadId}
-                    selectedModel={selectedModel}
-                    onModelSelect={selectModel}
-                  />
-                </div>
               </div>
-            </div>
-          }
-        />
-      </StickToBottom>
+            }
+          />
+        </StickToBottom>
 
-      {/* Auth Dialog */}
-      <AuthDialog
-        open={authDialogOpen}
-        onOpenChange={setAuthDialogOpen}
-        mode="signin"
-        pendingMessage={pendingMessage || undefined}
-        onClearPendingMessage={() => setPendingMessage(null)}
-      />
-    </div>
+        {/* Auth Dialog */}
+        <AuthDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+          mode="signin"
+          pendingMessage={pendingMessage || undefined}
+          onClearPendingMessage={() => setPendingMessage(null)}
+        />
+      </div>
+    </AnnotationProvider>
   );
 }

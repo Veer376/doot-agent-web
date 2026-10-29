@@ -5,12 +5,17 @@ import { useState } from "react";
 import { getContentString } from "@/features/chat/utils/content-string";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { BranchSwitcher, CommandBar } from "./shared";
+import { CommandBar } from "./shared";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { ChevronDownIcon } from "@/components/icons";
 import { useAuthSession } from "@/providers/Auth";
 import { MultimodalPreview } from "./MultimodalPreview";
 import { isBase64ContentBlock } from "@/lib/multimodal-utils";
+import { useThreadModel } from "@/hooks/use-thread-model";
+import { useApiKeys } from "@/hooks/use-api-keys";
+import { config } from "@/config";
+import { toast } from "sonner";
+import { useQueryState } from "nuqs";
 
 function EditableContent({
   value,
@@ -30,10 +35,11 @@ function EditableContent({
 
   return (
     <Textarea
+      aria-label="Edit message"
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="bg-muted border-border min-h-11 resize-none rounded-3xl px-5 py-3 text-base leading-7 shadow-none focus-visible:ring-2"
+      className="doot-human-editor min-h-11 resize-none px-4 py-2.5 text-base leading-[var(--doot-leading-body)] shadow-none focus-visible:ring-2"
     />
   );
 }
@@ -54,7 +60,10 @@ export function HumanMessage({
   const meta = thread.getMessagesMetadata
     ? thread.getMessagesMetadata(message)
     : null;
-  const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
+  const { selectedModel } = useThreadModel();
+  const [threadId] = useQueryState("threadId");
+  const { apiKeys } = useApiKeys();
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState("");
@@ -65,45 +74,85 @@ export function HumanMessage({
   const needsExpansion =
     contentString.split("\n").length > 5 || contentString.length > 300;
 
-  const handleSubmitEdit = () => {
-    if (!agentId) return;
-
-    setIsEditing(false);
-
-    const newMessage: Message = { type: "human", content: value };
-    const { getAgentConfig } = useConfigStore.getState();
-
-    thread.submit(
-      { messages: [newMessage] },
-      {
-        checkpoint: parentCheckpoint,
-        streamMode: ["values"],
-        optimisticValues: (prev) => {
-          const values = meta?.firstSeenState?.values;
-          if (!values) return prev;
-
-          return {
-            ...values,
-            messages: [...(values.messages.slice(0, -1) ?? []), newMessage],
-          };
+  const handleSubmitEdit = async () => {
+    if (
+      !threadId ||
+      !message.id ||
+      !value.trim() ||
+      thread.isLoading ||
+      isSaving ||
+      !thread.workspaceReady
+    )
+      return;
+    setIsSaving(true);
+    try {
+      const current = await thread.client.threads.getState<{
+        messages: Message[];
+      }>(threadId);
+      const position = current.values.messages.findIndex(
+        (item) => item.id === message.id,
+      );
+      if (position < 0) return;
+      const newMessage: Message = {
+        ...message,
+        content: Array.isArray(message.content)
+          ? [
+              { type: "text", text: value },
+              ...message.content.filter((block) => block.type !== "text"),
+            ]
+          : value,
+      };
+      const { getAgentConfig } = useConfigStore.getState();
+      const effectiveAgentId = config.features.localAgentEnabled
+        ? agentId
+        : thread.assistantId;
+      await thread.client.threads.updateState(threadId, {
+        values: {
+          messages: [
+            newMessage,
+            ...current.values.messages
+              .slice(position + 1)
+              .map((item) => ({ type: "remove", id: item.id, content: "" })),
+          ],
         },
-        config: {
-          configurable: getAgentConfig(agentId),
+        asNode: "__start__",
+      });
+      setIsEditing(false);
+      await thread.submit(null, {
+        checkpoint: null,
+        multitaskStrategy: "reject",
+        streamMode: ["messages-tuple", "values"],
+        optimisticValues: {
+          messages: [...current.values.messages.slice(0, position), newMessage],
+        },
+        context: {
+          ...getAgentConfig(effectiveAgentId || ""),
+          apiKeys,
+          workspace: thread.workspace,
+          model: selectedModel?.id,
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
         },
         streamSubgraphs: true,
         streamResumable: true,
-      },
-    );
+      });
+    } catch (reason) {
+      toast.error("Could not edit checkpoint", {
+        description: reason instanceof Error ? reason.message : String(reason),
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div
+      data-message-role="user"
+      data-editing={isEditing}
       className={cn(
-        "group ml-auto flex min-w-0 max-w-[90%] items-center gap-2 sm:max-w-[80%]",
-        isEditing && "w-full max-w-xl",
+        "doot-human-turn group ml-auto flex min-w-0 items-center gap-2",
+        isEditing && "w-full",
       )}
     >
       <div className={cn("flex min-w-0 flex-col gap-1", isEditing && "w-full")}>
@@ -140,10 +189,10 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <div className="relative ml-auto min-w-0 max-w-full">
+              <div className="relative ml-auto max-w-full min-w-0">
                 <p
                   className={cn(
-                    "bg-muted rounded-3xl px-5 py-3 text-left text-base leading-7 whitespace-pre-wrap [overflow-wrap:anywhere] transition-all duration-200",
+                    "doot-human-bubble px-4 py-2.5 text-left [overflow-wrap:anywhere] whitespace-pre-wrap transition-colors duration-150",
                     !isExpanded &&
                       needsExpansion &&
                       "max-h-[120px] overflow-hidden",
@@ -153,9 +202,7 @@ export function HumanMessage({
                   {contentString}
                 </p>
                 {!isExpanded && needsExpansion && (
-                  <div
-                    className="pointer-events-none absolute right-0 bottom-0 left-0 h-12 rounded-b-3xl bg-gradient-to-t from-muted to-transparent"
-                  />
+                  <div className="from-muted pointer-events-none absolute right-0 bottom-0 left-0 h-12 rounded-b-3xl bg-gradient-to-t to-transparent" />
                 )}
                 {!isExpanded && needsExpansion && (
                   <div className="pointer-events-none absolute bottom-2 left-4 flex items-center gap-1"></div>
@@ -164,8 +211,9 @@ export function HumanMessage({
                   <button
                     type="button"
                     onClick={() => setIsExpanded(!isExpanded)}
-                    data-radius="small-radius"
-                    className="hover:bg-muted-foreground/10 group absolute bottom-2 right-4 cursor-pointer p-1 transition-colors"
+                    data-radius="control"
+                    className="hover:bg-muted-foreground/10 group absolute right-4 bottom-2 cursor-pointer p-1 transition-colors"
+                    aria-expanded={isExpanded}
                     aria-label={
                       isExpanded ? "Collapse message" : "Expand message"
                     }
@@ -173,7 +221,7 @@ export function HumanMessage({
                     <ChevronDownIcon
                       size={16}
                       className={cn(
-                        "text-muted-foreground transition-all group-hover:text-foreground",
+                        "text-muted-foreground group-hover:text-foreground transition-all",
                         isExpanded && "rotate-180",
                       )}
                     />
@@ -185,22 +233,11 @@ export function HumanMessage({
         )}
 
         <div
-          className={cn(
-            "ml-auto flex items-center gap-2 transition-opacity duration-200 ease-in-out",
-            // Show instantly on hover/focus, delay hiding when leaving hover
-            // Always visible on mobile (below md), hidden on desktop until hover
-            "md:delay-[600ms] opacity-100 group-focus-within:opacity-100 group-focus-within:delay-0 group-hover:opacity-100 group-hover:delay-0 md:opacity-0",
-            isEditing && "opacity-100 delay-0",
-          )}
+          data-editing={isEditing}
+          className="doot-message-actions ml-auto flex items-center"
         >
-          <BranchSwitcher
-            branch={meta?.branch}
-            branchOptions={meta?.branchOptions}
-            onSelect={(branch) => thread.setBranch(branch)}
-            isLoading={isLoading}
-          />
           <CommandBar
-            isLoading={isLoading}
+            isLoading={isLoading || isSaving}
             content={contentString}
             isEditing={isEditing}
             setIsEditing={(c) => {

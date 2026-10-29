@@ -18,7 +18,7 @@ export default function DebugAuthPage() {
         <AuthDebug />
 
         <div
-          data-radius="radius"
+          data-radius="surface"
           className="mt-8 border bg-muted/30 p-4"
         >
           <h2 className="mb-2 text-lg font-medium">Testing Tips</h2>

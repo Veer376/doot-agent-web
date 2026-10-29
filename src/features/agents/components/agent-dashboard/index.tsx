@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { SearchIcon as Search } from "@/components/icons";
 import { FilterIcon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,22 +75,23 @@ export function AgentDashboard() {
   }, [allGraphGroups, graphFilter, searchQuery]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search agents..."
-              data-radius="radius"
-              className="h-11 pl-9"
+              aria-label="Search agents"
+              data-radius="control"
+              className="h-doot-control rounded-doot-panel pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
             <FilterIcon className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filters:</span>
@@ -101,8 +102,8 @@ export function AgentDashboard() {
             onValueChange={setGraphFilter}
           >
             <SelectTrigger
-              data-radius="radius"
-              className="h-11 min-w-[180px]"
+              data-radius="control"
+              className="h-doot-control min-w-45 rounded-doot-panel"
             >
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
@@ -122,7 +123,7 @@ export function AgentDashboard() {
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">
+        <h2 className="text-sm font-medium text-muted-foreground">
           {filteredAgents.length}{" "}
           {filteredAgents.length === 1 ? "Agent" : "Agents"}
         </h2>
@@ -130,11 +131,11 @@ export function AgentDashboard() {
 
       {filteredAgents.length === 0 ? (
         <div
-          data-radius="radius"
-          className="flex flex-col items-center justify-center border border-dashed p-8 text-center animate-in fade-in-50"
+          data-radius="surface"
+          className="doot-route-card flex flex-col items-center justify-center border border-dashed p-8 text-center animate-in fade-in-50"
         >
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-            <Search className="h-10 w-10 text-muted-foreground" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Search className="h-5 w-5 text-muted-foreground" />
           </div>
           <h2 className="mt-6 text-xl font-semibold">No agents found</h2>
           <p className="mb-8 mt-2 text-center text-muted-foreground">
@@ -143,14 +144,14 @@ export function AgentDashboard() {
           </p>
           <Button
             onClick={() => setShowCreateDialog(true)}
-            data-radius="radius"
-            className="h-10 bg-black text-white hover:bg-black/90"
+            data-radius="control"
+            className="h-doot-control bg-foreground text-background hover:bg-foreground/90"
           >
             Create Agent
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredAgents.map((agent) => (
             <AgentCard
               key={`agent-dashboard-${agent.assistant_id}`}

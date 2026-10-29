@@ -58,7 +58,7 @@ export function EmptyState({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-          data-radius="radius"
+          data-radius="surface"
           data-elevation="1"
           className="bg-muted/50 mb-2 p-6"
         >

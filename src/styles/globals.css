@@ -6,16 +6,15 @@
 @import "./base.css";
 @import "./utilities.css";
 @import "./theme.css";
+@import "./doot.css";
 
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── Viewport-responsive base font size ──
-   Min 16px at ~1024px viewport → Max 20px at ~1920px+
-── */
+/* Stable desktop density; rem units still respect browser font preferences. */
 html {
-  font-size: clamp(16px, calc(14px + 0.25vw), 20px);
+  font-size: 100%;
 }
 
 /* ── Font families — vars injected by next/font in layout.tsx ──
@@ -31,39 +30,3 @@ html {
 }
 
 /* @theme block moved to ./theme.css (shared with doot-agent-electron) */
-
-/* Neutral app chrome; brand colors remain on the Doot mark and controls. */
-.doot-shell {
-  --background: oklch(1 0 0);
-}
-
-[data-sidebar="sidebar"] {
-  --sidebar: oklch(0.975 0 0);
-  --sidebar-foreground-oklch: oklch(0.25 0 0);
-  --sidebar-accent-oklch: oklch(0.935 0 0);
-  --sidebar-accent-foreground-oklch: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --radius: 0.5rem;
-}
-
-.dark .doot-shell {
-  --background: oklch(0.18 0 0);
-}
-
-.dark [data-sidebar="sidebar"] {
-  --sidebar: oklch(0.155 0 0);
-  --sidebar-foreground-oklch: oklch(0.93 0 0);
-  --sidebar-accent-oklch: oklch(0.24 0 0);
-  --sidebar-accent-foreground-oklch: oklch(0.98 0 0);
-  --muted-foreground: oklch(0.68 0 0);
-}
-
-.doot-new-chat-composer {
-  --card: var(--background);
-  --shadow-brand: 0 2px 12px oklch(0 0 0 / 0.06);
-  --shadow-brand-focus: 0 2px 12px oklch(0 0 0 / 0.08);
-}
-
-.doot-assistant-selectable ::selection {
-  background: color-mix(in srgb, currentColor 16%, transparent);
-}

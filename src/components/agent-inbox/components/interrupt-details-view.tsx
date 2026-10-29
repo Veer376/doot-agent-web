@@ -21,7 +21,7 @@ export function InterruptDetailsView({
           ),
         )
       ) : (
-        <div className="text-sm text-gray-500">No interrupt data available</div>
+        <div className="text-sm text-muted-foreground">No interrupt data available</div>
       )}
     </div>
   );

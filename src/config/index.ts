@@ -13,6 +13,7 @@
 interface AppConfig {
     // API URLs
     apiUrl: string;
+    aegraApiUrl: string | null;
     mcpUrl: string;
     mcpServerUrl: string | null;
     ragApiUrl: string | null;
@@ -28,6 +29,7 @@ interface AppConfig {
     // Feature Flags
     features: {
         localMode: boolean;
+        localAgentEnabled: boolean;
         googleAuthDisabled: boolean;
         githubAuthDisabled: boolean;
         requireApiKeys: boolean;
@@ -75,6 +77,7 @@ function getConfig(): AppConfig {
     return {
         // API URLs
         apiUrl,
+        aegraApiUrl: process.env.NEXT_PUBLIC_AEGRA_API_URL || null,
         mcpUrl,
         mcpServerUrl: process.env.NEXT_PUBLIC_MCP_SERVER_URL || null,
         ragApiUrl: process.env.NEXT_PUBLIC_RAG_API_URL || null,
@@ -90,6 +93,7 @@ function getConfig(): AppConfig {
         // Feature Flags
         features: {
             localMode,
+            localAgentEnabled: localMode && process.env.NEXT_PUBLIC_PLATFORM_MODE !== "true",
             googleAuthDisabled: process.env.NEXT_PUBLIC_GOOGLE_AUTH_DISABLED === 'true',
             githubAuthDisabled: process.env.NEXT_PUBLIC_GITHUB_AUTH_DISABLED === 'true',
             requireApiKeys: process.env.NEXT_PUBLIC_REQUIRE_API_KEYS === 'true',
@@ -113,6 +117,7 @@ export const config = getConfig();
 if (typeof window === 'undefined' && config.isDev) {
     console.log('🔧 Configuration loaded:', {
         apiUrl: config.apiUrl,
+        aegraApiUrl: config.aegraApiUrl,
         mcpUrl: config.mcpUrl,
         mcpServerUrl: config.mcpServerUrl,
         environment: config.environment,

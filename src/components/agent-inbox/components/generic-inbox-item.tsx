@@ -90,21 +90,22 @@ export function GenericInboxItem<
     <div
       onClick={() => setSelectedThreadIdParam(threadData.thread.thread_id)}
       className={cn(
-        "grid h-[71px] w-full cursor-pointer grid-cols-12 p-4 py-4.5 transition-colors ease-in-out hover:bg-gray-50/90",
-        !isLast && "border-b-[1px] border-gray-200",
+        "grid min-h-doot-inbox-row w-full cursor-pointer grid-cols-12 px-4 py-3 transition-colors ease-in-out hover:bg-accent max-md:grid-cols-1 max-md:gap-2",
+        !isLast && "border-b border-border-subtle",
       )}
     >
-      <div className="col-span-1 flex items-center justify-center">
+      <div className="col-span-1 flex items-center justify-center max-md:hidden">
         {/* Empty space for alignment with interrupted items */}
       </div>
 
       <div
         className={cn(
           "col-span-6 flex items-center justify-start gap-2",
+          "max-md:col-span-full max-md:flex-wrap",
           !agentInboxId && "col-span-9",
         )}
       >
-        <p className="text-sm font-semibold text-black">Thread ID:</p>
+        <p className="text-sm font-medium text-foreground">Thread ID:</p>
         <ThreadIdCopyable
           showUUID
           threadId={threadData.thread.thread_id}
@@ -112,11 +113,11 @@ export function GenericInboxItem<
       </div>
 
       {agentInboxId && (
-        <div className="col-span-2 flex items-center">
+        <div className="col-span-2 flex items-center max-md:col-span-full">
           <Button
             size="sm"
             variant="outline"
-            className="flex items-center gap-1 bg-white"
+            className="flex items-center gap-1 bg-background"
             onClick={handleOpenInStudio}
           >
             Studio
@@ -127,13 +128,14 @@ export function GenericInboxItem<
       <div
         className={cn(
           "col-span-2 flex items-center",
+          "max-md:col-span-full max-md:col-start-auto",
           !agentInboxId && "col-start-10",
         )}
       >
         <InboxItemStatuses status={threadData.status} />
       </div>
 
-      <p className="col-span-1 pt-2 text-right text-sm font-light text-gray-600">
+      <p className="col-span-1 pt-2 text-right text-sm text-muted-foreground max-md:col-span-full max-md:pt-0 max-md:text-left">
         {updatedAtDateString}
       </p>
     </div>

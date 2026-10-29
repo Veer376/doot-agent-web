@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTheme } from "next-themes";
+import { LoaderIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
 interface MermaidDiagramProps {
   chart: string;
@@ -13,13 +15,18 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isRendering, setIsRendering] = useState(true);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const uniqueId = useId();
 
   useEffect(() => {
+    let cancelled = false;
+
     const renderDiagram = async () => {
       if (!containerRef.current) return;
+      setIsRendering(true);
+      setError(null);
 
       try {
         // Dynamically import mermaid only when needed
@@ -41,34 +48,41 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
         // Render the diagram
         const { svg } = await mermaid.render(id, chart);
+        if (cancelled || !containerRef.current) return;
         containerRef.current.innerHTML = svg;
         setError(null);
+        setIsRendering(false);
       } catch (err) {
+        if (cancelled) return;
         console.error("Mermaid rendering error:", err);
         setError(
           err instanceof Error ? err.message : "Failed to render diagram",
         );
+        setIsRendering(false);
       }
     };
 
-    renderDiagram();
+    void renderDiagram();
+    return () => {
+      cancelled = true;
+    };
   }, [chart, isDark]);
 
   if (error) {
     return (
-      <div className={className}>
+      <div className={cn("doot-mermaid-error p-4", className)}>
         <div
-          data-radius="radius"
-          className="border border-red-500/20 bg-red-500/10 p-4"
+          role="alert"
+          className="text-sm"
         >
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p>
             Failed to render diagram: {error}
           </p>
           <details className="mt-2">
-            <summary className="cursor-pointer text-xs text-red-600/70 dark:text-red-400/70">
+            <summary className="cursor-pointer text-xs opacity-75">
               Show diagram code
             </summary>
-            <pre className="mt-2 overflow-auto rounded bg-black/10 p-2 text-xs dark:bg-white/10">
+            <pre className="mt-2 max-w-full overflow-auto rounded-md bg-muted/60 p-2 text-xs">
               {chart}
             </pre>
           </details>
@@ -79,14 +93,26 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
 
   return (
     <div
-      ref={containerRef}
-      className={className}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "1rem",
-      }}
-    />
+      className={cn("doot-mermaid", className)}
+      aria-busy={isRendering}
+      aria-label="Diagram"
+    >
+      {isRendering && (
+        <div className="doot-mermaid-loading">
+          <LoaderIcon
+            size="xs"
+            className="animate-spin"
+          />
+          <span>Rendering diagram…</span>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className={cn(
+          "doot-mermaid-render-target",
+          isRendering && "invisible",
+        )}
+      />
+    </div>
   );
 };

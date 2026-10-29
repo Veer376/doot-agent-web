@@ -98,7 +98,7 @@ export default function ResetPasswordInterface() {
     <div className="flex min-h-screen items-center justify-center py-10">
       <Card
         className="w-full max-w-md"
-        data-radius="radius"
+        data-radius="surface"
       >
         <CardHeader>
           <CardTitle className="text-center text-2xl">Reset Password</CardTitle>
@@ -119,7 +119,7 @@ export default function ResetPasswordInterface() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 aria-invalid={!!errors.password}
-                data-radius="radius"
+                data-radius="control"
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
@@ -134,7 +134,7 @@ export default function ResetPasswordInterface() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 aria-invalid={!!errors.confirmPassword}
-                data-radius="radius"
+                data-radius="control"
               />
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">
@@ -146,7 +146,6 @@ export default function ResetPasswordInterface() {
             {authError && (
               <Alert
                 variant="destructive"
-                data-radius="radius"
               >
                 <AlertDescription>{authError}</AlertDescription>
               </Alert>
@@ -156,7 +155,7 @@ export default function ResetPasswordInterface() {
               type="submit"
               className="w-full"
               disabled={isLoading}
-              data-radius="radius"
+              data-radius="control"
             >
               {isLoading ? "Resetting..." : "Reset Password"}
             </Button>

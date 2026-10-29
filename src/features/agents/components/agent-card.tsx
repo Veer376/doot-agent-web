@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Brain, Edit, User, Wrench } from "lucide-react";
+import {
+  BotIcon as Bot,
+  BrainIcon as Brain,
+  EditIcon as Edit,
+  UserIconHuge as User,
+  WrenchIcon as Wrench,
+} from "@/components/icons";
 import { Comment01Icon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,8 +71,8 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     <>
       <Card
         key={agent.assistant_id}
-        className="overflow-hidden py-4"
-        data-radius="radius"
+        className="doot-route-card overflow-hidden py-4"
+        data-radius="surface"
       >
         <CardHeader className="space-y-1.5 pb-1">
           <div className="flex items-start justify-between">
@@ -111,7 +117,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             <Button
               variant="outline"
               size="sm"
-              data-radius="radius"
+              data-radius="control"
               onClick={() => setShowEditDialog(true)}
             >
               <Edit className="mr-2 h-3.5 w-3.5" />
@@ -124,8 +130,8 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           >
             <Button
               size="sm"
-              data-radius="radius"
-              className="bg-black text-white hover:bg-black/90"
+              data-radius="control"
+              className="bg-foreground text-background hover:bg-foreground/90"
             >
               <Comment01Icon className="mr-1 h-3.5 w-3.5" />
               Chat

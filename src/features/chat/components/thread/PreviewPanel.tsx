@@ -44,8 +44,8 @@ class PreviewPanelErrorBoundary extends Component<
       return (
         <div className="mx-auto w-full max-w-3xl">
           <div
-            data-radius="radius"
-            className="border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400"
+            data-radius="surface"
+            className="border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
           >
             <p className="font-semibold">Preview Panel Error</p>
             <p className="mt-1 text-xs opacity-80">
@@ -107,7 +107,7 @@ function PreviewPanelContent() {
               >
                 {/* Thumbnail Container */}
                 <div
-                  data-radius="radius"
+                  data-radius="surface"
                   className="shadow-brand group-hover:shadow-brand-focus relative h-20 w-32 overflow-hidden border border-border transition-all duration-200 group-hover:scale-105"
                 >
                   <img
@@ -116,11 +116,11 @@ function PreviewPanelContent() {
                     className="h-full w-full object-cover object-top"
                   />
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/0 transition-colors duration-200" />
+                  <div className="absolute inset-0 bg-transparent transition-colors duration-200" />
                   {/* Expand Icon - Bottom Right */}
                   <div className="absolute bottom-1 right-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                     <div
-                      data-radius="small-radius"
+                      data-radius="control"
                       className="bg-background/80 p-1.5 shadow-sm backdrop-blur-sm"
                     >
                       <SquareArrowExpand01Icon className="h-5 w-5 text-foreground" />
@@ -134,7 +134,7 @@ function PreviewPanelContent() {
           {/* Todos Section - Expandable list */}
           {hasTodos && todos && (
             <div
-              data-radius="radius"
+              data-radius="surface"
               className="hover:border-border/80 flex items-start gap-3 border border-border bg-card p-3 shadow-sm transition-all duration-200"
             >
               <div className="min-w-0 flex-1">
@@ -198,7 +198,7 @@ function PreviewPanelContent() {
                   {/* URL Bar */}
                   {browserSnapshot.url && (
                     <div
-                      data-radius="radius"
+                      data-radius="surface"
                       className="flex-shrink-0 rounded-full border bg-background px-3 py-2"
                     >
                       <span className="text-sm">{browserSnapshot.url}</span>
@@ -208,7 +208,7 @@ function PreviewPanelContent() {
                   {/* Screenshot */}
                   {browserSnapshot.screenshot && (
                     <div
-                      data-radius="radius"
+                      data-radius="surface"
                       className="flex-shrink-0 overflow-hidden border"
                     >
                       <img
@@ -224,7 +224,7 @@ function PreviewPanelContent() {
                   {/* URL Bar */}
                   {browserSnapshot.url && (
                     <div
-                      data-radius="radius"
+                      data-radius="surface"
                       className="flex-shrink-0 rounded-full border bg-background px-3 py-2"
                     >
                       <span className="text-sm">{browserSnapshot.url}</span>
@@ -234,7 +234,7 @@ function PreviewPanelContent() {
                   {/* DOM Text */}
                   {browserSnapshot.dom_text && (
                     <div
-                      data-radius="radius"
+                      data-radius="surface"
                       className="bg-muted/50 flex-1 overflow-hidden border p-4"
                     >
                       <h4 className="mb-2 text-sm font-semibold">

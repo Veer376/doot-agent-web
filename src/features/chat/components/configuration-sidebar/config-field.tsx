@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
-import { AlertCircle } from "lucide-react";
+import { AlertCircleIconHuge as AlertCircle } from "@/components/icons";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
@@ -147,7 +147,7 @@ export function ConfigField({
       </div>
 
       {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
+        <p className="text-xs whitespace-pre-line text-muted-foreground">
           {description}
         </p>
       )}
@@ -201,7 +201,7 @@ export function ConfigField({
       {type === "slider" && (
         <div className="pt-2">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs text-gray-500">{min ?? ""}</span>
+            <span className="text-xs text-muted-foreground">{min ?? ""}</span>
             <span className="text-sm font-medium">
               {/* Use currentValue */}
               {currentValue !== undefined
@@ -210,7 +210,7 @@ export function ConfigField({
                   ? (min + max) / 2
                   : ""}
             </span>
-            <span className="text-xs text-gray-500">{max ?? ""}</span>
+            <span className="text-xs text-muted-foreground">{max ?? ""}</span>
           </div>
           <Slider
             id={id}
@@ -267,7 +267,7 @@ export function ConfigField({
             className={cn(
               "min-h-[120px] font-mono text-sm",
               jsonError &&
-                "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
+                "border-destructive/40 focus:border-destructive/40 focus-visible:ring-destructive/30", // Add error styling
             )}
           />
           <div className="flex w-full items-start justify-between gap-2 pt-1">
@@ -383,7 +383,7 @@ export function ConfigFieldTool({
       </div>
 
       {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
+        <p className="text-xs whitespace-pre-line text-muted-foreground">
           {description}
         </p>
       )}
@@ -467,7 +467,7 @@ export function ConfigFieldAgents({
         className="w-full"
       />
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         The agents to make available to this supervisor.
       </p>
     </div>

@@ -24,7 +24,6 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
   const [open, setOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const { isAuthenticated } = useAuthSession();
 
   const { agentId, setSelectedAgent } = useAgentContext();
@@ -91,47 +90,25 @@ export function SimpleAgentSelector({ className }: SimpleAgentSelectorProps) {
         trigger={
           <button
             type="button"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            role="combobox"
+            aria-label="Select agent"
+            aria-expanded={open}
             className={cn(
-              "flex items-center gap-2 rounded-full p-1.5 transition-colors",
-              "hover:bg-accent/60 dark:hover:bg-accent/40",
+              "doot-agent-control flex min-w-0 items-center gap-1.5 transition-colors",
+              "hover:bg-accent",
               "focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none",
               className,
             )}
           >
-            <div className="relative flex size-5 items-center justify-center">
-              {/* Agent icon — fades out when hovered or open */}
-              {AgentIcon && (
-                <AgentIcon
-                  className={cn(
-                    "absolute size-5 transition-opacity duration-150",
-                    isHovered || open ? "opacity-0" : "opacity-100",
-                  )}
-                />
-              )}
-              {/* Arrow-down — fades in on hover, fades out when open */}
-              <ArrowDown01Icon
-                className={cn(
-                  "text-muted-foreground absolute size-4 transition-opacity duration-150",
-                  isHovered && !open ? "opacity-100" : "opacity-0",
-                )}
-              />
-              {/* Arrow-up — fades in when dropdown is open */}
-              <ArrowUp01Icon
-                className={cn(
-                  "text-muted-foreground absolute size-4 transition-opacity duration-150",
-                  open ? "opacity-100" : "opacity-0",
-                )}
-              />
-            </div>
-            <span className="text-foreground max-w-[140px] truncate text-sm font-medium">
-              {selectedAgent?.name
-                ? selectedAgent.name.length > 10
-                  ? `${selectedAgent.name.slice(0, 10)}...`
-                  : selectedAgent.name
-                : "Agent"}
+            {AgentIcon && <AgentIcon className="size-4 shrink-0" />}
+            <span className="doot-agent-name text-foreground max-w-33 truncate text-sm font-medium">
+              {selectedAgent?.name ?? "Agent"}
             </span>
+            {open ? (
+              <ArrowUp01Icon className="text-muted-foreground size-3.5 shrink-0" />
+            ) : (
+              <ArrowDown01Icon className="text-muted-foreground size-3.5 shrink-0" />
+            )}
           </button>
         }
       />

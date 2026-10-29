@@ -14,7 +14,12 @@ import {
   cloudAgentKeys,
 } from "@/hooks/use-cloud-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
-import { Bot, LoaderCircle, Trash, X } from "lucide-react";
+import {
+  BotIcon as Bot,
+  LoaderIcon as LoaderCircle,
+  TrashIcon as Trash,
+  XIcon as X,
+} from "@/components/icons";
 import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
@@ -139,7 +144,7 @@ function EditAgentDialogContent({
   };
 
   return (
-    <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
+    <AlertDialogContent className="h-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <AlertDialogHeader>
           <div className="flex items-start justify-between gap-4">
@@ -153,7 +158,7 @@ function EditAgentDialogContent({
             </div>
             <AlertDialogCancel
               size="icon"
-              data-radius="radius"
+              data-radius="control"
             >
               <X className="size-4" />
             </AlertDialogCancel>
@@ -178,7 +183,7 @@ function EditAgentDialogContent({
             className="flex w-full items-center justify-center gap-1"
             disabled={loading || deleteSubmitting}
             variant="destructive"
-            data-radius="radius"
+            data-radius="control"
           >
             {deleteSubmitting ? (
               <LoaderCircle className="animate-spin" />
@@ -191,7 +196,7 @@ function EditAgentDialogContent({
             type="submit"
             className="flex w-full items-center justify-center gap-1"
             disabled={loading || form.formState.isSubmitting}
-            data-radius="radius"
+            data-radius="control"
           >
             {form.formState.isSubmitting ? (
               <LoaderCircle className="animate-spin" />

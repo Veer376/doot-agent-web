@@ -29,6 +29,21 @@ import {
   MoreHorizontalIcon,
   AiBrain04Icon,
   Wrench01Icon,
+  RefreshIcon as RefreshHugeIcon,
+  QuotesIcon,
+  Shield01Icon,
+  Folder01Icon,
+  SourceCodeCircleIcon,
+  GlobalIcon,
+  FileSearchIcon as FileSearchHugeIcon,
+  Cursor01Icon,
+  CursorProgress01Icon as CursorProgress01HugeIcon,
+  KeyboardIcon as KeyboardHugeIcon,
+  MoveIcon as MoveHugeIcon,
+  ScrollIcon as ScrollHugeIcon,
+  Camera01Icon,
+  BotIcon as BotHugeIcon,
+  FileEditIcon as FileEditHugeIcon,
   SidebarLeft01Icon as SidebarLeft01HugeIcon,
   SidebarRight01Icon as SidebarRight01HugeIcon,
   Menu11Icon as Menu11HugeIcon,
@@ -207,6 +222,8 @@ export interface AppIconProps extends Omit<
   size?: IconSize;
   strokeWidth?: number;
 }
+
+export type AppIconComponent = React.ComponentType<AppIconProps>;
 
 // ============================================
 // ICON WRAPPER COMPONENT
@@ -514,7 +531,7 @@ export const CheckmarkCircleIcon: React.FC<AppIconProps> = ({
 }) => (
   <IconWrapper
     icon={CheckmarkCircle02Icon}
-    className={cn("text-green-600", className)}
+    className={cn("text-semantic-success", className)}
     {...props}
   />
 );
@@ -838,7 +855,7 @@ export const AlertCircleIconHuge: React.FC<AppIconProps> = ({
 }) => (
   <IconWrapper
     icon={AlertCircleHugeIcon}
-    className={cn("text-yellow-600", className)}
+    className={cn("text-semantic-warning", className)}
     {...props}
   />
 );
@@ -849,7 +866,7 @@ export const TriangleAlertIcon: React.FC<AppIconProps> = ({
 }) => (
   <IconWrapper
     icon={TriangleIcon}
-    className={cn("text-yellow-600", className)}
+    className={cn("text-semantic-warning", className)}
     {...props}
   />
 );
@@ -1145,6 +1162,132 @@ export const SaveIcon: React.FC<AppIconProps> = (props) => (
 );
 
 export const HouseIcon: React.FC<AppIconProps> = HomeIcon;
+
+export const BrainIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={AiBrain04Icon}
+    {...props}
+  />
+);
+
+export const DotIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CircleHugeIcon}
+    {...props}
+  />
+);
+
+export const BotIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={BotHugeIcon}
+    {...props}
+  />
+);
+
+export const WrenchIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Wrench01Icon}
+    {...props}
+  />
+);
+
+export const RefreshIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={RefreshHugeIcon}
+    {...props}
+  />
+);
+
+export const QuoteIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={QuotesIcon}
+    {...props}
+  />
+);
+
+export const ShieldAlertIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Shield01Icon}
+    {...props}
+  />
+);
+
+export const FolderIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Folder01Icon}
+    {...props}
+  />
+);
+
+export const TerminalIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={SourceCodeCircleIcon}
+    {...props}
+  />
+);
+
+export const GlobeIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={GlobalIcon}
+    {...props}
+  />
+);
+
+export const FileSearchIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={FileSearchHugeIcon}
+    {...props}
+  />
+);
+
+export const MousePointerIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Cursor01Icon}
+    {...props}
+  />
+);
+
+export const CursorProgress01Icon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={CursorProgress01HugeIcon}
+    {...props}
+  />
+);
+
+export const KeyboardAppIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={KeyboardHugeIcon}
+    {...props}
+  />
+);
+
+export const MoveAppIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={MoveHugeIcon}
+    {...props}
+  />
+);
+
+export const ScrollTextIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={ScrollHugeIcon}
+    {...props}
+  />
+);
+
+export const CameraIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={Camera01Icon}
+    {...props}
+  />
+);
+
+export const FileEditIcon: React.FC<AppIconProps> = (props) => (
+  <IconWrapper
+    icon={FileEditHugeIcon}
+    {...props}
+  />
+);
 
 // Default export object for convenient access
 export default {

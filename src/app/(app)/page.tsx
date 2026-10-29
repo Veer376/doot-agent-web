@@ -5,12 +5,25 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAuthSession } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { AuthDialog, type AuthMode } from "@/components/auth/auth-dialog";
+import type { AuthMode } from "@/components/auth/auth-dialog";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import { AgentTour } from "@/features/tour/components/AgentTour";
-import { WelcomeModal } from "@/components/onboarding/welcome-modal";
 import { config } from "@/config";
+
+const AuthDialog = dynamic(() =>
+  import("@/components/auth/auth-dialog").then((module) => module.AuthDialog),
+);
+const AgentTour = dynamic(() =>
+  import("@/features/tour/components/AgentTour").then(
+    (module) => module.AgentTour,
+  ),
+);
+const WelcomeModal = dynamic(() =>
+  import("@/components/onboarding/welcome-modal").then(
+    (module) => module.WelcomeModal,
+  ),
+);
 
 /**
  * The default page (/).
@@ -63,7 +76,7 @@ export default function ChatPage(): React.ReactNode {
   return (
     <>
       <Toaster />
-      <header className="flex h-14 shrink-0 items-center justify-between gap-3 pr-4 pl-14 md:px-5">
+      <header className="doot-header flex shrink-0 items-center justify-between gap-3 pr-4 pl-14 md:px-5">
         <span className="text-foreground/80 truncate text-base font-medium">
           DootAgent
         </span>
@@ -80,11 +93,13 @@ export default function ChatPage(): React.ReactNode {
       <ChatInterface />
 
       {/* Auth Dialog */}
-      <AuthDialog
-        open={authDialogOpen}
-        onOpenChange={setAuthDialogOpen}
-        mode={authMode}
-      />
+      {authDialogOpen && (
+        <AuthDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+          mode={authMode}
+        />
+      )}
 
       {/* Welcome video modal - shows first */}
       {!config.features.localMode && (
@@ -92,7 +107,7 @@ export default function ChatPage(): React.ReactNode {
       )}
 
       {/* Tour for unauthenticated users - only after welcome is done */}
-      {welcomeDone && <AgentTour />}
+      {!config.features.localMode && welcomeDone && <AgentTour />}
     </>
   );
 }

@@ -3,6 +3,7 @@ import "../globals.css";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
+import { ActiveRunsProvider } from "@/providers/ActiveRuns";
 
 export const metadata: Metadata = {
   title: "DootAgent",
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <NuqsAdapter>
-      <SidebarLayout>{children}</SidebarLayout>
+      <ActiveRunsProvider>
+        <SidebarLayout>{children}</SidebarLayout>
+      </ActiveRunsProvider>
     </NuqsAdapter>
   );
 }

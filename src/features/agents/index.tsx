@@ -4,7 +4,7 @@ import { AgentDashboard } from "./components/agent-dashboard";
 
 export default function AgentsInterfaceV2() {
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="doot-route-page mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
       <PageHeader
         title="Agents"
         description="Manage and chat with your agents"

@@ -16,6 +16,10 @@ import {
   PlusIcon,
   DownloadIcon,
   PdfIcon,
+  XIcon,
+  CursorProgress01Icon,
+  ShieldAlertIcon,
+  AlertCircleIconHuge,
 } from "@/components/icons";
 import {
   MessageSquareIcon,
@@ -62,6 +66,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { threadKeys } from "@/hooks/use-threads";
+import {
+  useActiveRuns,
+  type ThreadRuntimeStatus,
+} from "@/providers/ActiveRuns";
 import {
   exportThreadAsMarkdown,
   exportThreadAsJSON,
@@ -185,12 +193,48 @@ function groupThreadsByDate(threads: Thread[]) {
   return groups;
 }
 
+function ThreadRuntimeBadge({ status }: { status: ThreadRuntimeStatus }) {
+  const config =
+    status === "busy"
+      ? {
+          label: "Working",
+          Icon: CursorProgress01Icon,
+          className: "text-semantic-info",
+        }
+      : status === "interrupted"
+        ? {
+            label: "Interrupted",
+            Icon: ShieldAlertIcon,
+            className: "text-semantic-warning",
+          }
+        : {
+            label: "Error",
+            Icon: AlertCircleIconHuge,
+            className: "text-destructive",
+          };
+
+  return (
+    <span
+      data-thread-runtime-status={status}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 text-[11px] font-medium",
+        config.className,
+      )}
+      title={config.label}
+    >
+      <config.Icon size="xs" />
+      <span>{config.label}</span>
+    </span>
+  );
+}
+
 export function ThreadList() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const router = useRouter();
   const { session } = useAuthSession();
   const { state, isMobile } = useSidebar();
   const queryClient = useQueryClient();
+  const { getActivity } = useActiveRuns();
   const THREADS_PER_PAGE = 20;
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useFetchThreadsInfinite(undefined, THREADS_PER_PAGE);
@@ -661,6 +705,7 @@ export function ThreadList() {
     const isActive = thread.thread_id === threadId;
     const isPinned = thread.metadata?.pinned === true;
     const isSelected = index === selectedIndex;
+    const runtimeStatus = getActivity(thread.thread_id)?.status;
 
     // Get agent name (only shown for agent mode)
     const agentName = getAgentDisplayInfo(thread, agents);
@@ -677,9 +722,9 @@ export function ThreadList() {
         className={cn(
           "w-full px-3 py-3 text-left transition-colors",
           isSelected && "bg-accent",
-          !isSelected && "hover:bg-accent/50",
+          !isSelected && "hover:bg-accent",
         )}
-        data-radius="small-radius"
+        data-radius="control"
       >
         <div className="flex flex-col gap-1.5">
           {/* Thread Title */}
@@ -696,6 +741,7 @@ export function ThreadList() {
                 Current
               </span>
             )}
+            {runtimeStatus && <ThreadRuntimeBadge status={runtimeStatus} />}
           </div>
           {/* Agent Name - only shown for agent mode */}
           {agentName && (
@@ -715,7 +761,7 @@ export function ThreadList() {
         open={searchOpen}
         onOpenChange={setSearchOpen}
       >
-        <DialogContent className="flex h-[80vh] flex-col gap-0 p-0 sm:max-w-2xl [&>button]:hidden">
+        <DialogContent className="doot-search-dialog flex flex-col gap-0 p-0 [&>button]:hidden">
           <DialogTitle className="sr-only">Search Threads</DialogTitle>
           <DialogDescription className="sr-only">
             Browse and search all your conversation threads
@@ -725,6 +771,7 @@ export function ThreadList() {
             <Input
               ref={searchInputRef}
               placeholder="Search threads..."
+              aria-label="Search threads"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
@@ -732,20 +779,7 @@ export function ThreadList() {
             />
             <DialogClose asChild>
               <button className="ring-offset-background focus:ring-ring flex-shrink-0 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
+                <XIcon size="xs" />
                 <span className="sr-only">Close</span>
               </button>
             </DialogClose>
@@ -791,8 +825,8 @@ export function ThreadList() {
                 {/* New Thread Button */}
                 <button
                   onClick={handleCreateNewThread}
-                  className="hover:bg-accent/50 mb-4 w-full px-3 py-2.5 text-left transition-colors"
-                  data-radius="small-radius"
+                  className="hover:bg-accent mb-4 w-full px-3 py-2.5 text-left transition-colors"
+                  data-radius="control"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
@@ -923,6 +957,7 @@ export function ThreadList() {
                 const isEditing = editingThreadId === thread.thread_id;
                 const isPinned = thread.metadata?.pinned === true;
                 const agentName = getAgentDisplayInfo(thread, agents);
+                const runtimeStatus = getActivity(thread.thread_id)?.status;
 
                 return (
                   <SidebarMenuItem key={thread.thread_id}>
@@ -935,7 +970,7 @@ export function ThreadList() {
                           onKeyDown={handleKeyDown}
                           onBlur={handleSaveEdit}
                           className="placeholder:text-sidebar-foreground/60 border-border bg-card text-sidebar-foreground focus-visible:border-primary/30 h-9 border text-sm transition-all focus-visible:ring-0 focus-visible:ring-transparent"
-                          data-radius="radius"
+                          data-radius="control"
                           placeholder="Thread name..."
                         />
                       </div>
@@ -957,6 +992,9 @@ export function ThreadList() {
                             <span className="truncate text-sm leading-tight">
                               {title}
                             </span>
+                            {runtimeStatus && (
+                              <ThreadRuntimeBadge status={runtimeStatus} />
+                            )}
                             {agentName && (
                               <span className="sr-only"> · {agentName}</span>
                             )}

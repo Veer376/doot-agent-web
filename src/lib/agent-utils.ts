@@ -147,7 +147,7 @@ export function checkApiKeysWarning(hasApiKeys: boolean) {
           {
             href: "/settings",
             className:
-              "inline-flex items-center text-sm font-bold hover:text-red-900 underline",
+              "inline-flex items-center text-sm font-bold hover:text-destructive underline",
           },
           "Go to Settings →",
         ),

@@ -80,24 +80,24 @@ export function AgentFieldsForm({
         <p className="text-lg font-semibold tracking-tight">Agent Details</p>
         <div className="flex w-full flex-col items-start justify-start gap-2">
           <Label htmlFor="oap_name">
-            Name <span className="text-red-500">*</span>
+            Name <span className="text-destructive">*</span>
           </Label>
           <Input
             id="oap_name"
             {...form.register("name")}
             placeholder="Emails Agent"
-            data-radius="radius"
+            data-radius="control"
           />
         </div>
         <div className="flex w-full flex-col items-start justify-start gap-2">
           <Label htmlFor="oap_description">
-            Description <span className="text-red-500">*</span>
+            Description <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="oap_description"
             {...form.register("description")}
             placeholder="Agent that handles emails"
-            data-radius="radius"
+            data-radius="control"
           />
         </div>
       </div>
@@ -152,8 +152,8 @@ export function AgentFieldsForm({
                 className="w-full"
               />
               <div
-                data-radius="small-radius"
-                className="relative w-full flex-1 basis-[500px] border-[1px] border-slate-200 px-4"
+                data-radius="control"
+                className="relative w-full flex-1 basis-[500px] border border-border px-4"
               >
                 <div className="absolute inset-0 overflow-y-auto px-4">
                   {toolConfigurations[0]?.label
@@ -179,12 +179,12 @@ export function AgentFieldsForm({
                       ))
                     : null}
                   {displayTools.length === 0 && toolSearchTerm && (
-                    <p className="my-4 w-full text-center text-sm text-slate-500">
+                    <p className="my-4 w-full text-center text-sm text-muted-foreground">
                       No tools found matching "{toolSearchTerm}".
                     </p>
                   )}
                   {tools.length === 0 && !toolSearchTerm && (
-                    <p className="my-4 w-full text-center text-sm text-slate-500">
+                    <p className="my-4 w-full text-center text-sm text-muted-foreground">
                       No tools available for this agent.
                     </p>
                   )}
@@ -193,7 +193,7 @@ export function AgentFieldsForm({
                       <Button
                         variant="outline"
                         size="sm"
-                        data-radius="radius"
+                        data-radius="control"
                         onClick={async () => {
                           try {
                             setLoadingMore(true);

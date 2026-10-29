@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/select";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+} from "@/components/icons";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { toast } from "sonner";
 import { INBOX_PARAM, LIMIT_PARAM, OFFSET_PARAM } from "../constants";
@@ -30,7 +33,7 @@ function DisplayLimitSelect() {
         await setFetchLimitParam(Number(v));
       }}
     >
-      <SelectTrigger className="h-8 w-[180px]">
+      <SelectTrigger className="h-8 w-45">
         <SelectValue>{fetchLimitParam}</SelectValue>
       </SelectTrigger>
       <SelectContent>

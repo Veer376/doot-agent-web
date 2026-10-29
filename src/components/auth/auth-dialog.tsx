@@ -100,7 +100,7 @@ export function AuthDialog({
     >
       <DialogContent
         style={{ maxWidth: "23rem" }}
-        data-radius="radius"
+        data-radius="overlay"
         className="flex flex-col gap-0 overflow-hidden p-0"
       >
         <DialogTitle className="sr-only">{getDialogTitle()}</DialogTitle>

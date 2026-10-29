@@ -33,7 +33,7 @@ export function BrowserSnapshotView() {
 
   return (
     <div
-      data-radius="radius"
+      data-radius="surface"
       className="mb-4 w-full max-w-lg border bg-muted/30 px-0 pb-0 pt-3"
     >
       <div className="flex items-center justify-between px-4 pb-3">
@@ -46,7 +46,7 @@ export function BrowserSnapshotView() {
               ? "hover:bg-muted focus-visible:ring-2"
               : "cursor-not-allowed opacity-50",
           )}
-          data-radius="radius"
+          data-radius="control"
           onClick={() =>
             browserSnapshot?.dom_text && setShowDomText((prev) => !prev)
           }
@@ -71,7 +71,7 @@ export function BrowserSnapshotView() {
         <>
           {browserSnapshot.url && (
             <div
-              data-radius="radius"
+              data-radius="surface"
               className="mx-4 mb-3 border bg-background px-3 py-2 text-xs font-medium text-muted-foreground"
             >
               {browserSnapshot.url}

@@ -102,8 +102,8 @@ export function SignInForm({
       <div className="content-mask w-full flex-1 overflow-y-auto p-4">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
-              <LoginIcon className="size-4 text-blue-600 dark:text-blue-400" />
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-semantic-info-light">
+              <LoginIcon className="size-4 text-semantic-info" />
             </div>
             <h2 className="text-center text-xl font-semibold leading-tight text-foreground">
               Log in
@@ -111,25 +111,25 @@ export function SignInForm({
           </div>
           {pendingMessage && (
             <div
-              data-radius="radius"
-              className="relative mt-2 w-full min-w-0 overflow-hidden bg-blue-50 p-3 text-left text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+              data-radius="surface"
+              className="relative mt-2 w-full min-w-0 overflow-hidden bg-semantic-info-light p-3 text-left text-sm text-semantic-info"
             >
               <div className="flex items-center gap-2 pr-6 font-medium leading-none">
                 <span>Prompt queued</span>
                 <QueueIcon className="size-4" />
               </div>
-              <p className="mt-1 block w-full max-w-[17rem] truncate text-xs opacity-90">
+              <p className="mt-1 block w-full max-w-68 truncate text-xs opacity-90">
                 {"> " + pendingMessage}
               </p>
               {onClearPendingMessage && (
                 <button
                   type="button"
                   onClick={onClearPendingMessage}
-                  data-radius="radius"
-                  className="group absolute right-2 top-2 flex items-center p-1 opacity-70 transition-all hover:bg-red-50 hover:opacity-100 dark:hover:bg-red-900/20"
+                  data-radius="control"
+                  className="group absolute right-2 top-2 flex items-center p-1 opacity-70 transition-all hover:bg-destructive/10 hover:opacity-100 dark:hover:bg-destructive/10"
                 >
-                  <XIcon className="size-3.5 transition-colors group-hover:text-red-600 dark:group-hover:text-red-400" />
-                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-[10px] font-medium opacity-0 transition-all duration-300 group-hover:max-w-[50px] group-hover:pl-1 group-hover:text-red-600 group-hover:opacity-100 dark:group-hover:text-red-400">
+                  <XIcon className="size-3.5 transition-colors group-hover:text-destructive dark:group-hover:text-destructive" />
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-doot-fine font-medium opacity-0 transition-all duration-300 group-hover:max-w-doot-auth-action-label group-hover:pl-1 group-hover:text-destructive group-hover:opacity-100 dark:group-hover:text-destructive">
                     Remove
                   </span>
                 </button>
@@ -149,7 +149,7 @@ export function SignInForm({
               label="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              data-radius="radius"
+              data-radius="control"
               required
             />
           </div>
@@ -176,7 +176,6 @@ export function SignInForm({
           {error && (
             <Alert
               variant="destructive"
-              data-radius="radius"
             >
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -185,8 +184,8 @@ export function SignInForm({
           <div className="pt-2">
             <Button
               type="submit"
-              data-radius="radius"
-              className="h-10 w-full bg-black text-white hover:bg-black/90"
+              data-radius="control"
+              className="h-10 w-full bg-foreground text-background hover:bg-foreground/90"
               disabled={isLoading || isGoogleLoading || isGithubLoading}
             >
               {isLoading ? (
@@ -219,7 +218,7 @@ export function SignInForm({
                 <Button
                   variant="outline"
                   type="button"
-                  data-radius="radius"
+                  data-radius="control"
                   className="h-10 w-full"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading || isGoogleLoading || isGithubLoading}
@@ -260,7 +259,7 @@ export function SignInForm({
                 <Button
                   variant="outline"
                   type="button"
-                  data-radius="radius"
+                  data-radius="control"
                   className="h-10 w-full"
                   onClick={handleGithubSignIn}
                   disabled={isLoading || isGoogleLoading || isGithubLoading}
@@ -296,7 +295,7 @@ export function SignInForm({
             className="group text-muted-foreground transition-colors hover:text-foreground"
           >
             Don&apos;t have an account?{" "}
-            <span className="transition-colors group-hover:text-blue-600">
+            <span className="transition-colors group-hover:text-semantic-info">
               Sign up
             </span>
           </button>

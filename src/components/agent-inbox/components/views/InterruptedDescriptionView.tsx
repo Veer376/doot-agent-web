@@ -1,4 +1,4 @@
-import { MarkdownText } from "@/components/ui/markdown-text";
+import { MarkdownText } from "@/components/ui/markdown-text/lazy";
 
 interface InterruptedDescriptionViewProps {
   description: string | undefined;

@@ -4,21 +4,21 @@ import type { ToolCallArguments } from "@/types/tools";
 
 export type ChainStep =
   | {
-    type: "thinking";
-    heading: string;
-    content: string;
-    status: "complete";
-  }
+      type: "thinking";
+      heading: string;
+      content: string;
+      status: "complete";
+    }
   | {
-    type: "tool";
-    toolCall: {
-      id: string;
-      name: string;
-      args: ToolCallArguments;
+      type: "tool";
+      toolCall: {
+        id: string;
+        name: string;
+        args: ToolCallArguments;
+      };
+      toolResponse?: ToolMessage;
+      status: "pending" | "success" | "error";
     };
-    toolResponse?: ToolMessage;
-    status: "pending" | "success" | "error";
-  };
 
 export interface ContentBlock {
   type: "content";
@@ -55,18 +55,18 @@ export interface LegacyChainOfThoughtData {
 /**
  * Extracts chain of thought data from turn messages with proper grouping.
  * Groups thinking and tools into blocks that are delimited by content.
- * 
+ *
  * Algorithm:
  * - Thinking/tools without content → added to current group (or start new group)
  * - Content → closes current group and creates content block
  * - Tools without thinking and no open group → standalone tools block
- * 
+ *
  * @param turnMessages - Messages in the current AI turn
  * @param isLoading - Whether the turn is still streaming
  */
 export function extractChainOfThought(
   turnMessages: Message[],
-  isLoading: boolean = false
+  isLoading: boolean = false,
 ): ChainOfThoughtData {
   const renderBlocks: RenderBlock[] = [];
   const currentGroupSteps: ChainStep[] = [];
@@ -121,7 +121,7 @@ export function extractChainOfThought(
             (step) =>
               step.type === "thinking" &&
               step.heading === block.heading &&
-              step.content === block.content
+              step.content === block.content,
           );
 
           // Only add if not a duplicate
@@ -146,13 +146,7 @@ export function extractChainOfThought(
 
           let status: "pending" | "success" | "error" = "pending";
           if (response) {
-            const responseContent =
-              typeof response.content === "string"
-                ? response.content
-                : JSON.stringify(response.content);
-            status = responseContent.toLowerCase().includes("error")
-              ? "error"
-              : "success";
+            status = response.status === "error" ? "error" : "success";
           }
 
           toolSteps.push({
@@ -173,7 +167,9 @@ export function extractChainOfThought(
           const existingToolIds = new Set(
             currentGroupSteps
               .filter((s) => s.type === "tool")
-              .map((s) => (s as Extract<ChainStep, { type: "tool" }>).toolCall.id)
+              .map(
+                (s) => (s as Extract<ChainStep, { type: "tool" }>).toolCall.id,
+              ),
           );
 
           toolSteps.forEach((toolStep) => {

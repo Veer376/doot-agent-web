@@ -66,6 +66,10 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.87 0 0);
+  --overlay: oklch(0 0 0 / 0.5);
+  --status-on-solid: oklch(1 0 0);
+  --overlay-max-height: 90vh;
+  --overlay-max-width: calc(100% - 2rem);
 
   /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -74,11 +78,28 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Radius */
-  --small-radius: 0.5rem;
-  --radius: 1.1rem;
-  --radius3: 1.7rem;
-  --composer-radius: 1.7rem;
+  /* Radius primitives — intentionally tight for the current UI. */
+  --radius-base-none: 0;
+  --radius-base-xs: 0.3125rem; /* 5px */
+  --radius-base-sm: 0.5rem; /* 8px */
+  --radius-base-md: 0.75rem; /* 12px */
+  --radius-base-lg: 1rem; /* 16px */
+  --radius-base-full: 9999px;
+
+  /* Radius semantics — components consume these, not raw radius values. */
+  --radius-inline: var(--radius-base-xs);
+  --radius-control: var(--radius-base-sm);
+  --radius-surface: var(--radius-base-md);
+  --radius-overlay: var(--radius-base-lg);
+  --radius-message: var(--radius-base-md);
+  --radius-composer: var(--radius-base-lg);
+  --radius-round: var(--radius-base-full);
+
+  /* Legacy aliases kept while older shared components migrate. */
+  --small-radius: var(--radius-control);
+  --radius: var(--radius-surface);
+  --radius3: var(--radius-overlay);
+  --composer-radius: var(--radius-composer);
   --composer-max-width: 42rem;
 
   /* Shadcn/ui — Sidebar (HSL format required by shadcn sidebar components) */

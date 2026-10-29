@@ -9,7 +9,6 @@
 
 import type { Thread } from "@langchain/langgraph-sdk";
 import type { Message } from "@langchain/langgraph-sdk";
-import { jsPDF } from "jspdf";
 import { createClient } from "@/lib/client";
 
 // Utility to extract text content from MessageContent
@@ -193,6 +192,7 @@ export async function exportThreadAsPDF(
   const createdAt = (thread as any).created_at || new Date().toISOString();
 
   // Create PDF
+  const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();

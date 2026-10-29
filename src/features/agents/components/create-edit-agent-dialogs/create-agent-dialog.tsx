@@ -8,7 +8,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Bot, LoaderCircle, X } from "lucide-react";
+import {
+  BotIcon as Bot,
+  LoaderIcon as LoaderCircle,
+  XIcon as X,
+} from "@/components/icons";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -116,7 +120,7 @@ function CreateAgentFormContent(props: {
           }}
           variant="outline"
           disabled={loading || submitting}
-          data-radius="radius"
+          data-radius="control"
         >
           Cancel
         </Button>
@@ -124,7 +128,7 @@ function CreateAgentFormContent(props: {
           type="submit"
           className="flex w-full items-center justify-center gap-1"
           disabled={loading || submitting}
-          data-radius="radius"
+          data-radius="control"
         >
           {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
           <span>{submitting ? "Creating..." : "Create Agent"}</span>
@@ -174,7 +178,7 @@ export function CreateAgentDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <AlertDialogContent className="h-auto max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
+      <AlertDialogContent className="h-auto sm:max-w-lg md:max-w-2xl lg:max-w-3xl">
         <AlertDialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1.5">
@@ -187,7 +191,7 @@ export function CreateAgentDialog({
             </div>
             <AlertDialogCancel
               size="icon"
-              data-radius="radius"
+              data-radius="control"
             >
               <X className="size-4" />
             </AlertDialogCancel>

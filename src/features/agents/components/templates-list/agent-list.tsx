@@ -52,7 +52,7 @@ export function AgentList({ agents }: AgentListProps) {
 
       {filteredAgents.length === 0 ? (
         <div
-          data-radius="radius"
+          data-radius="surface"
           className="flex flex-col items-center justify-center p-6 py-12"
         >
           {searchQuery ? (

@@ -1,3 +1,6 @@
 /* App entry wrapper: import shared styles from src/styles/globals.css */
 @import "../styles/globals.css";
 
+
+:root { --font-roobert: Arial, Helvetica, sans-serif; --font-roobert-mono: ui-monospace, SFMono-Regular, monospace; }
+.font-system { font-family: var(--font-roobert); }

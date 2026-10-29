@@ -27,17 +27,17 @@ export function InboxItemStatuses({
       <div
         className={cn(
           "flex w-fit items-center justify-center rounded-full border-1.5 px-2 py-0.5 font-medium text-nowrap",
-          "transition-colors ease-in-out hover:bg-gray-50/90",
+          "transition-colors ease-in-out hover:bg-accent",
           isOnlyIgnoreAllowed
-            ? "border-gray-600 text-gray-600"
-            : "border-green-700 text-green-700",
+            ? "border-border text-muted-foreground"
+            : "border-semantic-success/40 text-semantic-success",
         )}
       >
         <div className="flex items-center justify-center gap-2 text-sm">
           <div
             className={cn(
-              "h-[6px] w-[6px] rounded-full",
-              isOnlyIgnoreAllowed ? "bg-gray-600" : "bg-green-700",
+              "size-doot-status-dot rounded-full",
+              isOnlyIgnoreAllowed ? "bg-muted-foreground" : "bg-semantic-success-light",
             )}
           />
           <span>{isOnlyIgnoreAllowed ? "Ignore" : "Requires Action"}</span>
@@ -49,11 +49,11 @@ export function InboxItemStatuses({
       <div
         className={cn(
           "flex w-fit items-center justify-center rounded-full border-2 px-2 py-0.5 font-medium text-nowrap",
-          status === "idle" && "border-gray-600 text-gray-600",
-          status === "busy" && "border-yellow-600 text-yellow-600",
-          status === "error" && "border-red-600 text-red-600",
-          status === "interrupted" && "border-green-700 text-green-700",
-          status === "human_response_needed" && "border-blue-600 text-blue-600",
+          status === "idle" && "border-border text-muted-foreground",
+          status === "busy" && "border-semantic-warning/40 text-semantic-warning",
+          status === "error" && "border-destructive/40 text-destructive",
+          status === "interrupted" && "border-semantic-success/40 text-semantic-success",
+          status === "human_response_needed" && "border-semantic-info/40 text-semantic-info",
         )}
       >
         <p className="text-sm">{prettifyText(status)}</p>

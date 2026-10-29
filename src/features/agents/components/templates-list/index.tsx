@@ -79,7 +79,7 @@ export function TemplatesList() {
 
       {filteredGraphGroupsState.length === 0 ? (
         <div
-          data-radius="radius"
+          data-radius="surface"
           className="flex flex-col items-center justify-center border border-dashed p-8 text-center animate-in fade-in-50"
         >
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-muted">

@@ -52,7 +52,7 @@
 
   *::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
-    border-radius: 4px;
+    border-radius: var(--radius-control);
     border: 2px solid transparent;
     background-clip: padding-box;
     transition: background 0.2s ease;
@@ -107,7 +107,7 @@
 
   /* ── Avatar radius ── */
   [data-slot="avatar"] {
-    border-radius: var(--radius);
+    border-radius: var(--radius-round);
   }
 
   [data-slot="avatar-image"],
@@ -115,11 +115,29 @@
     border-radius: inherit;
   }
 
-  /* ── Data-radius system ── */
+  /* ── Semantic data-radius system ── */
+  [data-radius="inline"]   { border-radius: var(--radius-inline); }
+  [data-radius="control"]  { border-radius: var(--radius-control); }
+  [data-radius="surface"]  { border-radius: var(--radius-surface); }
+  [data-radius="overlay"]  { border-radius: var(--radius-overlay); }
+  [data-radius="message"]  { border-radius: var(--radius-message); }
+  [data-radius="composer"] { border-radius: var(--radius-composer); }
+  [data-radius="round"]    { border-radius: var(--radius-round); }
+
+  /* Backward-compatible aliases for components not migrated yet. */
   [data-radius="small-radius"]    { border-radius: var(--small-radius); }
   [data-radius="radius"]          { border-radius: var(--radius); }
   [data-radius="radius3"]         { border-radius: var(--radius3); }
   [data-radius="composer-radius"] { border-radius: var(--composer-radius); }
+
+  /* Radix keeps its popper wrapper mounted while popover exit animations run.
+     A closed content node is already non-interactive, but the wrapper itself
+     can still sit over the composer and intercept pointer hit-testing. */
+  [data-radix-popper-content-wrapper]:has(
+    > [data-slot="popover-content"][data-state="closed"]
+  ) {
+    pointer-events: none;
+  }
 
   /* ── Autofill override ── */
   input:-webkit-autofill,

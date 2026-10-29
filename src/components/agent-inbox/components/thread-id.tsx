@@ -1,4 +1,7 @@
-import { Copy, CopyCheck } from "lucide-react";
+import {
+  CopyIconAlt as Copy,
+  CopyCheckIcon as CopyCheck,
+} from "@/components/icons";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,8 +27,8 @@ export function ThreadIdCopyable({
       onClick={(e) => handleCopy(e)}
       variant="ghost"
       tooltip="Copy thread ID"
-      className="flex w-fit flex-grow-0 cursor-pointer items-center gap-1 border-[1px] border-gray-200 p-1 hover:bg-gray-50/90"
-      data-radius="small-radius"
+      className="flex w-fit flex-grow-0 cursor-pointer items-center gap-1 rounded-md border border-border p-1 hover:bg-accent"
+      data-radius="control"
     >
       <p className="font-mono text-xs">{showUUID ? threadId : "ID"}</p>
       <AnimatePresence
@@ -40,7 +43,7 @@ export function ThreadIdCopyable({
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <CopyCheck className="h-3 max-h-3 w-3 max-w-3 text-green-500" />
+            <CopyCheck className="h-3 max-h-3 w-3 max-w-3 text-semantic-success" />
           </motion.div>
         ) : (
           <motion.div
@@ -50,7 +53,7 @@ export function ThreadIdCopyable({
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <Copy className="h-3 max-h-3 w-3 max-w-3 text-gray-500" />
+            <Copy className="h-3 max-h-3 w-3 max-w-3 text-muted-foreground" />
           </motion.div>
         )}
       </AnimatePresence>

@@ -33,9 +33,10 @@ import {
  */
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "272px";
-const SIDEBAR_WIDTH_MOBILE = "min(272px, calc(100vw - 48px))";
-const SIDEBAR_WIDTH_ICON = "3rem";
+const SIDEBAR_WIDTH = "var(--doot-sidebar-width)";
+const SIDEBAR_WIDTH_MOBILE =
+  "min(var(--doot-sidebar-width), calc(100vw - 48px))";
+const SIDEBAR_WIDTH_ICON = "var(--doot-sidebar-icon-width)";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 /**
@@ -343,18 +344,19 @@ function SidebarTrigger({
  * It overlays the edge and toggles the sidebar on click.
  */
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { toggleSidebar, setRailHovered } = useSidebar();
+  const { state, toggleSidebar, setRailHovered } = useSidebar();
+  const label = state === "expanded" ? "Collapse sidebar" : "Expand sidebar";
 
   return (
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
-      aria-label="Toggle Sidebar"
+      aria-label={label}
       tabIndex={-1}
       onClick={toggleSidebar}
       onMouseEnter={() => setRailHovered(true)}
       onMouseLeave={() => setRailHovered(false)}
-      title="Toggle Sidebar"
+      title={label}
       className={cn(
         "hover:after:bg-primary/30 absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[0.5px] after:bg-[var(--brand-muted)] after:opacity-60 after:transition-all hover:after:opacity-100 sm:flex",
         "cursor-ew-resize",
@@ -379,7 +381,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "bg-background relative flex min-h-0 w-full flex-1 flex-col overflow-hidden",
+        "bg-background relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className,
       )}
@@ -505,7 +507,7 @@ function SidebarGroupLabel({
     <Comp
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
-      data-radius="small-radius"
+      data-radius="control"
       className={cn(
         "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 w-4 shrink-0 items-center px-2 text-xs font-medium transition-[margin,opacity] duration-200 ease-linear outline-none focus-visible:ring-2 [&>svg]:h-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
@@ -531,7 +533,7 @@ const SidebarGroupAction = React.forwardRef<
       ref={ref}
       data-slot="sidebar-group-action"
       data-sidebar="group-action"
-      data-radius="radius"
+      data-radius="control"
       className={cn(
         "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-4 w-5 cursor-pointer items-center justify-center p-0 transition-transform outline-none focus-visible:ring-2 [&>svg]:h-4 [&>svg]:shrink-0",
         // Increases the hit area of the button on mobile.
@@ -665,7 +667,7 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        data-radius="radius"
+        data-radius="control"
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
       />
@@ -728,7 +730,7 @@ const SidebarMenuAction = React.forwardRef<
           "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className,
       )}
-      data-radius="radius"
+      data-radius="control"
       {...props}
     />
   );
@@ -748,7 +750,7 @@ function SidebarMenuBadge({
     <div
       data-slot="sidebar-menu-badge"
       data-sidebar="menu-badge"
-      data-radius="small-radius"
+      data-radius="control"
       className={cn(
         "text-sidebar-foreground pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center px-1 text-xs font-medium tabular-nums select-none",
         "peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[active=true]/menu-button:text-sidebar-accent-foreground",
@@ -783,13 +785,13 @@ function SidebarMenuSkeleton({
     <div
       data-slot="sidebar-menu-skeleton"
       data-sidebar="menu-skeleton"
-      data-radius="small-radius"
+      data-radius="control"
       className={cn("flex h-8 items-center gap-2 px-2", className)}
       {...props}
     >
       {showIcon && (
         <Skeleton
-          data-radius="small-radius"
+          data-radius="control"
           className="h-4 w-4"
           data-sidebar="menu-skeleton-icon"
         />
@@ -869,7 +871,7 @@ const SidebarMenuSubButton = React.forwardRef<
         data-sidebar="menu-sub-button"
         data-size={size}
         data-active={isActive}
-        data-radius="radius"
+        data-radius="control"
         className={cn(
           "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 w-4 min-w-0 -translate-x-px items-center gap-2 overflow-hidden px-2 outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:h-4 [&>svg]:shrink-0",
           "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",

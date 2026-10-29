@@ -33,7 +33,7 @@ export function TemplateCard({
     <Card
       className={cn(
         "overflow-hidden",
-        isOpen ? "" : "hover:bg-accent/50 cursor-pointer transition-colors",
+        isOpen ? "" : "hover:bg-accent cursor-pointer transition-colors",
       )}
       onClick={() => {
         // Don't allow toggling via clicking the card if it's already open

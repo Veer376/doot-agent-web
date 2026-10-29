@@ -21,7 +21,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
         style: {
-          borderRadius: "var(--radius)",
+          borderRadius: "var(--radius-surface)",
         },
       }}
       style={

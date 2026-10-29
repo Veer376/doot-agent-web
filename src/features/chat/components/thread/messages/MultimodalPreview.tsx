@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Pdf01Icon, DocumentCodeIcon } from "hugeicons-react";
-import { X } from "lucide-react";
+import { XIcon as X } from "@/components/icons";
 import type { Base64ContentBlock } from "@/types/multimodal";
 import {
   Dialog,
@@ -44,9 +44,9 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     return (
       <>
         <div
-          data-radius="radius"
+          data-radius="surface"
           className={cn(
-            "group/attachment bg-accent/30 border-border flex h-7 items-center overflow-hidden border",
+            "doot-attachment-chip group/attachment flex items-center",
             className,
           )}
         >
@@ -55,14 +55,14 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             type="button"
             title={`Preview ${name}`}
             onClick={() => setPreviewOpen(true)}
-            className="hover:bg-accent/60 flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 px-1.5 py-1 transition-colors"
+            className="doot-attachment-main flex flex-1 cursor-pointer items-center gap-1.5 transition-colors"
           >
             <img
               src={url}
               alt={name}
               className="size-4 flex-shrink-0 rounded object-cover"
             />
-            <span className="text-foreground max-w-[120px] truncate text-xs">
+            <span className="text-foreground max-w-doot-attachment-label truncate text-xs">
               {name}
             </span>
           </button>
@@ -76,7 +76,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
                 onRemove?.();
               }}
               aria-label="Remove image"
-              className="text-muted-foreground/60 hover:text-destructive flex flex-shrink-0 items-center self-stretch px-1.5 transition-colors"
+              className="doot-attachment-remove flex flex-shrink-0 items-center justify-center self-stretch transition-colors"
             >
               <X className="size-3" />
             </button>
@@ -88,7 +88,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
           open={previewOpen}
           onOpenChange={setPreviewOpen}
         >
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="doot-media-dialog">
             <DialogTitle className="text-sm font-medium">{name}</DialogTitle>
             <DialogDescription className="sr-only">
               Image preview
@@ -96,7 +96,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             <img
               src={url}
               alt={name}
-              className="max-h-[70vh] w-full rounded object-contain"
+              className="doot-media-preview"
             />
           </DialogContent>
         </Dialog>
@@ -113,9 +113,9 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     return (
       <>
         <div
-          data-radius="radius"
+          data-radius="surface"
           className={cn(
-            "group/attachment bg-accent/30 border-border flex h-7 items-center overflow-hidden border",
+            "doot-attachment-chip group/attachment flex items-center",
             className,
           )}
         >
@@ -124,10 +124,10 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             type="button"
             title={`Preview ${filename}`}
             onClick={() => setPreviewOpen(true)}
-            className="hover:bg-accent/60 flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 px-1.5 py-1 transition-colors"
+            className="doot-attachment-main flex flex-1 cursor-pointer items-center gap-1.5 transition-colors"
           >
             <Pdf01Icon className="text-primary size-4 flex-shrink-0" />
-            <span className="text-foreground max-w-[120px] truncate text-xs">
+            <span className="text-foreground max-w-doot-attachment-label truncate text-xs">
               {filename}
             </span>
           </button>
@@ -141,7 +141,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
                 onRemove?.();
               }}
               aria-label="Remove PDF"
-              className="text-muted-foreground/60 hover:text-destructive flex flex-shrink-0 items-center self-stretch px-1.5 transition-colors"
+              className="doot-attachment-remove flex flex-shrink-0 items-center justify-center self-stretch transition-colors"
             >
               <X className="size-3" />
             </button>
@@ -155,7 +155,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             setPreviewOpen(o);
           }}
         >
-          <DialogContent className="max-w-4xl overflow-hidden">
+          <DialogContent className="doot-media-dialog overflow-hidden">
             <DialogTitle className="text-sm font-medium">
               {filename}
             </DialogTitle>
@@ -164,7 +164,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             </DialogDescription>
 
             {/* Scrollable PDF area */}
-            <div className="bg-muted/30 border-border max-h-[75vh] overflow-auto rounded border">
+            <div className="doot-pdf-preview max-h-[75vh] overflow-auto">
               <iframe
                 src={`data:application/pdf;base64,${block.data}`}
                 className="h-[70vh] w-full"
@@ -180,15 +180,15 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
   // ── Fallback ──────────────────────────────────────────────────────────────
   return (
     <div
-      data-radius="radius"
+      data-radius="surface"
       className={cn(
-        "group/attachment bg-accent/30 border-border flex h-7 items-center overflow-hidden border",
+        "doot-attachment-chip group/attachment flex items-center",
         className,
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-1.5 px-1.5 py-1">
+      <div className="doot-attachment-main flex flex-1 items-center gap-1.5">
         <DocumentCodeIcon className="text-muted-foreground size-4 flex-shrink-0" />
-        <span className="text-muted-foreground max-w-[120px] truncate text-xs">
+        <span className="text-muted-foreground max-w-doot-attachment-label truncate text-xs">
           Unsupported file
         </span>
       </div>
@@ -200,7 +200,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
             onRemove?.();
           }}
           aria-label="Remove file"
-          className="text-muted-foreground/60 hover:text-destructive flex flex-shrink-0 items-center self-stretch px-1.5 transition-colors"
+          className="doot-attachment-remove flex flex-shrink-0 items-center justify-center self-stretch transition-colors"
         >
           <X className="size-3" />
         </button>

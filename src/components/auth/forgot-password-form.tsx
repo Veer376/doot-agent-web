@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthActions } from "@/providers/Auth";
 import { FloatingLabelInput } from "@/components/ui/floating-label-input";
-import { Loader2 } from "lucide-react";
+import { LoaderIcon as Loader2 } from "@/components/icons";
 
 import { ForgotPassIcon } from "@/components/icons";
 
@@ -61,8 +61,8 @@ export function ForgotPasswordForm({
       <div className="content-mask w-full flex-1 overflow-y-auto p-4">
         <div className="mb-4 flex flex-col items-center gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
-              <ForgotPassIcon className="size-4 text-blue-600 dark:text-blue-400" />
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-semantic-info-light">
+              <ForgotPassIcon className="size-4 text-semantic-info" />
             </div>
             <h1 className="text-center text-xl font-semibold leading-tight text-foreground">
               Reset your password
@@ -75,11 +75,8 @@ export function ForgotPasswordForm({
 
         {success ? (
           <div className="space-y-4">
-            <Alert
-              data-radius="radius"
-              className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
-            >
-              <AlertDescription className="text-green-800 dark:text-green-200">
+            <Alert variant="tip">
+              <AlertDescription>
                 Check your email for a link to reset your password. If it
                 doesn&apos;t appear within a few minutes, check your spam
                 folder.
@@ -88,7 +85,7 @@ export function ForgotPasswordForm({
             <Button
               type="button"
               variant="outline"
-              data-radius="radius"
+              data-radius="control"
               className="h-11 w-full"
               onClick={onSwitchToSignIn}
             >
@@ -112,7 +109,6 @@ export function ForgotPasswordForm({
             {error && (
               <Alert
                 variant="destructive"
-                data-radius="radius"
               >
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -120,8 +116,8 @@ export function ForgotPasswordForm({
 
             <Button
               type="submit"
-              data-radius="radius"
-              className="h-11 w-full bg-black text-white hover:bg-black/90"
+              data-radius="control"
+              className="h-11 w-full bg-foreground text-background hover:bg-foreground/90"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -146,7 +142,7 @@ export function ForgotPasswordForm({
             className="group text-muted-foreground transition-colors hover:text-foreground"
           >
             Remember your password?{" "}
-            <span className="transition-colors group-hover:text-blue-600">
+            <span className="transition-colors group-hover:text-semantic-info">
               Sign in
             </span>
           </button>

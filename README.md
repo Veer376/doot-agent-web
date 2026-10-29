@@ -1,39 +1,41 @@
-# Doot web
+<div align="center">
+  <h1>Doot web</h1>
+  <p><strong>The conversation, tool activity, and approval interface for Doot.</strong></p>
+  <p><a href="https://github.com/Veer376/doot-agent">Main project & demos</a> · <a href="https://www.dootagent.com">Website</a> · <a href="https://github.com/Veer376/doot-agent/blob/main/docs/ARCHITECTURE.md">Architecture</a></p>
 
-A Next.js/React interface for Doot's stateful agents: streaming conversations, tool activity, human approvals and restored thread history.
+[![Web checks](https://github.com/Veer376/doot-agent-web/actions/workflows/release-checks.yml/badge.svg)](https://github.com/Veer376/doot-agent-web/actions/workflows/release-checks.yml)
 
-**Built on [LangChain Open Agent Platform](https://github.com/langchain-ai/open-agent-platform).** This is Aryaveer's extended client, not a from-scratch replacement. See [NOTICE](NOTICE.md) for the contribution boundary.
+</div>
 
-[Watch the original browser-agent demo](public/dootagent-demo.mp4). This historical recording uses a real browser session and demonstrates the earlier browser automation workflow.
+A React/Next.js client for streamed conversations, model/tool presentation, human approval and resume, and persisted thread history. **[doot-agent](https://github.com/Veer376/doot-agent) is the canonical home for demos, engineering notes, backend setup, and contribution guidance.**
 
-The matching [Doot backend](https://github.com/Veer376/doot-agent) contains the architecture walkthrough, supported API, synthetic example and recorded demonstration.
+Built on LangChain's [Open Agent Platform](https://github.com/langchain-ai/open-agent-platform). Aryaveer's extensions include conversation/tool presentation, previews and annotations, model controls, run activity and reconnection, approval interfaces, and local-runtime integration. See [NOTICE](NOTICE.md) for the ownership boundary.
 
-## Current backend verification
+## Run locally
 
-The release preparation also verifies a separate ticket-triage workflow with a live model: tool calls → review proposed report → approve → persisted result after reload.
-
-[Watch approval/resume verification](public/showcase/approval-resume.mp4). Two screen captures of the same real thread are joined; the pause between captures is omitted. This is a live Gemini run on synthetic ticket data, not a simulated UI.
-
-![Report approval](public/showcase/demo-approval.png)
-
-## Run
-
-Start the backend using its `compose.showcase.yml`, then:
+Start the [backend quickstart](https://github.com/Veer376/doot-agent#run-it-locally), then use Node.js 22 and pnpm 9.15.4:
 
 ```sh
-# Node.js 22; pnpm 9.15.4
-corepack pnpm install --frozen-lockfile
+git clone https://github.com/Veer376/doot-agent-web.git
+cd doot-agent-web
 cp .env.local.example .env.local
+corepack pnpm install --frozen-lockfile
 corepack pnpm dev --hostname 127.0.0.1
 ```
 
-Open http://127.0.0.1:3000. Ask the agent to inspect the support tickets and save a triage report. Review the proposed report and approve or reject the write. The backend stores approved output locally.
+Open **http://127.0.0.1:3000**. Ask Doot to inspect the support tickets and save a triage report, review the proposed content, then approve or reject it. Reload the conversation to inspect persisted state. The canonical [demo gallery](https://github.com/Veer376/doot-agent#demos) includes both the original browser/desktop recordings and the current approval/resume verification.
 
-`NEXT_PUBLIC_PLATFORM_MODE=true` selects the custom-backend UI profile. `NEXT_PUBLIC_LOCAL_MODE=true` uses the local demo session. The newer local agent's machine/workspace controls are separate capabilities and are not shown in this profile. This configuration is for localhost only.
+## Connection and configuration
 
-The browser connects to `/api/langgraph`; the Next.js server proxies to `LANGGRAPH_API_URL`. Provider keys live in the backend environment. `DOOT_GATEWAY_TOKEN`, if used for a separately configured upstream, is server-only. A gateway token does not make the local demo a public multi-user service.
+```text
+Browser → /api/langgraph → Next.js server proxy → FastAPI → graph/runtime
+```
 
-For a compiled local server:
+The example environment selects the custom backend with `NEXT_PUBLIC_PLATFORM_MODE=true` and a local demo session with `NEXT_PUBLIC_LOCAL_MODE=true`. `LANGGRAPH_API_URL` is server-side; provider keys belong in the backend environment. Use `127.0.0.1` consistently with the defaults.
+
+The profile exposes conversation and approval controls. Experimental local-workspace/Electron features remain in the source and use a different runtime contract; they are outside the supported quickstart. A separately configured gateway can supply server-only `DOOT_GATEWAY_TOKEN`; this does not turn the local demo identity into multi-user authentication.
+
+## Build and contribute
 
 ```sh
 corepack pnpm typecheck
@@ -41,14 +43,12 @@ corepack pnpm build
 corepack pnpm start:local
 ```
 
-Rebuild after source changes. The production launcher uses Next’s standard server and binds to localhost.
+`start:local` binds Next's compiled server to localhost. Rebuild after source changes. CI checks TypeScript and the production build; the historical lint backlog is separate.
 
-## What Aryaveer added
+Follow the main project's [contribution guide](https://github.com/Veer376/doot-agent/blob/main/CONTRIBUTING.md). Open UI issues/PRs here with reproduction steps, expected/observed behavior, and before/after captures for visible changes. Link a companion backend change when needed. The backend [setup guide](https://github.com/Veer376/doot-agent/blob/main/docs/DEVELOPMENT.md) covers proxy, origin, and port troubleshooting.
 
-Conversation/tool presentation, previews and annotations; model controls; run activity and reconnect behavior; human approval/resume interfaces; local-runtime integration and startup optimizations. The source also retains experimental Electron/local-agent hooks; Electron distribution is outside this release.
-
-The supported demo proves a defined subset of these features. It does not establish production reliability, secure public hosting or support for every historical UI action. The backend README lists unsupported endpoints.
+The recordings retained under `public/` support existing URLs. New demo documentation and canonical copies are maintained in `doot-agent`.
 
 ## License
 
-MIT, preserving the original Open Agent Platform notice and credit. The backend has different licensing; see its NOTICE.
+MIT, preserving Open Agent Platform's original notice and credit. The backend has separate licensing; see its [NOTICE](https://github.com/Veer376/doot-agent/blob/main/NOTICE.md).

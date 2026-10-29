@@ -96,7 +96,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
               <span className="text-muted-foreground">LinkedIn</span>
             </a>
             <a
-              href="https://github.com/Veer376/doot-agent-lab"
+              href="https://github.com/Veer376/doot-agent"
               target="_blank"
               rel="noopener noreferrer"
               data-radius="control"
